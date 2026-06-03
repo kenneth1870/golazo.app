@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"
-import { NavLink, useLocation } from "react-router-dom"
+import { useEffect } from "react"
+import { Link, useLocation } from "react-router-dom"
 
-const NAV = [
+const NAV_ITEMS = [
+  { label: "Home",        path: "/" },
   {
-    label: "Scores",
-    path: "/scores",
+    label: "Scores", path: "/scores",
     children: [
       { label: "Live Matches",    path: "/scores/live" },
       { label: "Results",         path: "/scores/results" },
@@ -14,16 +14,14 @@ const NAV = [
     ]
   },
   {
-    label: "Groups",
-    path: "/groups",
-    children: Array.from({ length: 12 }, (_, i) => ({
-      label: `Group ${String.fromCharCode(65 + i)}`,
-      path:  `/groups/${String.fromCharCode(65 + i)}`
-    }))
+    label: "Groups", path: "/groups",
+    children: Array.from({ length: 12 }, (_, i) => {
+      const g = String.fromCharCode(65 + i)
+      return { label: `Group ${g}`, path: `/groups/${g}` }
+    })
   },
   {
-    label: "Mundial 2026",
-    path: "/mundial",
+    label: "Mundial 2026", path: "/mundial",
     children: [
       { label: "Teams",       path: "/mundial/teams" },
       { label: "Schedule",    path: "/mundial/schedule" },
@@ -36,107 +34,88 @@ const NAV = [
 ]
 
 export default function Navbar() {
-  const [mobileOpen, setMobileOpen]     = useState(false)
-  const [openDropdown, setOpenDropdown] = useState(null)
-  const [shrink, setShrink]             = useState(false)
   const location = useLocation()
 
+  // Re-init jQuery mobile menu after React renders (main.js runs before React mounts)
   useEffect(() => {
-    setMobileOpen(false)
-    setOpenDropdown(null)
-    document.body.classList.remove("offcanvas-menu")
+    if (window.jQuery) {
+      const $ = window.jQuery
+      // Re-clone nav into mobile menu body
+      const $body = $(".site-mobile-menu-body")
+      $body.empty()
+      $(".js-clone-nav").clone().attr("class", "site-nav-wrap").appendTo($body)
+    }
   }, [location.pathname])
 
-  useEffect(() => {
-    const onScroll = () => setShrink(window.scrollY > 50)
-    window.addEventListener("scroll", onScroll)
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [])
-
-  const toggleMobile = () => {
-    setMobileOpen(o => {
-      document.body.classList.toggle("offcanvas-menu", !o)
-      return !o
-    })
+  const isActive = (path) => {
+    if (path === "/") return location.pathname === "/"
+    return location.pathname.startsWith(path)
   }
 
   return (
     <>
-      {/* Mobile side menu */}
-      <div className={`site-mobile-menu${mobileOpen ? " mobile-menu-open" : ""}`}>
+      {/* Mobile menu — populated by jQuery clone of js-clone-nav */}
+      <div className="site-mobile-menu site-navbar-target">
         <div className="site-mobile-menu-header">
-          <div className="site-mobile-menu-close" onClick={() => { setMobileOpen(false); document.body.classList.remove("offcanvas-menu") }}>
-            <span className="icon-close2" />
+          <div className="site-mobile-menu-close">
+            <span className="icon-close2 js-menu-toggle" />
           </div>
         </div>
-        <div className="site-mobile-menu-body">
-          {NAV.map(item => (
-            <div key={item.path} className="mobile-nav-item">
-              {item.children ? (
-                <>
-                  <button
-                    className="mobile-nav-parent"
-                    onClick={() => setOpenDropdown(openDropdown === item.path ? null : item.path)}
-                  >
-                    {item.label}
-                    <span className={`mobile-arrow${openDropdown === item.path ? " open" : ""}`}>▾</span>
-                  </button>
-                  {openDropdown === item.path && (
-                    <div className="mobile-nav-children">
-                      {item.children.map(c => (
-                        <NavLink key={c.path} to={c.path} className="mobile-nav-child">{c.label}</NavLink>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <NavLink to={item.path} className="mobile-nav-parent">{item.label}</NavLink>
-              )}
-            </div>
-          ))}
-        </div>
+        <div className="site-mobile-menu-body" />
       </div>
 
-      <header className={`site-navbar py-3${shrink ? " shrink" : ""}`} role="banner">
+      {/* Header — js-sticky-header enables jQuery sticky + shrink */}
+      <header className="site-navbar js-sticky-header py-4" role="banner">
         <div className="container">
           <div className="d-flex align-items-center">
+
             <div className="site-logo">
-              <NavLink to="/" style={{ textDecoration: "none" }}>
-                <span className="golazo-logo">⚽ GOLAZO</span>
-                <span className="golazo-badge">Mundial 2026</span>
-              </NavLink>
+              <Link to="/">
+                <span style={{ fontFamily: "Montserrat", fontWeight: 900, fontSize: "1.4rem", color: "#fff", letterSpacing: 2 }}>
+                  ⚽ GOLAZO
+                </span>
+                <span style={{ display: "block", fontSize: "0.6rem", color: "#ee1e46", letterSpacing: 2, textTransform: "uppercase" }}>
+                  Mundial 2026
+                </span>
+              </Link>
             </div>
 
-            {/* Desktop nav */}
-            <nav className="site-navigation ml-auto d-none d-lg-block">
-              <ul className="site-menu main-menu d-flex" style={{ listStyle: "none", margin: 0, padding: 0, gap: "4px" }}>
-                {NAV.map(item => (
-                  <li key={item.path} className={`nav-item${item.children ? " has-dropdown" : ""}`}>
-                    <NavLink to={item.path} className="nav-link">
-                      {item.label}
-                      {item.children && <span style={{ fontSize: "0.6rem", marginLeft: 3 }}>▾</span>}
-                    </NavLink>
-                    {item.children && (
-                      <div className="dropdown-menu-custom">
-                        {item.children.map(c => (
-                          <NavLink key={c.path} to={c.path} className="dropdown-item-custom">{c.label}</NavLink>
-                        ))}
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </nav>
+            <div className="ml-auto">
+              <nav className="site-navigation position-relative text-right" role="navigation">
+                {/* js-clone-nav → cloned by jQuery into mobile menu */}
+                <ul className="site-menu main-menu js-clone-nav mr-auto d-none d-lg-block">
+                  {NAV_ITEMS.map(item => (
+                    <li
+                      key={item.path}
+                      className={`${isActive(item.path) ? "active" : ""}${item.children ? " has-children" : ""}`}
+                    >
+                      <Link to={item.path} className="nav-link">{item.label}</Link>
+                      {item.children && (
+                        <ul className="dropdown">
+                          {item.children.map(child => (
+                            <li key={child.path} className={isActive(child.path) ? "active" : ""}>
+                              <Link to={child.path} className="nav-link">{child.label}</Link>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </nav>
 
-            {/* Mobile hamburger */}
-            <button className="mobile-toggle d-lg-none ml-auto" onClick={toggleMobile}>
-              <span className="icon-menu" />
-            </button>
+              {/* js-menu-toggle → jQuery toggles offcanvas-menu on body */}
+              <a
+                href="#"
+                className="d-inline-block d-lg-none site-menu-toggle js-menu-toggle text-white float-right"
+                onClick={e => e.preventDefault()}
+              >
+                <span className="icon-menu h3 text-white" />
+              </a>
+            </div>
           </div>
         </div>
       </header>
-
-      {mobileOpen && <div className="mobile-overlay" onClick={() => { setMobileOpen(false); document.body.classList.remove("offcanvas-menu") }} />}
     </>
   )
 }

@@ -7,22 +7,23 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
 
-  <!-- Template vendor CSS (from soccer-master) -->
+  <%# Template vendor CSS — icomoon icons, flaticon, owl carousel, AOS %>
   <link rel="stylesheet" href="/fonts/icomoon/style.css">
   <link rel="stylesheet" href="/fonts/flaticon/font/flaticon.css">
   <link rel="stylesheet" href="/owl.carousel.min.css">
   <link rel="stylesheet" href="/owl.theme.default.min.css">
   <link rel="stylesheet" href="/aos.css">
 
-  <!-- Vite: React + app CSS (imports Bootstrap + template.css) -->
+  <%# Vite: React + Bootstrap + template CSS (all from application.css) %>
   <%= vite_client_tag %>
   <%= vite_react_refresh_tag %>
   <%= vite_javascript_tag "application.jsx" %>
 </head>
 <body>
+
   <div id="root"></div>
 
-  <!-- Template JS (jQuery-based behaviors: AOS, sticky, Owl Carousel) -->
+  <%# jQuery must load synchronously so it is available when main.js runs %>
   <script src="/jquery-3.3.1.min.js"></script>
   <script src="/bootstrap.min.js"></script>
   <script src="/owl.carousel.min.js"></script>
@@ -32,6 +33,9 @@
   <script src="/jquery.fancybox.min.js"></script>
   <script src="/jquery.stellar.min.js"></script>
   <script src="/jquery.sticky.js"></script>
-  <script src="/main.js"></script>
+
+  <%# main.js deferred so it runs after React mounts the DOM %>
+  <script src="/main.js" defer></script>
+
 </body>
 </html>
