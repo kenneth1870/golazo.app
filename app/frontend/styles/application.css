@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;900&display=swap');
 @import './bootstrap.css';
 @import './template.css';
+/* Vendor CSS loaded via <link> tags in spa.html.erb (owl, aos, icomoon, flaticon) */
 
 /* ─── Fonts & Icons ─────────────────────────────────── */
 @font-face {
