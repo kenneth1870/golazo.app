@@ -3,63 +3,71 @@ export default function MatchCard({ match, onClick }) {
   const isFinished = match.status === "finished"
   const hasScore = match.home_score !== null && match.away_score !== null
 
-  const kickoffTime = match.kickoff_at
-    ? new Date(match.kickoff_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    : "--:--"
+  const kickoff = match.kickoff_at
+    ? new Date(match.kickoff_at).toLocaleString([], {
+        month: "short", day: "numeric",
+        hour: "2-digit", minute: "2-digit"
+      })
+    : "TBD"
+
+  const homeGoals = match.goals?.filter(g => g.team_id === match.home_team?.id) || []
+  const awayGoals = match.goals?.filter(g => g.team_id === match.away_team?.id) || []
 
   return (
-    <div className={`match-card ${isLive ? "live" : ""}`} onClick={onClick}>
-      {isLive && <div className="live-badge">LIVE</div>}
-
-      <div className="match-meta">
-        <span className="match-round">{match.round || match.group_stage}</span>
-        <span className="match-venue">{match.venue}</span>
-      </div>
-
-      <div className="match-teams">
-        <div className="team home">
-          {match.home_team?.flag_url && (
-            <img src={match.home_team.flag_url} alt={match.home_team.code} className="flag" />
-          )}
-          <span className="team-code">{match.home_team?.code}</span>
-          <span className="team-name">{match.home_team?.name}</span>
-        </div>
-
-        <div className="score-block">
-          {hasScore ? (
-            <>
-              <span className={`score ${isLive ? "live-score" : ""}`}>
-                {match.home_score}
-              </span>
-              <span className="score-sep">:</span>
-              <span className={`score ${isLive ? "live-score" : ""}`}>
-                {match.away_score}
-              </span>
-            </>
-          ) : (
-            <span className="kickoff-time">{kickoffTime}</span>
-          )}
-        </div>
-
-        <div className="team away">
-          <span className="team-name">{match.away_team?.name}</span>
-          <span className="team-code">{match.away_team?.code}</span>
-          {match.away_team?.flag_url && (
-            <img src={match.away_team.flag_url} alt={match.away_team.code} className="flag" />
-          )}
-        </div>
-      </div>
-
-      {match.goals && match.goals.length > 0 && (
-        <div className="goal-summary">
-          {match.goals.map(g => (
-            <span key={g.id} className="goal-item">
-              {g.team_id === match.home_team?.id ? "⚽" : ""} {g.player_name} {g.minute}'
-              {g.team_id === match.away_team?.id ? " ⚽" : ""}
-            </span>
-          ))}
-        </div>
+    <div
+      className="d-flex team-vs"
+      onClick={onClick}
+      style={{ cursor: "pointer", marginBottom: "30px" }}
+    >
+      {hasScore && (
+        <span className="score">
+          {isLive && <span className="live-indicator" />}
+          {match.home_score}-{match.away_score}
+        </span>
       )}
+      {!hasScore && (
+        <span className="score" style={{ fontSize: "1.1rem" }}>{kickoff}</span>
+      )}
+
+      {/* Home team */}
+      <div className="team-1 w-50">
+        <div className="team-details w-100 text-center">
+          {match.home_team?.flag_url
+            ? <img src={match.home_team.flag_url} alt={match.home_team.code} className="img-fluid" style={{ maxHeight: 60, borderRadius: 4 }} />
+            : <div style={{ height: 60, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem" }}>🏳️</div>
+          }
+          <h3>
+            {match.home_team?.code}
+            {isFinished && match.home_score > match.away_score && <span> (win)</span>}
+            {isFinished && match.home_score < match.away_score && <span> (loss)</span>}
+          </h3>
+          <ul className="list-unstyled">
+            {homeGoals.map(g => (
+              <li key={g.id}>⚽ {g.player_name} {g.minute}'</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Away team */}
+      <div className="team-2 w-50">
+        <div className="team-details w-100 text-center">
+          {match.away_team?.flag_url
+            ? <img src={match.away_team.flag_url} alt={match.away_team.code} className="img-fluid" style={{ maxHeight: 60, borderRadius: 4 }} />
+            : <div style={{ height: 60, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem" }}>🏳️</div>
+          }
+          <h3>
+            {match.away_team?.code}
+            {isFinished && match.away_score > match.home_score && <span> (win)</span>}
+            {isFinished && match.away_score < match.home_score && <span> (loss)</span>}
+          </h3>
+          <ul className="list-unstyled">
+            {awayGoals.map(g => (
+              <li key={g.id}>⚽ {g.player_name} {g.minute}'</li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </div>
   )
 }
