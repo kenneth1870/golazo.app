@@ -1,23 +1,26 @@
 import { useState, useEffect, useCallback } from "react"
 
-export function useMatches(filter = "all") {
+export function useMatches(filter = "all", { competition, group } = {}) {
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   const fetchMatches = useCallback(async () => {
     try {
-      const res = await fetch(`/api/v1/matches?filter=${filter}`)
+      const params = new URLSearchParams({ filter })
+      if (competition) params.set("competition", competition)
+      if (group) params.set("group", group)
+
+      const res = await fetch(`/api/v1/matches?${params}`)
       if (!res.ok) throw new Error("Failed to fetch matches")
-      const data = await res.json()
-      setMatches(data)
+      setMatches(await res.json())
       setError(null)
     } catch (e) {
       setError(e.message)
     } finally {
       setLoading(false)
     }
-  }, [filter])
+  }, [filter, competition, group])
 
   useEffect(() => {
     fetchMatches()

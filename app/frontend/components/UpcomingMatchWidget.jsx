@@ -1,10 +1,7 @@
+import { formatFull } from "../hooks/useLocalTime"
+
 export default function UpcomingMatchWidget({ match, onClick }) {
-  const kickoff = match.kickoff_at
-    ? new Date(match.kickoff_at).toLocaleString([], {
-        month: "long", day: "numeric", year: "numeric",
-        hour: "2-digit", minute: "2-digit"
-      })
-    : "TBD"
+  const kickoff = formatFull(match.kickoff_at)
 
   return (
     <div

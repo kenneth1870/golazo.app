@@ -1,0 +1,20 @@
+# Recurring jobs for Golazo live sync
+# SolidQueue reads this on startup via config/queue.yml
+
+sync_live_matches:
+  class: SyncLiveMatchesJob
+  schedule: "every 1 minute"
+  queue: default
+  description: "Poll live match scores from football-data.org"
+
+sync_today_matches:
+  class: SyncTodayMatchesJob
+  schedule: "every 10 minutes"
+  queue: default
+  description: "Refresh today's fixtures and any score changes"
+
+sync_standings:
+  class: SyncStandingsJob
+  schedule: "every 30 minutes"
+  queue: default
+  description: "Update WC 2026 group standings"

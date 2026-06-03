@@ -1,1 +1,22 @@
+# Secrets
 .env.local
+.env.*.local
+config/master.key
+config/credentials/*.key
+
+# Dependencies
+node_modules/
+
+# Build artifacts
+public/vite-dev/
+public/vite-test/
+public/assets/
+
+# Rails tmp
+tmp/
+log/*.log
+*.log
+
+# System
+.DS_Store
+.bundle/

@@ -6,6 +6,8 @@ gem "rails", "~> 8.1.3"
 gem "pg", "~> 1.1"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
+# Background jobs + recurring scheduler
+gem "solid_queue"
 # Vite integration for React frontend
 gem "vite_rails"
 # CORS for API requests

@@ -1,14 +1,10 @@
+import { formatMatchDateTime } from "../hooks/useLocalTime"
+
 export default function MatchCard({ match, onClick }) {
   const isLive = match.status === "live"
   const isFinished = match.status === "finished"
   const hasScore = match.home_score !== null && match.away_score !== null
-
-  const kickoff = match.kickoff_at
-    ? new Date(match.kickoff_at).toLocaleString([], {
-        month: "short", day: "numeric",
-        hour: "2-digit", minute: "2-digit"
-      })
-    : "TBD"
+  const kickoff = formatMatchDateTime(match.kickoff_at)
 
   const homeGoals = match.goals?.filter(g => g.team_id === match.home_team?.id) || []
   const awayGoals = match.goals?.filter(g => g.team_id === match.away_team?.id) || []

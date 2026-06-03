@@ -4,34 +4,60 @@ import MatchCard from "./MatchCard"
 import UpcomingMatchWidget from "./UpcomingMatchWidget"
 
 const FILTERS = [
-  { key: "live", label: "Live" },
-  { key: "today", label: "Today" },
+  { key: "live",     label: "Live" },
+  { key: "today",    label: "Today" },
   { key: "upcoming", label: "Upcoming" },
-  { key: "all", label: "All Matches" },
+  { key: "all",      label: "All Matches" },
 ]
 
-export default function ScoreBoard({ onMatchSelect }) {
-  const [filter, setFilter] = useState("all")
-  const { matches, loading, error } = useMatches(filter)
+const WC_GROUPS = ["A","B","C","D","E","F","G","H","I","J","K","L"]
 
-  const liveMatches = matches.filter(m => m.status === "live")
-  const finishedMatches = matches.filter(m => m.status === "finished")
-  const upcomingMatches = matches.filter(m => m.status === "scheduled")
+export default function ScoreBoard({ onMatchSelect, competition = "WC" }) {
+  const [filter, setFilter] = useState("all")
+  const [group, setGroup]   = useState(null)
+
+  const { matches, loading, error } = useMatches(filter, { competition, group })
+
+  const liveCount     = matches.filter(m => m.status === "live").length
+  const finishedMatches  = matches.filter(m => m.status === "finished")
+  const liveMatches      = matches.filter(m => m.status === "live")
+  const upcomingMatches  = matches.filter(m => m.status === "scheduled")
 
   return (
     <>
-      {/* Filter tabs */}
-      <div className="site-section" style={{ paddingTop: "30px", paddingBottom: 0 }}>
+      {/* Filters */}
+      <div className="site-section" style={{ paddingTop: 24, paddingBottom: 0 }}>
         <div className="container">
-          <div className="filter-tabs">
+
+          {/* Status filter */}
+          <div className="filter-tabs mb-2">
             {FILTERS.map(f => (
               <button
                 key={f.key}
                 className={`filter-tab${filter === f.key ? " active" : ""}`}
                 onClick={() => setFilter(f.key)}
               >
-                {f.key === "live" && liveMatches.length > 0 && <span className="live-indicator" />}
+                {f.key === "live" && liveCount > 0 && <span className="live-indicator" />}
                 {f.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Group filter */}
+          <div className="filter-tabs">
+            <button
+              className={`filter-tab${!group ? " active" : ""}`}
+              onClick={() => setGroup(null)}
+            >
+              All Groups
+            </button>
+            {WC_GROUPS.map(g => (
+              <button
+                key={g}
+                className={`filter-tab${group === g ? " active" : ""}`}
+                onClick={() => setGroup(g)}
+              >
+                Group {g}
               </button>
             ))}
           </div>
@@ -41,11 +67,12 @@ export default function ScoreBoard({ onMatchSelect }) {
       {loading && (
         <div className="site-section">
           <div className="container">
-            <p className="text-center" style={{ color: "gray", padding: "3rem 0" }}>Loading matches...</p>
+            {[1,2,3].map(i => (
+              <div key={i} className="loading-shimmer mb-3" style={{ height: 140, borderRadius: 10 }} />
+            ))}
           </div>
         </div>
       )}
-
       {error && (
         <div className="site-section">
           <div className="container">
@@ -54,15 +81,12 @@ export default function ScoreBoard({ onMatchSelect }) {
         </div>
       )}
 
-      {/* Live matches — full team-vs cards */}
+      {/* Live */}
       {!loading && liveMatches.length > 0 && (
         <div className="container">
           <div className="row">
             <div className="col-12 title-section mt-4">
-              <h2 className="heading">
-                <span className="live-indicator" />
-                Live Now
-              </h2>
+              <h2 className="heading"><span className="live-indicator" />Live Now</h2>
             </div>
           </div>
           <div className="row">
@@ -75,7 +99,7 @@ export default function ScoreBoard({ onMatchSelect }) {
         </div>
       )}
 
-      {/* Finished matches */}
+      {/* Results */}
       {!loading && finishedMatches.length > 0 && (
         <div className="container">
           <div className="row">
@@ -93,7 +117,7 @@ export default function ScoreBoard({ onMatchSelect }) {
         </div>
       )}
 
-      {/* Upcoming matches — widget cards */}
+      {/* Upcoming */}
       {!loading && upcomingMatches.length > 0 && (
         <div className="site-section bg-dark">
           <div className="container">

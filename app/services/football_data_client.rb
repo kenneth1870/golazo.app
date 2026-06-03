@@ -1,6 +1,5 @@
 class FootballDataClient
-  BASE_URL    = "https://api.football-data.org/v4/"
-  WC_CODE     = "WC"
+  BASE_URL = "https://api.football-data.org/v4/"
 
   STATUS_MAP = {
     "TIMED"       => "scheduled",
@@ -25,25 +24,40 @@ class FootballDataClient
     end
   end
 
-  def teams
-    get("competitions/#{WC_CODE}/teams")["teams"] || []
+  # All competitions available on the account
+  def competitions
+    get("competitions")["competitions"] || []
   end
 
-  def matches(params = {})
-    get("competitions/#{WC_CODE}/matches", params)["matches"] || []
+  # Teams for a given competition code
+  def teams(competition_code)
+    get("competitions/#{competition_code}/teams")["teams"] || []
   end
 
-  def live_matches
-    get("competitions/#{WC_CODE}/matches", status: "IN_PLAY,PAUSED,EXTRA_TIME,PENALTY")["matches"] || []
+  # All matches for a competition (optionally filtered)
+  def matches(competition_code, params = {})
+    get("competitions/#{competition_code}/matches", params)["matches"] || []
   end
 
+  # Today's matches across ALL available competitions
   def today_matches
     today = Date.today.iso8601
-    get("competitions/#{WC_CODE}/matches", dateFrom: today, dateTo: today)["matches"] || []
+    get("matches", dateFrom: today, dateTo: today)["matches"] || []
   end
 
-  def standings
-    get("competitions/#{WC_CODE}/standings")["standings"] || []
+  # Live matches across all competitions
+  def live_matches
+    get("matches", status: "IN_PLAY,PAUSED,EXTRA_TIME,PENALTY")["matches"] || []
+  end
+
+  # Standings for a competition
+  def standings(competition_code)
+    get("competitions/#{competition_code}/standings")["standings"] || []
+  end
+
+  # Top scorers for a competition
+  def scorers(competition_code, limit: 20)
+    get("competitions/#{competition_code}/scorers", limit: limit)["scorers"] || []
   end
 
   private

@@ -117,6 +117,17 @@ body.offcanvas-menu .site-mobile-menu {
 .stat-bar-home { background: #ee1e46; transition: width 0.4s; }
 .stat-bar-away { background: rgba(255,255,255,0.4); transition: width 0.4s; }
 
+/* Skeleton loaders */
+.loading-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* Back button */
 .btn-back {
   background: none;
