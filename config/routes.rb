@@ -4,10 +4,14 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :competitions, only: [:index, :show], param: :code
-      get "live_scores", to: "live_scores#index"
-      resources :teams, only: [:index, :show]
+      get "live_scores",  to: "live_scores#index"
+      get "top_scorers",  to: "top_scorers#index"
+      get "venues",       to: "venues#index"
+      get "all_leagues",  to: "all_leagues#index"
+      get "all_leagues/live", to: "all_leagues#live"
+      resources :teams,    only: [:index, :show]
       resources :standings, only: [:index]
-resources :matches, only: [:index, :show, :update] do
+      resources :matches, only: [:index, :show, :update] do
         resources :goals, only: [:create]
         resource :stats, only: [] do
           post :upsert, on: :collection
@@ -16,10 +20,8 @@ resources :matches, only: [:index, :show, :update] do
     end
   end
 
-  # ActionCable
   mount ActionCable.server => "/cable"
 
-  # Catch-all: serve the React SPA
   get "*path", to: "application#spa", constraints: ->(req) { !req.xhr? && req.format.html? }
   root "application#spa"
 end

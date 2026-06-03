@@ -1,8 +1,51 @@
 import { useState, useEffect } from "react"
+import { NavLink, useLocation } from "react-router-dom"
 
-export default function Navbar({ activeTab, onTabChange }) {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [shrink, setShrink]     = useState(false)
+const NAV = [
+  {
+    label: "Scores",
+    path: "/scores",
+    children: [
+      { label: "Live Matches",    path: "/scores/live" },
+      { label: "Results",         path: "/scores/results" },
+      { label: "Fixtures",        path: "/scores/fixtures" },
+      { label: "Group Stage",     path: "/scores/groups" },
+      { label: "Knockout Rounds", path: "/scores/knockout" },
+    ]
+  },
+  {
+    label: "Groups",
+    path: "/groups",
+    children: Array.from({ length: 12 }, (_, i) => ({
+      label: `Group ${String.fromCharCode(65 + i)}`,
+      path:  `/groups/${String.fromCharCode(65 + i)}`
+    }))
+  },
+  {
+    label: "Mundial 2026",
+    path: "/mundial",
+    children: [
+      { label: "Teams",       path: "/mundial/teams" },
+      { label: "Schedule",    path: "/mundial/schedule" },
+      { label: "Venues",      path: "/mundial/venues" },
+      { label: "Top Scorers", path: "/mundial/scorers" },
+    ]
+  },
+  { label: "All Leagues", path: "/leagues" },
+  { label: "News",        path: "/news" },
+]
+
+export default function Navbar() {
+  const [mobileOpen, setMobileOpen]     = useState(false)
+  const [openDropdown, setOpenDropdown] = useState(null)
+  const [shrink, setShrink]             = useState(false)
+  const location = useLocation()
+
+  useEffect(() => {
+    setMobileOpen(false)
+    setOpenDropdown(null)
+    document.body.classList.remove("offcanvas-menu")
+  }, [location.pathname])
 
   useEffect(() => {
     const onScroll = () => setShrink(window.scrollY > 50)
@@ -10,90 +53,90 @@ export default function Navbar({ activeTab, onTabChange }) {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
-  const toggle = () => {
-    setMenuOpen(o => {
-      const next = !o
-      document.body.classList.toggle("offcanvas-menu", next)
-      return next
+  const toggleMobile = () => {
+    setMobileOpen(o => {
+      document.body.classList.toggle("offcanvas-menu", !o)
+      return !o
     })
   }
-  const close = () => {
-    setMenuOpen(false)
-    document.body.classList.remove("offcanvas-menu")
-  }
-
-  const navItems = [
-    { key: "home",    label: "Home" },
-    { key: "today",   label: "Today" },
-    { key: "matches", label: "Matches" },
-    { key: "bracket", label: "Bracket" },
-    { key: "groups",  label: "Groups" },
-    { key: "scorers", label: "Top Scorers" },
-  ]
 
   return (
     <>
-      <div className={`site-mobile-menu site-navbar-target${menuOpen ? " active" : ""}`}>
+      {/* Mobile side menu */}
+      <div className={`site-mobile-menu${mobileOpen ? " mobile-menu-open" : ""}`}>
         <div className="site-mobile-menu-header">
-          <div className="site-mobile-menu-close">
-            <span className="icon-close2" onClick={close} style={{ cursor: "pointer" }} />
+          <div className="site-mobile-menu-close" onClick={() => { setMobileOpen(false); document.body.classList.remove("offcanvas-menu") }}>
+            <span className="icon-close2" />
           </div>
         </div>
         <div className="site-mobile-menu-body">
-          <ul className="site-nav-wrap" style={{ paddingLeft: 0, listStyle: "none", marginTop: "3rem" }}>
-            {navItems.map(item => (
-              <li key={item.key} className={activeTab === item.key ? "active" : ""}>
-                <a
-                  href="#"
-                  className="nav-link"
-                  onClick={e => { e.preventDefault(); onTabChange(item.key); close() }}
-                  style={{ display: "block", padding: "10px 20px", color: "rgba(255,255,255,0.7)", fontSize: 15 }}
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
+          {NAV.map(item => (
+            <div key={item.path} className="mobile-nav-item">
+              {item.children ? (
+                <>
+                  <button
+                    className="mobile-nav-parent"
+                    onClick={() => setOpenDropdown(openDropdown === item.path ? null : item.path)}
+                  >
+                    {item.label}
+                    <span className={`mobile-arrow${openDropdown === item.path ? " open" : ""}`}>▾</span>
+                  </button>
+                  {openDropdown === item.path && (
+                    <div className="mobile-nav-children">
+                      {item.children.map(c => (
+                        <NavLink key={c.path} to={c.path} className="mobile-nav-child">{c.label}</NavLink>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <NavLink to={item.path} className="mobile-nav-parent">{item.label}</NavLink>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
-      <header className={`site-navbar py-4${shrink ? " shrink" : ""}`} role="banner">
+      <header className={`site-navbar py-3${shrink ? " shrink" : ""}`} role="banner">
         <div className="container">
           <div className="d-flex align-items-center">
             <div className="site-logo">
-              <a href="#" onClick={e => { e.preventDefault(); onTabChange("home") }}>
-                <span style={{ fontFamily: "Montserrat", fontWeight: 900, fontSize: "1.4rem", color: "#fff", letterSpacing: 2 }}>
-                  ⚽ GOLAZO
-                </span>
-              </a>
+              <NavLink to="/" style={{ textDecoration: "none" }}>
+                <span className="golazo-logo">⚽ GOLAZO</span>
+                <span className="golazo-badge">Mundial 2026</span>
+              </NavLink>
             </div>
-            <div className="ml-auto">
-              <nav className="site-navigation position-relative text-right" role="navigation">
-                <ul className="site-menu main-menu mr-auto d-none d-lg-block">
-                  {navItems.map(item => (
-                    <li key={item.key} className={activeTab === item.key ? "active" : ""}>
-                      <a href="#" className="nav-link" onClick={e => { e.preventDefault(); onTabChange(item.key) }}>
-                        {item.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-              <button
-                className="d-inline-block d-lg-none site-menu-toggle"
-                onClick={toggle}
-                style={{ background: "none", border: "none", color: "#fff", cursor: "pointer" }}
-              >
-                <span className="icon-menu h3 text-white" />
-              </button>
-            </div>
+
+            {/* Desktop nav */}
+            <nav className="site-navigation ml-auto d-none d-lg-block">
+              <ul className="site-menu main-menu d-flex" style={{ listStyle: "none", margin: 0, padding: 0, gap: "4px" }}>
+                {NAV.map(item => (
+                  <li key={item.path} className={`nav-item${item.children ? " has-dropdown" : ""}`}>
+                    <NavLink to={item.path} className="nav-link">
+                      {item.label}
+                      {item.children && <span style={{ fontSize: "0.6rem", marginLeft: 3 }}>▾</span>}
+                    </NavLink>
+                    {item.children && (
+                      <div className="dropdown-menu-custom">
+                        {item.children.map(c => (
+                          <NavLink key={c.path} to={c.path} className="dropdown-item-custom">{c.label}</NavLink>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            {/* Mobile hamburger */}
+            <button className="mobile-toggle d-lg-none ml-auto" onClick={toggleMobile}>
+              <span className="icon-menu" />
+            </button>
           </div>
         </div>
       </header>
 
-      {menuOpen && (
-        <div onClick={close} style={{ position: "fixed", inset: 0, zIndex: 998, background: "rgba(0,0,0,0.4)" }} />
-      )}
+      {mobileOpen && <div className="mobile-overlay" onClick={() => { setMobileOpen(false); document.body.classList.remove("offcanvas-menu") }} />}
     </>
   )
 }
