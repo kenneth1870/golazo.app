@@ -10,9 +10,14 @@ namespace :golazo do
     WorldCupSync.new.sync_today
   end
 
-  desc "Sync live match scores (run every 60s on match days)"
+  desc "Sync live match scores via football-data.org"
   task sync_live: :environment do
     WorldCupSync.new.sync_live
+  end
+
+  desc "Sync live scores via RapidAPI (all 125+ leagues)"
+  task sync_live_scores: :environment do
+    LiveScoresSync.new.sync
   end
 
   desc "Sync standings for a competition (COMPETITION=WC)"
@@ -20,12 +25,4 @@ namespace :golazo do
     code = ENV.fetch("COMPETITION", "WC")
     WorldCupSync.new(competition_code: code).sync_standings
   end
-end
-
-# Keep old namespace as alias
-namespace :world_cup do
-  task sync:          "golazo:sync"
-  task sync_today:    "golazo:sync_today"
-  task sync_live:     "golazo:sync_live"
-  task sync_standings:"golazo:sync_standings"
 end
