@@ -1,18 +1,21 @@
 namespace :world_cup do
-  desc "Sync all World Cup data (teams, fixtures, standings)"
+  desc "Full sync: teams, fixtures, standings (football-data.org WC 2026)"
   task sync: :environment do
     WorldCupSync.new.sync_all
   end
 
-  desc "Sync only live match scores"
+  desc "Sync today's matches"
+  task sync_today: :environment do
+    WorldCupSync.new.sync_today
+  end
+
+  desc "Sync live match scores (run every 60s during matches)"
   task sync_live: :environment do
     WorldCupSync.new.sync_live
   end
 
-  desc "Sync detailed stats and goals for a specific match (MATCH_ID=...)"
-  task sync_match: :environment do
-    match = Match.find(ENV["MATCH_ID"])
-    WorldCupSync.new.sync_fixture_details(match)
-    puts "Done."
+  desc "Sync standings only"
+  task sync_standings: :environment do
+    WorldCupSync.new.sync_standings
   end
 end
