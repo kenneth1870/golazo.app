@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :competitions, only: [:index, :show], param: :code
+      get "live_scores", to: "live_scores#index"
       resources :teams, only: [:index, :show]
       resources :standings, only: [:index]
       get "top_scorers", to: "top_scorers#index"
