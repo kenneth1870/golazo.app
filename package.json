@@ -8,6 +8,7 @@
   "dependencies": {
     "@rails/actioncable": "^8.1.300",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "vite-plugin-ruby": "^5.2.2"
   }
 }

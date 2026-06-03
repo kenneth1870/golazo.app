@@ -10,8 +10,17 @@ export default function Navbar({ activeTab, onTabChange }) {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
-  const toggle = () => setMenuOpen(o => !o)
-  const close = () => setMenuOpen(false)
+  const toggle = () => {
+    setMenuOpen(o => {
+      const next = !o
+      document.body.classList.toggle("offcanvas-menu", next)
+      return next
+    })
+  }
+  const close = () => {
+    setMenuOpen(false)
+    document.body.classList.remove("offcanvas-menu")
+  }
 
   const navItems = [
     { key: "home", label: "Home" },

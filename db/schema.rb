@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_02_235426) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_03_005044) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -47,6 +47,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_235426) do
     t.integer "away_score"
     t.bigint "away_team_id", null: false
     t.datetime "created_at", null: false
+    t.integer "external_id"
     t.string "group_stage"
     t.integer "home_score"
     t.bigint "home_team_id", null: false
@@ -56,17 +57,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_235426) do
     t.datetime "updated_at", null: false
     t.string "venue"
     t.index ["away_team_id"], name: "index_matches_on_away_team_id"
+    t.index ["external_id"], name: "index_matches_on_external_id", unique: true
     t.index ["home_team_id"], name: "index_matches_on_home_team_id"
+  end
+
+  create_table "standings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "drawn"
+    t.integer "goals_against"
+    t.integer "goals_for"
+    t.string "group_name"
+    t.integer "lost"
+    t.integer "played"
+    t.integer "points"
+    t.integer "rank"
+    t.bigint "team_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "won"
+    t.index ["team_id"], name: "index_standings_on_team_id"
   end
 
   create_table "teams", force: :cascade do |t|
     t.string "code"
     t.string "confederation"
     t.datetime "created_at", null: false
+    t.integer "external_id"
     t.string "flag_url"
     t.string "group"
     t.string "name"
     t.datetime "updated_at", null: false
+    t.index ["external_id"], name: "index_teams_on_external_id", unique: true
   end
 
   add_foreign_key "goals", "matches"
@@ -75,4 +95,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_235426) do
   add_foreign_key "match_stats", "teams"
   add_foreign_key "matches", "teams", column: "away_team_id"
   add_foreign_key "matches", "teams", column: "home_team_id"
+  add_foreign_key "standings", "teams"
 end

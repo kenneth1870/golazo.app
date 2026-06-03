@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :teams, only: [:index, :show]
+      resources :standings, only: [:index]
       resources :matches, only: [:index, :show, :update] do
         resources :goals, only: [:create]
         resource :stats, only: [] do

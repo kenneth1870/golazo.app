@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap');
+@import './bootstrap.css';
+@import './template.css';
 
 /* icomoon icons */
 @font-face {
@@ -36,21 +38,16 @@
   font-style: normal;
 }
 
-@import './bootstrap.css';
-@import './template.css';
-
-/* React SPA overrides */
+/* ── React SPA overrides ── */
 #root { min-height: 100vh; }
 
-/* Nav active state for React Router */
-.site-menu li.active > a::before {
-  content: "";
-  position: absolute;
-  bottom: -5px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: #fff;
+.site-navbar .site-logo a {
+  text-decoration: none !important;
+}
+
+/* Mobile menu: show when body.offcanvas-menu */
+body.offcanvas-menu .site-mobile-menu {
+  transform: translateX(0%);
 }
 
 /* Live match pulse */
@@ -85,17 +82,6 @@
 }
 .filter-tab:hover,
 .filter-tab.active { background: #ee1e46; border-color: #ee1e46; color: #fff; }
-
-/* Match score badge */
-.score-badge {
-  background: #ee1e46;
-  color: #fff;
-  font-weight: 900;
-  font-size: 1.1rem;
-  padding: 4px 14px;
-  border-radius: 4px;
-  display: inline-block;
-}
 
 /* Countdown */
 .countdown-wrap span {

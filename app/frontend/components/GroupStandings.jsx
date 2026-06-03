@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react"
 
 export default function GroupStandings() {
-  const [teams, setTeams] = useState([])
+  const [groups, setGroups] = useState({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("/api/v1/teams")
+    fetch("/api/v1/standings")
       .then(r => r.json())
-      .then(setTeams)
+      .then(setGroups)
       .finally(() => setLoading(false))
   }, [])
 
@@ -21,24 +21,17 @@ export default function GroupStandings() {
     )
   }
 
-  const groups = teams.reduce((acc, team) => {
-    const g = team.group || "TBD"
-    if (!acc[g]) acc[g] = []
-    acc[g].push(team)
-    return acc
-  }, {})
-
   return (
     <div className="site-section">
       <div className="container">
         <div className="row">
           <div className="col-12 title-section">
-            <h2 className="heading">Group Stage — Mundial 2026</h2>
+            <h2 className="heading">Group Stage — World Cup 2022</h2>
           </div>
         </div>
 
         <div className="row">
-          {Object.entries(groups).sort().map(([group, groupTeams]) => (
+          {Object.entries(groups).sort().map(([group, teams]) => (
             <div key={group} className="col-lg-6 mb-5">
               <div className="widget-next-match">
                 <div className="widget-title">
@@ -48,7 +41,7 @@ export default function GroupStandings() {
                   <table className="table custom-table">
                     <thead>
                       <tr>
-                        <th>P</th>
+                        <th>#</th>
                         <th>Team</th>
                         <th>MP</th>
                         <th>W</th>
@@ -59,27 +52,29 @@ export default function GroupStandings() {
                       </tr>
                     </thead>
                     <tbody>
-                      {groupTeams.map((team, idx) => (
-                        <tr key={team.id}>
-                          <td>{idx + 1}</td>
+                      {teams.map(s => (
+                        <tr key={s.team.id}>
+                          <td>{s.rank}</td>
                           <td>
-                            <div className="d-flex align-items-center" style={{ gap: "8px" }}>
-                              {team.flag_url && (
+                            <div className="d-flex align-items-center" style={{ gap: 8 }}>
+                              {s.team.flag_url && (
                                 <img
-                                  src={team.flag_url}
-                                  alt={team.code}
-                                  style={{ width: 24, height: 16, objectFit: "cover", borderRadius: 2 }}
+                                  src={s.team.flag_url}
+                                  alt={s.team.code}
+                                  style={{ width: 28, height: 18, objectFit: "cover", borderRadius: 2 }}
                                 />
                               )}
-                              <strong className="text-white">{team.name}</strong>
+                              <strong className="text-white">{s.team.name}</strong>
                             </div>
                           </td>
-                          <td>0</td>
-                          <td>0</td>
-                          <td>0</td>
-                          <td>0</td>
-                          <td>0</td>
-                          <td><strong className="text-white">0</strong></td>
+                          <td>{s.played}</td>
+                          <td>{s.won}</td>
+                          <td>{s.drawn}</td>
+                          <td>{s.lost}</td>
+                          <td style={{ color: s.goal_diff > 0 ? "#10b981" : s.goal_diff < 0 ? "#ef4444" : "inherit" }}>
+                            {s.goal_diff > 0 ? `+${s.goal_diff}` : s.goal_diff}
+                          </td>
+                          <td><strong className="text-white">{s.points}</strong></td>
                         </tr>
                       ))}
                     </tbody>

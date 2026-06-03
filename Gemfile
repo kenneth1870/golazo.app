@@ -10,6 +10,9 @@ gem "puma", ">= 5.0"
 gem "vite_rails"
 # CORS for API requests
 gem "rack-cors"
+# HTTP client for external APIs
+gem "faraday"
+gem "faraday-retry"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
