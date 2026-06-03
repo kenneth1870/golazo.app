@@ -1,0 +1,14 @@
+{
+  "nav": { "home":"Início","scores":"Placar","live":"Ao Vivo","results":"Resultados","fixtures":"Próximos Jogos","groupStage":"Fase de Grupos","knockout":"Eliminatórias","groups":"Grupos","group":"Grupo {{letter}}","mundial":"Mundial 2026","teams":"Seleções","schedule":"Agenda","venues":"Estádios","topScorers":"Artilheiros","allLeagues":"Todas as Ligas","news":"Notícias" },
+  "hero": { "title":"Mundial 2026","subtitle":"Placar ao vivo, estatísticas em tempo real e todos os gols da Copa do Mundo FIFA 2026 — EUA · Canadá · México.","liveBtn":"Ao Vivo","fixturesBtn":"Agenda","nextMatch":"Próximo jogo" },
+  "home": { "latestNews":"Últimas Notícias","nextMatch":"Próximo Jogo","upcomingMatches":"Próximos Jogos","viewAll":"Ver todos →","fullSchedule":"Agenda completa →" },
+  "scores": { "liveNow":"Ao Vivo","results":"Resultados","upcomingFixtures":"Próximos Jogos","allLeaguesLive":"Todas as Ligas — Ao Vivo ({{count}})","noLive":"Nenhum jogo do Mundial ao vivo agora","wc2026Begins":"A Copa do Mundo 2026 começa em 11 de junho de 2026","noResults":"Sem resultados ainda","resultsAppear":"Os resultados aparecerão aqui quando os jogos forem realizados","noFixtures":"Sem próximos jogos","bracketPending":"Chave eliminatória ainda não definida","advanceAfterGroups":"Equipes avançam após a fase de grupos em 2 de julho de 2026" },
+  "groups": { "title":"Grupos","subtitle":"FIFA Copa do Mundo 2026 — 12 Grupos","standings":"Grupo {{letter}} — Classificação","matches":"Grupo {{letter}} — Jogos","noStandings":"Sem classificação ainda","viewStandings":"Classificação →" },
+  "mundial": { "subtitle":"FIFA Copa do Mundo · EUA · Canadá · México · 11 Jun – 19 Jul","teamsTitle":"Seleções","scheduleTitle":"Agenda","venuesTitle":"Estádios","scorersTitle":"Artilheiros — Copa do Mundo 2026","noScorers":"Sem artilheiros ainda","scorersAppear":"Os artilheiros aparecerão aqui quando o torneio começar em 11 de junho de 2026","capacity":"Capacidade" },
+  "table": { "pos":"#","team":"Seleção","played":"J","won":"V","drawn":"E","lost":"D","gd":"SG","points":"Pts","goals":"Gols","assists":"Assistências","date":"Data","home":"Casa","away":"Fora" },
+  "status": { "live":"AO VIVO","ft":"FIM","vs":"vs" },
+  "leagues": { "title":"Todas as Ligas","subtitle":"{{count}} jogos ao vivo agora em {{comps}} competições","noLive":"Nenhum jogo ao vivo no mundo agora","checkBack":"Volte durante os horários dos jogos","available":"Ligas Disponíveis ({{count}})" },
+  "news": { "title":"Notícias","subtitle":"As últimas da Copa do Mundo FIFA 2026" },
+  "footer": { "follow":"Siga-nos","copyright":"Copyright © {{year}} Golazo — Placar ao Vivo Copa do Mundo 2026." },
+  "loading":"Carregando...","noMatches":"Nenhum jogo encontrado"
+}

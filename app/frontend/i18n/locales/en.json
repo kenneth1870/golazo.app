@@ -1,0 +1,102 @@
+{
+  "nav": {
+    "home": "Home",
+    "scores": "Scores",
+    "live": "Live Matches",
+    "results": "Results",
+    "fixtures": "Fixtures",
+    "groupStage": "Group Stage",
+    "knockout": "Knockout Rounds",
+    "groups": "Groups",
+    "group": "Group {{letter}}",
+    "mundial": "Mundial 2026",
+    "teams": "Teams",
+    "schedule": "Schedule",
+    "venues": "Venues",
+    "topScorers": "Top Scorers",
+    "allLeagues": "All Leagues",
+    "news": "News"
+  },
+  "hero": {
+    "title": "Mundial 2026",
+    "subtitle": "Live scores, real-time stats, and every goal from the FIFA World Cup 2026 — USA · Canada · Mexico.",
+    "liveBtn": "Live Scores",
+    "fixturesBtn": "Fixtures",
+    "nextMatch": "Next match"
+  },
+  "home": {
+    "latestNews": "Latest News",
+    "nextMatch": "Next Match",
+    "upcomingMatches": "Upcoming Matches",
+    "viewAll": "View all →",
+    "fullSchedule": "Full schedule →"
+  },
+  "scores": {
+    "liveNow": "Live Now",
+    "results": "Results",
+    "upcomingFixtures": "Upcoming Fixtures",
+    "allLeaguesLive": "All Leagues — Live Now ({{count}})",
+    "noLive": "No WC matches live right now",
+    "wc2026Begins": "World Cup 2026 begins June 11, 2026",
+    "noResults": "No results yet",
+    "resultsAppear": "Results will appear here once matches are played",
+    "noFixtures": "No upcoming fixtures",
+    "bracketPending": "Knockout bracket not yet determined",
+    "advanceAfterGroups": "Teams advance after the group stage ends on July 2, 2026"
+  },
+  "groups": {
+    "title": "Groups",
+    "subtitle": "FIFA World Cup 2026 — 12 Groups",
+    "standings": "Group {{letter}} — Standings",
+    "matches": "Group {{letter}} — Matches",
+    "noStandings": "No standings yet",
+    "viewStandings": "Standings →"
+  },
+  "mundial": {
+    "subtitle": "FIFA World Cup · USA · Canada · Mexico · June 11 – July 19",
+    "teamsTitle": "Teams",
+    "scheduleTitle": "Schedule",
+    "venuesTitle": "Venues",
+    "scorersTitle": "Top Scorers — World Cup 2026",
+    "noScorers": "No scorers yet",
+    "scorersAppear": "Top scorers will appear here once the tournament begins on June 11, 2026",
+    "capacity": "Capacity"
+  },
+  "table": {
+    "pos": "#",
+    "team": "Team",
+    "played": "MP",
+    "won": "W",
+    "drawn": "D",
+    "lost": "L",
+    "gd": "GD",
+    "points": "Pts",
+    "goals": "Goals",
+    "assists": "Assists",
+    "date": "Date",
+    "home": "Home",
+    "away": "Away"
+  },
+  "status": {
+    "live": "LIVE",
+    "ft": "FT",
+    "vs": "vs"
+  },
+  "leagues": {
+    "title": "All Leagues",
+    "subtitle": "{{count}} matches live right now across {{comps}} competitions",
+    "noLive": "No live matches worldwide right now",
+    "checkBack": "Check back during match times",
+    "available": "Available Leagues ({{count}})"
+  },
+  "news": {
+    "title": "News",
+    "subtitle": "Latest from FIFA World Cup 2026"
+  },
+  "footer": {
+    "follow": "Follow",
+    "copyright": "Copyright © {{year}} Golazo — Mundial 2026 Live Scores."
+  },
+  "loading": "Loading...",
+  "noMatches": "No matches found"
+}

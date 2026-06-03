@@ -1,51 +1,52 @@
 import { useEffect } from "react"
 import { Link, useLocation } from "react-router-dom"
-
-const NAV_ITEMS = [
-  { label: "Home",        path: "/" },
-  {
-    label: "Scores", path: "/scores",
-    children: [
-      { label: "Live Matches",    path: "/scores/live" },
-      { label: "Results",         path: "/scores/results" },
-      { label: "Fixtures",        path: "/scores/fixtures" },
-      { label: "Group Stage",     path: "/scores/groups" },
-      { label: "Knockout Rounds", path: "/scores/knockout" },
-    ]
-  },
-  {
-    label: "Groups", path: "/groups",
-    children: Array.from({ length: 12 }, (_, i) => {
-      const g = String.fromCharCode(65 + i)
-      return { label: `Group ${g}`, path: `/groups/${g}` }
-    })
-  },
-  {
-    label: "Mundial 2026", path: "/mundial",
-    children: [
-      { label: "Teams",       path: "/mundial/teams" },
-      { label: "Schedule",    path: "/mundial/schedule" },
-      { label: "Venues",      path: "/mundial/venues" },
-      { label: "Top Scorers", path: "/mundial/scorers" },
-    ]
-  },
-  { label: "All Leagues", path: "/leagues" },
-  { label: "News",        path: "/news" },
-]
+import { useTranslation } from "react-i18next"
+import LanguageSwitcher from "./LanguageSwitcher"
 
 export default function Navbar() {
   const location = useLocation()
+  const { t } = useTranslation()
 
-  // Re-init jQuery mobile menu after React renders (main.js runs before React mounts)
+  const NAV_ITEMS = [
+    { label: t("nav.home"),       path: "/" },
+    {
+      label: t("nav.scores"),     path: "/scores",
+      children: [
+        { label: t("nav.live"),       path: "/scores/live" },
+        { label: t("nav.results"),    path: "/scores/results" },
+        { label: t("nav.fixtures"),   path: "/scores/fixtures" },
+        { label: t("nav.groupStage"), path: "/scores/groups" },
+        { label: t("nav.knockout"),   path: "/scores/knockout" },
+      ]
+    },
+    {
+      label: t("nav.groups"),     path: "/groups",
+      children: Array.from({ length: 12 }, (_, i) => {
+        const g = String.fromCharCode(65 + i)
+        return { label: t("nav.group", { letter: g }), path: `/groups/${g}` }
+      })
+    },
+    {
+      label: t("nav.mundial"),    path: "/mundial",
+      children: [
+        { label: t("nav.teams"),      path: "/mundial/teams" },
+        { label: t("nav.schedule"),   path: "/mundial/schedule" },
+        { label: t("nav.venues"),     path: "/mundial/venues" },
+        { label: t("nav.topScorers"), path: "/mundial/scorers" },
+      ]
+    },
+    { label: t("nav.allLeagues"), path: "/leagues" },
+    { label: t("nav.news"),       path: "/news" },
+  ]
+
+  // Re-init jQuery mobile menu after React renders
   useEffect(() => {
     if (window.jQuery) {
       const $ = window.jQuery
-      // Re-clone nav into mobile menu body
-      const $body = $(".site-mobile-menu-body")
-      $body.empty()
-      $(".js-clone-nav").clone().attr("class", "site-nav-wrap").appendTo($body)
+      $(".site-mobile-menu-body").empty()
+      $(".js-clone-nav").clone().attr("class", "site-nav-wrap").appendTo(".site-mobile-menu-body")
     }
-  }, [location.pathname])
+  }, [location.pathname, t])  // re-clone when language changes too
 
   const isActive = (path) => {
     if (path === "/") return location.pathname === "/"
@@ -54,7 +55,7 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Mobile menu — populated by jQuery clone of js-clone-nav */}
+      {/* Mobile menu — jQuery clones .js-clone-nav here */}
       <div className="site-mobile-menu site-navbar-target">
         <div className="site-mobile-menu-header">
           <div className="site-mobile-menu-close">
@@ -64,25 +65,24 @@ export default function Navbar() {
         <div className="site-mobile-menu-body" />
       </div>
 
-      {/* Header — js-sticky-header enables jQuery sticky + shrink */}
+      {/* Header */}
       <header className="site-navbar js-sticky-header py-4" role="banner">
         <div className="container">
           <div className="d-flex align-items-center">
 
             <div className="site-logo">
               <Link to="/">
-                <span style={{ fontFamily: "Montserrat", fontWeight: 900, fontSize: "1.4rem", color: "#fff", letterSpacing: 2 }}>
+                <span style={{ fontFamily: "Montserrat", fontWeight: 900, fontSize: "1.3rem", color: "#fff", letterSpacing: 2 }}>
                   ⚽ GOLAZO
                 </span>
-                <span style={{ display: "block", fontSize: "0.6rem", color: "#ee1e46", letterSpacing: 2, textTransform: "uppercase" }}>
+                <span style={{ display: "block", fontSize: ".58rem", color: "#ee1e46", letterSpacing: 2, textTransform: "uppercase" }}>
                   Mundial 2026
                 </span>
               </Link>
             </div>
 
-            <div className="ml-auto">
+            <div className="ml-auto d-flex align-items-center" style={{ gap: 12 }}>
               <nav className="site-navigation position-relative text-right" role="navigation">
-                {/* js-clone-nav → cloned by jQuery into mobile menu */}
                 <ul className="site-menu main-menu js-clone-nav mr-auto d-none d-lg-block">
                   {NAV_ITEMS.map(item => (
                     <li
@@ -104,10 +104,15 @@ export default function Navbar() {
                 </ul>
               </nav>
 
-              {/* js-menu-toggle → jQuery toggles offcanvas-menu on body */}
+              {/* Language switcher — desktop */}
+              <div className="d-none d-lg-block">
+                <LanguageSwitcher />
+              </div>
+
+              {/* Mobile hamburger */}
               <a
                 href="#"
-                className="d-inline-block d-lg-none site-menu-toggle js-menu-toggle text-white float-right"
+                className="d-inline-block d-lg-none site-menu-toggle js-menu-toggle text-white"
                 onClick={e => e.preventDefault()}
               >
                 <span className="icon-menu h3 text-white" />

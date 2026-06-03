@@ -1,0 +1,102 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "scores": "Marcadores",
+    "live": "En Vivo",
+    "results": "Resultados",
+    "fixtures": "Próximos Partidos",
+    "groupStage": "Fase de Grupos",
+    "knockout": "Eliminatorias",
+    "groups": "Grupos",
+    "group": "Grupo {{letter}}",
+    "mundial": "Mundial 2026",
+    "teams": "Equipos",
+    "schedule": "Calendario",
+    "venues": "Estadios",
+    "topScorers": "Goleadores",
+    "allLeagues": "Todas las Ligas",
+    "news": "Noticias"
+  },
+  "hero": {
+    "title": "Mundial 2026",
+    "subtitle": "Marcadores en vivo, estadísticas en tiempo real y todos los goles del Mundial FIFA 2026 — EE.UU. · Canadá · México.",
+    "liveBtn": "En Vivo",
+    "fixturesBtn": "Calendario",
+    "nextMatch": "Próximo partido"
+  },
+  "home": {
+    "latestNews": "Últimas Noticias",
+    "nextMatch": "Próximo Partido",
+    "upcomingMatches": "Próximos Partidos",
+    "viewAll": "Ver todos →",
+    "fullSchedule": "Calendario completo →"
+  },
+  "scores": {
+    "liveNow": "En Vivo",
+    "results": "Resultados",
+    "upcomingFixtures": "Próximos Partidos",
+    "allLeaguesLive": "Todas las Ligas — En Vivo ({{count}})",
+    "noLive": "Ningún partido del Mundial en vivo ahora",
+    "wc2026Begins": "El Mundial 2026 comienza el 11 de junio de 2026",
+    "noResults": "Sin resultados aún",
+    "resultsAppear": "Los resultados aparecerán aquí una vez que se jueguen los partidos",
+    "noFixtures": "No hay próximos partidos",
+    "bracketPending": "El cuadro eliminatorio aún no está definido",
+    "advanceAfterGroups": "Los equipos clasifican tras la fase de grupos el 2 de julio de 2026"
+  },
+  "groups": {
+    "title": "Grupos",
+    "subtitle": "FIFA Mundial 2026 — 12 Grupos",
+    "standings": "Grupo {{letter}} — Clasificación",
+    "matches": "Grupo {{letter}} — Partidos",
+    "noStandings": "Sin clasificación aún",
+    "viewStandings": "Clasificación →"
+  },
+  "mundial": {
+    "subtitle": "FIFA Mundial · EE.UU. · Canadá · México · 11 Jun – 19 Jul",
+    "teamsTitle": "Equipos",
+    "scheduleTitle": "Calendario",
+    "venuesTitle": "Estadios",
+    "scorersTitle": "Goleadores — Mundial 2026",
+    "noScorers": "Sin goleadores aún",
+    "scorersAppear": "Los goleadores aparecerán aquí cuando comience el torneo el 11 de junio de 2026",
+    "capacity": "Capacidad"
+  },
+  "table": {
+    "pos": "#",
+    "team": "Equipo",
+    "played": "PJ",
+    "won": "G",
+    "drawn": "E",
+    "lost": "P",
+    "gd": "DG",
+    "points": "Pts",
+    "goals": "Goles",
+    "assists": "Asistencias",
+    "date": "Fecha",
+    "home": "Local",
+    "away": "Visitante"
+  },
+  "status": {
+    "live": "EN VIVO",
+    "ft": "FIN",
+    "vs": "vs"
+  },
+  "leagues": {
+    "title": "Todas las Ligas",
+    "subtitle": "{{count}} partidos en vivo ahora en {{comps}} competiciones",
+    "noLive": "No hay partidos en vivo en el mundo ahora",
+    "checkBack": "Vuelve durante los horarios de partido",
+    "available": "Ligas Disponibles ({{count}})"
+  },
+  "news": {
+    "title": "Noticias",
+    "subtitle": "Lo último del Mundial FIFA 2026"
+  },
+  "footer": {
+    "follow": "Síguenos",
+    "copyright": "Copyright © {{year}} Golazo — Marcadores Mundial 2026 en Vivo."
+  },
+  "loading": "Cargando...",
+  "noMatches": "No se encontraron partidos"
+}

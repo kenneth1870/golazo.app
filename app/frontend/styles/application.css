@@ -306,6 +306,42 @@ a:hover{color:var(--accent);opacity:.85}
 /* ─── Back btn ───────────────────────────────────────── */
 .btn-back{background:none;border:none;color:var(--accent);font-size:.9rem;padding:0 0 16px;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
 
+/* ─── Language Switcher ──────────────────────────────── */
+.lang-btn{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  color:#fff;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:.78rem;font-weight:700;
+  transition:.15s;white-space:nowrap;
+}
+.lang-btn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25)}
+.lang-code{letter-spacing:.05em}
+.lang-dropdown{
+  position:absolute;top:calc(100% + 6px);right:0;z-index:999;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);padding:6px;min-width:160px;
+}
+.lang-option{
+  display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;
+  background:none;border:none;color:var(--muted);font-size:.83rem;font-weight:600;
+  border-radius:6px;cursor:pointer;transition:.12s;text-align:left;
+}
+.lang-option:hover{background:var(--surface2);color:#fff}
+.lang-option.active{color:#fff;background:rgba(238,30,70,.1)}
+.lang-flag{font-size:1rem;flex-shrink:0}
+.lang-label{flex:1}
+.lang-check{color:var(--accent);font-size:.85rem}
+.lang-switcher{display:flex;align-items:center}
+
+/* ─── RTL support ────────────────────────────────────── */
+[dir="rtl"] .site-logo{margin-right:0;margin-left:auto}
+[dir="rtl"] .ml-auto{margin-left:0!important;margin-right:auto!important}
+[dir="rtl"] .text-right{text-align:left!important}
+[dir="rtl"] .match-row__team--home{justify-content:flex-start}
+[dir="rtl"] .match-row__team--away{justify-content:flex-end}
+[dir="rtl"] .match-row{direction:rtl}
+[dir="rtl"] .site-menu{direction:rtl}
+[dir="rtl"] .dropdown-menu-custom{left:auto;right:0}
+
 /* ─── Responsive fixes ───────────────────────────────── */
 @media(max-width:992px){
   .d-lg-none{display:block!important}

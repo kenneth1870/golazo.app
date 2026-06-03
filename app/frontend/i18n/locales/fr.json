@@ -1,0 +1,14 @@
+{
+  "nav": { "home":"Accueil","scores":"Scores","live":"En Direct","results":"Résultats","fixtures":"Calendrier","groupStage":"Phase de Groupes","knockout":"Phases Finales","groups":"Groupes","group":"Groupe {{letter}}","mundial":"Mondial 2026","teams":"Équipes","schedule":"Programme","venues":"Stades","topScorers":"Buteurs","allLeagues":"Toutes les Ligues","news":"Actualités" },
+  "hero": { "title":"Mondial 2026","subtitle":"Scores en direct, statistiques en temps réel et tous les buts de la Coupe du Monde FIFA 2026 — USA · Canada · Mexique.","liveBtn":"En Direct","fixturesBtn":"Calendrier","nextMatch":"Prochain match" },
+  "home": { "latestNews":"Dernières Nouvelles","nextMatch":"Prochain Match","upcomingMatches":"Prochains Matchs","viewAll":"Voir tout →","fullSchedule":"Programme complet →" },
+  "scores": { "liveNow":"En Direct","results":"Résultats","upcomingFixtures":"Prochains Matchs","allLeaguesLive":"Toutes les Ligues — En Direct ({{count}})","noLive":"Aucun match de la Coupe du Monde en direct","wc2026Begins":"La Coupe du Monde 2026 débute le 11 juin 2026","noResults":"Pas encore de résultats","resultsAppear":"Les résultats apparaîtront ici une fois les matchs joués","noFixtures":"Aucun match à venir","bracketPending":"Le tableau éliminatoire n'est pas encore défini","advanceAfterGroups":"Les équipes se qualifient après la phase de groupes le 2 juillet 2026" },
+  "groups": { "title":"Groupes","subtitle":"FIFA Coupe du Monde 2026 — 12 Groupes","standings":"Groupe {{letter}} — Classement","matches":"Groupe {{letter}} — Matchs","noStandings":"Pas encore de classement","viewStandings":"Classement →" },
+  "mundial": { "subtitle":"FIFA Coupe du Monde · USA · Canada · Mexique · 11 Jun – 19 Jul","teamsTitle":"Équipes","scheduleTitle":"Programme","venuesTitle":"Stades","scorersTitle":"Buteurs — Coupe du Monde 2026","noScorers":"Pas encore de buteurs","scorersAppear":"Les buteurs apparaîtront ici lorsque le tournoi débutera le 11 juin 2026","capacity":"Capacité" },
+  "table": { "pos":"#","team":"Équipe","played":"MJ","won":"V","drawn":"N","lost":"D","gd":"DB","points":"Pts","goals":"Buts","assists":"Passes D.","date":"Date","home":"Domicile","away":"Extérieur" },
+  "status": { "live":"EN DIRECT","ft":"FIN","vs":"vs" },
+  "leagues": { "title":"Toutes les Ligues","subtitle":"{{count}} matchs en direct dans {{comps}} compétitions","noLive":"Aucun match en direct dans le monde","checkBack":"Revenez pendant les heures de match","available":"Ligues Disponibles ({{count}})" },
+  "news": { "title":"Actualités","subtitle":"Les dernières nouvelles de la Coupe du Monde FIFA 2026" },
+  "footer": { "follow":"Suivez-nous","copyright":"Copyright © {{year}} Golazo — Scores en Direct Coupe du Monde 2026." },
+  "loading":"Chargement...","noMatches":"Aucun match trouvé"
+}

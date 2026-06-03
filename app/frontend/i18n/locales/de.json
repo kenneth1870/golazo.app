@@ -1,0 +1,14 @@
+{
+  "nav": { "home":"Startseite","scores":"Ergebnisse","live":"Live","results":"Resultate","fixtures":"Spielplan","groupStage":"Gruppenphase","knockout":"K.o.-Runde","groups":"Gruppen","group":"Gruppe {{letter}}","mundial":"WM 2026","teams":"Mannschaften","schedule":"Spielplan","venues":"Stadien","topScorers":"Torschützen","allLeagues":"Alle Ligen","news":"Nachrichten" },
+  "hero": { "title":"WM 2026","subtitle":"Live-Ergebnisse, Echtzeit-Statistiken und alle Tore der FIFA Fußball-Weltmeisterschaft 2026 — USA · Kanada · Mexiko.","liveBtn":"Live","fixturesBtn":"Spielplan","nextMatch":"Nächstes Spiel" },
+  "home": { "latestNews":"Neueste Nachrichten","nextMatch":"Nächstes Spiel","upcomingMatches":"Kommende Spiele","viewAll":"Alle anzeigen →","fullSchedule":"Vollständiger Spielplan →" },
+  "scores": { "liveNow":"Live","results":"Resultate","upcomingFixtures":"Kommende Spiele","allLeaguesLive":"Alle Ligen — Live ({{count}})","noLive":"Kein WM-Spiel live gerade","wc2026Begins":"Die WM 2026 beginnt am 11. Juni 2026","noResults":"Noch keine Resultate","resultsAppear":"Ergebnisse erscheinen hier sobald Spiele gespielt wurden","noFixtures":"Keine kommenden Spiele","bracketPending":"K.o.-Runde noch nicht festgelegt","advanceAfterGroups":"Teams steigen nach der Gruppenphase am 2. Juli 2026 auf" },
+  "groups": { "title":"Gruppen","subtitle":"FIFA WM 2026 — 12 Gruppen","standings":"Gruppe {{letter}} — Tabelle","matches":"Gruppe {{letter}} — Spiele","noStandings":"Noch keine Tabelle","viewStandings":"Tabelle →" },
+  "mundial": { "subtitle":"FIFA WM · USA · Kanada · Mexiko · 11. Jun – 19. Jul","teamsTitle":"Mannschaften","scheduleTitle":"Spielplan","venuesTitle":"Stadien","scorersTitle":"Torschützen — WM 2026","noScorers":"Noch keine Torschützen","scorersAppear":"Torschützen erscheinen hier wenn das Turnier am 11. Juni 2026 beginnt","capacity":"Kapazität" },
+  "table": { "pos":"#","team":"Mannschaft","played":"Sp","won":"S","drawn":"U","lost":"N","gd":"Tord.","points":"Pkt","goals":"Tore","assists":"Vorlagen","date":"Datum","home":"Heim","away":"Auswärts" },
+  "status": { "live":"LIVE","ft":"Ende","vs":"vs" },
+  "leagues": { "title":"Alle Ligen","subtitle":"{{count}} Spiele live in {{comps}} Wettbewerben","noLive":"Keine Live-Spiele weltweit gerade","checkBack":"Schau während der Spielzeiten vorbei","available":"Verfügbare Ligen ({{count}})" },
+  "news": { "title":"Nachrichten","subtitle":"Neuestes von der FIFA WM 2026" },
+  "footer": { "follow":"Folge uns","copyright":"Copyright © {{year}} Golazo — WM 2026 Live-Ergebnisse." },
+  "loading":"Laden...","noMatches":"Keine Spiele gefunden"
+}
