@@ -1,0 +1,242 @@
+  [1m[35mSQL (7.7ms)[0m  [1m[35mSET search_path TO public /*application='GolazoApp'*/[0m
+  [1m[35m (346.9ms)[0m  [1m[35mCREATE DATABASE "golazo_development" ENCODING = 'unicode' /*application='GolazoApp'*/[0m
+  [1m[35mSQL (0.1ms)[0m  [1m[35mSET search_path TO public /*application='GolazoApp'*/[0m
+  [1m[35m (73.1ms)[0m  [1m[35mCREATE DATABASE "golazo_test" ENCODING = 'unicode' /*application='GolazoApp'*/[0m
+  [1m[35m (9.3ms)[0m  [1m[35mCREATE TABLE "schema_migrations" ("version" character varying NOT NULL PRIMARY KEY) /*application='GolazoApp'*/[0m
+  [1m[35m (3.4ms)[0m  [1m[35mCREATE TABLE "ar_internal_metadata" ("key" character varying NOT NULL PRIMARY KEY, "value" character varying, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL) /*application='GolazoApp'*/[0m
+  [1m[35m (0.3ms)[0m  [1m[34mSELECT pg_try_advisory_lock(2389339138012701000) /*application='GolazoApp'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.8ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='GolazoApp'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Load (2.3ms)[0m  [1m[34mSELECT * FROM "ar_internal_metadata" WHERE "ar_internal_metadata"."key" = 'environment' ORDER BY "ar_internal_metadata"."key" ASC LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mActiveRecord::InternalMetadata Create (2.8ms)[0m  [1m[32mINSERT INTO "ar_internal_metadata" ("key", "value", "created_at", "updated_at") VALUES ('environment', 'development', '2026-06-02 23:55:35.098951', '2026-06-02 23:55:35.098953') RETURNING "key" /*application='GolazoApp'*/[0m
+Migrating to CreateTeams (20260602235238)
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[35m (7.6ms)[0m  [1m[35mCREATE TABLE "teams" ("id" bigserial primary key, "name" character varying, "code" character varying, "flag_url" character varying, "group" character varying, "confederation" character varying, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL) /*application='GolazoApp'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.3ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260602235238') RETURNING "version" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+Migrating to CreateMatches (20260602235243)
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[35m (6.4ms)[0m  [1m[35mCREATE TABLE "matches" ("id" bigserial primary key, "home_team_id" bigint NOT NULL, "away_team_id" bigint NOT NULL, "home_score" integer, "away_score" integer, "status" character varying, "kickoff_at" timestamp(6), "venue" character varying, "group_stage" character varying, "round" character varying, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_4aed6bdf0d"
+FOREIGN KEY ("home_team_id")
+  REFERENCES "teams" ("id")
+, CONSTRAINT "fk_rails_6a75121a9b"
+FOREIGN KEY ("away_team_id")
+  REFERENCES "teams" ("id")
+) /*application='GolazoApp'*/[0m
+  [1m[35m (0.8ms)[0m  [1m[35mCREATE INDEX "index_matches_on_home_team_id" ON "matches" ("home_team_id") /*application='GolazoApp'*/[0m
+  [1m[35m (0.7ms)[0m  [1m[35mCREATE INDEX "index_matches_on_away_team_id" ON "matches" ("away_team_id") /*application='GolazoApp'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.2ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260602235243') RETURNING "version" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.4ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+Migrating to CreateGoals (20260602235420)
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[35m (5.7ms)[0m  [1m[35mCREATE TABLE "goals" ("id" bigserial primary key, "match_id" bigint NOT NULL, "team_id" bigint NOT NULL, "player_name" character varying, "minute" integer, "goal_type" character varying, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_8a4d2544e4"
+FOREIGN KEY ("match_id")
+  REFERENCES "matches" ("id")
+, CONSTRAINT "fk_rails_f4a6f58467"
+FOREIGN KEY ("team_id")
+  REFERENCES "teams" ("id")
+) /*application='GolazoApp'*/[0m
+  [1m[35m (0.7ms)[0m  [1m[35mCREATE INDEX "index_goals_on_match_id" ON "goals" ("match_id") /*application='GolazoApp'*/[0m
+  [1m[35m (1.1ms)[0m  [1m[35mCREATE INDEX "index_goals_on_team_id" ON "goals" ("team_id") /*application='GolazoApp'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.2ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260602235420') RETURNING "version" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+Migrating to CreateMatchStats (20260602235426)
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[35m (2.8ms)[0m  [1m[35mCREATE TABLE "match_stats" ("id" bigserial primary key, "match_id" bigint NOT NULL, "team_id" bigint NOT NULL, "possession" integer, "shots" integer, "shots_on_target" integer, "corners" integer, "fouls" integer, "yellow_cards" integer, "red_cards" integer, "offsides" integer, "created_at" timestamp(6) NOT NULL, "updated_at" timestamp(6) NOT NULL, CONSTRAINT "fk_rails_05ae79911d"
+FOREIGN KEY ("match_id")
+  REFERENCES "matches" ("id")
+, CONSTRAINT "fk_rails_867d15c919"
+FOREIGN KEY ("team_id")
+  REFERENCES "teams" ("id")
+) /*application='GolazoApp'*/[0m
+  [1m[35m (1.1ms)[0m  [1m[35mCREATE INDEX "index_match_stats_on_match_id" ON "match_stats" ("match_id") /*application='GolazoApp'*/[0m
+  [1m[35m (0.9ms)[0m  [1m[35mCREATE INDEX "index_match_stats_on_team_id" ON "match_stats" ("team_id") /*application='GolazoApp'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Create (0.2ms)[0m  [1m[32mINSERT INTO "schema_migrations" ("version") VALUES ('20260602235426') RETURNING "version" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[35m (0.3ms)[0m  [1m[34mSELECT pg_advisory_unlock(2389339138012701000) /*application='GolazoApp'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.2ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='GolazoApp'*/[0m
+  [1m[35mSQL (0.1ms)[0m  [1m[35mSET search_path TO public /*application='GolazoApp'*/[0m
+  [1m[35mSQL (0.1ms)[0m  [1m[35mSET search_path TO "$user", public /*application='GolazoApp'*/[0m
+  [1m[35mSQL (0.1ms)[0m  [1m[35mSET search_path TO public /*application='GolazoApp'*/[0m
+  [1m[35mSQL (0.1ms)[0m  [1m[35mSET search_path TO "$user", public /*application='GolazoApp'*/[0m
+  [1m[36mActiveRecord::SchemaMigration Load (0.8ms)[0m  [1m[34mSELECT "schema_migrations"."version" FROM "schema_migrations" ORDER BY "schema_migrations"."version" ASC /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (1.4ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'USA' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (1.0ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('United States', 'USA', 'https://flagcdn.com/w80/us.png', 'A', 'CONCACAF', '2026-06-03 00:01:22.816079', '2026-06-03 00:01:22.816079') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.6ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'PAN' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.6ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Panama', 'PAN', 'https://flagcdn.com/w80/pa.png', 'A', 'CONCACAF', '2026-06-03 00:01:22.819258', '2026-06-03 00:01:22.819258') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'BOL' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (12.4ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Bolivia', 'BOL', 'https://flagcdn.com/w80/bo.png', 'A', 'CONMEBOL', '2026-06-03 00:01:22.821682', '2026-06-03 00:01:22.821682') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'MAR' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.7ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Morocco', 'MAR', 'https://flagcdn.com/w80/ma.png', 'A', 'CAF', '2026-06-03 00:01:22.835523', '2026-06-03 00:01:22.835523') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'ARG' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Argentina', 'ARG', 'https://flagcdn.com/w80/ar.png', 'B', 'CONMEBOL', '2026-06-03 00:01:22.837357', '2026-06-03 00:01:22.837357') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'CHI' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.6ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Chile', 'CHI', 'https://flagcdn.com/w80/cl.png', 'B', 'CONMEBOL', '2026-06-03 00:01:22.839294', '2026-06-03 00:01:22.839294') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'PER' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Peru', 'PER', 'https://flagcdn.com/w80/pe.png', 'B', 'CONMEBOL', '2026-06-03 00:01:22.841203', '2026-06-03 00:01:22.841203') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'AUS' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.6ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Australia', 'AUS', 'https://flagcdn.com/w80/au.png', 'B', 'AFC', '2026-06-03 00:01:22.842912', '2026-06-03 00:01:22.842912') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'MEX' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Mexico', 'MEX', 'https://flagcdn.com/w80/mx.png', 'C', 'CONCACAF', '2026-06-03 00:01:22.844653', '2026-06-03 00:01:22.844653') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'JAM' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Jamaica', 'JAM', 'https://flagcdn.com/w80/jm.png', 'C', 'CONCACAF', '2026-06-03 00:01:22.846227', '2026-06-03 00:01:22.846227') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'VEN' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Venezuela', 'VEN', 'https://flagcdn.com/w80/ve.png', 'C', 'CONMEBOL', '2026-06-03 00:01:22.847939', '2026-06-03 00:01:22.847939') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'NZL' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('New Zealand', 'NZL', 'https://flagcdn.com/w80/nz.png', 'C', 'OFC', '2026-06-03 00:01:22.849556', '2026-06-03 00:01:22.849556') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'BRA' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.7ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Brazil', 'BRA', 'https://flagcdn.com/w80/br.png', 'D', 'CONMEBOL', '2026-06-03 00:01:22.851177', '2026-06-03 00:01:22.851177') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'ECU' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Ecuador', 'ECU', 'https://flagcdn.com/w80/ec.png', 'D', 'CONMEBOL', '2026-06-03 00:01:22.853143', '2026-06-03 00:01:22.853143') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'PAR' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Paraguay', 'PAR', 'https://flagcdn.com/w80/py.png', 'D', 'CONMEBOL', '2026-06-03 00:01:22.854732', '2026-06-03 00:01:22.854732') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'COD' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('DR Congo', 'COD', 'https://flagcdn.com/w80/cd.png', 'D', 'CAF', '2026-06-03 00:01:22.856317', '2026-06-03 00:01:22.856317') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'ESP' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Spain', 'ESP', 'https://flagcdn.com/w80/es.png', 'E', 'UEFA', '2026-06-03 00:01:22.858465', '2026-06-03 00:01:22.858465') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'CRO' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Croatia', 'CRO', 'https://flagcdn.com/w80/hr.png', 'E', 'UEFA', '2026-06-03 00:01:22.860365', '2026-06-03 00:01:22.860365') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'JPN' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.0ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.4ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Japan', 'JPN', 'https://flagcdn.com/w80/jp.png', 'E', 'AFC', '2026-06-03 00:01:22.862150', '2026-06-03 00:01:22.862150') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'CMR' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Cameroon', 'CMR', 'https://flagcdn.com/w80/cm.png', 'E', 'CAF', '2026-06-03 00:01:22.863807', '2026-06-03 00:01:22.863807') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'GER' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Germany', 'GER', 'https://flagcdn.com/w80/de.png', 'F', 'UEFA', '2026-06-03 00:01:22.865471', '2026-06-03 00:01:22.865471') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'DEN' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Denmark', 'DEN', 'https://flagcdn.com/w80/dk.png', 'F', 'UEFA', '2026-06-03 00:01:22.867144', '2026-06-03 00:01:22.867144') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'KSA' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Saudi Arabia', 'KSA', 'https://flagcdn.com/w80/sa.png', 'F', 'AFC', '2026-06-03 00:01:22.868857', '2026-06-03 00:01:22.868857') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'POR' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Portugal', 'POR', 'https://flagcdn.com/w80/pt.png', 'G', 'UEFA', '2026-06-03 00:01:22.870548', '2026-06-03 00:01:22.870548') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'FRA' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('France', 'FRA', 'https://flagcdn.com/w80/fr.png', 'G', 'UEFA', '2026-06-03 00:01:22.872229', '2026-06-03 00:01:22.872229') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'URU' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Uruguay', 'URU', 'https://flagcdn.com/w80/uy.png', 'G', 'CONMEBOL', '2026-06-03 00:01:22.873895', '2026-06-03 00:01:22.873895') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'ALG' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.5ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Algeria', 'ALG', 'https://flagcdn.com/w80/dz.png', 'G', 'CAF', '2026-06-03 00:01:22.875609', '2026-06-03 00:01:22.875609') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'ENG' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.4ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('England', 'ENG', 'https://flagcdn.com/w80/gb-eng.png', 'H', 'UEFA', '2026-06-03 00:01:22.877545', '2026-06-03 00:01:22.877545') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'NED' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.6ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Netherlands', 'NED', 'https://flagcdn.com/w80/nl.png', 'H', 'UEFA', '2026-06-03 00:01:22.879422', '2026-06-03 00:01:22.879422') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'COL' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (1.0ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Colombia', 'COL', 'https://flagcdn.com/w80/co.png', 'H', 'CONMEBOL', '2026-06-03 00:01:22.881218', '2026-06-03 00:01:22.881218') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'SEN' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mTeam Create (0.7ms)[0m  [1m[32mINSERT INTO "teams" ("name", "code", "flag_url", "group", "confederation", "created_at", "updated_at") VALUES ('Senegal', 'SEN', 'https://flagcdn.com/w80/sn.png', 'H', 'CAF', '2026-06-03 00:01:22.883315', '2026-06-03 00:01:22.883315') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Count (0.7ms)[0m  [1m[34mSELECT COUNT(*) FROM "teams" /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'USA' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'MAR' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mMatch Load (2.1ms)[0m  [1m[34mSELECT "matches".* FROM "matches" WHERE "matches"."home_team_id" = 1 AND "matches"."away_team_id" = 4 LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mMatch Create (2.3ms)[0m  [1m[32mINSERT INTO "matches" ("home_team_id", "away_team_id", "home_score", "away_score", "status", "kickoff_at", "venue", "group_stage", "round", "created_at", "updated_at") VALUES (1, 4, 2, 1, 'finished', '2026-06-11 19:00:00', 'MetLife Stadium', 'A', 'Group Stage', '2026-06-03 00:01:22.898020', '2026-06-03 00:01:22.898020') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'PAN' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'BOL' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mMatch Load (0.2ms)[0m  [1m[34mSELECT "matches".* FROM "matches" WHERE "matches"."home_team_id" = 2 AND "matches"."away_team_id" = 3 LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mMatch Create (0.8ms)[0m  [1m[32mINSERT INTO "matches" ("home_team_id", "away_team_id", "home_score", "away_score", "status", "kickoff_at", "venue", "group_stage", "round", "created_at", "updated_at") VALUES (2, 3, 1, 0, 'finished', '2026-06-11 22:00:00', 'SoFi Stadium', 'A', 'Group Stage', '2026-06-03 00:01:22.902689', '2026-06-03 00:01:22.902689') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'ARG' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'PER' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mMatch Load (0.2ms)[0m  [1m[34mSELECT "matches".* FROM "matches" WHERE "matches"."home_team_id" = 5 AND "matches"."away_team_id" = 7 LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mMatch Create (0.7ms)[0m  [1m[32mINSERT INTO "matches" ("home_team_id", "away_team_id", "home_score", "away_score", "status", "kickoff_at", "venue", "group_stage", "round", "created_at", "updated_at") VALUES (5, 7, 1, 0, 'live', '2026-06-12 19:00:00', 'AT&T Stadium', 'B', 'Group Stage', '2026-06-03 00:01:22.905495', '2026-06-03 00:01:22.905495') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'CHI' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'AUS' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mMatch Load (0.2ms)[0m  [1m[34mSELECT "matches".* FROM "matches" WHERE "matches"."home_team_id" = 6 AND "matches"."away_team_id" = 8 LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mMatch Create (0.6ms)[0m  [1m[32mINSERT INTO "matches" ("home_team_id", "away_team_id", "home_score", "away_score", "status", "kickoff_at", "venue", "group_stage", "round", "created_at", "updated_at") VALUES (6, 8, NULL, NULL, 'scheduled', '2026-06-12 22:00:00', 'Levi''s Stadium', 'B', 'Group Stage', '2026-06-03 00:01:22.908237', '2026-06-03 00:01:22.908237') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'BRA' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.1ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'ECU' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mMatch Load (0.1ms)[0m  [1m[34mSELECT "matches".* FROM "matches" WHERE "matches"."home_team_id" = 13 AND "matches"."away_team_id" = 14 LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mMatch Create (0.6ms)[0m  [1m[32mINSERT INTO "matches" ("home_team_id", "away_team_id", "home_score", "away_score", "status", "kickoff_at", "venue", "group_stage", "round", "created_at", "updated_at") VALUES (13, 14, NULL, NULL, 'scheduled', '2026-06-13 16:00:00', 'Rose Bowl', 'D', 'Group Stage', '2026-06-03 00:01:22.910749', '2026-06-03 00:01:22.910749') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'ESP' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'JPN' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mMatch Load (0.2ms)[0m  [1m[34mSELECT "matches".* FROM "matches" WHERE "matches"."home_team_id" = 17 AND "matches"."away_team_id" = 19 LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mMatch Create (0.7ms)[0m  [1m[32mINSERT INTO "matches" ("home_team_id", "away_team_id", "home_score", "away_score", "status", "kickoff_at", "venue", "group_stage", "round", "created_at", "updated_at") VALUES (17, 19, NULL, NULL, 'scheduled', '2026-06-13 19:00:00', 'Hard Rock Stadium', 'E', 'Group Stage', '2026-06-03 00:01:22.913378', '2026-06-03 00:01:22.913378') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'ENG' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'SEN' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mMatch Load (0.2ms)[0m  [1m[34mSELECT "matches".* FROM "matches" WHERE "matches"."home_team_id" = 28 AND "matches"."away_team_id" = 31 LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mMatch Create (0.6ms)[0m  [1m[32mINSERT INTO "matches" ("home_team_id", "away_team_id", "home_score", "away_score", "status", "kickoff_at", "venue", "group_stage", "round", "created_at", "updated_at") VALUES (28, 31, NULL, NULL, 'scheduled', '2026-06-14 16:00:00', 'Gillette Stadium', 'H', 'Group Stage', '2026-06-03 00:01:22.916171', '2026-06-03 00:01:22.916171') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'GER' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."code" = 'KSA' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mMatch Load (0.2ms)[0m  [1m[34mSELECT "matches".* FROM "matches" WHERE "matches"."home_team_id" = 21 AND "matches"."away_team_id" = 23 LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mMatch Create (0.6ms)[0m  [1m[32mINSERT INTO "matches" ("home_team_id", "away_team_id", "home_score", "away_score", "status", "kickoff_at", "venue", "group_stage", "round", "created_at", "updated_at") VALUES (21, 23, NULL, NULL, 'scheduled', '2026-06-14 19:00:00', 'MetLife Stadium', 'F', 'Group Stage', '2026-06-03 00:01:22.918663', '2026-06-03 00:01:22.918663') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+  [1m[36mMatch Count (0.2ms)[0m  [1m[34mSELECT COUNT(*) FROM "matches" /*application='GolazoApp'*/[0m
+  [1m[36mMatch Load (0.2ms)[0m  [1m[34mSELECT "matches".* FROM "matches" WHERE "matches"."status" = 'live' LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mGoal Exists? (1.2ms)[0m  [1m[34mSELECT 1 AS one FROM "goals" WHERE "goals"."match_id" = 3 LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTeam Load (0.2ms)[0m  [1m[34mSELECT "teams".* FROM "teams" WHERE "teams"."id" = 5 LIMIT 1 /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN /*application='GolazoApp'*/[0m
+  [1m[36mGoal Create (1.5ms)[0m  [1m[32mINSERT INTO "goals" ("match_id", "team_id", "player_name", "minute", "goal_type", "created_at", "updated_at") VALUES (3, 5, 'L. Messi', 23, 'regular', '2026-06-03 00:01:22.932654', '2026-06-03 00:01:22.932654') RETURNING "id" /*application='GolazoApp'*/[0m
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT /*application='GolazoApp'*/[0m
+[ActionCable] Broadcasting to match_3: {:type=>"goal", :goal=>{"id"=>1, "match_id"=>3, "team_id"=>5, "player_name"=>"L. Messi", "minute"=>23, "goal_type"=>"regular", "created_at"=>"2026-06-03T00:01:22.932Z", "updated_at"=>"2026-06-03T00:01:22.932Z"}, :home_score=>1, :away_score=>0}

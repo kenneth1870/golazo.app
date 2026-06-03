@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  match: one
+  team: one
+  player_name: MyString
+  minute: 1
+  goal_type: MyString
+
+two:
+  match: two
+  team: two
+  player_name: MyString
+  minute: 1
+  goal_type: MyString

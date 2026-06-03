@@ -1,0 +1,16 @@
+module Api
+  module V1
+    class TeamsController < BaseController
+      def index
+        teams = Team.order(:group, :name)
+        render json: teams
+      end
+
+      def show
+        team = Team.find(params[:id])
+        matches = team.matches.includes(:home_team, :away_team).order(:kickoff_at)
+        render json: team.as_json.merge(matches: matches)
+      end
+    end
+  end
+end
