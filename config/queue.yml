@@ -31,5 +31,5 @@ production:
   <<: *default
   workers:
     - queues: "*"
-      threads: 5
+      threads: 3
       polling_interval: 0.5
