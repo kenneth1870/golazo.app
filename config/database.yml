@@ -17,6 +17,4 @@ test:
 
 production:
   <<: *default
-  database: golazo_production
-  username: golazo
-  password: <%= ENV["GOLAZO_DATABASE_PASSWORD"] %>
+  url: <%= ENV["DATABASE_URL"] %>

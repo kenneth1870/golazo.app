@@ -1,0 +1,29 @@
+databases:
+  - name: golazo-db
+    databaseName: golazo_production
+    user: golazo
+    plan: free
+
+services:
+  - type: web
+    name: golazo-app
+    runtime: docker
+    plan: free
+    healthCheckPath: /up
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: golazo-db
+          property: connectionString
+      - key: RAILS_MASTER_KEY
+        sync: false        # set manually in Render dashboard
+      - key: RAPIDAPI_KEY
+        sync: false        # set manually in Render dashboard
+      - key: ALLOWED_ORIGINS
+        sync: false        # set to your Render URL once deployed, e.g. https://golazo-app.onrender.com
+      - key: RAILS_LOG_LEVEL
+        value: info
+      - key: WEB_CONCURRENCY
+        value: 1
