@@ -167,6 +167,14 @@ class LiveScoresClient
     916345 => { name: "USL League One",               logo: nil, country: "USA" },
   }.freeze
 
+  # League IDs that are explicitly excluded even if they pass other filters.
+  EXCLUDED_LEAGUES = Set.new([
+    926232,  # UEFA U-17 Championship
+    344,     # U-21 Friendlies
+    925953,  # Women's Friendlies
+    896469,  # Asian Qualifiers
+  ]).freeze
+
   # Top domestic league IDs (FotMob IDs). Any league with country="INT" is
   # always included; these are the domestic leagues we also want to show.
   FEATURED_DOMESTIC_LEAGUES = Set.new([
@@ -390,6 +398,7 @@ class LiveScoresClient
     home    = (match.dig(:home, :name) || "").downcase
     away    = (match.dig(:away, :name) || "").downcase
 
+    return false if EXCLUDED_LEAGUES.include?(lid.to_i)
     return false if name.include?("women") || name.include?("female") || name.include?("girl")
     return false if home.end_with?("(w)") || away.end_with?("(w)")
 
