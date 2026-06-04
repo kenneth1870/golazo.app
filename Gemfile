@@ -1,5 +1,11 @@
 source "https://rubygems.org"
 
+# Gems extracted from Ruby stdlib — required explicitly on Ruby 3.3+
+gem "mutex_m"
+gem "base64"
+gem "ostruct"
+gem "bigdecimal"
+
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.3"
 # Use PostgreSQL as the database for Active Record

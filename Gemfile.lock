@@ -397,6 +397,8 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
+  base64
+  bigdecimal
   bootsnap
   brakeman
   bundler-audit
@@ -406,6 +408,8 @@ DEPENDENCIES
   faraday-retry
   image_processing (~> 1.2)
   kamal
+  mutex_m
+  ostruct
   pg (~> 1.1)
   puma (>= 5.0)
   rack-cors
