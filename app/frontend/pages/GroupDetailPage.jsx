@@ -1,11 +1,14 @@
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, Link } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { useMatches } from "../hooks/useMatches"
 import MatchRow from "../components/MatchRow"
 
 export default function GroupDetailPage() {
-  const { group } = useParams()
-  const navigate  = useNavigate()
+  const { group }  = useParams()
+  const navigate   = useNavigate()
+  const onMatchClick = (m) => {
+    if (m.external_id) navigate(`/matches/${m.external_id}`)
+  }
   const [standings, setStandings] = useState([])
 
   const { matches, loading } = useMatches("all", { competition: "WC", group })
@@ -13,7 +16,7 @@ export default function GroupDetailPage() {
   useEffect(() => {
     fetch("/api/v1/standings")
       .then(r => r.json())
-      .then(data => setStandings(data[group] || []))
+      .then(data => setStandings((Array.isArray(data) ? data.filter(s => s.group_name === group) : data[group]) || []))
   }, [group])
 
   return (
@@ -37,8 +40,8 @@ export default function GroupDetailPage() {
                         <td>{s.rank}</td>
                         <td>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            {s.team.flag_url && <img src={s.team.flag_url} alt="" style={{ width: 24, height: 16, objectFit: "cover", borderRadius: 2 }} />}
-                            <strong className="text-white">{s.team.name}</strong>
+                            {s.team.flag_url && <img src={s.team.flag_url} alt="" className="flag-xs" />}
+                            <Link to={`/teams/${s.team.id}`} style={{ color: "#fff", fontWeight: 700 }}>{s.team.name}</Link>
                           </div>
                         </td>
                         <td>{s.played}</td><td>{s.won}</td><td>{s.drawn}</td><td>{s.lost}</td>
@@ -63,7 +66,7 @@ export default function GroupDetailPage() {
                   ? <div className="loading-shimmer m-3" style={{ height: 200, borderRadius: 8 }} />
                   : matches.length === 0
                   ? <p style={{ color: "gray", textAlign: "center", padding: "2rem" }}>No matches found</p>
-                  : matches.map(m => <MatchRow key={m.id} match={m} showDate onClick={() => {}} />)
+                  : matches.map(m => <MatchRow key={m.id} match={m} showDate onClick={() => onMatchClick(m)} />)
                 }
               </div>
             </div>

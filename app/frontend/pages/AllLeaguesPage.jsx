@@ -1,111 +1,147 @@
 import { useState, useEffect } from "react"
-import { formatKickoff } from "../hooks/useLocalTime"
+import { useNavigate } from "react-router-dom"
 
-function LiveMatchRow({ match }) {
-  const isLive = match.started && !match.finished
+const TYPE_ORDER = { world_cup: 0, cup: 1, league: 2 }
+const TYPE_LABEL = { world_cup: "World Cup", cup: "Cups & International", league: "Domestic Leagues" }
+
+function LeagueCard({ competition, liveCount, onClick }) {
   return (
-    <div className={`match-row${isLive ? " match-row--live" : ""}`}>
-      <div className="match-row__status">
-        {isLive
-          ? <span className="match-status-live"><span className="live-dot" />{match.minute}</span>
-          : match.finished
-          ? <span className="match-status-ft">FT</span>
-          : <span className="match-status-time">—</span>
-        }
+    <div className="league-card" onClick={onClick} style={{ cursor: "pointer" }}>
+      <div className="league-card__logo">
+        {competition.logo ? (
+          <img
+            src={competition.logo}
+            alt={competition.name}
+            onError={e => (e.target.style.display = "none")}
+          />
+        ) : (
+          <span className="league-card__placeholder">⚽</span>
+        )}
       </div>
-      <div className="match-row__teams">
-        <div className="match-row__team match-row__team--home">
-          <span className="team-name">{match.home?.name}</span>
-        </div>
-        <div className="match-row__score">
-          <span className={`score-pill${isLive ? " score-pill--live" : ""}`}>
-            {match.home?.score} – {match.away?.score}
-          </span>
-        </div>
-        <div className="match-row__team match-row__team--away">
-          <span className="team-name">{match.away?.name}</span>
-          {match.away?.red_cards > 0 && <span className="red-card-badge">🟥</span>}
-        </div>
+      <div className="league-card__body">
+        <div className="league-card__name">{competition.name}</div>
+        <div className="league-card__country">{competition.country}</div>
       </div>
-      <div className="match-row__meta" />
+      {liveCount > 0 && (
+        <div className="league-card__live">
+          <span className="live-dot" />
+          {liveCount}
+        </div>
+      )}
     </div>
   )
 }
 
 export default function AllLeaguesPage() {
-  const [live, setLive]       = useState([])
-  const [leagues, setLeagues] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [competitions, setCompetitions] = useState([])
+  const [liveMatches, setLiveMatches]   = useState([])
+  const [loading, setLoading]           = useState(true)
+  const navigate = useNavigate()
+
+  const loadLive = () =>
+    fetch("/api/v1/live_scores")
+      .then(r => r.json())
+      .then(setLiveMatches)
+      .catch(() => {})
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/v1/live_scores").then(r => r.json()),
-      fetch("/api/v1/all_leagues").then(r => r.json())
-    ]).then(([liveData, leagueData]) => {
-      setLive(liveData)
-      setLeagues(leagueData)
+      fetch("/api/v1/competitions").then(r => r.json()),
+      loadLive()
+    ]).then(([comps]) => {
+      setCompetitions(comps)
     }).finally(() => setLoading(false))
 
-    const iv = setInterval(() => {
-      fetch("/api/v1/live_scores").then(r => r.json()).then(setLive).catch(() => {})
-    }, 30000)
+    const iv = setInterval(loadLive, 30000)
     return () => clearInterval(iv)
   }, [])
 
-  const leagueMap = leagues.reduce((acc, l) => { acc[l.id] = l; return acc }, {})
-
-  // Group live by league
-  const byLeague = live.reduce((acc, m) => {
-    const lid = m.league_id
-    if (!acc[lid]) acc[lid] = []
-    acc[lid].push(m)
+  // Count live matches per competition code from external API
+  const liveByCode = liveMatches.reduce((acc, m) => {
+    // External API doesn't have our codes — track by league name substring (best-effort)
     return acc
   }, {})
 
-  if (loading) return <div className="site-section container"><div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} /></div>
+  // Group competitions by type
+  const byType = competitions.reduce((acc, c) => {
+    const t = c.competition_type || "league"
+    if (!acc[t]) acc[t] = []
+    acc[t].push(c)
+    return acc
+  }, {})
+
+  const sortedTypes = Object.keys(byType).sort(
+    (a, b) => (TYPE_ORDER[a] ?? 9) - (TYPE_ORDER[b] ?? 9)
+  )
+
+  const totalLive = liveMatches.length
+
+  if (loading) {
+    return (
+      <div className="site-section">
+        <div className="container">
+          <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
       <div className="page-hero" style={{ backgroundImage: "url('/images/bg_2.jpg')" }}>
         <div className="container">
           <h1 className="page-hero__title">All Leagues</h1>
-          <p className="page-hero__sub">{live.length} matches live right now across {Object.keys(byLeague).length} competitions</p>
+          <p className="page-hero__sub">
+            {competitions.length} competitions
+            {totalLive > 0 && ` · ${totalLive} matches live worldwide`}
+          </p>
         </div>
       </div>
 
       <div className="site-section">
         <div className="container">
-          {live.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state__icon">🌍</div>
-              <h3>No live matches worldwide right now</h3>
-              <p>Check back during match times</p>
-              <div className="title-section mt-5"><h2 className="heading">Available Leagues ({leagues.length})</h2></div>
+          {/* Live worldwide banner */}
+          {totalLive > 0 && (
+            <div
+              className="widget-next-match mb-5"
+              style={{ borderLeft: "3px solid #ee1e46", cursor: "pointer" }}
+              onClick={() => navigate("/scores/live")}
+            >
+              <div className="widget-title d-flex align-items-center" style={{ gap: 8 }}>
+                <span className="live-dot" />
+                <h3 style={{ margin: 0 }}>{totalLive} Matches Live Worldwide</h3>
+                <span style={{ marginLeft: "auto", fontSize: "0.8rem", color: "#ee1e46" }}>
+                  View all →
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Competitions grouped by type */}
+          {sortedTypes.map(type => (
+            <div key={type} className="mb-5">
+              <div className="title-section">
+                <h2 className="heading">{TYPE_LABEL[type] ?? type}</h2>
+              </div>
               <div className="leagues-grid">
-                {leagues.map(l => (
-                  <div key={l.id} className="league-chip">
-                    {l.logo && <img src={l.logo} alt="" onError={e => e.target.style.display='none'} />}
-                    <span>{l.name}</span>
-                  </div>
+                {byType[type].map(c => (
+                  <LeagueCard
+                    key={c.id}
+                    competition={c}
+                    liveCount={liveByCode[c.code] ?? 0}
+                    onClick={() => navigate(c.code === "WC" ? "/mundial" : `/leagues/${c.code}`)}
+                  />
                 ))}
               </div>
             </div>
-          ) : (
-            Object.entries(byLeague).map(([leagueId, matches]) => {
-              const league = leagueMap[parseInt(leagueId)]
-              return (
-                <div key={leagueId} className="widget-next-match mb-4">
-                  <div className="widget-title d-flex align-items-center" style={{ gap: 10 }}>
-                    {league?.logo && <img src={league.logo} alt="" style={{ width: 22, height: 22, objectFit: "contain" }} onError={e => e.target.style.display='none'} />}
-                    <h3 style={{ margin: 0 }}>{league?.name || `League ${leagueId}`}</h3>
-                    <span className="live-badge ml-auto">{matches.length} LIVE</span>
-                  </div>
-                  <div className="widget-body p-0">
-                    {matches.map((m, i) => <LiveMatchRow key={i} match={m} />)}
-                  </div>
-                </div>
-              )
-            })
+          ))}
+
+          {competitions.length === 0 && (
+            <div className="empty-state">
+              <div className="empty-state__icon">🌍</div>
+              <h3>No leagues found</h3>
+              <p>Run db:seed to populate competition data</p>
+            </div>
           )}
         </div>
       </div>

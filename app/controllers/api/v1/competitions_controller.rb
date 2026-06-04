@@ -9,7 +9,7 @@ module Api
       end
 
       def show
-        competition = Competition.find_by!(code: params[:id])
+        competition = Competition.find_by!(code: params[:code])
         render json: competition.as_json(
           only: %i[id name code logo country competition_type],
           include: {

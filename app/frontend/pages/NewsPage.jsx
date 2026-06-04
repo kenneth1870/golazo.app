@@ -1,92 +1,103 @@
-// News aggregated from public football RSS feeds via backend proxy
-const NEWS = [
-  {
-    title: "FIFA World Cup 2026: Everything you need to know",
-    source: "FIFA.com",
-    date: "Jun 1, 2026",
-    summary: "The 23rd FIFA World Cup kicks off June 11 with Mexico vs South Africa at Estadio Azteca. 48 teams compete across 16 venues in USA, Canada, and Mexico.",
-    tag: "Preview",
-    url: "#"
-  },
-  {
-    title: "Group A preview: Mexico, South Korea, Czech Republic, South Africa",
-    source: "ESPN FC",
-    date: "Jun 2, 2026",
-    summary: "El Tri opens the tournament on home soil at the iconic Azteca. South Korea's K-League stars could cause an upset. Full group analysis.",
-    tag: "Group Stage",
-    url: "#"
-  },
-  {
-    title: "Lionel Messi leads Argentina into World Cup as defending champions",
-    source: "Goal.com",
-    date: "Jun 2, 2026",
-    summary: "Argentina arrive in North America looking to defend the title they won so dramatically in Qatar 2022. Can Messi lift the trophy once more?",
-    tag: "Teams",
-    url: "#"
-  },
-  {
-    title: "Expanded World Cup: 48 teams, 12 groups, new format explained",
-    source: "BBC Sport",
-    date: "May 30, 2026",
-    summary: "For the first time, 48 nations compete at a World Cup. The format includes 12 groups of 4 teams, with the top 2 plus 8 best third-placed teams advancing.",
-    tag: "Format",
-    url: "#"
-  },
-  {
-    title: "Estadio Azteca set to host historic World Cup opener for third time",
-    source: "The Guardian",
-    date: "May 29, 2026",
-    summary: "Mexico City's legendary stadium becomes the first venue to host World Cup matches in three different editions: 1970, 1986, and now 2026.",
-    tag: "Venues",
-    url: "#"
-  },
-  {
-    title: "Mbappé leads France's quest for back-to-back World Cup titles",
-    source: "L'Équipe",
-    date: "Jun 1, 2026",
-    summary: "Les Bleus, runners-up in Qatar, arrive with Kylian Mbappé at his peak. France face Uruguay and Algeria in a tough Group G.",
-    tag: "Teams",
-    url: "#"
-  },
-]
+import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
 
-const TAG_COLORS = {
-  "Preview":     "#6366f1",
-  "Group Stage": "#ee1e46",
-  "Teams":       "#10b981",
-  "Format":      "#f59e0b",
-  "Venues":      "#8b5cf6",
+const SOURCE_COLORS = {
+  "BBC Sport": "#b80000",
+  "ESPN FC":   "#cc0000",
+  "Goal.com":  "#ee1e46",
+}
+
+function NewsCard({ article, featured }) {
+  const color = SOURCE_COLORS[article.source] || "#ee1e46"
+
+  return (
+    <Link
+      to={`/news/${article.id}`}
+      className={`news-card${featured ? " news-card--featured" : ""}`}
+      style={{ textDecoration: "none" }}
+    >
+      {article.image
+        ? <div className="news-card__img" style={{ backgroundImage: `url(${article.image})` }} />
+        : <div className="news-card__img" style={{ background: "linear-gradient(135deg,#1a1a2e,#16213e)" }} />
+      }
+      <div className="news-card__body">
+        <div className="news-card__tag" style={{ background: color }}>{article.source}</div>
+        <h3 className="news-card__title">{article.title}</h3>
+        {article.summary && <p className="news-card__summary">{article.summary}</p>}
+        <div className="news-card__footer">
+          <span className="news-card__source">{article.source}</span>
+          <span className="news-card__date">{article.date_label}</span>
+        </div>
+      </div>
+    </Link>
+  )
 }
 
 export default function NewsPage() {
+  const [articles, setArticles] = useState([])
+  const [loading, setLoading]   = useState(true)
+  const [source, setSource]     = useState("All")
+
+  useEffect(() => {
+    fetch("/api/v1/news")
+      .then(r => r.json())
+      .then(setArticles)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const sources  = ["All", ...new Set(articles.map(a => a.source))]
+  const filtered = source === "All" ? articles : articles.filter(a => a.source === source)
+
   return (
     <>
       <div className="page-hero" style={{ backgroundImage: "url('/images/bg_1.jpg')" }}>
         <div className="container">
           <h1 className="page-hero__title">News</h1>
-          <p className="page-hero__sub">Latest from FIFA World Cup 2026</p>
+          <p className="page-hero__sub">Football stories from around the world</p>
+        </div>
+      </div>
+
+      <div className="tab-bar sticky-tabs">
+        <div className="container">
+          <div className="tab-bar__inner" style={{ overflowX: "auto" }}>
+            {sources.map(s => (
+              <button
+                key={s}
+                className={`tab-link${source === s ? " tab-link--active" : ""}`}
+                onClick={() => setSource(s)}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="site-section">
         <div className="container">
-          <div className="row">
-            {NEWS.map((article, i) => (
-              <div key={i} className={`col-lg-${i === 0 ? "12" : "6"} mb-4`}>
-                <div className={`news-card${i === 0 ? " news-card--featured" : ""}`}>
-                  <div className="news-card__tag" style={{ background: TAG_COLORS[article.tag] || "#ee1e46" }}>
-                    {article.tag}
-                  </div>
-                  <h3 className="news-card__title">{article.title}</h3>
-                  <p className="news-card__summary">{article.summary}</p>
-                  <div className="news-card__footer">
-                    <span className="news-card__source">{article.source}</span>
-                    <span className="news-card__date">{article.date}</span>
-                  </div>
+          {loading ? (
+            <div className="row">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="col-lg-6 mb-4">
+                  <div className="loading-shimmer" style={{ height: 220, borderRadius: 12 }} />
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state__icon">📰</div>
+              <h3>No articles found</h3>
+            </div>
+          ) : (
+            <div className="row">
+              {filtered.map((article, i) => (
+                <div key={i} className={`col-lg-${i === 0 && source === "All" ? "12" : "6"} mb-4`}>
+                  <NewsCard article={article} featured={i === 0 && source === "All"} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>

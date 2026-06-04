@@ -1,70 +1,146 @@
-import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
-import { useMatches } from "../../hooks/useMatches"
-import MatchCard from "../../components/MatchCard"
+import { useNavigate } from "react-router-dom"
+
+function LiveMatchRow({ match, onMatchClick }) {
+  const hasScore = match.home?.score !== null && match.away?.score !== null
+
+  return (
+    <div className="match-row match-row--live match-row--clickable" onClick={() => onMatchClick(match.external_id)}>
+      <div className="match-row__status">
+        <span className="match-status-live">
+          <span className="live-dot" />
+          {match.minute ? `${match.minute}'` : "LIVE"}
+        </span>
+      </div>
+      <div className="match-row__teams">
+        <div className="match-row__team match-row__team--home">
+          {match.home?.logo && (
+            <img src={match.home.logo} alt="" className="flag-xs"
+              onError={e => (e.target.style.display = "none")} />
+          )}
+          <span className="team-name">{match.home?.name}</span>
+        </div>
+        <div className="match-row__score">
+          {hasScore
+            ? <span className="score-pill score-pill--live">{match.home?.score} – {match.away?.score}</span>
+            : <span className="score-pill score-pill--vs">vs</span>
+          }
+        </div>
+        <div className="match-row__team match-row__team--away">
+          <span className="team-name">{match.away?.name}</span>
+          {match.away?.logo && (
+            <img src={match.away.logo} alt="" className="flag-xs"
+              onError={e => (e.target.style.display = "none")} />
+          )}
+          {match.away?.red_cards > 0 && (
+            <span className="red-card-badge" style={{ marginLeft: 4 }}>🟥×{match.away.red_cards}</span>
+          )}
+        </div>
+      </div>
+      <div className="match-row__meta">
+        {match.venue && <span style={{ fontSize: "0.65rem", color: "#666" }}>{match.venue}</span>}
+      </div>
+    </div>
+  )
+}
+
+function CompetitionBlock({ leagueName, leagueLogo, leagueCountry, matches, onMatchClick }) {
+  const sorted = [...matches].sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0))
+
+  return (
+    <div className="widget-next-match mb-4">
+      <div className="widget-title d-flex align-items-center" style={{ gap: 10 }}>
+        {leagueLogo && (
+          <img src={leagueLogo} alt="" className="logo-sm"
+            onError={e => (e.target.style.display = "none")} />
+        )}
+        <h3 style={{ margin: 0 }}>{leagueName ?? "Live"}</h3>
+        <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{leagueCountry}</span>
+        <span className="live-badge">LIVE</span>
+      </div>
+      <div className="widget-body p-0">
+        {sorted.map((m, i) => <LiveMatchRow key={m.external_id ?? i} match={m} onMatchClick={onMatchClick} />)}
+      </div>
+    </div>
+  )
+}
 
 export default function LivePage() {
-  const { matches, loading } = useMatches("live")
-  const [globalLive, setGlobalLive] = useState([])
+  const [matches, setMatches] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [lastUpdated, setLastUpdated] = useState(null)
   const navigate = useNavigate()
+  const onMatchClick = (extId) => navigate(`/matches/${extId}`)
 
-  useEffect(() => {
+  const load = () =>
     fetch("/api/v1/live_scores")
       .then(r => r.json())
-      .then(setGlobalLive)
+      .then(data => {
+        setMatches(data)
+        setLastUpdated(new Date())
+      })
       .catch(() => {})
-    const iv = setInterval(() => {
-      fetch("/api/v1/live_scores").then(r => r.json()).then(setGlobalLive).catch(() => {})
-    }, 30000)
+
+  useEffect(() => {
+    load().finally(() => setLoading(false))
+    const iv = setInterval(load, 30000)
     return () => clearInterval(iv)
   }, [])
+
+  const byLeague = matches.reduce((acc, m) => {
+    const key = m.league_id ?? m.league_name ?? "other"
+    if (!acc[key]) acc[key] = { leagueName: m.league_name, leagueLogo: m.league_logo, leagueCountry: m.league_country, matches: [] }
+    acc[key].matches.push(m)
+    return acc
+  }, {})
+
+  const groups = Object.values(byLeague).sort((a, b) =>
+    (a.leagueName ?? "").localeCompare(b.leagueName ?? "")
+  )
+
+  if (loading) {
+    return (
+      <div className="site-section">
+        <div className="container">
+          <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="site-section">
       <div className="container">
+        <div className="d-flex align-items-center justify-content-between mb-4">
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span className="live-dot" />
+            <span style={{ fontWeight: 600 }}>{matches.length} matches live</span>
+          </div>
+          {lastUpdated && (
+            <span style={{ fontSize: "0.72rem", color: "#666" }}>
+              Updated {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              <span style={{ marginLeft: 6, color: "#555" }}>· refreshes every 30s</span>
+            </span>
+          )}
+        </div>
 
-        {/* WC Live */}
-        {!loading && (
-          <>
-            {matches.length > 0 ? (
-              <>
-                <div className="title-section"><h2 className="heading"><span className="live-dot" />WC 2026 — Live</h2></div>
-                <div className="row">
-                  {matches.map(m => (
-                    <div key={m.id} className="col-lg-6">
-                      <MatchCard match={m} onClick={() => navigate(`/scores/live`)} />
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="empty-state">
-                <div className="empty-state__icon">⚽</div>
-                <h3>No WC matches live right now</h3>
-                <p>World Cup 2026 begins June 11, 2026</p>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Global live from all leagues */}
-        {globalLive.length > 0 && (
-          <>
-            <div className="title-section mt-5"><h2 className="heading">All Leagues — Live Now ({globalLive.length})</h2></div>
-            <div className="global-live-list">
-              {globalLive.map((m, i) => (
-                <div key={i} className="global-live-row">
-                  <div className="global-live-row__time">{m.minute || "LIVE"}</div>
-                  <div className="global-live-row__teams">
-                    <span>{m.home?.name}</span>
-                    <span className="score-pill score-pill--live">{m.home?.score} – {m.away?.score}</span>
-                    <span>{m.away?.name}</span>
-                  </div>
-                  {m.away?.red_cards > 0 && <span className="red-card-badge">🟥 ×{m.away.red_cards}</span>}
-                </div>
-              ))}
-            </div>
-          </>
+        {groups.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state__pitch" /><div className="empty-state__icon">⚽</div>
+            <h3>No matches live right now</h3>
+            <p>Check back soon or browse fixtures for upcoming games</p>
+          </div>
+        ) : (
+          groups.map((g, i) => (
+            <CompetitionBlock
+              key={g.leagueName ?? i}
+              leagueName={g.leagueName}
+              leagueLogo={g.leagueLogo}
+              leagueCountry={g.leagueCountry}
+              matches={g.matches}
+              onMatchClick={onMatchClick}
+            />
+          ))
         )}
       </div>
     </div>

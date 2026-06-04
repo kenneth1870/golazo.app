@@ -1,6 +1,7 @@
-import { NavLink, Outlet, useLocation } from "react-router-dom"
+import { NavLink, Outlet, Navigate } from "react-router-dom"
 
 const TABS = [
+  { path: "/scores/today",    label: "Today" },
   { path: "/scores/live",     label: "Live" },
   { path: "/scores/results",  label: "Results" },
   { path: "/scores/fixtures", label: "Fixtures" },
@@ -14,7 +15,7 @@ export default function ScoresPage() {
       <div className="page-hero" style={{ backgroundImage: "url('/images/bg_3.jpg')" }}>
         <div className="container">
           <h1 className="page-hero__title">Scores</h1>
-          <p className="page-hero__sub">FIFA World Cup 2026</p>
+          <p className="page-hero__sub">All Competitions · Live Updates</p>
         </div>
       </div>
 

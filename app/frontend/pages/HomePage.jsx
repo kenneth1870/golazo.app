@@ -1,47 +1,119 @@
-import { useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useNavigate, Link } from "react-router-dom"
 import { useMatches } from "../hooks/useMatches"
+import { useFavoriteTeam } from "../hooks/useFavoriteTeam"
+import { useLiveCount } from "../contexts/LiveContext"
 import Hero from "../components/Hero"
 import MatchCard from "../components/MatchCard"
+import FavoriteTeamPicker from "../components/FavoriteTeamPicker"
 
-// Template news posts using local images
-const NEWS_POSTS = [
-  {
-    img: "/images/img_1.jpg",
-    title: "Mexico opens World Cup 2026 at the legendary Estadio Azteca",
-    author: "Golazo Staff",
-    date: "Jun 11, 2026 • Sports"
-  },
-  {
-    img: "/images/img_3.jpg",
-    title: "48 teams, 12 groups — the new World Cup format explained",
-    author: "Golazo Staff",
-    date: "Jun 3, 2026 • Preview"
-  },
-  {
-    img: "/images/img_2.jpg",
-    title: "Argentina arrive as defending champions — can Messi do it again?",
-    author: "Golazo Staff",
-    date: "Jun 2, 2026 • Teams"
-  },
-]
+const FALLBACK_IMGS = ["/images/img_1.jpg", "/images/img_3.jpg", "/images/img_2.jpg"]
+
+function useLatestNews() {
+  const [news, setNews] = useState([])
+  useEffect(() => {
+    fetch("/api/v1/news")
+      .then(r => r.json())
+      .then(data => setNews(data.slice(0, 3)))
+      .catch(() => {})
+  }, [])
+  return news
+}
+
+function FavoriteTeamCard({ fav, todayMatches, upcomingMatches, navigate }) {
+  if (!fav) return null
+
+  const favMatches = [...todayMatches, ...upcomingMatches].filter(m =>
+    m.home_team?.name === fav.name || m.away_team?.name === fav.name
+  )
+  const next = favMatches[0]
+
+  return (
+    <div style={{
+      background: "linear-gradient(135deg, rgba(238,30,70,.12) 0%, rgba(238,30,70,.04) 100%)",
+      border: "1px solid rgba(238,30,70,.25)", borderRadius: 12,
+      padding: "16px 20px", marginBottom: 20, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {fav.flag_url && <img src={fav.flag_url} alt="" className="logo-sm" onError={e => (e.target.style.display="none")} />}
+        <div>
+          <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>Your team</div>
+          <div style={{ fontWeight: 800, color: "#fff", fontSize: "1rem" }}>{fav.name}</div>
+          {fav.group && <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>Group {fav.group}</div>}
+        </div>
+      </div>
+      {next ? (
+        <div
+          style={{ marginLeft: "auto", cursor: "pointer", textAlign: "right" }}
+          onClick={() => next.external_id ? navigate(`/matches/${next.external_id}`) : navigate("/scores/fixtures")}
+        >
+          <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>
+            {next.status === "live" ? "Playing now" : "Next match"}
+          </div>
+          <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.9rem" }}>
+            {next.home_team?.name} vs {next.away_team?.name}
+          </div>
+          <div style={{ fontSize: "0.72rem", color: "#ee1e46" }}>
+            {next.status === "live"
+              ? `LIVE ${next.minute ? `${next.minute}'` : ""}`
+              : next.kickoff_at
+              ? new Date(next.kickoff_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+              : "TBD"}
+          </div>
+        </div>
+      ) : (
+        <div style={{ marginLeft: "auto", fontSize: "0.78rem", color: "var(--muted)" }}>No upcoming matches found</div>
+      )}
+    </div>
+  )
+}
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const { matches: liveMatches }     = useMatches("live",     { competition: "WC" })
+  const { matches: liveWC }         = useMatches("live",     { competition: "WC" })
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: "WC" })
-  const nextMatch = upcomingMatches[0]
+  const latestNews = useLatestNews()
+  const [fav]  = useFavoriteTeam()
+  const liveCount  = useLiveCount()
+  const nextMatch  = upcomingMatches[0]
 
   return (
     <>
       {/* Hero — exact template structure */}
       <Hero nextMatch={nextMatch} />
 
-      {/* Featured match — .d-flex.team-vs (template style) */}
+      {/* Live now bar */}
+      {liveCount > 0 && (
+        <div
+          style={{ background: "#ee1e46", padding: "10px 0", cursor: "pointer" }}
+          onClick={() => navigate("/scores/today")}
+        >
+          <div className="container d-flex align-items-center" style={{ gap: 10 }}>
+            <span className="live-dot" />
+            <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.85rem" }}>
+              {liveCount} match{liveCount !== 1 ? "es" : ""} live right now
+            </span>
+            <span style={{ color: "rgba(255,255,255,.7)", fontSize: "0.75rem", marginLeft: "auto" }}>
+              View all →
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Favorite team card + picker */}
+      <div className="container" style={{ paddingTop: 20 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: fav ? 0 : 8 }}>
+          <FavoriteTeamCard fav={fav} todayMatches={[]} upcomingMatches={upcomingMatches} navigate={navigate} />
+          <FavoriteTeamPicker />
+        </div>
+      </div>
+
+      {/* Featured WC match */}
       <div className="container">
         <div className="row">
           <div className="col-lg-12">
-            {liveMatches.length > 0 ? (
-              liveMatches.slice(0, 1).map(m => (
+            {liveWC.length > 0 ? (
+              liveWC.slice(0, 1).map(m => (
                 <MatchCard key={m.id} match={m} onClick={() => navigate("/scores/live")} />
               ))
             ) : upcomingMatches.length > 0 ? (
@@ -60,27 +132,38 @@ export default function HomePage() {
             </div>
           </div>
           <div className="row no-gutters">
-            {NEWS_POSTS.map((post, i) => (
+            {(latestNews.length > 0 ? latestNews : [null, null, null]).map((post, i) => (
               <div key={i} className="col-md-4">
-                <div className="post-entry">
-                  <a href="#" onClick={e => { e.preventDefault(); navigate("/news") }}>
-                    <img src={post.img} alt={post.title} className="img-fluid" />
-                  </a>
-                  <div className="caption">
-                    <div className="caption-inner">
-                      <h3 className="mb-3">{post.title}</h3>
-                      <div className="author d-flex align-items-center">
-                        <div className="img mb-2 mr-3">
-                          <img src="/images/person_1.jpg" alt="" />
-                        </div>
-                        <div className="text">
-                          <h4>{post.author}</h4>
-                          <span>{post.date}</span>
-                        </div>
+                <Link to={post?.id ? `/news/${post.id}` : "/news"} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+                  <div className="post-entry">
+                    <img
+                      src={post?.image || FALLBACK_IMGS[i]}
+                      alt={post?.title || ""}
+                      className="img-fluid"
+                      onError={e => { e.target.src = FALLBACK_IMGS[i % FALLBACK_IMGS.length] }}
+                    />
+                    <div className="caption">
+                      <div className="caption-inner">
+                        {post ? (
+                          <>
+                            <h3 className="mb-3">{post.title}</h3>
+                            <div className="author d-flex align-items-center">
+                              <div className="img mb-2 mr-3">
+                                <img src="/images/person_1.jpg" alt="" />
+                              </div>
+                              <div className="text">
+                                <h4>{post.source}</h4>
+                                <span>{post.date_label}</span>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="loading-shimmer" style={{ height: 60, borderRadius: 8 }} />
+                        )}
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               </div>
             ))}
           </div>
@@ -104,7 +187,7 @@ export default function HomePage() {
                       <div className="d-flex align-items-center justify-content-around justify-content-between w-100">
                         <div className="team-1 text-center">
                           {nextMatch.home_team?.flag_url
-                            ? <img src={nextMatch.home_team.flag_url} alt="" style={{ maxWidth: 80, borderRadius: 4 }} />
+                            ? <img src={nextMatch.home_team.flag_url} alt="" className="logo-md" style={{ margin: "0 auto" }} />
                             : <span style={{ fontSize: "3rem" }}>🏳️</span>
                           }
                           <h3>{nextMatch.home_team?.name}</h3>
@@ -114,7 +197,7 @@ export default function HomePage() {
                         </div>
                         <div className="team-2 text-center">
                           {nextMatch.away_team?.flag_url
-                            ? <img src={nextMatch.away_team.flag_url} alt="" style={{ maxWidth: 80, borderRadius: 4 }} />
+                            ? <img src={nextMatch.away_team.flag_url} alt="" className="logo-md" style={{ margin: "0 auto" }} />
                             : <span style={{ fontSize: "3rem" }}>🏳️</span>
                           }
                           <h3>{nextMatch.away_team?.name}</h3>
@@ -166,14 +249,14 @@ export default function HomePage() {
                         </td>
                         <td>
                           <div className="d-flex align-items-center" style={{ gap: 6 }}>
-                            {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt="" style={{ width: 20, height: 14, objectFit: "cover", borderRadius: 2 }} />}
+                            {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt="" className="flag-xs" />}
                             <strong className="text-white">{m.home_team?.code}</strong>
                           </div>
                         </td>
                         <td style={{ color: "gray", fontSize: "0.75rem" }}>vs</td>
                         <td>
                           <div className="d-flex align-items-center" style={{ gap: 6 }}>
-                            {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt="" style={{ width: 20, height: 14, objectFit: "cover", borderRadius: 2 }} />}
+                            {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt="" className="flag-xs" />}
                             <strong className="text-white">{m.away_team?.code}</strong>
                           </div>
                         </td>

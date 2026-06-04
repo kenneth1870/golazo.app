@@ -19,8 +19,11 @@ class LiveScoresClient
   }.freeze
 
   def initialize
+    key = ENV["RAPIDAPI_KEY"]
+    raise "RAPIDAPI_KEY not configured" if key.blank?
+
     @conn = Faraday.new(url: BASE_URL) do |f|
-      f.headers["x-rapidapi-key"]  = ENV.fetch("RAPIDAPI_KEY")
+      f.headers["x-rapidapi-key"]  = key
       f.headers["x-rapidapi-host"] = HOST
       f.headers["Content-Type"]    = "application/json"
       f.request :retry, max: 2, interval: 1

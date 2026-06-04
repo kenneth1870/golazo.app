@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_03_220000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_04_061349) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -72,6 +72,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_03_220000) do
     t.index ["competition_id"], name: "index_matches_on_competition_id"
     t.index ["external_id"], name: "index_matches_on_external_id", unique: true
     t.index ["home_team_id"], name: "index_matches_on_home_team_id"
+  end
+
+  create_table "predictions", force: :cascade do |t|
+    t.integer "away_votes", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.integer "draw_votes", default: 0, null: false
+    t.integer "home_votes", default: 0, null: false
+    t.string "match_external_id", null: false
+    t.datetime "updated_at", null: false
+    t.text "voter_tokens", default: "[]", null: false
+    t.index ["match_external_id"], name: "index_predictions_on_match_external_id", unique: true
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|

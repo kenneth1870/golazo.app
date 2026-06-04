@@ -14,7 +14,7 @@ export default function UpcomingMatchWidget({ match, onClick }) {
           <div className="d-flex align-items-center justify-content-around w-100">
             <div className="team-1 text-center">
               {match.home_team?.flag_url
-                ? <img src={match.home_team.flag_url} alt={match.home_team.code} style={{ height: 48, borderRadius: 3 }} />
+                ? <img src={match.home_team.flag_url} alt={match.home_team.code} className="logo-md" style={{ margin: "0 auto" }} />
                 : <span style={{ fontSize: "2rem" }}>🏳️</span>
               }
               <h3 style={{ fontSize: "0.9rem", marginTop: 8 }}>{match.home_team?.name}</h3>
@@ -24,7 +24,7 @@ export default function UpcomingMatchWidget({ match, onClick }) {
             </div>
             <div className="team-2 text-center">
               {match.away_team?.flag_url
-                ? <img src={match.away_team.flag_url} alt={match.away_team.code} style={{ height: 48, borderRadius: 3 }} />
+                ? <img src={match.away_team.flag_url} alt={match.away_team.code} className="logo-md" style={{ margin: "0 auto" }} />
                 : <span style={{ fontSize: "2rem" }}>🏳️</span>
               }
               <h3 style={{ fontSize: "0.9rem", marginTop: 8 }}>{match.away_team?.name}</h3>

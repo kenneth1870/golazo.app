@@ -61,7 +61,7 @@ export default function GroupStandings() {
                                 <img
                                   src={s.team.flag_url}
                                   alt={s.team.code}
-                                  style={{ width: 28, height: 18, objectFit: "cover", borderRadius: 2 }}
+                                  className="flag-xs"
                                 />
                               )}
                               <strong className="text-white">{s.team.name}</strong>

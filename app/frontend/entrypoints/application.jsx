@@ -4,13 +4,16 @@ import { BrowserRouter } from "react-router-dom"
 import { I18nextProvider } from "react-i18next"
 import i18n from "../i18n"
 import App from "../App"
+import { LiveProvider } from "../contexts/LiveContext"
 import "../styles/application.css"
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <I18nextProvider i18n={i18n}>
       <BrowserRouter>
-        <App />
+        <LiveProvider>
+          <App />
+        </LiveProvider>
       </BrowserRouter>
     </I18nextProvider>
   </StrictMode>
