@@ -226,7 +226,7 @@ export default function TodayPage() {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
         const filtered = raw.filter(m => {
           const ko = m.kickoff_at || m.kickoff
-          if (!ko) return true
+          if (!ko) return false
           const localDate = new Date(ko).toLocaleDateString("en-CA", { timeZone: tz })
           return localDate === iso
         })

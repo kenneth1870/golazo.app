@@ -62,9 +62,23 @@ class LiveScoresClient
   # (after ~18:00 UTC) appear in the *next* UTC day. We fetch both days
   # and merge; the frontend then filters by the user's local date.
   def matches_for_date(date)
-    Rails.cache.fetch("live_scores_date_v7_#{date.to_date.iso8601}", expires_in: 5.minutes) do
+    Rails.cache.fetch("live_scores_date_v8_#{date.to_date.iso8601}", expires_in: 5.minutes) do
       raw = fetch_raw_matches(date.to_date) + fetch_raw_matches(date.to_date + 1)
       raw.uniq! { |m| m["id"] || m["matchId"] }
+
+      # Guard against date+1 scheduled matches leaking into today's view.
+      # Allow through date 00:00 UTC → (date+1) 06:00 UTC so UTC-6 and earlier
+      # users still see their local late-night matches, while morning matches
+      # from the next calendar day are excluded.
+      window_start = date.to_date.beginning_of_day.utc
+      window_end   = (date.to_date + 1).beginning_of_day.utc + 6.hours
+      raw.select! do |m|
+        ts = m["startTimestamp"]
+        next true unless ts
+        t = Time.at(ts.to_i).utc
+        t >= window_start && t < window_end
+      end
+
       league_map = build_league_map(raw)
       raw.filter_map { |m| normalize_match(m, league_map) }
          .select { |m| featured_league?(m, league_map) }
