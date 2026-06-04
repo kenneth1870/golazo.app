@@ -1,173 +1,165 @@
 class WorldCupSync
+  # WC 2026 league/season IDs on free-api-live-football-data.p.rapidapi.com
+  # Override via ENV if the API uses different IDs.
+  WC_LEAGUE_ID = (ENV["RAPIDAPI_WC_LEAGUE_ID"] || 1).to_i
+  WC_SEASON_ID = (ENV["RAPIDAPI_WC_SEASON_ID"] || 2026).to_i
+
+  STATUS_MAP = {
+    1  => "scheduled",
+    2  => "live", 3 => "live", 4 => "live", 5 => "live",
+    6  => "finished", 7 => "finished", 8 => "finished",
+    11 => "live", 12 => "live",
+  }.freeze
+
   def initialize(competition_code: "WC")
-    @api  = FootballDataClient.new
+    @api  = LiveScoresClient.new
     @code = competition_code
     @log  = Rails.logger
   end
 
-  # Full sync for one competition
-  def sync_all
-    log "Full sync: #{@code}"
-    competition = sync_competition
-    sync_teams(competition)
-    sync_fixtures(competition)
-    sync_standings(competition)
-    log "Done — Teams: #{Team.count}, Matches: #{Match.count}, Standings: #{Standing.count}"
-  end
-
-  # Sync all competitions available on the account, then today's matches
-  def sync_today
-    matches = @api.today_matches
-    log "Today: #{matches.length} matches across #{matches.map { |m| m.dig('competition','code') }.uniq.length} competitions"
-    matches.each { |m| sync_match_row(m) }
-  end
-
-  # Sync only currently live matches
+  # Sync all live matches across all leagues, updating DB records matched by team name
   def sync_live
     matches = @api.live_matches
     return log("No live matches") if matches.empty?
-    log "Live: #{matches.length} matches"
-    matches.each { |m| sync_match_row(m) }
+
+    log("Live: #{matches.length} matches")
+    updated = 0
+    matches.each { |raw| updated += 1 if sync_match_from_live(raw) }
+    log("Updated #{updated} matches")
   end
 
+  # Sync today's matches (scheduled + live + finished today)
+  def sync_today
+    matches = @api.matches_for_date(Date.today)
+    return log("No matches today") if matches.empty?
+
+    log("Today: #{matches.length} matches")
+    updated = 0
+    matches.each { |m| updated += 1 if sync_match_from_normalized(m) }
+    log("Updated #{updated} matches")
+  end
+
+  # Sync standings for the WC competition using the RapidAPI standings endpoint
   def sync_standings(competition = nil)
     competition ||= Competition.find_by!(code: @code)
-    groups = @api.standings(@code)
-    log "Standings: #{groups.length} groups"
 
-    groups.each do |group|
-      group_label = group["group"]&.gsub("GROUP_", "") || "?"
-      (group["table"] || []).each do |entry|
-        team = Team.find_by(external_id: entry.dig("team", "id"))
-        next unless team
+    groups = @api.league_standings(WC_LEAGUE_ID, WC_SEASON_ID)
+    return log("No standings data returned") if groups.empty?
 
-        Standing.find_or_initialize_by(team: team, competition: competition).tap do |s|
-          s.group_name    = group_label
-          s.rank          = entry["position"]
-          s.played        = entry["playedGames"]
-          s.won           = entry["won"]
-          s.drawn         = entry["draw"]
-          s.lost          = entry["lost"]
-          s.goals_for     = entry["goalsFor"]
-          s.goals_against = entry["goalsAgainst"]
-          s.points        = entry["points"]
-          s.save!
-        end
-      end
+    log("Standings: #{groups.length} entries")
+    groups.each { |entry| upsert_standing(entry, competition) }
+  end
+
+  # Legacy full sync — teams and fixtures come from DB seeds for WC 2026.
+  # Only live/today sync and standings are updated from the API.
+  def sync_all
+    log("Sync all: #{@code} (standings + today)")
+    competition = Competition.find_by(code: @code)
+    unless competition
+      log("Competition #{@code} not found in DB — run seeds first")
+      return
     end
+    sync_standings(competition)
+    sync_today
+    log("Done")
   end
 
   private
 
-  def sync_competition
-    raw = @api.competitions.find { |c| c["code"] == @code }
+  # Updates a DB match from a live-endpoint raw match object
+  def sync_match_from_live(raw)
+    home_name  = raw.dig("home", "name") || raw.dig("home", "longName")
+    away_name  = raw.dig("away", "name") || raw.dig("away", "longName")
+    return false unless home_name && away_name
 
-    unless raw
-      raw = { "id" => nil, "name" => @code, "code" => @code, "type" => "CUP",
-              "emblem" => nil, "area" => {} }
-    end
+    home_score = raw.dig("home", "score")
+    away_score = raw.dig("away", "score")
+    minute     = raw.dig("status", "liveTime", "long")
 
-    Competition.find_or_initialize_by(code: @code).tap do |c|
-      c.name             = raw["name"]
-      c.logo             = raw["emblem"]
-      c.country          = raw.dig("area", "name")
-      c.competition_type = raw["type"]
-      c.external_id      = raw["id"]
-      c.save!
-    end
-  end
+    match = find_match_by_teams(home_name, away_name)
+    return false unless match
+    return false if home_score == match.home_score && away_score == match.away_score
 
-  def sync_teams(competition)
-    raw = @api.teams(@code)
-    log "Teams: #{raw.length}"
-    raw.each do |t|
-      Team.find_or_initialize_by(external_id: t["id"]).tap do |team|
-        team.name     = t["name"]
-        team.code     = (t["tla"] || t["shortName"]&.upcase&.first(3) || "???")
-        team.flag_url = t["crest"]
-        team.save!
-      end
-    end
-  end
-
-  def sync_fixtures(competition)
-    raw = @api.matches(@code)
-    log "Fixtures: #{raw.length}"
-    raw.each { |m| sync_match_row(m, competition) }
-  end
-
-  def sync_match_row(m, competition = nil)
-    # Resolve competition from DB or inline competition data
-    comp_code = m.dig("competition", "code") || @code
-    competition ||= Competition.find_or_create_by!(code: comp_code) do |c|
-      c.name             = m.dig("competition", "name") || comp_code
-      c.logo             = m.dig("competition", "emblem")
-      c.competition_type = m.dig("competition", "type") || "LEAGUE"
-      c.external_id      = m.dig("competition", "id")
-    end
-
-    home_team = find_or_create_team(m["homeTeam"])
-    away_team = find_or_create_team(m["awayTeam"])
-    return unless home_team && away_team
-
-    status     = FootballDataClient::STATUS_MAP.fetch(m["status"], "scheduled")
-    group      = m["group"]&.gsub("GROUP_", "")
-    round      = humanize_round(m["stage"], m["matchday"])
-    home_score = m.dig("score", "fullTime", "home")
-    away_score = m.dig("score", "fullTime", "away")
-
-    if status == "live" && home_score.nil?
-      home_score = m.dig("score", "halfTime", "home")
-      away_score = m.dig("score", "halfTime", "away")
-    end
-
-    match = Match.find_or_initialize_by(external_id: m["id"])
-    match.assign_attributes(
-      competition: competition,
-      home_team:   home_team,
-      away_team:   away_team,
-      kickoff_at:  m["utcDate"],
-      venue:       m["venue"] || competition.name,
-      round:       round,
-      group_stage: group,
-      status:      status,
-      home_score:  status == "scheduled" ? nil : home_score,
-      away_score:  status == "scheduled" ? nil : away_score
-    )
-    match.save!
-
-    if status == "live"
-      ActionCable.server.broadcast("match_#{match.id}", {
-        type: "score_update", home_score: match.home_score,
-        away_score: match.away_score, status: match.status
-      })
-    end
-
-    match
+    match.update!(status: "live", home_score: home_score, away_score: away_score)
+    broadcast_score(match, minute)
+    true
   rescue => e
-    log "Error on match #{m['id']}: #{e.message}"
+    log("Live sync error for #{home_name} v #{away_name}: #{e.message}")
+    false
   end
 
-  def find_or_create_team(data)
-    return nil if data.nil? || data["id"].nil?
-    Team.find_or_initialize_by(external_id: data["id"]).tap do |t|
-      t.name     ||= data["name"] || data["shortName"] || "Unknown"
-      t.code     ||= (data["tla"] || data["shortName"]&.upcase&.first(3) || "???")
-      t.flag_url ||= data["crest"]
-      t.save! if t.new_record? || t.changed?
-    end
+  # Updates a DB match from a normalized match hash (from matches_for_date)
+  def sync_match_from_normalized(m)
+    home_name = m[:home]&.dig(:name) || m.dig(:home, "name")
+    away_name = m[:away]&.dig(:name) || m.dig(:away, "name")
+    return false unless home_name && away_name
+
+    status     = m[:status]
+    home_score = m.dig(:home, :score)
+    away_score = m.dig(:away, :score)
+
+    match = find_match_by_teams(home_name, away_name)
+    return false unless match
+
+    attrs = { status: status }
+    attrs[:home_score] = home_score unless status == "scheduled"
+    attrs[:away_score] = away_score unless status == "scheduled"
+
+    match.update!(attrs)
+    broadcast_score(match, m[:minute]) if status == "live"
+    true
+  rescue => e
+    log("Today sync error for #{home_name} v #{away_name}: #{e.message}")
+    false
   end
 
-  def humanize_round(stage, matchday)
-    case stage
-    when "GROUP_STAGE"    then "Group Stage - MD#{matchday}"
-    when "ROUND_OF_16"    then "Round of 16"
-    when "QUARTER_FINALS" then "Quarter Final"
-    when "SEMI_FINALS"    then "Semi Final"
-    when "THIRD_PLACE"    then "3rd Place"
-    when "FINAL"          then "Final"
-    else stage&.humanize || "?"
+  def upsert_standing(entry, competition)
+    # Attempt to match by team name since external_ids may differ across APIs
+    team_name = entry.dig("team", "name") || entry["teamName"]
+    return unless team_name
+
+    team = Team.where(competition_id: nil)
+               .where("LOWER(name) = ?", team_name.downcase)
+               .first
+    team ||= Team.where("LOWER(name) LIKE ?", "%#{team_name.downcase.split.first}%").first
+    return unless team
+
+    Standing.find_or_initialize_by(team: team, competition: competition).tap do |s|
+      s.group_name    = entry["group"] || entry["groupName"]
+      s.rank          = entry["position"] || entry["rank"]
+      s.played        = entry["played"] || entry["playedGames"]
+      s.won           = entry["won"]
+      s.drawn         = entry["drawn"] || entry["draw"]
+      s.lost          = entry["lost"]
+      s.goals_for     = entry["goalsFor"] || entry["scored"]
+      s.goals_against = entry["goalsAgainst"] || entry["conceded"]
+      s.points        = entry["points"]
+      s.save!
     end
+  rescue => e
+    log("Standing upsert error for #{team_name}: #{e.message}")
+  end
+
+  def find_match_by_teams(home_name, away_name)
+    Match.joins(:home_team, :away_team)
+         .where(status: %w[scheduled live])
+         .find_by(
+           "LOWER(home_teams_matches.name) = ? AND LOWER(away_teams_matches.name) = ?",
+           home_name.downcase, away_name.downcase
+         )
+  rescue => e
+    log("Match lookup error: #{e.message}")
+    nil
+  end
+
+  def broadcast_score(match, minute = nil)
+    ActionCable.server.broadcast("match_#{match.id}", {
+      type:       "score_update",
+      home_score: match.home_score,
+      away_score: match.away_score,
+      status:     match.status,
+      minute:     minute,
+    })
   end
 
   def log(msg)

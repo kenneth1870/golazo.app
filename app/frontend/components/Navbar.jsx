@@ -64,29 +64,6 @@ function MundialMegaMenu({ t }) {
   )
 }
 
-// ─── Desktop dropdown items ───────────────────────────
-function ScoresDropdown({ t, liveCount }) {
-  return (
-    <div className="dropdown-menu-custom">
-      <NavLink to="/scores/today"    className={({ isActive }) => `dropdown-item-custom${isActive ? " active" : ""}`}>
-        <span className="dd-icon">📅</span> Today
-      </NavLink>
-      <NavLink to="/scores/live"     className={({ isActive }) => `dropdown-item-custom${isActive ? " active" : ""}`}>
-        <span className="dd-icon">
-          {liveCount > 0 ? <span className="live-dot" style={{ verticalAlign: "middle" }} /> : "🔴"}
-        </span>
-        {t("nav.live")}
-        {liveCount > 0 && <span className="dd-live-count">{liveCount}</span>}
-      </NavLink>
-      <NavLink to="/scores/results"  className={({ isActive }) => `dropdown-item-custom${isActive ? " active" : ""}`}>
-        <span className="dd-icon">✓</span> {t("nav.results")}
-      </NavLink>
-      <NavLink to="/scores/fixtures" className={({ isActive }) => `dropdown-item-custom${isActive ? " active" : ""}`}>
-        <span className="dd-icon">🗓</span> {t("nav.fixtures")}
-      </NavLink>
-    </div>
-  )
-}
 
 function LeaguesDropdown({ t }) {
   return (
@@ -171,14 +148,6 @@ export default function Navbar() {
   const toggle = (key) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }))
 
   // Mobile sections
-  const MOBILE_SCORES = [
-    { label: "Today",             path: "/scores/today" },
-    { label: t("nav.live"),       path: "/scores/live", liveCount },
-    { label: t("nav.results"),    path: "/scores/results" },
-    { label: t("nav.fixtures"),   path: "/scores/fixtures" },
-    { label: "Group Stage",       path: "/scores/groups" },
-    { label: t("nav.knockout"),   path: "/scores/knockout" },
-  ]
   const MOBILE_MUNDIAL = [
     { label: t("nav.teams"),      path: "/mundial/teams" },
     { label: t("nav.schedule"),   path: "/mundial/schedule" },
@@ -249,15 +218,15 @@ export default function Navbar() {
             </NavLink>
           </div>
 
-          {/* Scores */}
-          <MobileSection label={t("nav.scores")} sectionKey="scores" badge={liveCount}>
-            {MOBILE_SCORES.map(item => (
-              <NavLink key={item.path} to={item.path} className={({ isActive }) => `mobile-nav-child${isActive ? " active" : ""}`}>
-                {item.label}
-                {item.liveCount > 0 && <span className="live-dot" style={{ marginLeft: 6, verticalAlign: "middle" }} />}
-              </NavLink>
-            ))}
-          </MobileSection>
+          {/* Live Matches */}
+          <div className="mobile-nav-item">
+            <NavLink to="/scores/today" className={({ isActive }) => `mobile-nav-parent${isActive ? " active" : ""}`} style={{ textDecoration: "none" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {t("nav.liveMatches", "Live Matches")}
+                {liveCount > 0 && <span className="live-dot" />}
+              </span>
+            </NavLink>
+          </div>
 
           {/* Mundial */}
           <MobileSection label="Mundial 2026" sectionKey="mundial">
@@ -313,15 +282,11 @@ export default function Navbar() {
                 {t("nav.home")}
               </NavLink>
 
-              {/* Scores */}
-              <div className="nav-item has-dropdown">
-                <NavLink to="/scores" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
-                  {t("nav.scores")}
-                  {liveCount > 0 && <span className="live-dot" style={{ marginLeft: 5, verticalAlign: "middle" }} />}
-                  <span className="nav-chevron">▼</span>
-                </NavLink>
-                <ScoresDropdown t={t} liveCount={liveCount} />
-              </div>
+              {/* Live Matches */}
+              <NavLink to="/scores/today" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
+                {t("nav.liveMatches", "Live Matches")}
+                {liveCount > 0 && <span className="live-dot" style={{ marginLeft: 5, verticalAlign: "middle" }} />}
+              </NavLink>
 
               {/* Mundial 2026 (mega-menu) */}
               <div className="nav-item has-mega">

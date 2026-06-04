@@ -3,6 +3,8 @@
 .env.*.local
 config/master.key
 config/credentials/*.key
+.claude/settings.json
+.claude/settings.local.json
 
 # Dependencies
 node_modules/

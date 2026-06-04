@@ -3,7 +3,7 @@ module Api
     class ResultsController < BaseController
       def index
         date = parse_date(params[:date]) || Date.yesterday
-        render json: ApiSportsClient.new.matches_for_date(date)
+        render json: LiveScoresClient.new.matches_for_date(date)
       rescue => e
         Rails.logger.error("[ResultsController] #{e.message}")
         render json: []

@@ -120,19 +120,22 @@ function FlagOrInitials({ name, src, size = 80 }) {
 }
 
 // ─── Scoreboard ────────────────────────────────────────
-function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare }) {
+function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, notifEnabled, notifSupported }) {
   const [copied, setCopied] = useState(false)
   const home   = fixture?.teams?.home
   const away   = fixture?.teams?.away
   const goals  = fixture?.goals
   const status = fixture?.fixture?.status
+  const isNS   = status?.short === "NS"
+  const isFT   = status?.short === "FT" || status?.short === "AET" || status?.short === "PEN"
+  const isHT   = status?.short === "HT"
 
   function share() {
     const hs   = goals?.home ?? "?"
     const as   = goals?.away ?? "?"
     const text = isLive
-      ? `🔴 LIVE: ${home?.name} ${hs}–${as} ${away?.name} | golazo.app/matches/${matchId}`
-      : `${home?.name} ${hs}–${as} ${away?.name} | golazo.app/matches/${matchId}`
+      ? `🔴 LIVE: ${home?.name} ${hs}–${as} ${away?.name}`
+      : `${home?.name} ${hs}–${as} ${away?.name}`
     navigator.clipboard?.writeText(text).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
@@ -140,68 +143,138 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare }) {
     onShare?.()
   }
 
+  const kickoffStr = fixture?.fixture?.date
+    ? new Date(fixture.fixture.date).toLocaleString([], {
+        weekday: "short", month: "short", day: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      })
+    : null
+
   return (
     <div className="scoreboard">
       <div className="scoreboard__half scoreboard__half--home" />
       <div className="scoreboard__half scoreboard__half--away" />
 
-      <div className="container scoreboard__inner" style={{ maxWidth: 700 }}>
+      <div className="container scoreboard__inner" style={{ maxWidth: 740 }}>
+
+        {/* Competition row */}
         <div className="scoreboard__competition">
           {fixture?.league?.logo && (
-            <img src={fixture.league.logo} alt="" className="logo-sm"
+            <img src={fixture.league.logo} alt="" style={{ width: 18, height: 18, objectFit: "contain" }}
               onError={e => (e.target.style.display = "none")} />
           )}
           <span>{fixture?.league?.name}</span>
-          {fixture?.league?.round && <span className="scoreboard__round">{fixture.league.round}</span>}
+          {fixture?.league?.round && (
+            <span className="scoreboard__round">{fixture.league.round}</span>
+          )}
         </div>
 
+        {/* Status pill */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+          {isLive ? (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              background: "rgba(238,30,70,.15)", border: "1px solid rgba(238,30,70,.4)",
+              borderRadius: 20, padding: "5px 14px",
+              fontSize: ".72rem", fontWeight: 800, color: "#ee1e46", letterSpacing: ".06em",
+            }}>
+              <span className="live-dot" />
+              {liveMinute ? `${liveMinute}'` : "LIVE"}
+              {isHT && " · Half Time"}
+            </div>
+          ) : isFT ? (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)",
+              borderRadius: 20, padding: "5px 14px",
+              fontSize: ".72rem", fontWeight: 700, color: "rgba(255,255,255,.5)", letterSpacing: ".06em",
+            }}>
+              Full Time
+            </div>
+          ) : isNS && kickoffStr ? (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)",
+              borderRadius: 20, padding: "5px 14px",
+              fontSize: ".72rem", fontWeight: 600, color: "rgba(255,255,255,.5)",
+            }}>
+              {kickoffStr}
+            </div>
+          ) : (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)",
+              borderRadius: 20, padding: "5px 14px",
+              fontSize: ".72rem", fontWeight: 700, color: "rgba(255,255,255,.5)",
+            }}>
+              {status?.long || status?.short || "—"}
+            </div>
+          )}
+        </div>
+
+        {/* Teams + Score */}
         <div className="scoreboard__teams">
           <div className="scoreboard__team">
-            <FlagOrInitials name={home?.name} src={home?.logo} size={80} />
+            <FlagOrInitials name={home?.name} src={home?.logo} size={76} />
             <div className={`scoreboard__team-name${home?.winner ? " scoreboard__team-name--winner" : ""}`}>
               {home?.name}
             </div>
-            {home?.winner && <div className="scoreboard__winner-badge">WINNER</div>}
           </div>
 
           <div className="scoreboard__score-block">
-            {isLive && (
-              <div className="scoreboard__live-label">
-                <span className="live-dot" />
-                {liveMinute ? `${liveMinute}'` : "LIVE"}
+            <div className="scoreboard__score" style={{ gap: 12 }}>
+              <span style={{ color: home?.winner ? "#10b981" : "#fff" }}>{goals?.home ?? (isNS ? "–" : "0")}</span>
+              <span className="scoreboard__score-sep">:</span>
+              <span style={{ color: away?.winner ? "#10b981" : "#fff" }}>{goals?.away ?? (isNS ? "–" : "0")}</span>
+            </div>
+            {home?.winner && (
+              <div style={{ textAlign: "center", marginTop: 8, fontSize: ".6rem", fontWeight: 800, letterSpacing: ".1em", color: "#10b981" }}>
+                {home.name} WIN
               </div>
             )}
-            <div className="scoreboard__score">
-              <span>{goals?.home ?? "–"}</span>
-              <span className="scoreboard__score-sep">:</span>
-              <span>{goals?.away ?? "–"}</span>
-            </div>
-            <div className="scoreboard__status">
-              {status?.short === "FT"  ? "Full Time"
-              : status?.short === "HT" ? "Half Time"
-              : status?.short === "NS" ? new Date(fixture?.fixture?.date).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-              : status?.long || status?.short}
-            </div>
+            {away?.winner && (
+              <div style={{ textAlign: "center", marginTop: 8, fontSize: ".6rem", fontWeight: 800, letterSpacing: ".1em", color: "#10b981" }}>
+                {away.name} WIN
+              </div>
+            )}
           </div>
 
           <div className="scoreboard__team scoreboard__team--away">
-            <FlagOrInitials name={away?.name} src={away?.logo} size={80} />
+            <FlagOrInitials name={away?.name} src={away?.logo} size={76} />
             <div className={`scoreboard__team-name${away?.winner ? " scoreboard__team-name--winner" : ""}`}>
               {away?.name}
             </div>
-            {away?.winner && <div className="scoreboard__winner-badge">WINNER</div>}
           </div>
         </div>
 
+        {/* Footer: venue + share + notif */}
         <div className="scoreboard__footer">
           {fixture?.fixture?.venue?.name && (
             <span className="scoreboard__venue">
-              📍 {fixture.fixture.venue.name}{fixture.fixture.venue.city ? `, ${fixture.fixture.venue.city}` : ""}
+              📍 {fixture.fixture.venue.name}
+              {fixture.fixture.venue.city ? `, ${fixture.fixture.venue.city}` : ""}
             </span>
           )}
-          <button onClick={share} className={`scoreboard__share${copied ? " copied" : ""}`}>
-            {copied ? "✓ Copied" : "Share"}
-          </button>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {isLive && notifSupported && (
+              <button
+                onClick={onNotif}
+                title={notifEnabled ? "Notifications on" : "Get goal alerts"}
+                style={{
+                  background: notifEnabled ? "rgba(16,185,129,.15)" : "rgba(255,255,255,.08)",
+                  border: notifEnabled ? "1px solid rgba(16,185,129,.4)" : "1px solid rgba(255,255,255,.15)",
+                  borderRadius: 20, padding: "5px 12px",
+                  color: notifEnabled ? "#10b981" : "rgba(255,255,255,.5)",
+                  fontSize: ".72rem", fontWeight: 600, cursor: "pointer",
+                }}
+              >
+                {notifEnabled ? "🔔 On" : "🔔 Alerts"}
+              </button>
+            )}
+            <button onClick={share} className={`scoreboard__share${copied ? " copied" : ""}`}>
+              {copied ? "✓ Copied" : "Share"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -465,66 +538,74 @@ function FormRow({ label, matches, teamId }) {
   )
 }
 
-function PreviewPanel({ homeTeamId, awayTeamId, homeTeamName, awayTeamName }) {
-  const [preview, setPreview] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!homeTeamId || !awayTeamId) { setLoading(false); return }
-    fetch(`/api/v1/match_preview?home_team_id=${homeTeamId}&away_team_id=${awayTeamId}`)
-      .then(r => r.json())
-      .then(setPreview)
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [homeTeamId, awayTeamId])
-
-  if (loading) return <section className="match-section"><div className="loading-shimmer" style={{ height: 80, borderRadius: 6 }} /></section>
-
-  const hasForm = preview?.home_form?.length > 0 || preview?.away_form?.length > 0
-  const hasH2H  = preview?.h2h?.length > 0
-
-  if (!hasForm && !hasH2H) return (
-    <div className="empty-state" style={{ paddingTop: 40 }}>
+function H2HPanel({ h2h, homeTeamName, awayTeamName }) {
+  if (!h2h?.matches?.length) return (
+    <div className="empty-state">
       <div className="empty-state__icon">📈</div>
-      <h3>No H2H data available</h3>
+      <h3>No H2H history found</h3>
+      <p>Previous meetings will appear here</p>
     </div>
   )
 
+  const [hw, d, aw] = h2h.summary || [0, 0, 0]
+  const total = hw + d + aw || 1
+
   return (
     <>
-      {hasForm && (
-        <section className="match-section">
-          <h3 className="match-section__title">Recent Form</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <FormRow label={homeTeamName} matches={preview.home_form} teamId={homeTeamId} />
-            <FormRow label={awayTeamName} matches={preview.away_form} teamId={awayTeamId} />
+      {/* Summary bar */}
+      <section className="match-section">
+        <h3 className="match-section__title">Head to Head Summary</h3>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#ee1e46" }}>{hw}</div>
+            <div style={{ fontSize: ".68rem", color: "var(--muted)", marginTop: 2 }}>{homeTeamName}</div>
           </div>
-        </section>
-      )}
-      {hasH2H && (
-        <section className="match-section">
-          <h3 className="match-section__title">Head to Head</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {preview.h2h.map((m, i) => {
-              const hs   = m.home?.score ?? "–"
-              const as   = m.away?.score ?? "–"
-              const date = m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" }) : ""
-              return (
-                <div key={i} style={{
-                  display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
-                  background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,.02)",
-                  borderRadius: 6, fontSize: "0.8rem",
-                }}>
-                  <span style={{ color: "var(--muted)", fontSize: "0.68rem", width: 88, flexShrink: 0 }}>{date}</span>
-                  <span style={{ flex: 1, textAlign: "right", fontWeight: 600, color: "#fff", fontSize: "0.78rem" }}>{m.home?.name}</span>
-                  <span style={{ fontWeight: 900, color: "#fff", padding: "2px 10px", background: "var(--surface2)", borderRadius: 4, fontSize: "0.88rem" }}>{hs} – {as}</span>
-                  <span style={{ flex: 1, fontWeight: 600, color: "#fff", fontSize: "0.78rem" }}>{m.away?.name}</span>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "rgba(255,255,255,.5)" }}>{d}</div>
+            <div style={{ fontSize: ".68rem", color: "var(--muted)", marginTop: 2 }}>Draw</div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#3b82f6" }}>{aw}</div>
+            <div style={{ fontSize: ".68rem", color: "var(--muted)", marginTop: 2 }}>{awayTeamName}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "var(--surface2)" }}>
+          <div style={{ width: `${(hw/total)*100}%`, background: "#ee1e46" }} />
+          <div style={{ width: `${(d/total)*100}%`, background: "rgba(255,255,255,.2)" }} />
+          <div style={{ flex: 1, background: "#3b82f6" }} />
+        </div>
+      </section>
+
+      {/* Match history */}
+      <section className="match-section">
+        <h3 className="match-section__title">Recent Meetings</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {h2h.matches.map((m, i) => {
+            const hs   = m.home?.score ?? "–"
+            const as   = m.away?.score ?? "–"
+            const date = m.kickoff_at
+              ? new Date(m.kickoff_at).toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" })
+              : ""
+            const homeWon = Number(hs) > Number(as)
+            const awayWon = Number(as) > Number(hs)
+            return (
+              <div key={i} style={{
+                display: "flex", alignItems: "center", gap: 8, padding: "9px 12px",
+                background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,.02)",
+                borderRadius: 6, fontSize: "0.8rem",
+              }}>
+                <div style={{ width: 80, flexShrink: 0 }}>
+                  <div style={{ fontSize: ".65rem", color: "var(--muted)" }}>{date}</div>
+                  {m.competition?.name && <div style={{ fontSize: ".58rem", color: "#555", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80 }}>{m.competition.name}</div>}
                 </div>
-              )
-            })}
-          </div>
-        </section>
-      )}
+                <span style={{ flex: 1, textAlign: "right", fontWeight: homeWon ? 800 : 500, color: homeWon ? "#fff" : "rgba(255,255,255,.5)", fontSize: ".8rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.home?.name}</span>
+                <span style={{ fontWeight: 900, color: "#fff", padding: "3px 12px", background: "var(--surface2)", borderRadius: 4, fontSize: ".9rem", flexShrink: 0, minWidth: 64, textAlign: "center" }}>{hs} – {as}</span>
+                <span style={{ flex: 1, fontWeight: awayWon ? 800 : 500, color: awayWon ? "#fff" : "rgba(255,255,255,.5)", fontSize: ".8rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.away?.name}</span>
+              </div>
+            )
+          })}
+        </div>
+      </section>
     </>
   )
 }
@@ -860,7 +941,8 @@ export default function MatchShowPage() {
   const goalCount   = data.events?.filter(e => e.type === "Goal").length ?? 0
   const hasEvents   = eventCount > 0
   const hasStats    = data.stats?.length > 0
-  const hasLineups  = data.lineups?.some(l => l?.start_xi?.length > 0)
+  const hasLineups  = data.lineups?.some(l => l?.start_xi?.length > 0 || l?.startXI?.length > 0)
+  const hasH2H      = data.h2h?.matches?.length > 0
 
   function tabLabel(t) {
     if (t === "Summary" && eventCount > 0) return `${t} (${eventCount})`
@@ -869,15 +951,34 @@ export default function MatchShowPage() {
     return t
   }
 
+  function handleNotif() {
+    if (notifEnabled) return
+    if (Notification.permission === "granted") {
+      setNotifEnabled(true)
+    } else {
+      requestNotifPermission()
+    }
+  }
+
+  const notifSupported = typeof Notification !== "undefined"
+
   return (
     <div>
       <GoalToast text={toast} visible={!!toast} />
 
-      <Scoreboard fixture={data.fixture} isLive={isLive} liveMinute={liveMinute} matchId={id} />
+      <Scoreboard
+        fixture={data.fixture}
+        isLive={isLive}
+        liveMinute={liveMinute}
+        matchId={id}
+        notifEnabled={notifEnabled}
+        notifSupported={notifSupported}
+        onNotif={handleNotif}
+      />
 
       {/* Tab bar */}
       <div className="tab-bar sticky-tabs">
-        <div className="container" style={{ maxWidth: 700 }}>
+        <div className="container" style={{ maxWidth: 740 }}>
           <div className="tab-bar__inner">
             {TABS.map(t => (
               <button
@@ -889,43 +990,40 @@ export default function MatchShowPage() {
                 {t === "Summary" && eventCount > 0 && (
                   <span className="tab-count">{eventCount}</span>
                 )}
-                {(t === "Stats" && hasStats) || (t === "Lineups" && hasLineups) ? (
+                {((t === "Stats" && hasStats) || (t === "Lineups" && hasLineups) || (t === "H2H" && hasH2H)) && (
                   <span className="tab-dot" />
-                ) : null}
+                )}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="container" style={{ maxWidth: 700, paddingTop: 20 }}>
-        {/* Back + live indicator row */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <button onClick={goBack} className="btn-back" style={{ padding: 0 }}>← Back</button>
+      <div className="container" style={{ maxWidth: 740, paddingTop: 20, paddingBottom: 40 }}>
+        {/* Back row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <button onClick={goBack} className="btn-back">← Back</button>
           {isLive && (
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.7rem", color: "var(--muted)" }}>
-              <span className="live-dot" /> Updating live
+              <span className="live-dot" /> Updating every 20s
             </span>
           )}
         </div>
 
-        {/* Goal banner strip (shown when events exist) */}
+        {/* Goal banner */}
         {goalCount > 0 && (
-          <div className="goal-banner">
-            {data.events
-              .filter(e => e.type === "Goal")
-              .map((e, i) => (
-                <span key={i} className="goal-banner__item">
-                  ⚽ {e.player} {e.minute}'
-                  {e.detail !== "Goal" && <span style={{ opacity: .65, fontSize: "0.7em", marginLeft: 3 }}>({e.detail === "Own Goal" ? "OG" : "P"})</span>}
-                </span>
-              ))}
+          <div className="goal-banner" style={{ marginBottom: 20 }}>
+            {data.events.filter(e => e.type === "Goal").map((e, i) => (
+              <span key={i} className="goal-banner__item">
+                ⚽ {e.player} {e.minute}'
+                {e.detail !== "Goal" && (
+                  <span style={{ opacity: .65, fontSize: "0.7em", marginLeft: 3 }}>
+                    ({e.detail === "Own Goal" ? "OG" : "P"})
+                  </span>
+                )}
+              </span>
+            ))}
           </div>
-        )}
-
-        {/* Notification banner */}
-        {showNotifBanner && isLive && (
-          <NotifBanner onAllow={requestNotifPermission} onDismiss={() => setShowNotifBanner(false)} />
         )}
 
         {/* Tab content */}
@@ -935,10 +1033,14 @@ export default function MatchShowPage() {
             {hasEvents
               ? <EventsTimeline events={data.events} homeTeam={homeName} />
               : (
-                <div className="empty-state" style={{ paddingTop: 32 }}>
-                  <div style={{ fontSize: "3rem", marginBottom: 12, opacity: .4 }}>🏟️</div>
-                  <h3>{statusShort === "NS" ? "Match hasn't kicked off yet" : "No events yet"}</h3>
-                  <p>Goals, cards and substitutions appear here</p>
+                <div className="empty-state">
+                  <div style={{ fontSize: "2.5rem", marginBottom: 12, opacity: .3 }}>🏟️</div>
+                  <h3>{statusShort === "NS" ? "Not kicked off yet" : "No events recorded"}</h3>
+                  <p style={{ maxWidth: 260 }}>
+                    {statusShort === "NS"
+                      ? "Goals, cards and subs will appear here once the match starts"
+                      : "Events are not available for this match"}
+                  </p>
                 </div>
               )
             }
@@ -952,7 +1054,7 @@ export default function MatchShowPage() {
         {tab === "Lineups" && <LineupsPanel lineups={data.lineups} />}
 
         {tab === "H2H" && (
-          <PreviewPanel homeTeamId={homeTeamId} awayTeamId={awayTeamId} homeTeamName={homeName} awayTeamName={awayName} />
+          <H2HPanel h2h={data.h2h} homeTeamName={homeName} awayTeamName={awayName} />
         )}
       </div>
     </div>

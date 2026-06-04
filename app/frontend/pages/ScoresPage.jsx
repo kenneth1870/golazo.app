@@ -1,12 +1,7 @@
 import { NavLink, Outlet, Navigate } from "react-router-dom"
 
 const TABS = [
-  { path: "/scores/today",    label: "Today" },
-  { path: "/scores/live",     label: "Live" },
-  { path: "/scores/results",  label: "Results" },
-  { path: "/scores/fixtures", label: "Fixtures" },
-  { path: "/scores/groups",   label: "Group Stage" },
-  { path: "/scores/knockout", label: "Knockout" },
+  { path: "/scores/today", label: "Today" },
 ]
 
 export default function ScoresPage() {

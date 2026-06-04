@@ -1,14 +1,103 @@
 {
-  "nav": { "home":"ホーム","scores":"スコア","live":"ライブ","results":"結果","fixtures":"試合日程","groupStage":"グループステージ","knockout":"決勝トーナメント","groups":"グループ","group":"グループ{{letter}}","mundial":"ワールドカップ2026","teams":"チーム","schedule":"スケジュール","venues":"スタジアム","topScorers":"得点王","allLeagues":"全リーグ","news":"ニュース" },
-  "hero": { "title":"ワールドカップ2026","subtitle":"FIFAワールドカップ2026のライブスコア、リアルタイム統計、全ゴール — アメリカ・カナダ・メキシコ","liveBtn":"ライブ","fixturesBtn":"日程","nextMatch":"次の試合" },
-  "home": { "latestNews":"最新ニュース","nextMatch":"次の試合","upcomingMatches":"今後の試合","viewAll":"すべて見る →","fullSchedule":"全日程 →" },
-  "scores": { "liveNow":"ライブ","results":"結果","upcomingFixtures":"今後の試合","allLeaguesLive":"全リーグ — ライブ ({{count}})","noLive":"現在W杯のライブ試合なし","wc2026Begins":"ワールドカップ2026は2026年6月11日開幕","noResults":"結果なし","resultsAppear":"試合終了後に結果が表示されます","noFixtures":"今後の試合なし","bracketPending":"決勝トーナメントは未定","advanceAfterGroups":"グループステージ終了後（2026年7月2日）に進出チームが決定" },
-  "groups": { "title":"グループ","subtitle":"FIFAワールドカップ2026 — 12グループ","standings":"グループ{{letter}} — 順位表","matches":"グループ{{letter}} — 試合","noStandings":"順位表なし","viewStandings":"順位表 →" },
-  "mundial": { "subtitle":"FIFA W杯 · アメリカ · カナダ · メキシコ · 6/11 – 7/19","teamsTitle":"チーム","scheduleTitle":"スケジュール","venuesTitle":"スタジアム","scorersTitle":"得点王 — ワールドカップ2026","noScorers":"得点王なし","scorersAppear":"2026年6月11日の大会開幕後に表示されます","capacity":"収容人数" },
-  "table": { "pos":"#","team":"チーム","played":"試","won":"勝","drawn":"分","lost":"負","gd":"得失","points":"勝点","goals":"得点","assists":"アシスト","date":"日付","home":"ホーム","away":"アウェイ" },
-  "status": { "live":"LIVE","ft":"終了","vs":"vs" },
-  "leagues": { "title":"全リーグ","subtitle":"{{comps}}大会で{{count}}試合ライブ中","noLive":"現在世界でライブ試合なし","checkBack":"試合時間に再確認ください","available":"利用可能なリーグ ({{count}})" },
-  "news": { "title":"ニュース","subtitle":"FIFAワールドカップ2026の最新情報" },
-  "footer": { "follow":"フォロー","copyright":"Copyright © {{year}} Golazo — ワールドカップ2026ライブスコア." },
-  "loading":"読込中...","noMatches":"試合が見つかりません"
+  "nav": {
+    "home": "ホーム",
+    "scores": "スコア",
+    "live": "ライブ",
+    "results": "結果",
+    "fixtures": "試合日程",
+    "groupStage": "グループステージ",
+    "knockout": "決勝トーナメント",
+    "groups": "グループ",
+    "group": "グループ{{letter}}",
+    "mundial": "ワールドカップ2026",
+    "teams": "チーム",
+    "schedule": "スケジュール",
+    "venues": "スタジアム",
+    "topScorers": "得点王",
+    "allLeagues": "全リーグ",
+    "news": "ニュース",
+    "liveMatches": "ライブ試合"
+  },
+  "hero": {
+    "title": "ワールドカップ2026",
+    "subtitle": "FIFAワールドカップ2026のライブスコア、リアルタイム統計、全ゴール — アメリカ・カナダ・メキシコ",
+    "liveBtn": "ライブ",
+    "fixturesBtn": "日程",
+    "nextMatch": "次の試合"
+  },
+  "home": {
+    "latestNews": "最新ニュース",
+    "nextMatch": "次の試合",
+    "upcomingMatches": "今後の試合",
+    "viewAll": "すべて見る →",
+    "fullSchedule": "全日程 →"
+  },
+  "scores": {
+    "liveNow": "ライブ",
+    "results": "結果",
+    "upcomingFixtures": "今後の試合",
+    "allLeaguesLive": "全リーグ — ライブ ({{count}})",
+    "noLive": "現在W杯のライブ試合なし",
+    "wc2026Begins": "ワールドカップ2026は2026年6月11日開幕",
+    "noResults": "結果なし",
+    "resultsAppear": "試合終了後に結果が表示されます",
+    "noFixtures": "今後の試合なし",
+    "bracketPending": "決勝トーナメントは未定",
+    "advanceAfterGroups": "グループステージ終了後（2026年7月2日）に進出チームが決定"
+  },
+  "groups": {
+    "title": "グループ",
+    "subtitle": "FIFAワールドカップ2026 — 12グループ",
+    "standings": "グループ{{letter}} — 順位表",
+    "matches": "グループ{{letter}} — 試合",
+    "noStandings": "順位表なし",
+    "viewStandings": "順位表 →"
+  },
+  "mundial": {
+    "subtitle": "FIFA W杯 · アメリカ · カナダ · メキシコ · 6/11 – 7/19",
+    "teamsTitle": "チーム",
+    "scheduleTitle": "スケジュール",
+    "venuesTitle": "スタジアム",
+    "scorersTitle": "得点王 — ワールドカップ2026",
+    "noScorers": "得点王なし",
+    "scorersAppear": "2026年6月11日の大会開幕後に表示されます",
+    "capacity": "収容人数"
+  },
+  "table": {
+    "pos": "#",
+    "team": "チーム",
+    "played": "試",
+    "won": "勝",
+    "drawn": "分",
+    "lost": "負",
+    "gd": "得失",
+    "points": "勝点",
+    "goals": "得点",
+    "assists": "アシスト",
+    "date": "日付",
+    "home": "ホーム",
+    "away": "アウェイ"
+  },
+  "status": {
+    "live": "LIVE",
+    "ft": "終了",
+    "vs": "vs"
+  },
+  "leagues": {
+    "title": "全リーグ",
+    "subtitle": "{{comps}}大会で{{count}}試合ライブ中",
+    "noLive": "現在世界でライブ試合なし",
+    "checkBack": "試合時間に再確認ください",
+    "available": "利用可能なリーグ ({{count}})"
+  },
+  "news": {
+    "title": "ニュース",
+    "subtitle": "FIFAワールドカップ2026の最新情報"
+  },
+  "footer": {
+    "follow": "フォロー",
+    "copyright": "Copyright © {{year}} Golazo — ワールドカップ2026ライブスコア."
+  },
+  "loading": "読込中...",
+  "noMatches": "試合が見つかりません"
 }

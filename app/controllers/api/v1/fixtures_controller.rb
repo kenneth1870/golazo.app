@@ -3,7 +3,11 @@ module Api
     class FixturesController < BaseController
       def index
         date = parse_date(params[:date]) || Date.tomorrow
-        render json: ApiSportsClient.new.matches_for_date(date)
+        matches = Match
+          .where(kickoff_at: date.all_day)
+          .includes(:home_team, :away_team, :competition)
+          .order(:kickoff_at)
+        render json: matches
       rescue => e
         Rails.logger.error("[FixturesController] #{e.message}")
         render json: []

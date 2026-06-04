@@ -1,14 +1,103 @@
 {
-  "nav": { "home":"الرئيسية","scores":"النتائج","live":"مباشر","results":"النتائج","fixtures":"المباريات القادمة","groupStage":"دور المجموعات","knockout":"الأدوار الإقصائية","groups":"المجموعات","group":"المجموعة {{letter}}","mundial":"مونديال 2026","teams":"المنتخبات","schedule":"الجدول","venues":"الملاعب","topScorers":"الهدافون","allLeagues":"كل الدوريات","news":"الأخبار" },
-  "hero": { "title":"مونديال 2026","subtitle":"النتائج مباشرة، إحصاءات فورية وكل الأهداف من كأس العالم FIFA 2026 — الولايات المتحدة · كندا · المكسيك","liveBtn":"مباشر","fixturesBtn":"الجدول","nextMatch":"المباراة القادمة" },
-  "home": { "latestNews":"آخر الأخبار","nextMatch":"المباراة القادمة","upcomingMatches":"المباريات القادمة","viewAll":"عرض الكل →","fullSchedule":"الجدول الكامل →" },
-  "scores": { "liveNow":"مباشر الآن","results":"النتائج","upcomingFixtures":"المباريات القادمة","allLeaguesLive":"كل الدوريات — مباشر ({{count}})","noLive":"لا توجد مباريات مونديال مباشرة الآن","wc2026Begins":"كأس العالم 2026 يبدأ في 11 يونيو 2026","noResults":"لا توجد نتائج بعد","resultsAppear":"ستظهر النتائج هنا بعد انتهاء المباريات","noFixtures":"لا توجد مباريات قادمة","bracketPending":"لم يتحدد جدول الإقصاء بعد","advanceAfterGroups":"تتأهل الفرق بعد دور المجموعات في 2 يوليو 2026" },
-  "groups": { "title":"المجموعات","subtitle":"FIFA كأس العالم 2026 — 12 مجموعة","standings":"المجموعة {{letter}} — الترتيب","matches":"المجموعة {{letter}} — المباريات","noStandings":"لا يوجد ترتيب بعد","viewStandings":"الترتيب →" },
-  "mundial": { "subtitle":"FIFA كأس العالم · الولايات المتحدة · كندا · المكسيك · 11 يون – 19 يول","teamsTitle":"المنتخبات","scheduleTitle":"الجدول","venuesTitle":"الملاعب","scorersTitle":"الهدافون — كأس العالم 2026","noScorers":"لا يوجد هدافون بعد","scorersAppear":"سيظهر الهدافون هنا عند انطلاق البطولة في 11 يونيو 2026","capacity":"السعة" },
-  "table": { "pos":"#","team":"المنتخب","played":"ل","won":"ف","drawn":"ت","lost":"خ","gd":"فارق","points":"نقاط","goals":"أهداف","assists":"تمريرات","date":"التاريخ","home":"ديار","away":"ضيف" },
-  "status": { "live":"مباشر","ft":"انتهت","vs":"ضد" },
-  "leagues": { "title":"كل الدوريات","subtitle":"{{count}} مباراة مباشرة في {{comps}} منافسات","noLive":"لا توجد مباريات مباشرة في العالم الآن","checkBack":"تابع خلال أوقات المباريات","available":"الدوريات المتاحة ({{count}})" },
-  "news": { "title":"الأخبار","subtitle":"آخر أخبار كأس العالم FIFA 2026" },
-  "footer": { "follow":"تابعنا","copyright":"حقوق النشر © {{year}} Golazo — نتائج مونديال 2026 مباشرة." },
-  "loading":"جارٍ التحميل...","noMatches":"لم يتم العثور على مباريات"
+  "nav": {
+    "home": "الرئيسية",
+    "scores": "النتائج",
+    "live": "مباشر",
+    "results": "النتائج",
+    "fixtures": "المباريات القادمة",
+    "groupStage": "دور المجموعات",
+    "knockout": "الأدوار الإقصائية",
+    "groups": "المجموعات",
+    "group": "المجموعة {{letter}}",
+    "mundial": "مونديال 2026",
+    "teams": "المنتخبات",
+    "schedule": "الجدول",
+    "venues": "الملاعب",
+    "topScorers": "الهدافون",
+    "allLeagues": "كل الدوريات",
+    "news": "الأخبار",
+    "liveMatches": "المباريات المباشرة"
+  },
+  "hero": {
+    "title": "مونديال 2026",
+    "subtitle": "النتائج مباشرة، إحصاءات فورية وكل الأهداف من كأس العالم FIFA 2026 — الولايات المتحدة · كندا · المكسيك",
+    "liveBtn": "مباشر",
+    "fixturesBtn": "الجدول",
+    "nextMatch": "المباراة القادمة"
+  },
+  "home": {
+    "latestNews": "آخر الأخبار",
+    "nextMatch": "المباراة القادمة",
+    "upcomingMatches": "المباريات القادمة",
+    "viewAll": "عرض الكل →",
+    "fullSchedule": "الجدول الكامل →"
+  },
+  "scores": {
+    "liveNow": "مباشر الآن",
+    "results": "النتائج",
+    "upcomingFixtures": "المباريات القادمة",
+    "allLeaguesLive": "كل الدوريات — مباشر ({{count}})",
+    "noLive": "لا توجد مباريات مونديال مباشرة الآن",
+    "wc2026Begins": "كأس العالم 2026 يبدأ في 11 يونيو 2026",
+    "noResults": "لا توجد نتائج بعد",
+    "resultsAppear": "ستظهر النتائج هنا بعد انتهاء المباريات",
+    "noFixtures": "لا توجد مباريات قادمة",
+    "bracketPending": "لم يتحدد جدول الإقصاء بعد",
+    "advanceAfterGroups": "تتأهل الفرق بعد دور المجموعات في 2 يوليو 2026"
+  },
+  "groups": {
+    "title": "المجموعات",
+    "subtitle": "FIFA كأس العالم 2026 — 12 مجموعة",
+    "standings": "المجموعة {{letter}} — الترتيب",
+    "matches": "المجموعة {{letter}} — المباريات",
+    "noStandings": "لا يوجد ترتيب بعد",
+    "viewStandings": "الترتيب →"
+  },
+  "mundial": {
+    "subtitle": "FIFA كأس العالم · الولايات المتحدة · كندا · المكسيك · 11 يون – 19 يول",
+    "teamsTitle": "المنتخبات",
+    "scheduleTitle": "الجدول",
+    "venuesTitle": "الملاعب",
+    "scorersTitle": "الهدافون — كأس العالم 2026",
+    "noScorers": "لا يوجد هدافون بعد",
+    "scorersAppear": "سيظهر الهدافون هنا عند انطلاق البطولة في 11 يونيو 2026",
+    "capacity": "السعة"
+  },
+  "table": {
+    "pos": "#",
+    "team": "المنتخب",
+    "played": "ل",
+    "won": "ف",
+    "drawn": "ت",
+    "lost": "خ",
+    "gd": "فارق",
+    "points": "نقاط",
+    "goals": "أهداف",
+    "assists": "تمريرات",
+    "date": "التاريخ",
+    "home": "ديار",
+    "away": "ضيف"
+  },
+  "status": {
+    "live": "مباشر",
+    "ft": "انتهت",
+    "vs": "ضد"
+  },
+  "leagues": {
+    "title": "كل الدوريات",
+    "subtitle": "{{count}} مباراة مباشرة في {{comps}} منافسات",
+    "noLive": "لا توجد مباريات مباشرة في العالم الآن",
+    "checkBack": "تابع خلال أوقات المباريات",
+    "available": "الدوريات المتاحة ({{count}})"
+  },
+  "news": {
+    "title": "الأخبار",
+    "subtitle": "آخر أخبار كأس العالم FIFA 2026"
+  },
+  "footer": {
+    "follow": "تابعنا",
+    "copyright": "حقوق النشر © {{year}} Golazo — نتائج مونديال 2026 مباشرة."
+  },
+  "loading": "جارٍ التحميل...",
+  "noMatches": "لم يتم العثور على مباريات"
 }

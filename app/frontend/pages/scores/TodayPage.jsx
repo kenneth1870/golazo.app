@@ -1,29 +1,106 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import MatchRow from "../../components/MatchRow"
+import { useLocale } from "../../hooks/useLocale"
 
-function normalizeReal(m) {
-  return {
-    id:          `real-${m.external_id}`,
-    external_id: m.external_id,
-    status:      m.status,
-    kickoff_at:  m.kickoff_at,
-    minute:      m.minute,
-    home_score:  m.home?.score ?? null,
-    away_score:  m.away?.score ?? null,
-    home_team:   { name: m.home?.name, flag_url: m.home?.logo },
-    away_team:   { name: m.away?.name, flag_url: m.away?.logo },
-    competition: {
-      id:      `ext-${m.league_id}`,
-      name:    m.league_name,
-      logo:    m.league_logo,
-      country: m.league_country,
-      code:    null,
-    },
-    round: null,
-  }
+// ─── Helpers ──────────────────────────────────────────
+function toISO(date) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
 }
 
+function addDays(date, n) {
+  const d = new Date(date)
+  d.setDate(d.getDate() + n)
+  return d
+}
+
+function startOfDay() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+function dateLabel(date) {
+  const todayISO     = toISO(new Date())
+  const yesterdayISO = toISO(addDays(new Date(), -1))
+  const tomorrowISO  = toISO(addDays(new Date(), 1))
+  const iso          = toISO(date)
+  if (iso === todayISO)     return "Today"
+  if (iso === yesterdayISO) return "Yesterday"
+  if (iso === tomorrowISO)  return "Tomorrow"
+  return date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })
+}
+
+// ─── Date strip ───────────────────────────────────────
+function DateStrip({ selected, onChange }) {
+  const todayISO    = toISO(new Date())
+  const selectedISO = toISO(selected)
+
+  // Show 7 days centred on selected (capped so we don't go too far into future)
+  const days = Array.from({ length: 7 }, (_, i) => addDays(selected, i - 3))
+
+  return (
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      gap: 4,
+      overflowX: "auto",
+      paddingBottom: 2,
+    }}>
+      <button
+        className="btn-nav"
+        style={{ flexShrink: 0 }}
+        onClick={() => onChange(addDays(selected, -1))}
+      >←</button>
+
+      <div style={{ display: "flex", gap: 4, flex: 1, justifyContent: "center", flexWrap: "nowrap" }}>
+        {days.map(d => {
+          const iso     = toISO(d)
+          const isToday = iso === todayISO
+          const isSel   = iso === selectedISO
+          return (
+            <button
+              key={iso}
+              onClick={() => onChange(d)}
+              style={{
+                background:   isSel ? "var(--accent, #ee1e46)" : isToday ? "rgba(238,30,70,0.15)" : "var(--surface2, #1a1a1a)",
+                color:        isSel ? "#fff" : isToday ? "var(--accent, #ee1e46)" : "var(--muted, #888)",
+                border:       isSel ? "1px solid var(--accent, #ee1e46)" : "1px solid var(--border, #2a2a2a)",
+                borderRadius: 8,
+                padding:      "6px 10px",
+                cursor:       "pointer",
+                fontSize:     "0.72rem",
+                fontWeight:   isSel ? 700 : 400,
+                whiteSpace:   "nowrap",
+                transition:   "all 0.15s",
+                minWidth:     52,
+                textAlign:    "center",
+              }}
+            >
+              <div style={{ fontWeight: isSel || isToday ? 700 : 400 }}>
+                {d.toLocaleDateString([], { weekday: "short" })}
+              </div>
+              <div style={{ fontSize: "0.68rem", opacity: 0.8 }}>
+                {d.toLocaleDateString([], { month: "short", day: "numeric" })}
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      <button
+        className="btn-nav"
+        style={{ flexShrink: 0 }}
+        onClick={() => onChange(addDays(selected, 1))}
+      >→</button>
+    </div>
+  )
+}
+
+// ─── Real-match row (API shape) ────────────────────────
 function RealMatchRow({ match, onMatchClick }) {
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
@@ -76,15 +153,17 @@ function RealMatchRow({ match, onMatchClick }) {
   )
 }
 
-function CompetitionBlock({ competition, matches, isReal, navigate, onMatchClick }) {
+// ─── Competition block ────────────────────────────────
+function CompetitionBlock({ matches, navigate, onMatchClick }) {
+  const comp    = matches[0]?.competition
   const hasLive = matches.some(m => m.status === "live")
-  const sorted  = [...matches].sort((a, b) => {
+  const isReal  = typeof matches[0]?.id === "string" && matches[0]?.id?.startsWith("ext_")
+  const canNav  = comp?.code && !String(comp.code).match(/^\d+$/)
+
+  const sorted = [...matches].sort((a, b) => {
     const order = { live: 0, scheduled: 1, finished: 2 }
     return (order[a.status] ?? 3) - (order[b.status] ?? 3) || new Date(a.kickoff_at) - new Date(b.kickoff_at)
   })
-
-  const comp = competition || matches[0]?.competition
-  const canNav = comp?.code && !comp.code.startsWith("ext-")
 
   return (
     <div className="widget-next-match mb-4">
@@ -113,131 +192,121 @@ function CompetitionBlock({ competition, matches, isReal, navigate, onMatchClick
   )
 }
 
-function TodayEmptyState() {
-  const [nextDate, setNextDate] = useState(null)
-
-  useEffect(() => {
-    // Check tomorrow then the day after to find the next match day
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    const iso = tomorrow.toISOString().split("T")[0]
-    fetch(`/api/v1/fixtures?date=${iso}`)
-      .then(r => r.json())
-      .then(matches => {
-        if (matches.length > 0 && matches[0].kickoff_at) {
-          setNextDate(new Date(matches[0].kickoff_at))
-        }
-      })
-      .catch(() => {})
-  }, [])
-
-  const label = nextDate
-    ? nextDate.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })
-    : null
-
+// ─── Empty state ──────────────────────────────────────
+function EmptyState({ label }) {
   return (
     <div className="empty-state">
       <div className="empty-state__pitch" />
       <div className="empty-state__icon">📅</div>
-      <h3>No matches today</h3>
-      <p>
-        {label
-          ? <>Next matches on <strong style={{ color: "#fff" }}>{label}</strong></>
-          : "Check the Fixtures tab for upcoming matches"}
-      </p>
+      <h3>No matches for {label}</h3>
+      <p>Try a different date</p>
     </div>
   )
 }
 
+// ─── Main page ────────────────────────────────────────
 export default function TodayPage() {
-  const [data, setData]       = useState({ real: [], local: [] })
-  const [loading, setLoading] = useState(true)
-  const navigate = useNavigate()
-  const onMatchClick = (extId) => navigate(`/matches/${extId}`)
+  const [selected, setSelected] = useState(startOfDay)
+  const [matches, setMatches]   = useState([])
+  const [loading, setLoading]   = useState(true)
+  const navigate     = useNavigate()
+  const onMatchClick = extId => navigate(`/matches/${extId}`)
+  const { timezone } = useLocale()
 
-  const load = () =>
-    fetch("/api/v1/today")
+  const load = useCallback((date) => {
+    setLoading(true)
+    const iso    = toISO(date)
+    const today  = toISO(new Date())
+    const url    = iso === today ? "/api/v1/today" : `/api/v1/today?date=${iso}`
+    fetch(url)
       .then(r => r.json())
-      .then(setData)
-      .catch(() => {})
-
-  useEffect(() => {
-    load().finally(() => setLoading(false))
-    const iv = setInterval(load, 60000)
-    return () => clearInterval(iv)
+      .then(raw => {
+        // Filter by local kickoff date — the API uses UTC dates which can bleed
+        // into the previous/next day for users in non-UTC timezones.
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+        const filtered = raw.filter(m => {
+          const ko = m.kickoff_at || m.kickoff
+          if (!ko) return true
+          const localDate = new Date(ko).toLocaleDateString("en-CA", { timeZone: tz })
+          return localDate === iso
+        })
+        setMatches(filtered)
+      })
+      .catch(() => setMatches([]))
+      .finally(() => setLoading(false))
   }, [])
 
-  const realNorm  = (data.real || []).map(normalizeReal)
-  const dbMatches = data.local || []
+  useEffect(() => { load(selected) }, [selected, load])
 
-  const dbByComp = dbMatches.reduce((acc, m) => {
-    const key = m.competition?.id ?? "other"
+  // Keyboard navigation
+  useEffect(() => {
+    function onKey(e) {
+      if (e.target.tagName === "INPUT") return
+      if (e.key === "ArrowLeft")  setSelected(d => addDays(d, -1))
+      if (e.key === "ArrowRight") setSelected(d => addDays(d,  1))
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
+
+  // Auto-refresh only for today
+  useEffect(() => {
+    const iso   = toISO(selected)
+    const today = toISO(new Date())
+    if (iso !== today) return
+    const iv = setInterval(() => load(selected), 60000)
+    return () => clearInterval(iv)
+  }, [selected, load])
+
+  const byComp = matches.reduce((acc, m) => {
+    const key = m.competition?.id ?? m.competition?.code ?? "other"
     if (!acc[key]) acc[key] = []
     acc[key].push(m)
     return acc
   }, {})
 
-  const realByLeague = realNorm.reduce((acc, m) => {
-    const key = m.competition?.id ?? "other"
-    if (!acc[key]) acc[key] = []
-    acc[key].push(m)
-    return acc
-  }, {})
+  const groups = Object.values(byComp).sort((a, b) => {
+    const aLive = a.some(m => m.status === "live") ? 0 : 1
+    const bLive = b.some(m => m.status === "live") ? 0 : 1
+    return aLive - bLive || (a[0]?.competition?.name ?? "").localeCompare(b[0]?.competition?.name ?? "")
+  })
 
-  const liveCount  = [...realNorm, ...dbMatches].filter(m => m.status === "live").length
-  const todayLabel = new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })
-
-  const sortGroups = (groups, isReal) =>
-    Object.values(groups)
-      .sort((a, b) => {
-        const aLive = a.some(m => m.status === "live") ? 0 : 1
-        const bLive = b.some(m => m.status === "live") ? 0 : 1
-        return aLive - bLive || (a[0]?.competition?.name ?? "").localeCompare(b[0]?.competition?.name ?? "")
-      })
-      .map(matches => ({ matches, isReal }))
-
-  const allGroups = [
-    ...sortGroups(realByLeague, true),
-    ...sortGroups(dbByComp, false),
-  ]
-
-  if (loading) {
-    return (
-      <div className="site-section">
-        <div className="container">
-          <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
-        </div>
-      </div>
-    )
-  }
+  const liveCount = matches.filter(m => m.status === "live").length
+  const label     = dateLabel(selected)
 
   return (
     <div className="site-section">
       <div className="container">
-        <div className="d-flex align-items-center justify-content-between mb-4" style={{ flexWrap: "wrap", gap: 8 }}>
-          <div style={{ color: "#aaa", fontSize: "0.85rem" }}>{todayLabel}</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: "0.8rem" }}>
+        {/* Date strip */}
+        <div className="mb-4">
+          <DateStrip selected={selected} onChange={d => { setSelected(d); setMatches([]) }} />
+        </div>
+
+        {/* Header row */}
+        <div className="d-flex align-items-center justify-content-between mb-3" style={{ flexWrap: "wrap", gap: 8 }}>
+          <div style={{ fontWeight: 600, fontSize: "0.95rem", color: "#fff" }}>{label}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: "0.78rem" }}>
             {liveCount > 0 && (
-              <span style={{ display: "flex", alignItems: "center", gap: 6, color: "#ee1e46" }}>
-                <span className="live-dot" />
-                {liveCount} live now
+              <span style={{ display: "flex", alignItems: "center", gap: 5, color: "#ee1e46" }}>
+                <span className="live-dot" />{liveCount} live
               </span>
             )}
-            <span style={{ color: "#555", fontSize: "0.72rem" }}>
-              {realNorm.length} real · {dbMatches.length} scheduled
-            </span>
+            {!loading && (
+              <span style={{ color: "#555" }}>{matches.length} matches</span>
+            )}
           </div>
         </div>
 
-        {allGroups.length === 0 ? (
-          <TodayEmptyState />
+        {/* Content */}
+        {loading ? (
+          <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
+        ) : groups.length === 0 ? (
+          <EmptyState label={label} />
         ) : (
-          allGroups.map(({ matches, isReal }, i) => (
+          groups.map((g, i) => (
             <CompetitionBlock
-              key={`${isReal ? "real" : "db"}-${matches[0]?.competition?.id ?? i}`}
-              competition={matches[0]?.competition}
-              matches={matches}
-              isReal={isReal}
+              key={g[0]?.competition?.id ?? i}
+              matches={g}
               navigate={navigate}
               onMatchClick={onMatchClick}
             />

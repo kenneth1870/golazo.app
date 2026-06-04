@@ -2,27 +2,31 @@ module Api
   module V1
     class TopScorersController < BaseController
       def index
-        competition_code = params[:competition] || "WC"
+        league_id = params[:league_id]
+        season_id = params[:season_id]
 
-        scorers = FootballDataClient.new.scorers(competition_code, limit: 20)
+        scorers = LiveScoresClient.new.top_scorers(league_id, season_id)
 
         render json: scorers.map { |s|
           {
             player: {
-              name:        s.dig("player", "name"),
-              nationality: s.dig("player", "nationality"),
-              photo:       nil
+              name:        s.dig("player", "name") || s["playerName"],
+              nationality: s.dig("player", "nationality") || s["nationality"],
+              photo:       s.dig("player", "photo"),
             },
             team: {
-              name:    s.dig("team", "name"),
-              crest:   s.dig("team", "crest"),
-              tla:     s.dig("team", "tla")
+              name:  s.dig("team", "name") || s["teamName"],
+              crest: s.dig("team", "logo") || s["teamLogo"],
+              tla:   s.dig("team", "tla"),
             },
-            goals:   s["goals"],
+            goals:   s["goals"]   || s["goalsScored"],
             assists: s["assists"],
-            played:  s["playedMatches"]
+            played:  s["played"]  || s["playedMatches"],
           }
         }
+      rescue => e
+        Rails.logger.error("[TopScorersController] #{e.message}")
+        render json: []
       end
     end
   end

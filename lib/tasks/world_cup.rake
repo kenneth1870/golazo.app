@@ -10,7 +10,7 @@ namespace :golazo do
     WorldCupSync.new.sync_today
   end
 
-  desc "Sync live match scores via football-data.org"
+  desc "Sync live match scores via RapidAPI"
   task sync_live: :environment do
     WorldCupSync.new.sync_live
   end

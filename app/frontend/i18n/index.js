@@ -1,6 +1,5 @@
 import i18n from "i18next"
 import { initReactI18next } from "react-i18next"
-import LanguageDetector from "i18next-browser-languagedetector"
 
 import en from "./locales/en.json"
 import es from "./locales/es.json"
@@ -22,19 +21,17 @@ export const SUPPORTED_LANGUAGES = [
   { code: "ko", label: "한국어",      flag: "🇰🇷", dir: "ltr" },
 ]
 
+// Initial language: only use explicitly saved preference, never navigator/browser language.
+// IP geolocation (useLocale.js) sets the language on first visit; manual picks are saved as golazo_lang.
+const savedLang = localStorage.getItem("golazo_lang")
+
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: { en: { translation: en }, es: { translation: es }, pt: { translation: pt }, fr: { translation: fr }, de: { translation: de }, ar: { translation: ar }, ja: { translation: ja }, ko: { translation: ko } },
+    lng: savedLang || "en",
     fallbackLng: "en",
     supportedLngs: ["en", "es", "pt", "fr", "de", "ar", "ja", "ko"],
-    detection: {
-      // Order: localStorage override → navigator language → HTML lang
-      order: ["localStorage", "navigator", "htmlTag"],
-      caches: ["localStorage"],
-      lookupLocalStorage: "golazo_lang",
-    },
     interpolation: { escapeValue: false },
   })
 

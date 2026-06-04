@@ -28,7 +28,7 @@ function MatchRow({ match, onClick }) {
       <div style={{ width: 70, flexShrink: 0, textAlign: "center" }}>
         {isLive ? (
           <span style={{ color: "#ee1e46", fontSize: "0.7rem", fontWeight: 700, letterSpacing: 1 }}>
-            <span className="live-indicator" /> LIVE
+            <span className="live-indicator" /> {match.minute || "LIVE"}
           </span>
         ) : isFinished ? (
           <span style={{ color: "gray", fontSize: "0.72rem" }}>FT</span>
@@ -118,7 +118,7 @@ export default function TodayMatches({ onMatchSelect }) {
 
   useEffect(() => {
     const fetch_ = () => {
-      fetch("/api/v1/matches?filter=today")
+      fetch("/api/v1/today")
         .then(r => r.json())
         .then(matches => {
           // Group by competition

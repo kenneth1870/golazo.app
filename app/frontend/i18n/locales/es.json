@@ -1,7 +1,8 @@
 {
   "nav": {
     "home": "Inicio",
-    "scores": "Marcadores",
+    "scores": "Scores",
+    "liveMatches": "Partidos en Vivo",
     "live": "En Vivo",
     "results": "Resultados",
     "fixtures": "Próximos Partidos",

@@ -3,7 +3,7 @@ module Api
     class MatchDetailController < BaseController
       def show
         external_id = params[:id].to_s.sub(/\Aext-/, "").to_i
-        data = ApiSportsClient.new.fixture_detail(external_id)
+        data = LiveScoresClient.new.match_detail(external_id)
 
         # External API returned nothing — fall back to local DB
         if data[:fixture].nil?
@@ -137,8 +137,7 @@ module Api
       def preview
         home_id = params[:home_team_id].to_i
         away_id = params[:away_team_id].to_i
-        data = ApiSportsClient.new.fixture_preview(home_id, away_id)
-        render json: data
+        render json: { h2h: [], home_form: [], away_form: [] }
       rescue => e
         Rails.logger.error("[MatchDetailController#preview] #{e.message}")
         render json: { h2h: [], home_form: [], away_form: [] }

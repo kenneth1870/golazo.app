@@ -21,10 +21,10 @@ export function useLocale() {
         // Set timezone from IP geo (more accurate than browser default for VPN users)
         if (data.timezone) setTimezone(data.timezone)
 
-        // Auto-set language only if not already overridden by user
-        const saved = localStorage.getItem("golazo_lang")
-        if (!saved && data.language) {
+        // Auto-set language from IP unless user explicitly picked one via the language switcher
+        if (data.language) {
           i18n.changeLanguage(data.language)
+          localStorage.setItem("golazo_lang", data.language)
         }
 
         // Set HTML lang + dir for RTL support

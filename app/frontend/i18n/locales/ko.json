@@ -1,14 +1,103 @@
 {
-  "nav": { "home":"홈","scores":"스코어","live":"라이브","results":"결과","fixtures":"일정","groupStage":"조별리그","knockout":"토너먼트","groups":"조","group":"{{letter}}조","mundial":"월드컵 2026","teams":"팀","schedule":"일정","venues":"경기장","topScorers":"득점왕","allLeagues":"전체 리그","news":"뉴스" },
-  "hero": { "title":"월드컵 2026","subtitle":"FIFA 월드컵 2026 라이브 스코어, 실시간 통계 및 모든 골 — 미국·캐나다·멕시코","liveBtn":"라이브","fixturesBtn":"일정","nextMatch":"다음 경기" },
-  "home": { "latestNews":"최신 뉴스","nextMatch":"다음 경기","upcomingMatches":"예정 경기","viewAll":"모두 보기 →","fullSchedule":"전체 일정 →" },
-  "scores": { "liveNow":"라이브","results":"결과","upcomingFixtures":"예정 경기","allLeaguesLive":"전체 리그 — 라이브 ({{count}})","noLive":"현재 월드컵 라이브 경기 없음","wc2026Begins":"월드컵 2026은 2026년 6월 11일 시작","noResults":"아직 결과 없음","resultsAppear":"경기 후 결과가 표시됩니다","noFixtures":"예정 경기 없음","bracketPending":"토너먼트 대진표 미정","advanceAfterGroups":"2026년 7월 2일 조별리그 이후 진출팀 결정" },
-  "groups": { "title":"조","subtitle":"FIFA 월드컵 2026 — 12개 조","standings":"{{letter}}조 — 순위","matches":"{{letter}}조 — 경기","noStandings":"아직 순위 없음","viewStandings":"순위 →" },
-  "mundial": { "subtitle":"FIFA 월드컵 · 미국·캐나다·멕시코 · 6/11–7/19","teamsTitle":"팀","scheduleTitle":"일정","venuesTitle":"경기장","scorersTitle":"득점왕 — 월드컵 2026","noScorers":"아직 득점왕 없음","scorersAppear":"2026년 6월 11일 대회 시작 후 표시됩니다","capacity":"수용 인원" },
-  "table": { "pos":"#","team":"팀","played":"경기","won":"승","drawn":"무","lost":"패","gd":"득실","points":"점","goals":"골","assists":"도움","date":"날짜","home":"홈","away":"원정" },
-  "status": { "live":"라이브","ft":"종료","vs":"vs" },
-  "leagues": { "title":"전체 리그","subtitle":"{{comps}}개 대회에서 {{count}}경기 라이브","noLive":"현재 전 세계 라이브 경기 없음","checkBack":"경기 시간에 다시 확인해 주세요","available":"이용 가능한 리그 ({{count}})" },
-  "news": { "title":"뉴스","subtitle":"FIFA 월드컵 2026 최신 소식" },
-  "footer": { "follow":"팔로우","copyright":"Copyright © {{year}} Golazo — 월드컵 2026 라이브 스코어." },
-  "loading":"로딩 중...","noMatches":"경기를 찾을 수 없습니다"
+  "nav": {
+    "home": "홈",
+    "scores": "스코어",
+    "live": "라이브",
+    "results": "결과",
+    "fixtures": "일정",
+    "groupStage": "조별리그",
+    "knockout": "토너먼트",
+    "groups": "조",
+    "group": "{{letter}}조",
+    "mundial": "월드컵 2026",
+    "teams": "팀",
+    "schedule": "일정",
+    "venues": "경기장",
+    "topScorers": "득점왕",
+    "allLeagues": "전체 리그",
+    "news": "뉴스",
+    "liveMatches": "라이브 경기"
+  },
+  "hero": {
+    "title": "월드컵 2026",
+    "subtitle": "FIFA 월드컵 2026 라이브 스코어, 실시간 통계 및 모든 골 — 미국·캐나다·멕시코",
+    "liveBtn": "라이브",
+    "fixturesBtn": "일정",
+    "nextMatch": "다음 경기"
+  },
+  "home": {
+    "latestNews": "최신 뉴스",
+    "nextMatch": "다음 경기",
+    "upcomingMatches": "예정 경기",
+    "viewAll": "모두 보기 →",
+    "fullSchedule": "전체 일정 →"
+  },
+  "scores": {
+    "liveNow": "라이브",
+    "results": "결과",
+    "upcomingFixtures": "예정 경기",
+    "allLeaguesLive": "전체 리그 — 라이브 ({{count}})",
+    "noLive": "현재 월드컵 라이브 경기 없음",
+    "wc2026Begins": "월드컵 2026은 2026년 6월 11일 시작",
+    "noResults": "아직 결과 없음",
+    "resultsAppear": "경기 후 결과가 표시됩니다",
+    "noFixtures": "예정 경기 없음",
+    "bracketPending": "토너먼트 대진표 미정",
+    "advanceAfterGroups": "2026년 7월 2일 조별리그 이후 진출팀 결정"
+  },
+  "groups": {
+    "title": "조",
+    "subtitle": "FIFA 월드컵 2026 — 12개 조",
+    "standings": "{{letter}}조 — 순위",
+    "matches": "{{letter}}조 — 경기",
+    "noStandings": "아직 순위 없음",
+    "viewStandings": "순위 →"
+  },
+  "mundial": {
+    "subtitle": "FIFA 월드컵 · 미국·캐나다·멕시코 · 6/11–7/19",
+    "teamsTitle": "팀",
+    "scheduleTitle": "일정",
+    "venuesTitle": "경기장",
+    "scorersTitle": "득점왕 — 월드컵 2026",
+    "noScorers": "아직 득점왕 없음",
+    "scorersAppear": "2026년 6월 11일 대회 시작 후 표시됩니다",
+    "capacity": "수용 인원"
+  },
+  "table": {
+    "pos": "#",
+    "team": "팀",
+    "played": "경기",
+    "won": "승",
+    "drawn": "무",
+    "lost": "패",
+    "gd": "득실",
+    "points": "점",
+    "goals": "골",
+    "assists": "도움",
+    "date": "날짜",
+    "home": "홈",
+    "away": "원정"
+  },
+  "status": {
+    "live": "라이브",
+    "ft": "종료",
+    "vs": "vs"
+  },
+  "leagues": {
+    "title": "전체 리그",
+    "subtitle": "{{comps}}개 대회에서 {{count}}경기 라이브",
+    "noLive": "현재 전 세계 라이브 경기 없음",
+    "checkBack": "경기 시간에 다시 확인해 주세요",
+    "available": "이용 가능한 리그 ({{count}})"
+  },
+  "news": {
+    "title": "뉴스",
+    "subtitle": "FIFA 월드컵 2026 최신 소식"
+  },
+  "footer": {
+    "follow": "팔로우",
+    "copyright": "Copyright © {{year}} Golazo — 월드컵 2026 라이브 스코어."
+  },
+  "loading": "로딩 중...",
+  "noMatches": "경기를 찾을 수 없습니다"
 }
