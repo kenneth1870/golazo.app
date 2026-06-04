@@ -1,24 +1,41 @@
 # Secrets
+.env
 .env.local
 .env.*.local
 config/master.key
 config/credentials/*.key
+
+# Claude Code (contains API keys)
 .claude/settings.json
 .claude/settings.local.json
 
 # Dependencies
 node_modules/
+vendor/bundle/
 
 # Build artifacts
 public/vite-dev/
 public/vite-test/
 public/assets/
 
-# Rails tmp
+# Rails tmp & logs
 tmp/
-log/*.log
+log/
 *.log
+
+# Database
+*.sqlite3
+*.sqlite3-journal
+db/*.sqlite3
+db/*.sqlite3-journal
 
 # System
 .DS_Store
+Thumbs.db
 .bundle/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
