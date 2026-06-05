@@ -23,7 +23,8 @@
     "subtitle": "Placar ao vivo, estatísticas em tempo real e todos os gols da Copa do Mundo FIFA 2026 — EUA · Canadá · México.",
     "liveBtn": "Ao Vivo",
     "fixturesBtn": "Agenda",
-    "nextMatch": "Próximo jogo"
+    "nextMatch": "Próximo jogo",
+    "opensIn": "⚽ A Copa começa em"
   },
   "home": {
     "latestNews": "Últimas Notícias",
@@ -92,7 +93,8 @@
     "date": "Data",
     "home": "Casa",
     "away": "Fora",
-    "group": "Grupo"
+    "group": "Grupo",
+    "player": "Jogador"
   },
   "match": {
     "summary": "Resumo",

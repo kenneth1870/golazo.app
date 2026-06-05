@@ -98,8 +98,8 @@ export default function NewsPage() {
           ) : (
             <div className="row">
               {filtered.map((article, i) => (
-                <div key={i} className={`col-lg-${i === 0 && source === "All" ? "12" : "6"} mb-4`}>
-                  <NewsCard article={article} featured={i === 0 && source === "All"} />
+                <div key={i} className={`col-lg-${i === 0 && active === allLabel ? "12" : "6"} mb-4`}>
+                  <NewsCard article={article} featured={i === 0 && active === allLabel} />
                 </div>
               ))}
             </div>

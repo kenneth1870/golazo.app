@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 
 export default function ScorersPage() {
+  const { t } = useTranslation()
   const [scorers, setScorers] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -19,22 +21,22 @@ export default function ScorersPage() {
         {scorers.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state__icon">⚽</div>
-            <h3>No scorers yet</h3>
-            <p>Top scorers will appear here once the tournament begins on June 11, 2026</p>
+            <h3>{t("mundial.noScorers")}</h3>
+            <p>{t("mundial.scorersAppear")}</p>
           </div>
         ) : (
           <div className="widget-next-match">
-            <div className="widget-title"><h3>Top Scorers — World Cup 2026</h3></div>
+            <div className="widget-title"><h3>{t("mundial.scorersTitle")}</h3></div>
             <div className="widget-body p-0">
               <table className="table custom-table mb-0">
                 <thead>
                   <tr>
-                    <th>#</th>
-                    <th>Player</th>
-                    <th>Team</th>
-                    <th>Goals</th>
-                    <th>Assists</th>
-                    <th>Played</th>
+                    <th>{t("table.pos")}</th>
+                    <th>{t("table.player")}</th>
+                    <th>{t("table.team")}</th>
+                    <th>{t("table.goals")}</th>
+                    <th>{t("table.assists")}</th>
+                    <th>{t("table.played")}</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -31,7 +31,11 @@ export default function GroupStagePage() {
                 </div>
                 <div className="match-list match-list--compact">
                   {byGroup[g].map(m => (
-                    <MatchRow key={m.id} match={m} onClick={() => navigate(`/groups/${g}`)} />
+                    <MatchRow
+                      key={m.id}
+                      match={m}
+                      onClick={() => m.external_id ? navigate(`/matches/${m.external_id}`) : navigate(`/groups/${g}`)}
+                    />
                   ))}
                 </div>
               </div>

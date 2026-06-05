@@ -23,7 +23,8 @@
     "subtitle": "Scores en direct, statistiques en temps réel et tous les buts de la Coupe du Monde FIFA 2026 — USA · Canada · Mexique.",
     "liveBtn": "En Direct",
     "fixturesBtn": "Calendrier",
-    "nextMatch": "Prochain match"
+    "nextMatch": "Prochain match",
+    "opensIn": "⚽ La Coupe du Monde commence dans"
   },
   "home": {
     "latestNews": "Dernières Nouvelles",
@@ -92,7 +93,8 @@
     "date": "Date",
     "home": "Domicile",
     "away": "Extérieur",
-    "group": "Groupe"
+    "group": "Groupe",
+    "player": "Joueur"
   },
   "match": {
     "summary": "Résumé",

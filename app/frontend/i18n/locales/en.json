@@ -23,7 +23,8 @@
     "subtitle": "Live scores, real-time stats, and every goal from the FIFA World Cup 2026 — USA · Canada · Mexico.",
     "liveBtn": "Live Scores",
     "fixturesBtn": "Fixtures",
-    "nextMatch": "Next match"
+    "nextMatch": "Next match",
+    "opensIn": "⚽ World Cup opens in"
   },
   "home": {
     "latestNews": "Latest News",
@@ -92,7 +93,8 @@
     "date": "Date",
     "home": "Home",
     "away": "Away",
-    "group": "Group"
+    "group": "Group",
+    "player": "Player"
   },
   "match": {
     "summary": "Summary",

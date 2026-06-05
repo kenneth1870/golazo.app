@@ -23,7 +23,8 @@
     "subtitle": "FIFA 월드컵 2026 라이브 스코어, 실시간 통계 및 모든 골 — 미국·캐나다·멕시코",
     "liveBtn": "라이브",
     "fixturesBtn": "일정",
-    "nextMatch": "다음 경기"
+    "nextMatch": "다음 경기",
+    "opensIn": "⚽ 월드컵 개막까지"
   },
   "home": {
     "latestNews": "최신 뉴스",
@@ -92,7 +93,8 @@
     "date": "날짜",
     "home": "홈",
     "away": "원정",
-    "group": "조"
+    "group": "조",
+    "player": "선수"
   },
   "match": {
     "summary": "요약",

@@ -86,13 +86,13 @@ export default function Footer() {
           <div className="footer-col">
             <h4 className="footer-col__title">{t("nav.scores")}</h4>
             <ul className="footer-links">
-              <li><Link to="/scores/today">Today</Link></li>
+              <li><Link to="/scores/today">{t("time.today")}</Link></li>
               <li>
                 <Link to="/scores/live">{t("nav.live")}</Link>
               </li>
               <li><Link to="/scores/results">{t("nav.results")}</Link></li>
               <li><Link to="/scores/fixtures">{t("nav.fixtures")}</Link></li>
-              <li><Link to="/scores/groups">Group Stage</Link></li>
+              <li><Link to="/scores/groups">{t("nav.groupStage")}</Link></li>
               <li><Link to="/scores/knockout">{t("nav.knockout")}</Link></li>
             </ul>
           </div>
@@ -105,7 +105,7 @@ export default function Footer() {
               <li><Link to="/mundial/schedule">{t("nav.schedule")}</Link></li>
               <li><Link to="/mundial/venues">{t("nav.venues")}</Link></li>
               <li><Link to="/mundial/scorers">{t("nav.topScorers")}</Link></li>
-              <li><Link to="/leagues">All Leagues</Link></li>
+              <li><Link to="/leagues">{t("nav.allLeagues")}</Link></li>
               <li><Link to="/news">{t("nav.news")}</Link></li>
             </ul>
           </div>

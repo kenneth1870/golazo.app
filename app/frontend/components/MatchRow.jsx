@@ -9,7 +9,7 @@ export default function MatchRow({ match, onClick, showDate = false }) {
     <div className={`match-row${isLive ? " match-row--live" : ""}`} onClick={onClick}>
       <div className="match-row__status">
         {isLive
-          ? <span className="match-status-live"><span className="live-dot" />LIVE</span>
+          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'` : "LIVE"}</span>
           : isFinished
           ? <span className="match-status-ft">FT</span>
           : <span className="match-status-time">

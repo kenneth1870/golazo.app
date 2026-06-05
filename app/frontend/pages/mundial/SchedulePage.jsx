@@ -24,7 +24,11 @@ export default function SchedulePage() {
             <div className="fixture-day__header">{date}</div>
             <div className="match-list">
               {dayMatches.map(m => (
-                <MatchRow key={m.id} match={m} onClick={() => {}} />
+                <MatchRow
+                  key={m.id}
+                  match={m}
+                  onClick={m.external_id ? () => navigate(`/matches/${m.external_id}`) : undefined}
+                />
               ))}
             </div>
           </div>

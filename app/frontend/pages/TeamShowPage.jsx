@@ -14,7 +14,7 @@ export default function TeamShowPage() {
       .then(data => {
         setTeam(data)
         if (data.group) {
-          fetch("/api/v1/standings")
+          fetch("/api/v1/standings?competition=WC")
             .then(r => r.json())
             .then(grouped => {
               const rows = grouped[data.group] || []

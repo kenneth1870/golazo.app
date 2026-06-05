@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 function getLeft(d) {
   const ms = Math.max(0, Date.parse(d) - Date.now())
@@ -42,32 +43,33 @@ function Countdown({ targetDate, label }) {
 
 export default function Hero({ nextMatch }) {
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const target    = nextMatch?.kickoff_at || WC_OPENING
   const isOpening = !nextMatch?.kickoff_at
   const label     = isOpening
-    ? "⚽ World Cup opens in"
-    : `Next: ${nextMatch.home_team?.name ?? ""} vs ${nextMatch.away_team?.name ?? ""}`
+    ? t("hero.opensIn")
+    : `${t("hero.nextMatch")}: ${nextMatch.home_team?.name ?? ""} vs ${nextMatch.away_team?.name ?? ""}`
 
   return (
     <div className="hero overlay" style={{ backgroundImage: "url('/images/bg_3.jpg')" }}>
       <div className="container">
         <div className="row align-items-center">
           <div className="col-12 col-lg-6 ml-auto" style={{ paddingTop: "1rem", paddingBottom: "1rem" }}>
-            <h1 className="text-white" style={{ fontSize: "clamp(1.8rem, 6vw, 3rem)" }}>Mundial 2026</h1>
+            <h1 className="text-white" style={{ fontSize: "clamp(1.8rem, 6vw, 3rem)" }}>{t("hero.title")}</h1>
             <p style={{ fontSize: "clamp(.82rem, 2.5vw, 1rem)" }}>
-              Live scores, real-time stats, and every goal from the FIFA World Cup 2026 — USA · Canada · Mexico.
+              {t("hero.subtitle")}
             </p>
             <Countdown targetDate={target} label={label} />
             <p style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
               <a href="#" className="btn btn-primary py-2 px-4"
                 onClick={e => { e.preventDefault(); navigate("/scores/today") }}>
-                Live Scores
+                {t("hero.liveBtn")}
               </a>
               <a href="#" className="btn btn-primary py-2 px-4"
                 onClick={e => { e.preventDefault(); navigate("/mundial/schedule") }}
                 style={{ background: "transparent", borderColor: "rgba(255,255,255,.4)" }}>
-                Schedule
+                {t("nav.schedule")}
               </a>
             </p>
           </div>

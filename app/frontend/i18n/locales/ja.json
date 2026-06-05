@@ -23,7 +23,8 @@
     "subtitle": "FIFAワールドカップ2026のライブスコア、リアルタイム統計、全ゴール — アメリカ・カナダ・メキシコ",
     "liveBtn": "ライブ",
     "fixturesBtn": "日程",
-    "nextMatch": "次の試合"
+    "nextMatch": "次の試合",
+    "opensIn": "⚽ ワールドカップ開幕まで"
   },
   "home": {
     "latestNews": "最新ニュース",
@@ -92,7 +93,8 @@
     "date": "日付",
     "home": "ホーム",
     "away": "アウェイ",
-    "group": "組"
+    "group": "組",
+    "player": "選手"
   },
   "match": {
     "summary": "概要",

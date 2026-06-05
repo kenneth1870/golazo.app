@@ -23,7 +23,8 @@
     "subtitle": "Live-Ergebnisse, Echtzeit-Statistiken und alle Tore der FIFA Fußball-Weltmeisterschaft 2026 — USA · Kanada · Mexiko.",
     "liveBtn": "Live",
     "fixturesBtn": "Spielplan",
-    "nextMatch": "Nächstes Spiel"
+    "nextMatch": "Nächstes Spiel",
+    "opensIn": "⚽ WM startet in"
   },
   "home": {
     "latestNews": "Neueste Nachrichten",
@@ -92,7 +93,8 @@
     "date": "Datum",
     "home": "Heim",
     "away": "Auswärts",
-    "group": "Gruppe"
+    "group": "Gruppe",
+    "player": "Spieler"
   },
   "match": {
     "summary": "Zusammenfassung",
