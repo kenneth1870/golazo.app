@@ -64,7 +64,7 @@ module Api
           })
         end
 
-        Rails.cache.write(cache_key, current, expires_in: 4.hours)
+        Rails.cache.write(cache_key, current, expires_in: 30.seconds)
       rescue => e
         Rails.logger.warn("[MatchDetail#broadcast] #{e.message}")
       end

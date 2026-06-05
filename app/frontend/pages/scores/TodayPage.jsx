@@ -251,14 +251,16 @@ export default function TodayPage() {
     return () => window.removeEventListener("keydown", onKey)
   }, [])
 
-  // Auto-refresh only for today
+  // Auto-refresh only for today — 30s when matches are live, 60s otherwise
   useEffect(() => {
     const iso   = toISO(selected)
     const today = toISO(new Date())
     if (iso !== today) return
-    const iv = setInterval(() => load(selected), 60000)
+    const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "BT", "P", "LIVE"])
+    const hasLive = matches.some(m => LIVE_STATUSES.has(m.status?.short ?? m.status))
+    const iv = setInterval(() => load(selected), hasLive ? 30000 : 60000)
     return () => clearInterval(iv)
-  }, [selected, load])
+  }, [selected, load, matches])
 
   const byComp = matches.reduce((acc, m) => {
     const key = m.competition?.id ?? m.competition?.code ?? "other"

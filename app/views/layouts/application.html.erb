@@ -1,11 +1,27 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Golazo App" %></title>
+    <title><%= content_for(:title) || "Golazo App — Mundial 2026" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Golazo App">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="<%= content_for(:meta_description) || "Live scores, real-time stats, and every goal from the FIFA World Cup 2026 — USA · Canada · Mexico." %>">
+
+    <%# Open Graph %>
+    <meta property="og:site_name" content="Golazo App">
+    <meta property="og:title"       content="<%= content_for(:og_title)       || content_for(:title)       || "Golazo App — Mundial 2026" %>">
+    <meta property="og:description" content="<%= content_for(:og_description) || content_for(:meta_description) || "Live scores, real-time stats, and every goal from the FIFA World Cup 2026 — USA · Canada · Mexico." %>">
+    <meta property="og:image"       content="<%= content_for(:og_image)       || request.base_url + "/images/bg_3.jpg" %>">
+    <meta property="og:url"         content="<%= request.original_url %>">
+    <meta property="og:type"        content="website">
+
+    <%# Twitter Card %>
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="<%= content_for(:og_title)       || "Golazo App — Mundial 2026" %>">
+    <meta name="twitter:description" content="<%= content_for(:og_description) || "Live scores, real-time stats, and every goal from the FIFA World Cup 2026." %>">
+    <meta name="twitter:image"       content="<%= content_for(:og_image)       || request.base_url + "/images/bg_3.jpg" %>">
+
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 

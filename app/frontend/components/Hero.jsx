@@ -6,8 +6,8 @@ function getLeft(d) {
   return { weeks: Math.floor(ms / 6048e5), days: Math.floor(ms / 864e5) % 7, hours: Math.floor(ms / 36e5) % 24, minutes: Math.floor(ms / 6e4) % 60, seconds: Math.floor(ms / 1e3) % 60 }
 }
 
-// Opening match: Mexico vs South Africa, June 11 2026, 6pm CDT (23:00 UTC)
-const WC_OPENING = "2026-06-11T23:00:00Z"
+// Opening match: Mexico vs South Africa, June 11 2026 — 19:00 UTC (Estadio Azteca)
+const WC_OPENING = "2026-06-11T19:00:00Z"
 
 function Countdown({ targetDate, label }) {
   const [t, setT] = useState(getLeft(targetDate))
