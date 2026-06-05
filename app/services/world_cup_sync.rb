@@ -1,7 +1,7 @@
 class WorldCupSync
   # WC 2026 league/season IDs on free-api-live-football-data.p.rapidapi.com
   # Override via ENV if the API uses different IDs.
-  WC_LEAGUE_ID = (ENV["RAPIDAPI_WC_LEAGUE_ID"] || 1).to_i
+  WC_LEAGUE_ID = (ENV["RAPIDAPI_WC_LEAGUE_ID"] || 77).to_i
   WC_SEASON_ID = (ENV["RAPIDAPI_WC_SEASON_ID"] || 2026).to_i
 
   STATUS_MAP = {

@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Inicio",
-    "scores": "Scores",
+    "scores": "Marcadores",
     "liveMatches": "Partidos en Vivo",
     "live": "En Vivo",
     "results": "Resultados",
@@ -30,7 +30,22 @@
     "nextMatch": "Próximo Partido",
     "upcomingMatches": "Próximos Partidos",
     "viewAll": "Ver todos →",
-    "fullSchedule": "Calendario completo →"
+    "fullSchedule": "Calendario completo →",
+    "yourTeam": "Tu equipo",
+    "playingNow": "Jugando ahora",
+    "noUpcoming": "No se encontraron próximos partidos",
+    "liveNow_one": "{{count}} partido en vivo ahora",
+    "liveNow_other": "{{count}} partidos en vivo ahora",
+    "followTeam": "Seguir un equipo"
+  },
+  "time": {
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "tomorrow": "Mañana",
+    "noMatches": "No hay partidos para {{date}}",
+    "tryDifferent": "Prueba otra fecha",
+    "matchCount": "{{count}} partidos",
+    "liveCount": "{{count}} en vivo"
   },
   "scores": {
     "liveNow": "En Vivo",
@@ -76,7 +91,47 @@
     "assists": "Asistencias",
     "date": "Fecha",
     "home": "Local",
-    "away": "Visitante"
+    "away": "Visitante",
+    "group": "Grupo"
+  },
+  "match": {
+    "summary": "Resumen",
+    "stats": "Estadísticas",
+    "lineups": "Alineaciones",
+    "h2h": "H2H",
+    "events": "Eventos del Partido",
+    "noEvents": "Sin eventos registrados",
+    "notStarted": "Aún no ha comenzado",
+    "eventsAppear": "Goles, tarjetas y cambios aparecerán cuando comience el partido",
+    "eventsUnavailable": "Los eventos no están disponibles para este partido",
+    "statsUnavailable": "Estadísticas no disponibles aún",
+    "statsAppear": "Las estadísticas aparecen cuando comienza el partido",
+    "lineupsUnavailable": "Alineaciones no disponibles aún",
+    "lineupsRelease": "Normalmente publicadas 1 hora antes del inicio",
+    "noH2H": "Sin historial de enfrentamientos",
+    "h2hPrev": "Los encuentros anteriores aparecerán aquí",
+    "h2hSummary": "Historial de Enfrentamientos",
+    "recentMeetings": "Últimos Encuentros",
+    "updatingEvery": "Actualizando cada 20s",
+    "fanPoll": "Encuesta de Aficionados",
+    "tapToVote": "Toca para votar",
+    "yourVote": "tu voto",
+    "votes_one": "{{count}} voto",
+    "votes_other": "{{count}} votos",
+    "beFirstVote": "Sé el primero en votar",
+    "draw": "Empate",
+    "fullTime": "Tiempo Completo",
+    "halfTime": "Medio Tiempo",
+    "substitutes": "Suplentes"
+  },
+  "error": {
+    "dataUnavailable": "Datos temporalmente no disponibles",
+    "apiError": "El proveedor de datos no responde. Inténtalo de nuevo en un momento.",
+    "notFound": "Partido no encontrado",
+    "matchRemoved": "Este partido no está en nuestra base de datos. Puede haber sido cancelado.",
+    "retry": "Reintentar",
+    "back": "Volver",
+    "goBack": "Ir atrás"
   },
   "status": {
     "live": "EN VIVO",
@@ -92,7 +147,9 @@
   },
   "news": {
     "title": "Noticias",
-    "subtitle": "Lo último del Mundial FIFA 2026"
+    "subtitle": "Lo último del fútbol mundial",
+    "noArticles": "No se encontraron artículos",
+    "all": "Todos"
   },
   "footer": {
     "follow": "Síguenos",

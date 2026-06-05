@@ -56,7 +56,7 @@ export default function SearchBar({ onClose }) {
     if (result.type === "team") {
       navigate(`/teams/${result.id}`)
     } else if (result.type === "match") {
-      const dest = result.external_id ? `/matches/${result.external_id}` : "/scores/today"
+      const dest = result.external_id ? `/matches/${result.external_id}` : `/matches/db-${result.id}`
       navigate(dest)
     }
     onClose()
@@ -74,10 +74,15 @@ export default function SearchBar({ onClose }) {
     return () => window.removeEventListener("keydown", onKey)
   }, [results, focused, go, onClose])
 
-  const statusLabel = (s) => {
-    if (s === "live")      return <span style={{ color: "#ee1e46", fontSize: "0.68rem", fontWeight: 800 }}>● LIVE</span>
-    if (s === "finished")  return <span style={{ color: "var(--muted)", fontSize: "0.68rem" }}>FT</span>
-    return <span style={{ color: "var(--muted)", fontSize: "0.68rem" }}>scheduled</span>
+  const statusLabel = (r) => {
+    if (r.status === "live")     return <span style={{ color: "#ee1e46", fontSize: "0.68rem", fontWeight: 800 }}>● LIVE</span>
+    if (r.status === "finished") return <span style={{ color: "var(--muted)", fontSize: "0.68rem" }}>FT</span>
+    if (r.kickoff_at) {
+      const d = new Date(r.kickoff_at)
+      const label = d.toLocaleDateString([], { month: "short", day: "numeric" }) + " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      return <span style={{ color: "#10b981", fontSize: "0.68rem", fontWeight: 600 }}>{label}</span>
+    }
+    return <span style={{ color: "var(--muted)", fontSize: "0.68rem" }}>TBD</span>
   }
 
   return (
@@ -161,7 +166,7 @@ export default function SearchBar({ onClose }) {
                       <span style={{ fontWeight: 700, color: "#fff", fontSize: "0.88rem" }}>{r.away}</span>
                       <FlagOrInitials name={r.away} flagUrl={r.away_flag} size={24} />
                     </div>
-                    {statusLabel(r.status)}
+                    {statusLabel(r)}
                   </>
                 )}
               </div>

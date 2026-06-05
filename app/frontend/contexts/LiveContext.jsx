@@ -10,7 +10,7 @@ export function LiveProvider({ children }) {
       fetch("/api/v1/today")
         .then(r => r.json())
         .then(d => {
-          const all = [...(d.real || []), ...(d.local || [])]
+          const all = Array.isArray(d) ? d : [...(d.real || []), ...(d.local || [])]
           setLiveCount(all.filter(m => m.status === "live").length)
         })
         .catch(() => {})

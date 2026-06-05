@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 function normalizeMatch(m) {
   return {
@@ -83,7 +84,10 @@ function CompetitionBlock({ matches, onMatchClick }) {
 }
 
 function toISO(date) {
-  return date.toISOString().split("T")[0]
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
 }
 
 function addDays(date, n) {
@@ -92,16 +96,17 @@ function addDays(date, n) {
   return d
 }
 
-function formatLabel(date) {
+function useResultLabel(date, t) {
   const yesterday = toISO(addDays(new Date(), -1))
   const today     = toISO(new Date())
   const iso       = toISO(date)
-  if (iso === yesterday) return "Yesterday"
-  if (iso === today)     return "Today"
+  if (iso === yesterday) return t("time.yesterday")
+  if (iso === today)     return t("time.today")
   return date.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })
 }
 
 export default function ResultsPage() {
+  const { t }    = useTranslation()
   const [date, setDate]       = useState(() => addDays(new Date(), -1))
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
@@ -144,14 +149,15 @@ export default function ResultsPage() {
   )
 
   const today = toISO(new Date())
+  const label = useResultLabel(date, t)
 
   return (
     <div className="site-section">
       <div className="container">
         <div className="d-flex align-items-center justify-content-between mb-4" style={{ gap: 12 }}>
-          <button className="btn-nav" onClick={() => setDate(d => addDays(d, -1))}>← Prev</button>
+          <button className="btn-nav" onClick={() => setDate(d => addDays(d, -1))}>← {t("time.yesterday")}</button>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontWeight: 600, fontSize: "1rem" }}>{formatLabel(date)}</div>
+            <div style={{ fontWeight: 600, fontSize: "1rem" }}>{label}</div>
             <div style={{ fontSize: "0.75rem", color: "#888" }}>{toISO(date)}</div>
           </div>
           <button
@@ -159,7 +165,7 @@ export default function ResultsPage() {
             onClick={() => setDate(d => addDays(d, 1))}
             disabled={toISO(date) >= today}
             style={{ opacity: toISO(date) >= today ? 0.3 : 1 }}
-          >Next →</button>
+          >{t("time.tomorrow")} →</button>
         </div>
 
         {loading ? (
@@ -167,8 +173,8 @@ export default function ResultsPage() {
         ) : groups.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state__icon">🏆</div>
-            <h3>No results for {formatLabel(date)}</h3>
-            <p>Try a different date</p>
+            <h3>{t("time.noMatches", { date: label })}</h3>
+            <p>{t("time.tryDifferent")}</p>
           </div>
         ) : (
           groups.map((g, i) => (

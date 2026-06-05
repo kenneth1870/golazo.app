@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 const SOURCE_COLORS = {
   "BBC Sport": "#b80000",
@@ -34,6 +35,7 @@ function NewsCard({ article, featured }) {
 }
 
 export default function NewsPage() {
+  const { t } = useTranslation()
   const [articles, setArticles] = useState([])
   const [loading, setLoading]   = useState(true)
   const [source, setSource]     = useState("All")
@@ -46,15 +48,16 @@ export default function NewsPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const sources  = ["All", ...new Set(articles.map(a => a.source))]
-  const filtered = source === "All" ? articles : articles.filter(a => a.source === source)
+  const allLabel = t("news.all")
+  const sources  = [allLabel, ...new Set(articles.map(a => a.source))]
+  const filtered = source === allLabel ? articles : articles.filter(a => a.source === source)
 
   return (
     <>
       <div className="page-hero" style={{ backgroundImage: "url('/images/bg_1.jpg')" }}>
         <div className="container">
-          <h1 className="page-hero__title">News</h1>
-          <p className="page-hero__sub">Football stories from around the world</p>
+          <h1 className="page-hero__title">{t("news.title")}</h1>
+          <p className="page-hero__sub">{t("news.subtitle")}</p>
         </div>
       </div>
 
@@ -87,7 +90,7 @@ export default function NewsPage() {
           ) : filtered.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state__icon">📰</div>
-              <h3>No articles found</h3>
+              <h3>{t("news.noArticles")}</h3>
             </div>
           ) : (
             <div className="row">

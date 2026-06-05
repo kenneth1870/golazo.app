@@ -33,52 +33,86 @@ def comp(code) = Competition.find_by!(code: code)
 puts "#{Competition.count} competitions"
 
 # ───────────────────────── NATIONAL TEAMS (WC 2026) ─────────────────────────
+# Official FIFA WC 2026 draw — December 5, 2024 — Kennedy Center, Washington D.C.
 puts "Seeding World Cup teams..."
 
 WC_TEAMS = [
-  { name: "United States",  code: "USA", group: "A", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/us.png"     },
-  { name: "Panama",         code: "PAN", group: "A", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/pa.png"     },
-  { name: "Bolivia",        code: "BOL", group: "A", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/bo.png"     },
-  { name: "Morocco",        code: "MAR", group: "A", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/ma.png"     },
-  { name: "Argentina",      code: "ARG", group: "B", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/ar.png"     },
-  { name: "Chile",          code: "CHI", group: "B", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/cl.png"     },
-  { name: "Peru",           code: "PER", group: "B", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/pe.png"     },
-  { name: "Australia",      code: "AUS", group: "B", confederation: "AFC",      flag_url: "https://flagcdn.com/w80/au.png"     },
-  { name: "Mexico",         code: "MEX", group: "C", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/mx.png"     },
-  { name: "Jamaica",        code: "JAM", group: "C", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/jm.png"     },
-  { name: "Venezuela",      code: "VEN", group: "C", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/ve.png"     },
-  { name: "New Zealand",    code: "NZL", group: "C", confederation: "OFC",      flag_url: "https://flagcdn.com/w80/nz.png"     },
-  { name: "Brazil",         code: "BRA", group: "D", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/br.png"     },
-  { name: "Ecuador",        code: "ECU", group: "D", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/ec.png"     },
-  { name: "Paraguay",       code: "PAR", group: "D", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/py.png"     },
-  { name: "DR Congo",       code: "COD", group: "D", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/cd.png"     },
-  { name: "Spain",          code: "ESP", group: "E", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/es.png"     },
-  { name: "Croatia",        code: "CRO", group: "E", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/hr.png"     },
-  { name: "Japan",          code: "JPN", group: "E", confederation: "AFC",      flag_url: "https://flagcdn.com/w80/jp.png"     },
-  { name: "Cameroon",       code: "CMR", group: "E", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/cm.png"     },
-  { name: "Germany",        code: "GER", group: "F", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/de.png"     },
-  { name: "Denmark",        code: "DEN", group: "F", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/dk.png"     },
-  { name: "Saudi Arabia",   code: "KSA", group: "F", confederation: "AFC",      flag_url: "https://flagcdn.com/w80/sa.png"     },
-  { name: "Portugal",       code: "POR", group: "G", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/pt.png"     },
-  { name: "France",         code: "FRA", group: "G", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/fr.png"     },
-  { name: "Uruguay",        code: "URU", group: "G", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/uy.png"     },
-  { name: "Algeria",        code: "ALG", group: "G", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/dz.png"     },
-  { name: "England",        code: "ENG", group: "H", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/gb-eng.png" },
-  { name: "Netherlands",    code: "NED", group: "H", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/nl.png"     },
-  { name: "Colombia",       code: "COL", group: "H", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/co.png"     },
-  { name: "Senegal",        code: "SEN", group: "H", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/sn.png"     },
+  # Group A — Mexico City / Guadalajara (host: Mexico)
+  { name: "Mexico",              code: "MEX", group: "A", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/mx.png"     },
+  { name: "South Africa",        code: "RSA", group: "A", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/za.png"     },
+  { name: "South Korea",         code: "KOR", group: "A", confederation: "AFC",      flag_url: "https://flagcdn.com/w80/kr.png"     },
+  { name: "Czechia",             code: "CZE", group: "A", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/cz.png"     },
+  # Group B — Toronto / Vancouver (host: Canada)
+  { name: "Canada",              code: "CAN", group: "B", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/ca.png"     },
+  { name: "Bosnia & Herz.",      code: "BIH", group: "B", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/ba.png"     },
+  { name: "Qatar",               code: "QAT", group: "B", confederation: "AFC",      flag_url: "https://flagcdn.com/w80/qa.png"     },
+  { name: "Switzerland",         code: "SUI", group: "B", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/ch.png"     },
+  # Group C — Los Angeles / San Francisco
+  { name: "Brazil",              code: "BRA", group: "C", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/br.png"     },
+  { name: "Morocco",             code: "MAR", group: "C", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/ma.png"     },
+  { name: "Haiti",               code: "HAI", group: "C", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/ht.png"     },
+  { name: "Scotland",            code: "SCO", group: "C", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/gb-sct.png" },
+  # Group D — Dallas / Houston (host: United States)
+  { name: "United States",       code: "USA", group: "D", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/us.png"     },
+  { name: "Paraguay",            code: "PAR", group: "D", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/py.png"     },
+  { name: "Australia",           code: "AUS", group: "D", confederation: "AFC",      flag_url: "https://flagcdn.com/w80/au.png"     },
+  { name: "Turkey",              code: "TUR", group: "D", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/tr.png"     },
+  # Group E — Atlanta / Miami
+  { name: "Germany",             code: "GER", group: "E", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/de.png"     },
+  { name: "Curacao",             code: "CUW", group: "E", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/cw.png"     },
+  { name: "Ivory Coast",         code: "CIV", group: "E", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/ci.png"     },
+  { name: "Ecuador",             code: "ECU", group: "E", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/ec.png"     },
+  # Group F — Seattle / San Francisco
+  { name: "Netherlands",         code: "NED", group: "F", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/nl.png"     },
+  { name: "Japan",               code: "JPN", group: "F", confederation: "AFC",      flag_url: "https://flagcdn.com/w80/jp.png"     },
+  { name: "Sweden",              code: "SWE", group: "F", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/se.png"     },
+  { name: "Tunisia",             code: "TUN", group: "F", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/tn.png"     },
+  # Group G — Kansas City / Cincinnati
+  { name: "Belgium",             code: "BEL", group: "G", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/be.png"     },
+  { name: "Egypt",               code: "EGY", group: "G", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/eg.png"     },
+  { name: "Iran",                code: "IRN", group: "G", confederation: "AFC",      flag_url: "https://flagcdn.com/w80/ir.png"     },
+  { name: "New Zealand",         code: "NZL", group: "G", confederation: "OFC",      flag_url: "https://flagcdn.com/w80/nz.png"     },
+  # Group H — Miami / Atlanta
+  { name: "Spain",               code: "ESP", group: "H", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/es.png"     },
+  { name: "Cape Verde",          code: "CPV", group: "H", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/cv.png"     },
+  { name: "Saudi Arabia",        code: "KSA", group: "H", confederation: "AFC",      flag_url: "https://flagcdn.com/w80/sa.png"     },
+  { name: "Uruguay",             code: "URU", group: "H", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/uy.png"     },
+  # Group I — Chicago / Boston
+  { name: "France",              code: "FRA", group: "I", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/fr.png"     },
+  { name: "Senegal",             code: "SEN", group: "I", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/sn.png"     },
+  { name: "Iraq",                code: "IRQ", group: "I", confederation: "AFC",      flag_url: "https://flagcdn.com/w80/iq.png"     },
+  { name: "Norway",              code: "NOR", group: "I", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/no.png"     },
+  # Group J — New York / New Jersey
+  { name: "Argentina",           code: "ARG", group: "J", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/ar.png"     },
+  { name: "Algeria",             code: "ALG", group: "J", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/dz.png"     },
+  { name: "Austria",             code: "AUT", group: "J", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/at.png"     },
+  { name: "Jordan",              code: "JOR", group: "J", confederation: "AFC",      flag_url: "https://flagcdn.com/w80/jo.png"     },
+  # Group K — Los Angeles / San Diego
+  { name: "Portugal",            code: "POR", group: "K", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/pt.png"     },
+  { name: "DR Congo",            code: "COD", group: "K", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/cd.png"     },
+  { name: "Uzbekistan",          code: "UZB", group: "K", confederation: "AFC",      flag_url: "https://flagcdn.com/w80/uz.png"     },
+  { name: "Colombia",            code: "COL", group: "K", confederation: "CONMEBOL", flag_url: "https://flagcdn.com/w80/co.png"     },
+  # Group L — Boston / Philadelphia
+  { name: "England",             code: "ENG", group: "L", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/gb-eng.png" },
+  { name: "Croatia",             code: "CRO", group: "L", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/hr.png"     },
+  { name: "Ghana",               code: "GHA", group: "L", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/gh.png"     },
+  { name: "Panama",              code: "PAN", group: "L", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/pa.png"     },
 ].uniq { |t| t[:code] }
 
+# Use find_or_initialize so existing teams get their group corrected
 WC_TEAMS.each do |attrs|
-  Team.find_or_create_by!(code: attrs[:code]) do |t|
-    t.name          = attrs[:name]
-    t.group         = attrs[:group]
-    t.confederation = attrs[:confederation]
-    t.flag_url      = attrs[:flag_url]
-  end
+  t = Team.find_or_initialize_by(code: attrs[:code])
+  t.name          = attrs[:name]
+  t.group         = attrs[:group]
+  t.confederation = attrs[:confederation]
+  t.flag_url      = attrs[:flag_url]
+  t.save!
 end
 
-puts "#{Team.count} national teams"
+# Remove old placeholder teams that are no longer in the draw
+Team.where(code: %w[MAT PAT HON BOL CHI PER CMR CRC DEN DAN VEN JAM NGA ITA POL NAM SRB GUA]).update_all(group: nil)
+
+puts "#{Team.where.not(group: nil).count} WC teams seeded"
 
 # ───────────────────────── CLUB TEAMS ─────────────────────────
 puts "Seeding club teams..."
@@ -153,18 +187,90 @@ def team(code)
 end
 
 WC_FIXTURES = [
-  { home: "USA", away: "MAR", kickoff: "2026-06-11 19:00", venue: "MetLife Stadium",  group: "A", status: "finished", hs: 2, as: 1 },
-  { home: "PAN", away: "BOL", kickoff: "2026-06-11 22:00", venue: "SoFi Stadium",     group: "A", status: "finished", hs: 1, as: 0 },
-  { home: "ARG", away: "PER", kickoff: "2026-06-12 19:00", venue: "AT&T Stadium",     group: "B", status: "scheduled" },
-  { home: "CHI", away: "AUS", kickoff: "2026-06-12 22:00", venue: "Levi's Stadium",   group: "B", status: "scheduled" },
-  { home: "BRA", away: "ECU", kickoff: "2026-06-13 16:00", venue: "Rose Bowl",        group: "D", status: "scheduled" },
-  { home: "ESP", away: "JPN", kickoff: "2026-06-13 19:00", venue: "Hard Rock Stadium",group: "E", status: "scheduled" },
-  { home: "ENG", away: "SEN", kickoff: "2026-06-14 16:00", venue: "Gillette Stadium", group: "H", status: "scheduled" },
-  { home: "GER", away: "KSA", kickoff: "2026-06-14 19:00", venue: "MetLife Stadium",  group: "F", status: "scheduled" },
-  { home: "POR", away: "ALG", kickoff: "2026-06-15 16:00", venue: "AT&T Stadium",     group: "G", status: "scheduled" },
-  { home: "FRA", away: "URU", kickoff: "2026-06-15 19:00", venue: "Rose Bowl",        group: "G", status: "scheduled" },
-  { home: "NED", away: "COL", kickoff: "2026-06-16 16:00", venue: "Levi's Stadium",   group: "H", status: "scheduled" },
-  { home: "MEX", away: "VEN", kickoff: "2026-06-16 19:00", venue: "SoFi Stadium",     group: "C", status: "scheduled" },
+  # ── Group A — Mexico, South Africa, South Korea, Czechia ──
+  { home: "MEX", away: "RSA", kickoff: "2026-06-11 23:00", venue: "Estadio GNP Seguros, Mexico City",   group: "A", status: "scheduled" },
+  { home: "KOR", away: "CZE", kickoff: "2026-06-12 02:00", venue: "Estadio Akron, Guadalajara",         group: "A", status: "scheduled" },
+  { home: "MEX", away: "KOR", kickoff: "2026-06-15 23:00", venue: "Estadio GNP Seguros, Mexico City",   group: "A", status: "scheduled" },
+  { home: "CZE", away: "RSA", kickoff: "2026-06-15 19:00", venue: "Estadio Akron, Guadalajara",         group: "A", status: "scheduled" },
+  { home: "MEX", away: "CZE", kickoff: "2026-06-19 23:00", venue: "Estadio GNP Seguros, Mexico City",   group: "A", status: "scheduled" },
+  { home: "RSA", away: "KOR", kickoff: "2026-06-19 23:00", venue: "Estadio Akron, Guadalajara",         group: "A", status: "scheduled" },
+  # ── Group B — Canada, Bosnia & Herz., Qatar, Switzerland ──
+  { home: "CAN", away: "BIH", kickoff: "2026-06-12 23:00", venue: "BC Place, Vancouver",                group: "B", status: "scheduled" },
+  { home: "QAT", away: "SUI", kickoff: "2026-06-12 19:00", venue: "BMO Field, Toronto",                 group: "B", status: "scheduled" },
+  { home: "CAN", away: "QAT", kickoff: "2026-06-16 23:00", venue: "BC Place, Vancouver",                group: "B", status: "scheduled" },
+  { home: "SUI", away: "BIH", kickoff: "2026-06-16 19:00", venue: "BMO Field, Toronto",                 group: "B", status: "scheduled" },
+  { home: "CAN", away: "SUI", kickoff: "2026-06-20 23:00", venue: "BC Place, Vancouver",                group: "B", status: "scheduled" },
+  { home: "BIH", away: "QAT", kickoff: "2026-06-20 23:00", venue: "BMO Field, Toronto",                 group: "B", status: "scheduled" },
+  # ── Group C — Brazil, Morocco, Haiti, Scotland ──
+  { home: "BRA", away: "MAR", kickoff: "2026-06-13 02:00", venue: "SoFi Stadium, Los Angeles",          group: "C", status: "scheduled" },
+  { home: "HAI", away: "SCO", kickoff: "2026-06-13 22:00", venue: "Levi's Stadium, San Francisco",      group: "C", status: "scheduled" },
+  { home: "BRA", away: "HAI", kickoff: "2026-06-17 22:00", venue: "SoFi Stadium, Los Angeles",          group: "C", status: "scheduled" },
+  { home: "SCO", away: "MAR", kickoff: "2026-06-17 02:00", venue: "Levi's Stadium, San Francisco",      group: "C", status: "scheduled" },
+  { home: "BRA", away: "SCO", kickoff: "2026-06-21 22:00", venue: "SoFi Stadium, Los Angeles",          group: "C", status: "scheduled" },
+  { home: "MAR", away: "HAI", kickoff: "2026-06-21 22:00", venue: "Levi's Stadium, San Francisco",      group: "C", status: "scheduled" },
+  # ── Group D — USA, Paraguay, Australia, Turkey ──
+  { home: "USA", away: "PAR", kickoff: "2026-06-12 02:00", venue: "AT&T Stadium, Dallas",               group: "D", status: "scheduled" },
+  { home: "AUS", away: "TUR", kickoff: "2026-06-12 19:00", venue: "NRG Stadium, Houston",               group: "D", status: "scheduled" },
+  { home: "USA", away: "AUS", kickoff: "2026-06-16 02:00", venue: "AT&T Stadium, Dallas",               group: "D", status: "scheduled" },
+  { home: "TUR", away: "PAR", kickoff: "2026-06-16 22:00", venue: "NRG Stadium, Houston",               group: "D", status: "scheduled" },
+  { home: "USA", away: "TUR", kickoff: "2026-06-20 02:00", venue: "AT&T Stadium, Dallas",               group: "D", status: "scheduled" },
+  { home: "PAR", away: "AUS", kickoff: "2026-06-20 22:00", venue: "NRG Stadium, Houston",               group: "D", status: "scheduled" },
+  # ── Group E — Germany, Curacao, Ivory Coast, Ecuador ──
+  { home: "GER", away: "CUW", kickoff: "2026-06-13 22:00", venue: "Mercedes-Benz Stadium, Atlanta",     group: "E", status: "scheduled" },
+  { home: "CIV", away: "ECU", kickoff: "2026-06-13 19:00", venue: "Hard Rock Stadium, Miami",           group: "E", status: "scheduled" },
+  { home: "GER", away: "CIV", kickoff: "2026-06-17 19:00", venue: "Mercedes-Benz Stadium, Atlanta",     group: "E", status: "scheduled" },
+  { home: "ECU", away: "CUW", kickoff: "2026-06-17 22:00", venue: "Hard Rock Stadium, Miami",           group: "E", status: "scheduled" },
+  { home: "GER", away: "ECU", kickoff: "2026-06-21 19:00", venue: "Mercedes-Benz Stadium, Atlanta",     group: "E", status: "scheduled" },
+  { home: "CUW", away: "CIV", kickoff: "2026-06-21 19:00", venue: "Hard Rock Stadium, Miami",           group: "E", status: "scheduled" },
+  # ── Group F — Netherlands, Japan, Sweden, Tunisia ──
+  { home: "NED", away: "JPN", kickoff: "2026-06-14 02:00", venue: "Lumen Field, Seattle",               group: "F", status: "scheduled" },
+  { home: "SWE", away: "TUN", kickoff: "2026-06-14 22:00", venue: "Levi's Stadium, San Francisco",      group: "F", status: "scheduled" },
+  { home: "NED", away: "SWE", kickoff: "2026-06-18 02:00", venue: "Lumen Field, Seattle",               group: "F", status: "scheduled" },
+  { home: "TUN", away: "JPN", kickoff: "2026-06-18 22:00", venue: "Levi's Stadium, San Francisco",      group: "F", status: "scheduled" },
+  { home: "NED", away: "TUN", kickoff: "2026-06-22 02:00", venue: "Lumen Field, Seattle",               group: "F", status: "scheduled" },
+  { home: "JPN", away: "SWE", kickoff: "2026-06-22 02:00", venue: "Levi's Stadium, San Francisco",      group: "F", status: "scheduled" },
+  # ── Group G — Belgium, Egypt, Iran, New Zealand ──
+  { home: "BEL", away: "EGY", kickoff: "2026-06-14 22:00", venue: "Arrowhead Stadium, Kansas City",     group: "G", status: "scheduled" },
+  { home: "IRN", away: "NZL", kickoff: "2026-06-14 19:00", venue: "Paycor Stadium, Cincinnati",         group: "G", status: "scheduled" },
+  { home: "BEL", away: "IRN", kickoff: "2026-06-18 22:00", venue: "Arrowhead Stadium, Kansas City",     group: "G", status: "scheduled" },
+  { home: "NZL", away: "EGY", kickoff: "2026-06-18 19:00", venue: "Paycor Stadium, Cincinnati",         group: "G", status: "scheduled" },
+  { home: "BEL", away: "NZL", kickoff: "2026-06-22 22:00", venue: "Arrowhead Stadium, Kansas City",     group: "G", status: "scheduled" },
+  { home: "EGY", away: "IRN", kickoff: "2026-06-22 22:00", venue: "Paycor Stadium, Cincinnati",         group: "G", status: "scheduled" },
+  # ── Group H — Spain, Cape Verde, Saudi Arabia, Uruguay ──
+  { home: "ESP", away: "CPV", kickoff: "2026-06-15 02:00", venue: "Hard Rock Stadium, Miami",           group: "H", status: "scheduled" },
+  { home: "KSA", away: "URU", kickoff: "2026-06-15 22:00", venue: "Mercedes-Benz Stadium, Atlanta",     group: "H", status: "scheduled" },
+  { home: "ESP", away: "KSA", kickoff: "2026-06-19 02:00", venue: "Hard Rock Stadium, Miami",           group: "H", status: "scheduled" },
+  { home: "URU", away: "CPV", kickoff: "2026-06-19 22:00", venue: "Mercedes-Benz Stadium, Atlanta",     group: "H", status: "scheduled" },
+  { home: "ESP", away: "URU", kickoff: "2026-06-23 02:00", venue: "Hard Rock Stadium, Miami",           group: "H", status: "scheduled" },
+  { home: "CPV", away: "KSA", kickoff: "2026-06-23 02:00", venue: "Mercedes-Benz Stadium, Atlanta",     group: "H", status: "scheduled" },
+  # ── Group I — France, Senegal, Iraq, Norway ──
+  { home: "FRA", away: "SEN", kickoff: "2026-06-15 22:00", venue: "Soldier Field, Chicago",             group: "I", status: "scheduled" },
+  { home: "IRQ", away: "NOR", kickoff: "2026-06-15 19:00", venue: "Gillette Stadium, Boston",           group: "I", status: "scheduled" },
+  { home: "FRA", away: "IRQ", kickoff: "2026-06-19 22:00", venue: "Soldier Field, Chicago",             group: "I", status: "scheduled" },
+  { home: "NOR", away: "SEN", kickoff: "2026-06-19 19:00", venue: "Gillette Stadium, Boston",           group: "I", status: "scheduled" },
+  { home: "FRA", away: "NOR", kickoff: "2026-06-23 22:00", venue: "Soldier Field, Chicago",             group: "I", status: "scheduled" },
+  { home: "SEN", away: "IRQ", kickoff: "2026-06-23 22:00", venue: "Gillette Stadium, Boston",           group: "I", status: "scheduled" },
+  # ── Group J — Argentina, Algeria, Austria, Jordan ──
+  { home: "ARG", away: "ALG", kickoff: "2026-06-16 02:00", venue: "MetLife Stadium, New York",          group: "J", status: "scheduled" },
+  { home: "AUT", away: "JOR", kickoff: "2026-06-16 22:00", venue: "Lincoln Financial Field, Philadelphia", group: "J", status: "scheduled" },
+  { home: "ARG", away: "AUT", kickoff: "2026-06-20 02:00", venue: "MetLife Stadium, New York",          group: "J", status: "scheduled" },
+  { home: "JOR", away: "ALG", kickoff: "2026-06-20 22:00", venue: "Lincoln Financial Field, Philadelphia", group: "J", status: "scheduled" },
+  { home: "ARG", away: "JOR", kickoff: "2026-06-24 02:00", venue: "MetLife Stadium, New York",          group: "J", status: "scheduled" },
+  { home: "ALG", away: "AUT", kickoff: "2026-06-24 02:00", venue: "Lincoln Financial Field, Philadelphia", group: "J", status: "scheduled" },
+  # ── Group K — Portugal, DR Congo, Uzbekistan, Colombia ──
+  { home: "POR", away: "COD", kickoff: "2026-06-17 02:00", venue: "Rose Bowl, Los Angeles",             group: "K", status: "scheduled" },
+  { home: "UZB", away: "COL", kickoff: "2026-06-17 22:00", venue: "Dignity Health Sports Park, LA",     group: "K", status: "scheduled" },
+  { home: "POR", away: "UZB", kickoff: "2026-06-21 02:00", venue: "Rose Bowl, Los Angeles",             group: "K", status: "scheduled" },
+  { home: "COL", away: "COD", kickoff: "2026-06-21 22:00", venue: "Dignity Health Sports Park, LA",     group: "K", status: "scheduled" },
+  { home: "POR", away: "COL", kickoff: "2026-06-25 02:00", venue: "Rose Bowl, Los Angeles",             group: "K", status: "scheduled" },
+  { home: "COD", away: "UZB", kickoff: "2026-06-25 02:00", venue: "Dignity Health Sports Park, LA",     group: "K", status: "scheduled" },
+  # ── Group L — England, Croatia, Ghana, Panama ──
+  { home: "ENG", away: "CRO", kickoff: "2026-06-17 19:00", venue: "Gillette Stadium, Boston",           group: "L", status: "scheduled" },
+  { home: "GHA", away: "PAN", kickoff: "2026-06-17 22:00", venue: "Lincoln Financial Field, Philadelphia", group: "L", status: "scheduled" },
+  { home: "ENG", away: "GHA", kickoff: "2026-06-21 19:00", venue: "Gillette Stadium, Boston",           group: "L", status: "scheduled" },
+  { home: "PAN", away: "CRO", kickoff: "2026-06-21 22:00", venue: "Lincoln Financial Field, Philadelphia", group: "L", status: "scheduled" },
+  { home: "ENG", away: "PAN", kickoff: "2026-06-25 19:00", venue: "Gillette Stadium, Boston",           group: "L", status: "scheduled" },
+  { home: "CRO", away: "GHA", kickoff: "2026-06-25 19:00", venue: "Lincoln Financial Field, Philadelphia", group: "L", status: "scheduled" },
 ].uniq { |f| [f[:home], f[:away]] }
 
 WC_FIXTURES.each do |f|
@@ -189,14 +295,7 @@ Match.where(competition: nil).update_all(competition_id: wc_comp.id)
 
 puts "#{Match.where(competition: wc_comp).count} WC matches"
 
-# Seed goals for an already-finished WC match (USA vs Morocco)
-usa_mar = Match.joins(:home_team, :away_team)
-               .find_by(competition: wc_comp, teams: { code: "USA" })
-if usa_mar && usa_mar.goals.empty?
-  Goal.create!(match: usa_mar, team: usa_mar.home_team, player_name: "Pulisic", minute: 34, goal_type: "regular")
-  Goal.create!(match: usa_mar, team: usa_mar.home_team, player_name: "Reyna",   minute: 67, goal_type: "regular")
-  Goal.create!(match: usa_mar, team: usa_mar.away_team, player_name: "En-Nesyri", minute: 55, goal_type: "regular")
-end
+# Goals seeded once real WC matches complete
 
 # ───────────────────────── CLUB LEAGUE FIXTURES ─────────────────────────
 puts "Seeding club league fixtures..."

@@ -16,7 +16,7 @@ class Prediction < ApplicationRecord
     return { error: "invalid_choice" } unless %w[home draw away].include?(choice)
 
     increment!("#{choice}_votes")
-    update_column(:voter_tokens, (tokens + [token]).last(10_000).to_json) if token.present?
+    update_column(:voter_tokens, (tokens + [token]).last(1_000).to_json) if token.present?
     as_json_result
   end
 

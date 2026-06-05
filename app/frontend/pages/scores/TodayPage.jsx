@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import MatchRow from "../../components/MatchRow"
 import { useLocale } from "../../hooks/useLocale"
 
@@ -23,14 +24,14 @@ function startOfDay() {
   return d
 }
 
-function dateLabel(date) {
+function useDateLabel(date, t) {
   const todayISO     = toISO(new Date())
   const yesterdayISO = toISO(addDays(new Date(), -1))
   const tomorrowISO  = toISO(addDays(new Date(), 1))
   const iso          = toISO(date)
-  if (iso === todayISO)     return "Today"
-  if (iso === yesterdayISO) return "Yesterday"
-  if (iso === tomorrowISO)  return "Tomorrow"
+  if (iso === todayISO)     return t("time.today")
+  if (iso === yesterdayISO) return t("time.yesterday")
+  if (iso === tomorrowISO)  return t("time.tomorrow")
   return date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })
 }
 
@@ -114,7 +115,7 @@ function RealMatchRow({ match, onMatchClick }) {
   return (
     <div
       className={`match-row${isLive ? " match-row--live" : ""}${clickable ? " match-row--clickable" : ""}`}
-      onClick={clickable ? () => onMatchClick(match.external_id) : undefined}
+      onClick={clickable ? () => onMatchClick(match.external_id, match) : undefined}
     >
       <div className="match-row__status">
         {isLive
@@ -185,7 +186,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick }) {
         {sorted.map(m =>
           isReal
             ? <RealMatchRow key={m.id} match={m} onMatchClick={onMatchClick} />
-            : <MatchRow key={m.id} match={m} onClick={m.external_id ? () => onMatchClick(m.external_id) : undefined} />
+            : <MatchRow key={m.id} match={m} onClick={m.external_id ? () => onMatchClick(m.external_id, m) : undefined} />
         )}
       </div>
     </div>
@@ -193,24 +194,25 @@ function CompetitionBlock({ matches, navigate, onMatchClick }) {
 }
 
 // ─── Empty state ──────────────────────────────────────
-function EmptyState({ label }) {
+function EmptyState({ label, t }) {
   return (
     <div className="empty-state">
       <div className="empty-state__pitch" />
       <div className="empty-state__icon">📅</div>
-      <h3>No matches for {label}</h3>
-      <p>Try a different date</p>
+      <h3>{t("time.noMatches", { date: label })}</h3>
+      <p>{t("time.tryDifferent")}</p>
     </div>
   )
 }
 
 // ─── Main page ────────────────────────────────────────
 export default function TodayPage() {
+  const { t } = useTranslation()
   const [selected, setSelected] = useState(startOfDay)
   const [matches, setMatches]   = useState([])
   const [loading, setLoading]   = useState(true)
   const navigate     = useNavigate()
-  const onMatchClick = extId => navigate(`/matches/${extId}`)
+  const onMatchClick = (extId, match) => navigate(`/matches/${extId}`, { state: { preview: match } })
   const { timezone } = useLocale()
 
   const load = useCallback((date) => {
@@ -272,7 +274,7 @@ export default function TodayPage() {
   })
 
   const liveCount = matches.filter(m => m.status === "live").length
-  const label     = dateLabel(selected)
+  const label     = useDateLabel(selected, t)
 
   return (
     <div className="site-section">
@@ -288,11 +290,11 @@ export default function TodayPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: "0.78rem" }}>
             {liveCount > 0 && (
               <span style={{ display: "flex", alignItems: "center", gap: 5, color: "#ee1e46" }}>
-                <span className="live-dot" />{liveCount} live
+                <span className="live-dot" />{t("time.liveCount", { count: liveCount })}
               </span>
             )}
             {!loading && (
-              <span style={{ color: "#555" }}>{matches.length} matches</span>
+              <span style={{ color: "#555" }}>{t("time.matchCount", { count: matches.length })}</span>
             )}
           </div>
         </div>
@@ -301,7 +303,7 @@ export default function TodayPage() {
         {loading ? (
           <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
         ) : groups.length === 0 ? (
-          <EmptyState label={label} />
+          <EmptyState label={label} t={t} />
         ) : (
           groups.map((g, i) => (
             <CompetitionBlock

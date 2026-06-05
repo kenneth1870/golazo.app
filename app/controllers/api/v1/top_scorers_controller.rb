@@ -1,9 +1,21 @@
 module Api
   module V1
     class TopScorersController < BaseController
+      # FotMob league/season IDs for well-known competitions
+      COMPETITION_IDS = {
+        "WC"  => { league_id: 4,   season_id: 2026 },
+        "CL"  => { league_id: 244, season_id: 2025 },
+        "PL"  => { league_id: 47,  season_id: 2025 },
+        "BL1" => { league_id: 54,  season_id: 2025 },
+        "SA"  => { league_id: 55,  season_id: 2025 },
+        "LAL" => { league_id: 87,  season_id: 2025 },
+        "L1"  => { league_id: 53,  season_id: 2025 },
+      }.freeze
+
       def index
-        league_id = params[:league_id]
-        season_id = params[:season_id]
+        ids = COMPETITION_IDS[params[:competition]]
+        league_id = ids&.dig(:league_id) || params[:league_id]
+        season_id = ids&.dig(:season_id) || params[:season_id]
 
         scorers = LiveScoresClient.new.top_scorers(league_id, season_id)
 

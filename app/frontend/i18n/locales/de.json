@@ -3,6 +3,7 @@
     "home": "Startseite",
     "scores": "Ergebnisse",
     "live": "Live",
+    "liveMatches": "Live-Spiele",
     "results": "Resultate",
     "fixtures": "Spielplan",
     "groupStage": "Gruppenphase",
@@ -15,8 +16,7 @@
     "venues": "Stadien",
     "topScorers": "Torschützen",
     "allLeagues": "Alle Ligen",
-    "news": "Nachrichten",
-    "liveMatches": "Live-Spiele"
+    "news": "Nachrichten"
   },
   "hero": {
     "title": "WM 2026",
@@ -30,7 +30,22 @@
     "nextMatch": "Nächstes Spiel",
     "upcomingMatches": "Kommende Spiele",
     "viewAll": "Alle anzeigen →",
-    "fullSchedule": "Vollständiger Spielplan →"
+    "fullSchedule": "Vollständiger Spielplan →",
+    "yourTeam": "Dein Team",
+    "playingNow": "Spielt gerade",
+    "noUpcoming": "Keine kommenden Spiele gefunden",
+    "liveNow_one": "{{count}} Spiel live jetzt",
+    "liveNow_other": "{{count}} Spiele live jetzt",
+    "followTeam": "Team folgen"
+  },
+  "time": {
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "tomorrow": "Morgen",
+    "noMatches": "Keine Spiele für {{date}}",
+    "tryDifferent": "Anderes Datum versuchen",
+    "matchCount": "{{count}} Spiele",
+    "liveCount": "{{count}} live"
   },
   "scores": {
     "liveNow": "Live",
@@ -76,7 +91,47 @@
     "assists": "Vorlagen",
     "date": "Datum",
     "home": "Heim",
-    "away": "Auswärts"
+    "away": "Auswärts",
+    "group": "Gruppe"
+  },
+  "match": {
+    "summary": "Zusammenfassung",
+    "stats": "Statistiken",
+    "lineups": "Aufstellungen",
+    "h2h": "H2H",
+    "events": "Spielereignisse",
+    "noEvents": "Keine Ereignisse aufgezeichnet",
+    "notStarted": "Noch nicht angepfiffen",
+    "eventsAppear": "Tore, Karten und Wechsel erscheinen hier nach dem Anpfiff",
+    "eventsUnavailable": "Ereignisse für dieses Spiel nicht verfügbar",
+    "statsUnavailable": "Statistiken noch nicht verfügbar",
+    "statsAppear": "Statistiken erscheinen nach dem Anpfiff",
+    "lineupsUnavailable": "Aufstellungen noch nicht verfügbar",
+    "lineupsRelease": "Normalerweise 1 Stunde vor Anpfiff veröffentlicht",
+    "noH2H": "Kein Aufeinandertreffen-Verlauf",
+    "h2hPrev": "Frühere Begegnungen erscheinen hier",
+    "h2hSummary": "Direkter Vergleich",
+    "recentMeetings": "Letzte Begegnungen",
+    "updatingEvery": "Aktualisierung alle 20s",
+    "fanPoll": "Fan-Umfrage",
+    "tapToVote": "Tippen zum Abstimmen",
+    "yourVote": "deine Stimme",
+    "votes_one": "{{count}} Stimme",
+    "votes_other": "{{count}} Stimmen",
+    "beFirstVote": "Sei der Erste der abstimmt",
+    "draw": "Unentschieden",
+    "fullTime": "Spielende",
+    "halfTime": "Halbzeit",
+    "substitutes": "Auswechselspieler"
+  },
+  "error": {
+    "dataUnavailable": "Daten vorübergehend nicht verfügbar",
+    "apiError": "Der Datenanbieter antwortet nicht. Versuche es gleich erneut.",
+    "notFound": "Spiel nicht gefunden",
+    "matchRemoved": "Dieses Spiel ist nicht in unserer Datenbank. Es könnte abgesagt worden sein.",
+    "retry": "Erneut versuchen",
+    "back": "Zurück",
+    "goBack": "Zurückgehen"
   },
   "status": {
     "live": "LIVE",
@@ -92,7 +147,9 @@
   },
   "news": {
     "title": "Nachrichten",
-    "subtitle": "Neuestes von der FIFA WM 2026"
+    "subtitle": "Die neuesten Fußballnachrichten weltweit",
+    "noArticles": "Keine Artikel gefunden",
+    "all": "Alle"
   },
   "footer": {
     "follow": "Folge uns",

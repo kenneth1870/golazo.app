@@ -34,7 +34,11 @@ module Api
 
       def index
         ip = request.remote_ip
-        ip = "8.8.8.8" if ip == "127.0.0.1" || ip == "::1" # dev fallback
+        # In dev/test, skip geo lookup and let the browser detect locale
+        if ip == "127.0.0.1" || ip == "::1"
+          return render json: { ip: ip, country: nil, country_code: nil, city: nil,
+                                timezone: nil, language: nil, currency: nil, flag: nil }
+        end
 
         geo = fetch_geo(ip)
 

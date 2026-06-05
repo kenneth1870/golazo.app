@@ -30,7 +30,22 @@
     "nextMatch": "Next Match",
     "upcomingMatches": "Upcoming Matches",
     "viewAll": "View all →",
-    "fullSchedule": "Full schedule →"
+    "fullSchedule": "Full schedule →",
+    "yourTeam": "Your team",
+    "playingNow": "Playing now",
+    "noUpcoming": "No upcoming matches found",
+    "liveNow_one": "{{count}} match live right now",
+    "liveNow_other": "{{count}} matches live right now",
+    "followTeam": "Follow a team"
+  },
+  "time": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "tomorrow": "Tomorrow",
+    "noMatches": "No matches for {{date}}",
+    "tryDifferent": "Try a different date",
+    "matchCount": "{{count}} matches",
+    "liveCount": "{{count}} live"
   },
   "scores": {
     "liveNow": "Live Now",
@@ -76,7 +91,47 @@
     "assists": "Assists",
     "date": "Date",
     "home": "Home",
-    "away": "Away"
+    "away": "Away",
+    "group": "Group"
+  },
+  "match": {
+    "summary": "Summary",
+    "stats": "Stats",
+    "lineups": "Lineups",
+    "h2h": "H2H",
+    "events": "Match Events",
+    "noEvents": "No events recorded",
+    "notStarted": "Not kicked off yet",
+    "eventsAppear": "Goals, cards and subs will appear here once the match starts",
+    "eventsUnavailable": "Events are not available for this match",
+    "statsUnavailable": "Stats not yet available",
+    "statsAppear": "Statistics appear once the match kicks off",
+    "lineupsUnavailable": "Lineups not yet available",
+    "lineupsRelease": "Usually released 1 hour before kickoff",
+    "noH2H": "No H2H history found",
+    "h2hPrev": "Previous meetings will appear here",
+    "h2hSummary": "Head to Head Summary",
+    "recentMeetings": "Recent Meetings",
+    "updatingEvery": "Updating every 20s",
+    "fanPoll": "Fan Poll",
+    "tapToVote": "Tap to vote",
+    "yourVote": "your vote",
+    "votes_one": "{{count}} vote",
+    "votes_other": "{{count}} votes",
+    "beFirstVote": "Be the first to vote",
+    "draw": "Draw",
+    "fullTime": "Full Time",
+    "halfTime": "Half Time",
+    "substitutes": "Substitutes"
+  },
+  "error": {
+    "dataUnavailable": "Data temporarily unavailable",
+    "apiError": "The external data provider is not responding. Try again in a moment.",
+    "notFound": "Match not found",
+    "matchRemoved": "This fixture isn't in our database. It may have been cancelled or removed.",
+    "retry": "Retry",
+    "back": "Back",
+    "goBack": "Go back"
   },
   "status": {
     "live": "LIVE",
@@ -92,7 +147,9 @@
   },
   "news": {
     "title": "News",
-    "subtitle": "Latest from FIFA World Cup 2026"
+    "subtitle": "Football stories from around the world",
+    "noArticles": "No articles found",
+    "all": "All"
   },
   "footer": {
     "follow": "Follow",

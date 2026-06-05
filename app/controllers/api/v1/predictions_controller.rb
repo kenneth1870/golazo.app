@@ -7,12 +7,20 @@ module Api
       end
 
       def vote
-        pred  = Prediction.find_or_create_by!(match_external_id: params[:match_id])
-        token = params[:token].to_s.first(64)
+        # Rate-limit: one vote per IP per match per 24 hours
+        ip_key = "vote_ip_#{request.remote_ip}_#{params[:match_id]}"
+        if Rails.cache.read(ip_key)
+          return render json: { error: "already_voted" }, status: :unprocessable_entity
+        end
+
+        pred   = Prediction.find_or_create_by!(match_external_id: params[:match_id])
+        token  = params[:token].to_s.first(64)
         result = pred.vote!(params[:choice], token)
+
         if result[:error]
           render json: result, status: :unprocessable_entity
         else
+          Rails.cache.write(ip_key, true, expires_in: 24.hours)
           render json: result
         end
       rescue => e

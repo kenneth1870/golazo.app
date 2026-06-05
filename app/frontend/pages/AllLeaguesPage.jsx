@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 const TYPE_ORDER = { world_cup: 0, cup: 1, league: 2 }
 const TYPE_LABEL = { world_cup: "World Cup", cup: "Cups & International", league: "Domestic Leagues" }
@@ -33,6 +34,7 @@ function LeagueCard({ competition, liveCount, onClick }) {
 }
 
 export default function AllLeaguesPage() {
+  const { t } = useTranslation()
   const [competitions, setCompetitions] = useState([])
   const [liveMatches, setLiveMatches]   = useState([])
   const [loading, setLoading]           = useState(true)
@@ -56,17 +58,25 @@ export default function AllLeaguesPage() {
     return () => clearInterval(iv)
   }, [])
 
-  // Count live matches per competition code from external API
-  const liveByCode = liveMatches.reduce((acc, m) => {
-    // External API doesn't have our codes — track by league name substring (best-effort)
+  // Count live matches per competition, matched by external league_id
+  const liveByExternalId = liveMatches.reduce((acc, m) => {
+    const id = m.league_id
+    if (id) acc[id] = (acc[id] || 0) + 1
+    return acc
+  }, {})
+
+  // Map DB competition external_id → live count
+  const liveByCode = competitions.reduce((acc, c) => {
+    const count = liveByExternalId[c.external_id] || 0
+    if (count > 0) acc[c.code] = count
     return acc
   }, {})
 
   // Group competitions by type
   const byType = competitions.reduce((acc, c) => {
-    const t = c.competition_type || "league"
-    if (!acc[t]) acc[t] = []
-    acc[t].push(c)
+    const type = c.competition_type || "league"
+    if (!acc[type]) acc[type] = []
+    acc[type].push(c)
     return acc
   }, {})
 
@@ -90,10 +100,11 @@ export default function AllLeaguesPage() {
     <>
       <div className="page-hero" style={{ backgroundImage: "url('/images/bg_2.jpg')" }}>
         <div className="container">
-          <h1 className="page-hero__title">All Leagues</h1>
+          <h1 className="page-hero__title">{t("leagues.title")}</h1>
           <p className="page-hero__sub">
-            {competitions.length} competitions
-            {totalLive > 0 && ` · ${totalLive} matches live worldwide`}
+            {totalLive > 0
+              ? t("leagues.subtitle", { count: totalLive, comps: competitions.length })
+              : `${competitions.length} competitions`}
           </p>
         </div>
       </div>
@@ -109,9 +120,9 @@ export default function AllLeaguesPage() {
             >
               <div className="widget-title d-flex align-items-center" style={{ gap: 8 }}>
                 <span className="live-dot" />
-                <h3 style={{ margin: 0 }}>{totalLive} Matches Live Worldwide</h3>
+                <h3 style={{ margin: 0 }}>{t("leagues.subtitle", { count: totalLive, comps: competitions.length })}</h3>
                 <span style={{ marginLeft: "auto", fontSize: "0.8rem", color: "#ee1e46" }}>
-                  View all →
+                  {t("home.viewAll")}
                 </span>
               </div>
             </div>
@@ -139,8 +150,8 @@ export default function AllLeaguesPage() {
           {competitions.length === 0 && (
             <div className="empty-state">
               <div className="empty-state__icon">🌍</div>
-              <h3>No leagues found</h3>
-              <p>Run db:seed to populate competition data</p>
+              <h3>{t("leagues.available", { count: 0 })}</h3>
+              <p>{t("leagues.checkBack")}</p>
             </div>
           )}
         </div>

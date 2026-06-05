@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { useParams, Link, useNavigate } from "react-router-dom"
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { useExternalMatchChannel } from "../hooks/useExternalMatchChannel"
 
 // ─── Live minute counter ──────────────────────────────
@@ -295,14 +296,14 @@ function FormPill({ result }) {
   )
 }
 
-function EventsTimeline({ events, homeTeam }) {
+function EventsTimeline({ events, homeTeam, t }) {
   if (!events?.length) return null
   const relevant = events.filter(e => ["Goal", "Card", "subst"].includes(e.type))
   if (!relevant.length) return null
 
   return (
     <section className="match-section">
-      <h3 className="match-section__title">Match Events</h3>
+      <h3 className="match-section__title">{t("match.events")}</h3>
       <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
         {relevant.map((e, i) => {
           const isHome   = e.team?.name === homeTeam
@@ -370,12 +371,12 @@ function StatBar({ label, homeVal, awayVal, isPct }) {
   )
 }
 
-function StatsPanel({ stats, home, away }) {
+function StatsPanel({ stats, home, away, t }) {
   if (!stats?.length) return (
     <div className="empty-state" style={{ paddingTop: 40 }}>
       <div className="empty-state__icon">📊</div>
-      <h3>Stats not yet available</h3>
-      <p>Statistics appear once the match kicks off</p>
+      <h3>{t("match.statsUnavailable")}</h3>
+      <p>{t("match.statsAppear") }</p>
     </div>
   )
 
@@ -389,7 +390,7 @@ function StatsPanel({ stats, home, away }) {
   if (!pairs.length) return (
     <div className="empty-state" style={{ paddingTop: 40 }}>
       <div className="empty-state__icon">📊</div>
-      <h3>Stats not yet available</h3>
+      <h3>{t("match.statsUnavailable")}</h3>
     </div>
   )
 
@@ -428,6 +429,7 @@ function PlayerDot({ number, pos, name }) {
 }
 
 function LineupTeam({ team, side }) {
+  const { t } = useTranslation()
   if (!team?.start_xi?.length) return null
   const byRow = team.start_xi.reduce((acc, p) => {
     const row = p.grid?.split(":")[0] || "1"
@@ -468,7 +470,7 @@ function LineupTeam({ team, side }) {
       {/* Substitutes */}
       {team.subs?.length > 0 && (
         <div className="lineup-subs">
-          <div className="lineup-subs__title">Substitutes</div>
+          <div className="lineup-subs__title">{t("match.substitutes")}</div>
           {team.subs.map((p, i) => {
             const ps = posStyle(p.pos)
             return (
@@ -499,19 +501,19 @@ function PosLegend() {
   )
 }
 
-function LineupsPanel({ lineups }) {
+function LineupsPanel({ lineups, t }) {
   if (!lineups?.length) return (
     <div className="empty-state" style={{ paddingTop: 40 }}>
       <div className="empty-state__icon">👕</div>
-      <h3>Lineups not yet available</h3>
-      <p>Usually released 1 hour before kickoff</p>
+      <h3>{t("match.lineupsUnavailable")}</h3>
+      <p>{t("match.lineupsRelease")}</p>
     </div>
   )
   const [home, away] = lineups
   if (!home?.start_xi?.length && !away?.start_xi?.length) return (
     <div className="empty-state" style={{ paddingTop: 40 }}>
       <div className="empty-state__icon">👕</div>
-      <h3>Lineups not yet available</h3>
+      <h3>{t("match.lineupsUnavailable")}</h3>
     </div>
   )
   return (
@@ -538,12 +540,12 @@ function FormRow({ label, matches, teamId }) {
   )
 }
 
-function H2HPanel({ h2h, homeTeamName, awayTeamName }) {
+function H2HPanel({ h2h, homeTeamName, awayTeamName, t }) {
   if (!h2h?.matches?.length) return (
     <div className="empty-state">
       <div className="empty-state__icon">📈</div>
-      <h3>No H2H history found</h3>
-      <p>Previous meetings will appear here</p>
+      <h3>{t("match.noH2H")}</h3>
+      <p>{t("match.h2hPrev")}</p>
     </div>
   )
 
@@ -554,7 +556,7 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName }) {
     <>
       {/* Summary bar */}
       <section className="match-section">
-        <h3 className="match-section__title">Head to Head Summary</h3>
+        <h3 className="match-section__title">{t("match.h2hSummary")}</h3>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#ee1e46" }}>{hw}</div>
@@ -562,7 +564,7 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName }) {
           </div>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "rgba(255,255,255,.5)" }}>{d}</div>
-            <div style={{ fontSize: ".68rem", color: "var(--muted)", marginTop: 2 }}>Draw</div>
+            <div style={{ fontSize: ".68rem", color: "var(--muted)", marginTop: 2 }}>{t("match.draw")}</div>
           </div>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#3b82f6" }}>{aw}</div>
@@ -578,7 +580,7 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName }) {
 
       {/* Match history */}
       <section className="match-section">
-        <h3 className="match-section__title">Recent Meetings</h3>
+        <h3 className="match-section__title">{t("match.recentMeetings")}</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {h2h.matches.map((m, i) => {
             const hs   = m.home?.score ?? "–"
@@ -610,7 +612,7 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName }) {
   )
 }
 
-function PredictionPanel({ matchId, homeTeamName, awayTeamName }) {
+function PredictionPanel({ matchId, homeTeamName, awayTeamName, t }) {
   const [pred, setPred]     = useState(null)
   const [myVote, setMyVote] = useState(null)
   const [voting, setVoting] = useState(false)
@@ -651,7 +653,7 @@ function PredictionPanel({ matchId, homeTeamName, awayTeamName }) {
   const total   = pred.total || 0
   const options = [
     { key: "home", label: homeTeamName ?? "Home", pct: pred.home_pct, color: "#ee1e46" },
-    { key: "draw", label: "Draw",                  pct: pred.draw_pct, color: "#f59e0b" },
+    { key: "draw", label: t("match.draw"),           pct: pred.draw_pct, color: "#f59e0b" },
     { key: "away", label: awayTeamName ?? "Away",  pct: pred.away_pct, color: "#3b82f6" },
   ]
 
@@ -660,9 +662,9 @@ function PredictionPanel({ matchId, homeTeamName, awayTeamName }) {
     return (
       <section className="match-section">
         <div className="prediction-header">
-          <h3 className="match-section__title" style={{ margin: 0 }}>Fan Poll</h3>
+          <h3 className="match-section__title" style={{ margin: 0 }}>{t("match.fanPoll")}</h3>
           <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>
-            {total > 0 ? `${total.toLocaleString()} votes` : "Be the first to vote"}
+            {total > 0 ? t("match.votes", { count: total }) : t("match.beFirstVote")}
           </span>
         </div>
         <div className="prediction-btns">
@@ -675,7 +677,7 @@ function PredictionPanel({ matchId, homeTeamName, awayTeamName }) {
               style={{ "--pred-color": color }}
             >
               <span className="prediction-btn__label">{label}</span>
-              <span className="prediction-btn__cta">Tap to vote</span>
+              <span className="prediction-btn__cta">{t("match.tapToVote")}</span>
             </button>
           ))}
         </div>
@@ -687,8 +689,8 @@ function PredictionPanel({ matchId, homeTeamName, awayTeamName }) {
   return (
     <section className="match-section">
       <div className="prediction-header">
-        <h3 className="match-section__title" style={{ margin: 0 }}>Fan Poll</h3>
-        <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{total.toLocaleString()} vote{total !== 1 ? "s" : ""}</span>
+        <h3 className="match-section__title" style={{ margin: 0 }}>{t("match.fanPoll")}</h3>
+        <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{t("match.votes", { count: total })}</span>
       </div>
       <div className="prediction-bars">
         {options.map(({ key, label, pct, color }) => (
@@ -782,14 +784,36 @@ function MatchSkeleton() {
 }
 
 // ─── Main Page ─────────────────────────────────────────
-const TABS = ["Summary", "Stats", "Lineups", "H2H"]
+const TAB_KEYS = ["summary", "stats", "lineups", "h2h"]
+
+// Converts a list-match preview (from router state) into the fixture shape
+// MatchShowPage expects, so the scoreboard renders before the API responds.
+function previewToFixture(m) {
+  if (!m) return null
+  const short = m.status === "finished" ? "FT" : m.status === "live" ? "1H" : "NS"
+  return {
+    fixture: {
+      fixture: { id: m.external_id, date: m.kickoff_at, status: { short, long: short, elapsed: m.minute }, venue: {} },
+      league:  { id: m.competition?.id, name: m.competition?.name, logo: m.competition?.logo, country: m.competition?.country, round: null },
+      teams: {
+        home: { id: null, name: m.home_team?.name, logo: m.home_team?.flag_url, winner: null },
+        away: { id: null, name: m.away_team?.name, logo: m.away_team?.flag_url, winner: null },
+      },
+      goals: { home: m.home_score, away: m.away_score },
+    },
+    events: [], stats: [], lineups: [],
+  }
+}
 
 export default function MatchShowPage() {
+  const { t }    = useTranslation()
   const { id }      = useParams()
   const navigate    = useNavigate()
-  const [data, setData]         = useState(null)
+  const location    = useLocation()
+  const preview     = location.state?.preview
+  const [data, setData]         = useState(() => previewToFixture(preview))
   const [loading, setLoading]   = useState(true)
-  const [tab, setTab]           = useState("Summary")
+  const [tab, setTab]           = useState("summary")
   const [toast, setToast]       = useState(null)
   const [showNotifBanner, setShowNotifBanner] = useState(false)
   const [notifEnabled, setNotifEnabled] = useState(false)
@@ -897,15 +921,13 @@ export default function MatchShowPage() {
     return (
       <div className="site-section">
         <div className="container" style={{ maxWidth: 700 }}>
-          <button onClick={goBack} className="btn-back" style={{ marginBottom: 24 }}>← Back</button>
+          <button onClick={goBack} className="btn-back" style={{ marginBottom: 24 }}>← {t("error.back")}</button>
           <div className="empty-state">
             <div className="empty-state__pitch" />
             <div className="empty-state__icon">{isApiError ? "🔌" : "⚽"}</div>
-            <h3>{isApiError ? "Data temporarily unavailable" : "Match not found"}</h3>
+            <h3>{isApiError ? t("error.dataUnavailable") : t("error.notFound")}</h3>
             <p style={{ maxWidth: 300 }}>
-              {isApiError
-                ? "The external data provider is not responding. Try again in a moment."
-                : "This fixture isn't in our database. It may have been cancelled or removed."}
+              {isApiError ? t("error.apiError") : t("error.matchRemoved")}
             </p>
             <div style={{ display: "flex", gap: 10, marginTop: 20, flexWrap: "wrap", justifyContent: "center" }}>
               {isApiError && (
@@ -917,7 +939,7 @@ export default function MatchShowPage() {
                     fontSize: "0.85rem", cursor: "pointer",
                   }}
                 >
-                  Retry
+                  {t("error.retry")}
                 </button>
               )}
               <button
@@ -928,7 +950,7 @@ export default function MatchShowPage() {
                   fontSize: "0.85rem", cursor: "pointer",
                 }}
               >
-                ← Go back
+                ← {t("error.goBack")}
               </button>
             </div>
           </div>
@@ -943,13 +965,7 @@ export default function MatchShowPage() {
   const hasStats    = data.stats?.length > 0
   const hasLineups  = data.lineups?.some(l => l?.start_xi?.length > 0 || l?.startXI?.length > 0)
   const hasH2H      = data.h2h?.matches?.length > 0
-
-  function tabLabel(t) {
-    if (t === "Summary" && eventCount > 0) return `${t} (${eventCount})`
-    if (t === "Stats"   && hasStats)       return `${t} ●`
-    if (t === "Lineups" && hasLineups)     return `${t} ●`
-    return t
-  }
+  const TABS = TAB_KEYS.map(k => ({ key: k, label: t(`match.${k}`) }))
 
   function handleNotif() {
     if (notifEnabled) return
@@ -980,17 +996,17 @@ export default function MatchShowPage() {
       <div className="tab-bar sticky-tabs">
         <div className="container" style={{ maxWidth: 740 }}>
           <div className="tab-bar__inner">
-            {TABS.map(t => (
+            {TABS.map(({ key, label }) => (
               <button
-                key={t}
-                className={`tab-link${tab === t ? " tab-link--active" : ""}`}
-                onClick={() => setTab(t)}
+                key={key}
+                className={`tab-link${tab === key ? " tab-link--active" : ""}`}
+                onClick={() => setTab(key)}
               >
-                {t}
-                {t === "Summary" && eventCount > 0 && (
+                {label}
+                {key === "summary" && eventCount > 0 && (
                   <span className="tab-count">{eventCount}</span>
                 )}
-                {((t === "Stats" && hasStats) || (t === "Lineups" && hasLineups) || (t === "H2H" && hasH2H)) && (
+                {((key === "stats" && hasStats) || (key === "lineups" && hasLineups) || (key === "h2h" && hasH2H)) && (
                   <span className="tab-dot" />
                 )}
               </button>
@@ -1027,19 +1043,17 @@ export default function MatchShowPage() {
         )}
 
         {/* Tab content */}
-        {tab === "Summary" && (
+        {tab === "summary" && (
           <>
-            <PredictionPanel matchId={id} homeTeamName={homeName} awayTeamName={awayName} />
+            <PredictionPanel matchId={id} homeTeamName={homeName} awayTeamName={awayName} t={t} />
             {hasEvents
-              ? <EventsTimeline events={data.events} homeTeam={homeName} />
+              ? <EventsTimeline events={data.events} homeTeam={homeName} t={t} />
               : (
                 <div className="empty-state">
                   <div style={{ fontSize: "2.5rem", marginBottom: 12, opacity: .3 }}>🏟️</div>
-                  <h3>{statusShort === "NS" ? "Not kicked off yet" : "No events recorded"}</h3>
+                  <h3>{statusShort === "NS" ? t("match.notStarted") : t("match.noEvents")}</h3>
                   <p style={{ maxWidth: 260 }}>
-                    {statusShort === "NS"
-                      ? "Goals, cards and subs will appear here once the match starts"
-                      : "Events are not available for this match"}
+                    {statusShort === "NS" ? t("match.eventsAppear") : t("match.eventsUnavailable")}
                   </p>
                 </div>
               )
@@ -1047,14 +1061,14 @@ export default function MatchShowPage() {
           </>
         )}
 
-        {tab === "Stats" && (
-          <StatsPanel stats={data.stats} home={data.fixture?.teams?.home} away={data.fixture?.teams?.away} />
+        {tab === "stats" && (
+          <StatsPanel stats={data.stats} home={data.fixture?.teams?.home} away={data.fixture?.teams?.away} t={t} />
         )}
 
-        {tab === "Lineups" && <LineupsPanel lineups={data.lineups} />}
+        {tab === "lineups" && <LineupsPanel lineups={data.lineups} t={t} />}
 
-        {tab === "H2H" && (
-          <H2HPanel h2h={data.h2h} homeTeamName={homeName} awayTeamName={awayName} />
+        {tab === "h2h" && (
+          <H2HPanel h2h={data.h2h} homeTeamName={homeName} awayTeamName={awayName} t={t} />
         )}
       </div>
     </div>

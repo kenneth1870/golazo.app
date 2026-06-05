@@ -1,9 +1,13 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import MatchRow from "../../components/MatchRow"
 
 function toISO(date) {
-  return date.toISOString().split("T")[0]
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
 }
 
 function addDays(date, n) {
@@ -12,12 +16,14 @@ function addDays(date, n) {
   return d
 }
 
-function dateLabel(date) {
+function useDateLabel(date, t) {
   const todayISO     = toISO(new Date())
   const tomorrowISO  = toISO(addDays(new Date(), 1))
+  const yesterdayISO = toISO(addDays(new Date(), -1))
   const iso          = toISO(date)
-  if (iso === todayISO)    return "Today"
-  if (iso === tomorrowISO) return "Tomorrow"
+  if (iso === todayISO)     return t("time.today")
+  if (iso === tomorrowISO)  return t("time.tomorrow")
+  if (iso === yesterdayISO) return t("time.yesterday")
   return date.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })
 }
 
@@ -62,7 +68,7 @@ function DateStrip({ selected, onChange }) {
   )
 }
 
-function CompetitionBlock({ matches, navigate }) {
+function CompetitionBlock({ matches, navigate, onMatchClick }) {
   const comp   = matches[0]?.competition
   const canNav = comp?.code && !String(comp.code).match(/^\d+$/)
   const sorted = [...matches].sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
@@ -82,17 +88,28 @@ function CompetitionBlock({ matches, navigate }) {
         {canNav && <span style={{ fontSize: "0.75rem", color: "#ee1e46" }}>→</span>}
       </div>
       <div className="widget-body p-0">
-        {sorted.map(m => <MatchRow key={m.id} match={m} />)}
+        {sorted.map(m => (
+          <MatchRow
+            key={m.id}
+            match={m}
+            onClick={() => onMatchClick(m)}
+          />
+        ))}
       </div>
     </div>
   )
 }
 
 export default function FixturesPage() {
+  const { t }    = useTranslation()
   const [selected, setSelected] = useState(() => addDays(new Date(), 1))
   const [matches, setMatches]   = useState([])
   const [loading, setLoading]   = useState(true)
   const navigate = useNavigate()
+  const onMatchClick = (m) => {
+    if (m.external_id) navigate(`/matches/${m.external_id}`)
+    else navigate(`/matches/db-${m.id}`)
+  }
 
   const load = useCallback((date) => {
     setLoading(true)
@@ -126,7 +143,7 @@ export default function FixturesPage() {
     (a[0]?.competition?.name ?? "").localeCompare(b[0]?.competition?.name ?? "")
   )
 
-  const label = dateLabel(selected)
+  const label = useDateLabel(selected, t)
 
   return (
     <div className="site-section">
@@ -138,7 +155,7 @@ export default function FixturesPage() {
         <div className="d-flex align-items-center justify-content-between mb-3" style={{ flexWrap: "wrap", gap: 8 }}>
           <div style={{ fontWeight: 600, fontSize: "0.95rem", color: "#fff" }}>{label}</div>
           {!loading && (
-            <span style={{ fontSize: "0.78rem", color: "#555" }}>{matches.length} matches</span>
+            <span style={{ fontSize: "0.78rem", color: "#555" }}>{t("time.matchCount", { count: matches.length })}</span>
           )}
         </div>
 
@@ -148,12 +165,12 @@ export default function FixturesPage() {
           <div className="empty-state">
             <div className="empty-state__pitch" />
             <div className="empty-state__icon">📅</div>
-            <h3>No fixtures for {label}</h3>
-            <p>Try a different date</p>
+            <h3>{t("time.noMatches", { date: label })}</h3>
+            <p>{t("time.tryDifferent")}</p>
           </div>
         ) : (
           groups.map((g, i) => (
-            <CompetitionBlock key={g[0]?.competition?.id ?? i} matches={g} navigate={navigate} />
+            <CompetitionBlock key={g[0]?.competition?.id ?? i} matches={g} navigate={navigate} onMatchClick={onMatchClick} />
           ))
         )}
       </div>

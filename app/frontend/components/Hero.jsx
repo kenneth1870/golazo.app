@@ -6,8 +6,8 @@ function getLeft(d) {
   return { weeks: Math.floor(ms / 6048e5), days: Math.floor(ms / 864e5) % 7, hours: Math.floor(ms / 36e5) % 24, minutes: Math.floor(ms / 6e4) % 60, seconds: Math.floor(ms / 1e3) % 60 }
 }
 
-// Opening match: June 11 2026, 8pm ET (midnight UTC)
-const WC_OPENING = "2026-06-12T00:00:00Z"
+// Opening match: Mexico vs South Africa, June 11 2026, 6pm CDT (23:00 UTC)
+const WC_OPENING = "2026-06-11T23:00:00Z"
 
 function Countdown({ targetDate, label }) {
   const [t, setT] = useState(getLeft(targetDate))
@@ -43,36 +43,28 @@ function Countdown({ targetDate, label }) {
 export default function Hero({ nextMatch }) {
   const navigate = useNavigate()
 
+  const target    = nextMatch?.kickoff_at || WC_OPENING
+  const isOpening = !nextMatch?.kickoff_at
+  const label     = isOpening
+    ? "⚽ World Cup opens in"
+    : `Next: ${nextMatch.home_team?.name ?? ""} vs ${nextMatch.away_team?.name ?? ""}`
+
   return (
-    /* Exact template markup: div.hero.overlay with inline bg */
     <div className="hero overlay" style={{ backgroundImage: "url('/images/bg_3.jpg')" }}>
       <div className="container">
         <div className="row align-items-center">
           <div className="col-lg-5 ml-auto">
             <h1 className="text-white">Mundial 2026</h1>
             <p>Live scores, real-time stats, and every goal from the FIFA World Cup 2026 — USA · Canada · Mexico.</p>
-            {(() => {
-              const target = nextMatch?.kickoff_at || WC_OPENING
-              const isOpening = !nextMatch?.kickoff_at
-              const label = isOpening
-                ? "⚽ World Cup opens in"
-                : `Next: ${nextMatch.home_team?.name ?? ""} vs ${nextMatch.away_team?.name ?? ""}`
-              return <Countdown targetDate={target} label={label} />
-            })()}
+            <Countdown targetDate={target} label={label} />
             <p>
-              <a
-                href="#"
-                className="btn btn-primary py-3 px-4 mr-3"
-                onClick={e => { e.preventDefault(); navigate("/scores/live") }}
-              >
+              <a href="#" className="btn btn-primary py-3 px-4 mr-3"
+                onClick={e => { e.preventDefault(); navigate("/scores/live") }}>
                 Live Scores
               </a>
-              <a
-                href="#"
-                className="btn btn-primary py-3 px-4"
+              <a href="#" className="btn btn-primary py-3 px-4"
                 onClick={e => { e.preventDefault(); navigate("/scores/fixtures") }}
-                style={{ background: "transparent", borderColor: "rgba(255,255,255,.4)" }}
-              >
+                style={{ background: "transparent", borderColor: "rgba(255,255,255,.4)" }}>
                 Fixtures
               </a>
             </p>

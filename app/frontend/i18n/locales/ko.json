@@ -3,6 +3,7 @@
     "home": "홈",
     "scores": "스코어",
     "live": "라이브",
+    "liveMatches": "라이브 경기",
     "results": "결과",
     "fixtures": "일정",
     "groupStage": "조별리그",
@@ -15,8 +16,7 @@
     "venues": "경기장",
     "topScorers": "득점왕",
     "allLeagues": "전체 리그",
-    "news": "뉴스",
-    "liveMatches": "라이브 경기"
+    "news": "뉴스"
   },
   "hero": {
     "title": "월드컵 2026",
@@ -30,7 +30,22 @@
     "nextMatch": "다음 경기",
     "upcomingMatches": "예정 경기",
     "viewAll": "모두 보기 →",
-    "fullSchedule": "전체 일정 →"
+    "fullSchedule": "전체 일정 →",
+    "yourTeam": "내 팀",
+    "playingNow": "경기 중",
+    "noUpcoming": "예정된 경기가 없습니다",
+    "liveNow_one": "{{count}}경기 라이브",
+    "liveNow_other": "{{count}}경기 라이브",
+    "followTeam": "팀 팔로우"
+  },
+  "time": {
+    "today": "오늘",
+    "yesterday": "어제",
+    "tomorrow": "내일",
+    "noMatches": "{{date}} 경기 없음",
+    "tryDifferent": "다른 날짜를 선택해 주세요",
+    "matchCount": "{{count}}경기",
+    "liveCount": "{{count}} 라이브"
   },
   "scores": {
     "liveNow": "라이브",
@@ -76,7 +91,47 @@
     "assists": "도움",
     "date": "날짜",
     "home": "홈",
-    "away": "원정"
+    "away": "원정",
+    "group": "조"
+  },
+  "match": {
+    "summary": "요약",
+    "stats": "통계",
+    "lineups": "선발 명단",
+    "h2h": "맞대결",
+    "events": "경기 이벤트",
+    "noEvents": "기록된 이벤트 없음",
+    "notStarted": "아직 시작 전",
+    "eventsAppear": "경기 시작 후 골, 카드, 교체 선수가 표시됩니다",
+    "eventsUnavailable": "이 경기의 이벤트를 사용할 수 없습니다",
+    "statsUnavailable": "통계를 아직 사용할 수 없습니다",
+    "statsAppear": "경기 시작 후 통계가 표시됩니다",
+    "lineupsUnavailable": "선발 명단을 아직 사용할 수 없습니다",
+    "lineupsRelease": "보통 킥오프 1시간 전에 공개됩니다",
+    "noH2H": "맞대결 기록 없음",
+    "h2hPrev": "이전 만남이 여기에 표시됩니다",
+    "h2hSummary": "맞대결 요약",
+    "recentMeetings": "최근 만남",
+    "updatingEvery": "20초마다 업데이트",
+    "fanPoll": "팬 투표",
+    "tapToVote": "탭하여 투표",
+    "yourVote": "내 표",
+    "votes_one": "{{count}}표",
+    "votes_other": "{{count}}표",
+    "beFirstVote": "첫 번째로 투표하세요",
+    "draw": "무승부",
+    "fullTime": "경기 종료",
+    "halfTime": "하프타임",
+    "substitutes": "후보 선수"
+  },
+  "error": {
+    "dataUnavailable": "데이터를 일시적으로 사용할 수 없습니다",
+    "apiError": "데이터 제공자가 응답하지 않습니다. 잠시 후 다시 시도하세요.",
+    "notFound": "경기를 찾을 수 없습니다",
+    "matchRemoved": "이 경기는 데이터베이스에 없습니다. 취소되었을 수 있습니다.",
+    "retry": "다시 시도",
+    "back": "뒤로",
+    "goBack": "돌아가기"
   },
   "status": {
     "live": "라이브",
@@ -92,7 +147,9 @@
   },
   "news": {
     "title": "뉴스",
-    "subtitle": "FIFA 월드컵 2026 최신 소식"
+    "subtitle": "세계 축구 최신 소식",
+    "noArticles": "기사를 찾을 수 없습니다",
+    "all": "전체"
   },
   "footer": {
     "follow": "팔로우",

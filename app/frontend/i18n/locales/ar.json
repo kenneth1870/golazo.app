@@ -3,6 +3,7 @@
     "home": "الرئيسية",
     "scores": "النتائج",
     "live": "مباشر",
+    "liveMatches": "المباريات المباشرة",
     "results": "النتائج",
     "fixtures": "المباريات القادمة",
     "groupStage": "دور المجموعات",
@@ -15,8 +16,7 @@
     "venues": "الملاعب",
     "topScorers": "الهدافون",
     "allLeagues": "كل الدوريات",
-    "news": "الأخبار",
-    "liveMatches": "المباريات المباشرة"
+    "news": "الأخبار"
   },
   "hero": {
     "title": "مونديال 2026",
@@ -30,7 +30,22 @@
     "nextMatch": "المباراة القادمة",
     "upcomingMatches": "المباريات القادمة",
     "viewAll": "عرض الكل →",
-    "fullSchedule": "الجدول الكامل →"
+    "fullSchedule": "الجدول الكامل →",
+    "yourTeam": "فريقك",
+    "playingNow": "يلعب الآن",
+    "noUpcoming": "لم يتم العثور على مباريات قادمة",
+    "liveNow_one": "{{count}} مباراة مباشرة الآن",
+    "liveNow_other": "{{count}} مباريات مباشرة الآن",
+    "followTeam": "متابعة فريق"
+  },
+  "time": {
+    "today": "اليوم",
+    "yesterday": "أمس",
+    "tomorrow": "غداً",
+    "noMatches": "لا توجد مباريات في {{date}}",
+    "tryDifferent": "جرب تاريخاً آخر",
+    "matchCount": "{{count}} مباراة",
+    "liveCount": "{{count}} مباشر"
   },
   "scores": {
     "liveNow": "مباشر الآن",
@@ -73,10 +88,50 @@
     "gd": "فارق",
     "points": "نقاط",
     "goals": "أهداف",
-    "assists": "تمريرات",
+    "assists": "تمريرات حاسمة",
     "date": "التاريخ",
-    "home": "ديار",
-    "away": "ضيف"
+    "home": "مضيف",
+    "away": "ضيف",
+    "group": "المجموعة"
+  },
+  "match": {
+    "summary": "ملخص",
+    "stats": "إحصاءات",
+    "lineups": "التشكيلات",
+    "h2h": "مواجهات",
+    "events": "أحداث المباراة",
+    "noEvents": "لا توجد أحداث مسجلة",
+    "notStarted": "لم تبدأ بعد",
+    "eventsAppear": "الأهداف والبطاقات والتبديلات ستظهر هنا عند بدء المباراة",
+    "eventsUnavailable": "الأحداث غير متاحة لهذه المباراة",
+    "statsUnavailable": "الإحصاءات غير متاحة بعد",
+    "statsAppear": "تظهر الإحصاءات عند انطلاق المباراة",
+    "lineupsUnavailable": "التشكيلات غير متاحة بعد",
+    "lineupsRelease": "تُعلن عادةً قبل ساعة من الانطلاق",
+    "noH2H": "لا يوجد سجل مواجهات",
+    "h2hPrev": "المواجهات السابقة ستظهر هنا",
+    "h2hSummary": "ملخص المواجهات المباشرة",
+    "recentMeetings": "آخر المواجهات",
+    "updatingEvery": "تحديث كل 20 ث",
+    "fanPoll": "استفتاء الجماهير",
+    "tapToVote": "اضغط للتصويت",
+    "yourVote": "صوتك",
+    "votes_one": "{{count}} صوت",
+    "votes_other": "{{count}} أصوات",
+    "beFirstVote": "كن أول من يصوت",
+    "draw": "تعادل",
+    "fullTime": "نهاية المباراة",
+    "halfTime": "نهاية الشوط الأول",
+    "substitutes": "البدلاء"
+  },
+  "error": {
+    "dataUnavailable": "البيانات غير متاحة مؤقتاً",
+    "apiError": "مزود البيانات لا يستجيب. حاول مرة أخرى بعد قليل.",
+    "notFound": "المباراة غير موجودة",
+    "matchRemoved": "هذه المباراة ليست في قاعدة بياناتنا. ربما تم إلغاؤها.",
+    "retry": "إعادة المحاولة",
+    "back": "رجوع",
+    "goBack": "العودة"
   },
   "status": {
     "live": "مباشر",
@@ -92,7 +147,9 @@
   },
   "news": {
     "title": "الأخبار",
-    "subtitle": "آخر أخبار كأس العالم FIFA 2026"
+    "subtitle": "آخر أخبار كرة القدم العالمية",
+    "noArticles": "لم يتم العثور على مقالات",
+    "all": "الكل"
   },
   "footer": {
     "follow": "تابعنا",

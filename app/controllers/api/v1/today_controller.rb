@@ -2,19 +2,8 @@ module Api
   module V1
     class TodayController < BaseController
       def index
-        date       = parse_date(params[:date]) || Date.today
-        db_matches = fetch_db_matches(date)
-        api_matches = fetch_api_matches(date)
-
-        db_pairs = db_matches.map { |m|
-          [m.dig("home_team", "name")&.downcase, m.dig("away_team", "name")&.downcase]
-        }.to_set
-
-        extra_api = api_matches.reject { |m|
-          db_pairs.include?([m[:home_team][:name]&.downcase, m[:away_team][:name]&.downcase])
-        }
-
-        all = (db_matches + extra_api).sort_by { |m| (m[:kickoff_at] || m["kickoff_at"]).to_s }
+        date = parse_date(params[:date]) || Date.today
+        all  = fetch_api_matches(date).sort_by { |m| m[:kickoff_at].to_s }
         render json: all
       end
 
@@ -25,14 +14,6 @@ module Api
         Date.parse(val)
       rescue ArgumentError
         nil
-      end
-
-      def fetch_db_matches(date)
-        Match
-          .where(kickoff_at: date.all_day)
-          .includes(:home_team, :away_team, :competition)
-          .order(:kickoff_at)
-          .map(&:as_json)
       end
 
       def fetch_api_matches(date)

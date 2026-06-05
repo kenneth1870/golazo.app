@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate, Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { useMatches } from "../hooks/useMatches"
 import { useFavoriteTeam } from "../hooks/useFavoriteTeam"
 import { useLiveCount } from "../contexts/LiveContext"
@@ -20,7 +21,7 @@ function useLatestNews() {
   return news
 }
 
-function FavoriteTeamCard({ fav, todayMatches, upcomingMatches, navigate }) {
+function FavoriteTeamCard({ fav, todayMatches, upcomingMatches, navigate, t }) {
   if (!fav) return null
 
   const favMatches = [...todayMatches, ...upcomingMatches].filter(m =>
@@ -37,9 +38,9 @@ function FavoriteTeamCard({ fav, todayMatches, upcomingMatches, navigate }) {
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {fav.flag_url && <img src={fav.flag_url} alt="" className="logo-sm" onError={e => (e.target.style.display="none")} />}
         <div>
-          <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>Your team</div>
+          <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>{t("home.yourTeam")}</div>
           <div style={{ fontWeight: 800, color: "#fff", fontSize: "1rem" }}>{fav.name}</div>
-          {fav.group && <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>Group {fav.group}</div>}
+          {fav.group && <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{t("nav.group", { letter: fav.group })}</div>}
         </div>
       </div>
       {next ? (
@@ -48,7 +49,7 @@ function FavoriteTeamCard({ fav, todayMatches, upcomingMatches, navigate }) {
           onClick={() => next.external_id ? navigate(`/matches/${next.external_id}`) : navigate("/scores/fixtures")}
         >
           <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>
-            {next.status === "live" ? "Playing now" : "Next match"}
+            {next.status === "live" ? t("home.playingNow") : t("hero.nextMatch")}
           </div>
           <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.9rem" }}>
             {next.home_team?.name} vs {next.away_team?.name}
@@ -62,20 +63,22 @@ function FavoriteTeamCard({ fav, todayMatches, upcomingMatches, navigate }) {
           </div>
         </div>
       ) : (
-        <div style={{ marginLeft: "auto", fontSize: "0.78rem", color: "var(--muted)" }}>No upcoming matches found</div>
+        <div style={{ marginLeft: "auto", fontSize: "0.78rem", color: "var(--muted)" }}>{t("home.noUpcoming")}</div>
       )}
     </div>
   )
 }
 
 export default function HomePage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { matches: liveWC }         = useMatches("live",     { competition: "WC" })
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: "WC" })
   const latestNews = useLatestNews()
   const [fav]  = useFavoriteTeam()
   const liveCount  = useLiveCount()
-  const nextMatch  = upcomingMatches[0]
+  // Show the live WC match in Hero if one is active, otherwise next upcoming
+  const nextMatch  = liveWC[0] || upcomingMatches[0]
 
   return (
     <>
@@ -91,10 +94,10 @@ export default function HomePage() {
           <div className="container d-flex align-items-center" style={{ gap: 10 }}>
             <span className="live-dot" />
             <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.85rem" }}>
-              {liveCount} match{liveCount !== 1 ? "es" : ""} live right now
+              {t("home.liveNow", { count: liveCount })}
             </span>
             <span style={{ color: "rgba(255,255,255,.7)", fontSize: "0.75rem", marginLeft: "auto" }}>
-              View all →
+              {t("home.viewAll")}
             </span>
           </div>
         </div>
@@ -103,7 +106,7 @@ export default function HomePage() {
       {/* Favorite team card + picker */}
       <div className="container" style={{ paddingTop: 20 }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: fav ? 0 : 8 }}>
-          <FavoriteTeamCard fav={fav} todayMatches={[]} upcomingMatches={upcomingMatches} navigate={navigate} />
+          <FavoriteTeamCard fav={fav} todayMatches={[]} upcomingMatches={upcomingMatches} navigate={navigate} t={t} />
           <FavoriteTeamPicker />
         </div>
       </div>
@@ -114,10 +117,15 @@ export default function HomePage() {
           <div className="col-lg-12">
             {liveWC.length > 0 ? (
               liveWC.slice(0, 1).map(m => (
-                <MatchCard key={m.id} match={m} onClick={() => navigate("/scores/live")} />
+                <MatchCard key={m.id} match={m}
+                  onClick={() => m.external_id ? navigate(`/matches/${m.external_id}`) : navigate(`/matches/db-${m.id}`)} />
               ))
             ) : upcomingMatches.length > 0 ? (
-              <MatchCard match={upcomingMatches[0]} onClick={() => navigate("/scores/fixtures")} />
+              <MatchCard match={upcomingMatches[0]}
+                onClick={() => {
+                  const m = upcomingMatches[0]
+                  m.external_id ? navigate(`/matches/${m.external_id}`) : navigate(`/matches/db-${m.id}`)
+                }} />
             ) : null}
           </div>
         </div>
@@ -128,7 +136,7 @@ export default function HomePage() {
         <div className="container">
           <div className="row">
             <div className="col-12 title-section">
-              <h2 className="heading">Latest News</h2>
+              <h2 className="heading">{t("home.latestNews")}</h2>
             </div>
           </div>
           <div className="row no-gutters">
@@ -180,7 +188,7 @@ export default function HomePage() {
               {nextMatch && (
                 <div className="widget-next-match">
                   <div className="widget-title">
-                    <h3>Next Match</h3>
+                    <h3>{t("home.nextMatch")}</h3>
                   </div>
                   <div className="widget-body mb-3">
                     <div className="widget-vs">
@@ -229,16 +237,16 @@ export default function HomePage() {
             <div className="col-lg-6">
               <div className="widget-next-match">
                 <div className="widget-title">
-                  <h3>Upcoming Matches</h3>
+                  <h3>{t("home.upcomingMatches")}</h3>
                 </div>
                 <table className="table custom-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Home</th>
+                      <th>{t("table.date")}</th>
+                      <th>{t("table.home")}</th>
                       <th></th>
-                      <th>Away</th>
-                      <th>Group</th>
+                      <th>{t("table.away")}</th>
+                      <th>{t("table.group")}</th>
                     </tr>
                   </thead>
                   <tbody>

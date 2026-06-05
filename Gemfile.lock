@@ -409,6 +409,7 @@ DEPENDENCIES
   image_processing (~> 1.2)
   kamal
   mutex_m
+  nokogiri
   ostruct
   pg (~> 1.1)
   puma (>= 5.0)

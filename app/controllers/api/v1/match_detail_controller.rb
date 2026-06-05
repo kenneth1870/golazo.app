@@ -2,18 +2,31 @@ module Api
   module V1
     class MatchDetailController < BaseController
       def show
-        external_id = params[:id].to_s.sub(/\Aext-/, "").to_i
-        data = LiveScoresClient.new.match_detail(external_id)
+        raw_id = params[:id].to_s
+        client = LiveScoresClient.new
 
-        # External API returned nothing — fall back to local DB
-        if data[:fixture].nil?
+        # db-{id} — direct DB lookup (WC matches without an external_id)
+        if raw_id.start_with?("db-")
+          db_id = raw_id.sub("db-", "").to_i
+          match = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition).find_by(id: db_id)
+          return render json: { fixture: nil, error: "not_found", stats: [], events: [], lineups: [] } unless match
+          return render json: local_match_as_fixture(match)
+        end
+
+        external_id = raw_id.sub(/\Aext-/, "").to_i
+        data = client.match_detail(external_id)
+
+        # Full detail unavailable — cascade through fallbacks
+        if data.nil? || data[:fixture].nil?
+          # 1. Local DB (synced matches with external_id)
           match = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition)
                        .find_by(external_id: external_id)
-
           if match
             data = local_match_as_fixture(match)
           else
-            return render json: { fixture: nil, error: "not_found", stats: [], events: [], lineups: [] }
+            # 2. Build a basic fixture from the cached date-list data
+            data = client.match_from_list(external_id)
+            return render json: { fixture: nil, error: "not_found", stats: [], events: [], lineups: [] } unless data
           end
         end
 

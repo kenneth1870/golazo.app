@@ -117,6 +117,21 @@ class LiveScoresClient
     end
   end
 
+  # Finds a match in the cached date lists (today ± 1 day) and returns a
+  # basic fixture detail built from list data. Used as a last-resort fallback
+  # when the full detail API returns nothing.
+  def match_from_list(match_id)
+    [Date.today - 1, Date.today, Date.today + 1].each do |d|
+      list = matches_for_date(d)
+      found = list.find { |m| m[:external_id].to_s == match_id.to_s }
+      return build_detail_from_list(found) if found
+    end
+    nil
+  rescue => e
+    Rails.logger.warn("[LiveScoresClient] match_from_list #{match_id}: #{e.message}")
+    nil
+  end
+
   # Standings table for a league/season
   def league_standings(league_id, season_id)
     Rails.cache.fetch("live_scores_standings_#{league_id}_#{season_id}", expires_in: 10.minutes) do
@@ -165,6 +180,10 @@ class LiveScoresClient
     931430 => { name: "Division 4 (Sweden)",          logo: nil, country: "SWE" },
     918043 => { name: "Division 4 (Sweden)",          logo: nil, country: "SWE" },
     916345 => { name: "USL League One",               logo: nil, country: "USA" },
+    # Summer 2026 tournaments
+    6      => { name: "Copa América 2026",            logo: nil, country: "INT" },
+    940476 => { name: "FIFA Club World Cup 2025",     logo: nil, country: "INT" },
+    936234 => { name: "Copa América 2026",            logo: nil, country: "INT" },
   }.freeze
 
   # League IDs that are explicitly excluded even if they pass other filters.
@@ -199,6 +218,9 @@ class LiveScoresClient
     9,    # FIFA Women's World Cup
     137,  # Copa Libertadores
     138,  # Copa Sudamericana
+    6,    # Copa América (recurring FotMob ID)
+    940476, # FIFA Club World Cup 2025
+    936234, # Copa América 2026 (alternate FotMob ID)
   ]).freeze
 
   # Builds a leagueId → {name, logo, country} map from the raw match list

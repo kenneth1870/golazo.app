@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 export default function TeamsPage() {
+  const { t } = useTranslation()
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -27,16 +30,16 @@ export default function TeamsPage() {
           {Object.entries(byGroup).sort().map(([group, groupTeams]) => (
             <div key={group} className="col-lg-3 col-md-4 col-6 mb-4">
               <div className="group-teams-card">
-                <div className="group-teams-card__header">Group {group}</div>
+                <div className="group-teams-card__header">{t("nav.group", { letter: group })}</div>
                 <div className="group-teams-card__list">
                   {groupTeams.map(t => (
-                    <div key={t.id} className="team-item">
+                    <Link key={t.id} to={`/teams/${t.id}`} className="team-item" style={{ textDecoration: "none" }}>
                       {t.flag_url
                         ? <img src={t.flag_url} alt={t.code} className="team-item__flag" onError={e => e.target.style.display='none'} />
                         : <span className="team-item__placeholder">🏳️</span>
                       }
                       <span className="team-item__name">{t.name}</span>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>

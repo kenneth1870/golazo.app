@@ -3,6 +3,7 @@
     "home": "ホーム",
     "scores": "スコア",
     "live": "ライブ",
+    "liveMatches": "ライブ試合",
     "results": "結果",
     "fixtures": "試合日程",
     "groupStage": "グループステージ",
@@ -15,8 +16,7 @@
     "venues": "スタジアム",
     "topScorers": "得点王",
     "allLeagues": "全リーグ",
-    "news": "ニュース",
-    "liveMatches": "ライブ試合"
+    "news": "ニュース"
   },
   "hero": {
     "title": "ワールドカップ2026",
@@ -30,7 +30,22 @@
     "nextMatch": "次の試合",
     "upcomingMatches": "今後の試合",
     "viewAll": "すべて見る →",
-    "fullSchedule": "全日程 →"
+    "fullSchedule": "全日程 →",
+    "yourTeam": "あなたのチーム",
+    "playingNow": "試合中",
+    "noUpcoming": "今後の試合は見つかりません",
+    "liveNow_one": "{{count}}試合ライブ中",
+    "liveNow_other": "{{count}}試合ライブ中",
+    "followTeam": "チームをフォロー"
+  },
+  "time": {
+    "today": "今日",
+    "yesterday": "昨日",
+    "tomorrow": "明日",
+    "noMatches": "{{date}}の試合はありません",
+    "tryDifferent": "別の日付を試してください",
+    "matchCount": "{{count}}試合",
+    "liveCount": "{{count}}ライブ"
   },
   "scores": {
     "liveNow": "ライブ",
@@ -76,7 +91,47 @@
     "assists": "アシスト",
     "date": "日付",
     "home": "ホーム",
-    "away": "アウェイ"
+    "away": "アウェイ",
+    "group": "組"
+  },
+  "match": {
+    "summary": "概要",
+    "stats": "統計",
+    "lineups": "スターティングメンバー",
+    "h2h": "対戦成績",
+    "events": "試合イベント",
+    "noEvents": "記録されたイベントなし",
+    "notStarted": "まだ始まっていません",
+    "eventsAppear": "試合開始後にゴール・カード・交代が表示されます",
+    "eventsUnavailable": "この試合のイベントは利用できません",
+    "statsUnavailable": "統計はまだ利用できません",
+    "statsAppear": "試合開始後に統計が表示されます",
+    "lineupsUnavailable": "スターティングメンバーはまだ利用できません",
+    "lineupsRelease": "通常キックオフ1時間前に公開",
+    "noH2H": "対戦成績なし",
+    "h2hPrev": "過去の対戦がここに表示されます",
+    "h2hSummary": "直接対決サマリー",
+    "recentMeetings": "最近の対戦",
+    "updatingEvery": "20秒ごとに更新",
+    "fanPoll": "ファン投票",
+    "tapToVote": "タップして投票",
+    "yourVote": "あなたの票",
+    "votes_one": "{{count}}票",
+    "votes_other": "{{count}}票",
+    "beFirstVote": "最初に投票する",
+    "draw": "引き分け",
+    "fullTime": "試合終了",
+    "halfTime": "ハーフタイム",
+    "substitutes": "控え選手"
+  },
+  "error": {
+    "dataUnavailable": "データが一時的に利用できません",
+    "apiError": "データプロバイダーが応答していません。しばらくしてから再試行してください。",
+    "notFound": "試合が見つかりません",
+    "matchRemoved": "この試合はデータベースにありません。中止された可能性があります。",
+    "retry": "再試行",
+    "back": "戻る",
+    "goBack": "前に戻る"
   },
   "status": {
     "live": "LIVE",
@@ -92,7 +147,9 @@
   },
   "news": {
     "title": "ニュース",
-    "subtitle": "FIFAワールドカップ2026の最新情報"
+    "subtitle": "世界のサッカー最新情報",
+    "noArticles": "記事が見つかりません",
+    "all": "すべて"
   },
   "footer": {
     "follow": "フォロー",

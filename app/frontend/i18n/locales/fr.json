@@ -3,6 +3,7 @@
     "home": "Accueil",
     "scores": "Scores",
     "live": "En Direct",
+    "liveMatches": "Matchs en Direct",
     "results": "Résultats",
     "fixtures": "Calendrier",
     "groupStage": "Phase de Groupes",
@@ -15,8 +16,7 @@
     "venues": "Stades",
     "topScorers": "Buteurs",
     "allLeagues": "Toutes les Ligues",
-    "news": "Actualités",
-    "liveMatches": "Matchs en Direct"
+    "news": "Actualités"
   },
   "hero": {
     "title": "Mondial 2026",
@@ -30,7 +30,22 @@
     "nextMatch": "Prochain Match",
     "upcomingMatches": "Prochains Matchs",
     "viewAll": "Voir tout →",
-    "fullSchedule": "Programme complet →"
+    "fullSchedule": "Programme complet →",
+    "yourTeam": "Ton équipe",
+    "playingNow": "En cours",
+    "noUpcoming": "Aucun match à venir trouvé",
+    "liveNow_one": "{{count}} match en direct",
+    "liveNow_other": "{{count}} matchs en direct",
+    "followTeam": "Suivre une équipe"
+  },
+  "time": {
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "tomorrow": "Demain",
+    "noMatches": "Aucun match pour {{date}}",
+    "tryDifferent": "Essayez une autre date",
+    "matchCount": "{{count}} matchs",
+    "liveCount": "{{count}} en direct"
   },
   "scores": {
     "liveNow": "En Direct",
@@ -76,7 +91,47 @@
     "assists": "Passes D.",
     "date": "Date",
     "home": "Domicile",
-    "away": "Extérieur"
+    "away": "Extérieur",
+    "group": "Groupe"
+  },
+  "match": {
+    "summary": "Résumé",
+    "stats": "Stats",
+    "lineups": "Compositions",
+    "h2h": "H2H",
+    "events": "Événements du Match",
+    "noEvents": "Aucun événement enregistré",
+    "notStarted": "Pas encore commencé",
+    "eventsAppear": "Les buts, cartons et remplacements apparaîtront ici",
+    "eventsUnavailable": "Événements non disponibles pour ce match",
+    "statsUnavailable": "Stats pas encore disponibles",
+    "statsAppear": "Les statistiques apparaissent au coup d'envoi",
+    "lineupsUnavailable": "Compositions pas encore disponibles",
+    "lineupsRelease": "Généralement publiées 1 heure avant le coup d'envoi",
+    "noH2H": "Aucun historique de confrontations",
+    "h2hPrev": "Les rencontres précédentes apparaîtront ici",
+    "h2hSummary": "Historique des Confrontations",
+    "recentMeetings": "Dernières Rencontres",
+    "updatingEvery": "Mise à jour toutes les 20s",
+    "fanPoll": "Sondage des Supporters",
+    "tapToVote": "Appuyer pour voter",
+    "yourVote": "votre vote",
+    "votes_one": "{{count}} vote",
+    "votes_other": "{{count}} votes",
+    "beFirstVote": "Soyez le premier à voter",
+    "draw": "Nul",
+    "fullTime": "Fin du Match",
+    "halfTime": "Mi-Temps",
+    "substitutes": "Remplaçants"
+  },
+  "error": {
+    "dataUnavailable": "Données temporairement indisponibles",
+    "apiError": "Le fournisseur de données ne répond pas. Réessayez dans un moment.",
+    "notFound": "Match introuvable",
+    "matchRemoved": "Ce match n'est pas dans notre base de données. Il a peut-être été annulé.",
+    "retry": "Réessayer",
+    "back": "Retour",
+    "goBack": "Revenir"
   },
   "status": {
     "live": "EN DIRECT",
@@ -92,7 +147,9 @@
   },
   "news": {
     "title": "Actualités",
-    "subtitle": "Les dernières nouvelles de la Coupe du Monde FIFA 2026"
+    "subtitle": "Les dernières nouvelles du football mondial",
+    "noArticles": "Aucun article trouvé",
+    "all": "Tous"
   },
   "footer": {
     "follow": "Suivez-nous",

@@ -10,14 +10,17 @@ module Api
           .limit(6)
           .map { |t| { type: "team", id: t.id, name: t.name, code: t.code, flag_url: t.flag_url, group: t.group } }
 
+        now = Time.current
         matches = Match
           .includes(:home_team, :away_team)
           .joins(:home_team, :away_team)
           .where(
-            "home_teams_matches.name ILIKE :q OR away_teams_matches.name ILIKE :q",
+            "teams.name ILIKE :q OR away_teams_matches.name ILIKE :q",
             q: "%#{q}%"
           )
-          .order(kickoff_at: :desc)
+          .order(
+            Arel.sql("CASE WHEN status IN ('scheduled','live') AND kickoff_at >= '#{now.iso8601}' THEN 0 ELSE 1 END, ABS(EXTRACT(EPOCH FROM (kickoff_at - '#{now.iso8601}'))) ASC")
+          )
           .limit(5)
           .map do |m|
             {
