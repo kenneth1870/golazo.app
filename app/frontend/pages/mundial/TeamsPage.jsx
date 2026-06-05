@@ -8,7 +8,7 @@ export default function TeamsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("/api/v1/teams")
+    fetch("/api/v1/teams?competition=WC")
       .then(r => r.json())
       .then(setTeams)
       .finally(() => setLoading(false))
