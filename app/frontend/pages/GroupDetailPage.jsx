@@ -14,7 +14,7 @@ export default function GroupDetailPage() {
   const { matches, loading } = useMatches("all", { competition: "WC", group })
 
   useEffect(() => {
-    fetch("/api/v1/standings")
+    fetch("/api/v1/standings?competition=WC")
       .then(r => r.json())
       .then(data => setStandings((Array.isArray(data) ? data.filter(s => s.group_name === group) : data[group]) || []))
   }, [group])

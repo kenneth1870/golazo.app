@@ -2,8 +2,11 @@ module Api
   module V1
     class StandingsController < BaseController
       def index
-        scope = Standing.includes(:team, :competition).order(:group_name, :rank)
-        scope = scope.for_competition(params[:competition]) if params[:competition].present?
+        competition_code = params[:competition].presence || "WC"
+        scope = Standing.includes(:team, :competition)
+                        .for_competition(competition_code)
+                        .where.not(group_name: [nil, ""])
+                        .order(:group_name, :rank)
 
         if scope.exists?
           flat = scope.map { |s|

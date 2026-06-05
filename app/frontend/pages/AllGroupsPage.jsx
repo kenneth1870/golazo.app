@@ -76,7 +76,7 @@ export default function AllGroupsPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetch("/api/v1/standings")
+    fetch("/api/v1/standings?competition=WC")
       .then(r => r.json())
       .then(data => setGrouped(data))
       .catch(() => {})
