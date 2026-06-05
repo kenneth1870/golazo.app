@@ -225,25 +225,44 @@ class WorldCupSync
 
   # FotMob / RapidAPI uses different spellings for some WC nations.
   # Map API name → DB name so sync survives naming mismatches.
+  # Maps API/FotMob team name variants → DB canonical name
   TEAM_ALIASES = {
-    "korea republic"          => "south korea",
-    "republic of korea"       => "south korea",
-    "côte d'ivoire"           => "ivory coast",
-    "cote d'ivoire"           => "ivory coast",
-    "usa"                     => "united states",
-    "united states of america"=> "united states",
-    "bosnia and herzegovina"  => "bosnia & herz.",
-    "bosnia & herzegovina"    => "bosnia & herz.",
-    "dr congo"                => "dr congo",
+    # South Korea
+    "korea republic"               => "south korea",
+    "republic of korea"            => "south korea",
+    # Ivory Coast
+    "côte d'ivoire"                => "ivory coast",
+    "cote d'ivoire"                => "ivory coast",
+    "cote divoire"                 => "ivory coast",
+    # United States
+    "usa"                          => "united states",
+    "united states of america"     => "united states",
+    # Bosnia
+    "bosnia and herzegovina"       => "bosnia & herz.",
+    "bosnia & herzegovina"         => "bosnia & herz.",
+    "bosnia-herzegovina"           => "bosnia & herz.",
+    # DR Congo
+    "congo dr"                     => "dr congo",
     "democratic republic of congo" => "dr congo",
-    "congo dr"                => "dr congo",
-    "new zealand"             => "new zealand",
-    "czechia"                 => "czechia",
-    "czech republic"          => "czechia",
-    "cape verde"              => "cape verde",
-    "cabo verde"              => "cape verde",
-    "saudi arabia"            => "saudi arabia",
-    "ksa"                     => "saudi arabia",
+    "dr. congo"                    => "dr congo",
+    # Czechia
+    "czech republic"               => "czechia",
+    # Cape Verde
+    "cabo verde"                   => "cape verde",
+    # Curacao
+    "curaçao"                      => "curacao",
+    "curacao"                      => "curacao",
+    # Turkey
+    "türkiye"                      => "turkey",
+    "turkiye"                      => "turkey",
+    # Iran
+    "ir iran"                      => "iran",
+    "islamic republic of iran"     => "iran",
+    # Saudi Arabia
+    "ksa"                          => "saudi arabia",
+    # Algeria
+    "algeria"                      => "algeria",
+    "algérie"                      => "algeria",
   }.freeze
 
   def normalize_team_name(name)
