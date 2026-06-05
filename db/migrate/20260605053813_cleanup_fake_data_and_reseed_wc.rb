@@ -158,8 +158,38 @@ class CleanupFakeDataAndReseedWc < ActiveRecord::Migration[8.1]
     execute("DELETE FROM match_stats WHERE match_id IN (SELECT id FROM matches WHERE competition_id != #{wc_id})")
     execute("DELETE FROM matches WHERE competition_id != #{wc_id}")
 
-    # 3. Remove orphan placeholder teams (not WC, not a known club)
+    # 2b. Remove WC matches that reference placeholder teams (not in keep list)
+    #     These are the old contaminated fixtures (e.g. Argentina vs Peru in WC).
+    #     Must happen BEFORE we delete the teams to avoid FK violations.
     keep = (WC_CODES + CLUB_CODES).map { |c| quote(c) }.join(", ")
+    execute(<<~SQL)
+      DELETE FROM goals WHERE match_id IN (
+        SELECT m.id FROM matches m
+        JOIN teams h ON h.id = m.home_team_id
+        JOIN teams a ON a.id = m.away_team_id
+        WHERE m.competition_id = #{wc_id}
+          AND (h.code NOT IN (#{keep}) OR a.code NOT IN (#{keep}))
+      )
+    SQL
+    execute(<<~SQL)
+      DELETE FROM match_stats WHERE match_id IN (
+        SELECT m.id FROM matches m
+        JOIN teams h ON h.id = m.home_team_id
+        JOIN teams a ON a.id = m.away_team_id
+        WHERE m.competition_id = #{wc_id}
+          AND (h.code NOT IN (#{keep}) OR a.code NOT IN (#{keep}))
+      )
+    SQL
+    execute(<<~SQL)
+      DELETE FROM matches
+      USING teams h, teams a
+      WHERE matches.home_team_id = h.id
+        AND matches.away_team_id = a.id
+        AND matches.competition_id = #{wc_id}
+        AND (h.code NOT IN (#{keep}) OR a.code NOT IN (#{keep}))
+    SQL
+
+    # 3. Remove orphan placeholder teams (not WC, not a known club)
     execute("UPDATE teams SET \"group\" = NULL WHERE code NOT IN (#{keep})")
     execute("DELETE FROM teams WHERE code NOT IN (#{keep})")
 
