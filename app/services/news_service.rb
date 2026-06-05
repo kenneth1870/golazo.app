@@ -1,15 +1,48 @@
 class NewsService
-  FEEDS = [
-    { url: "https://feeds.bbci.co.uk/sport/football/rss.xml", source: "BBC Sport" },
-    { url: "https://www.espn.com/espn/rss/soccer/news",        source: "ESPN FC"  },
-    { url: "https://www.goal.com/feeds/en/news",               source: "Goal.com" },
-  ].freeze
+  # Primary feeds per locale. Falls back to English when a locale has no feeds.
+  FEEDS = {
+    "en" => [
+      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       },
+      { url: "https://www.espn.com/espn/rss/soccer/news",                      source: "ESPN FC"         },
+      { url: "https://www.goal.com/feeds/en/news",                             source: "Goal.com"        },
+    ],
+    "es" => [
+      { url: "https://feeds.bbci.co.uk/mundo/deportes/rss.xml",               source: "BBC Mundo"       },
+      { url: "https://espndeportes.espn.com/espn/rss/deportes/soccer/noticias", source: "ESPN Deportes"  },
+      { url: "https://www.marca.com/rss/futbol.xml",                           source: "Marca"           },
+    ],
+    "pt" => [
+      { url: "https://www.goal.com/feeds/pt/news",                             source: "Goal.com"        },
+      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       },
+    ],
+    "fr" => [
+      { url: "https://www.goal.com/feeds/fr/news",                             source: "Goal.com"        },
+      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       },
+    ],
+    "de" => [
+      { url: "https://www.goal.com/feeds/de/news",                             source: "Goal.com"        },
+      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       },
+    ],
+    "ar" => [
+      { url: "https://www.goal.com/feeds/ar/news",                             source: "Goal.com"        },
+      { url: "https://feeds.bbci.co.uk/arabic/sports/rss.xml",                source: "BBC Arabic"      },
+    ],
+    "ja" => [
+      { url: "https://www.goal.com/feeds/ja/news",                             source: "Goal.com"        },
+      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       },
+    ],
+    "ko" => [
+      { url: "https://www.goal.com/feeds/ko/news",                             source: "Goal.com"        },
+      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       },
+    ],
+  }.freeze
 
   USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
 
-  def latest(limit: 20)
-    Rails.cache.fetch("news_feed", expires_in: 15.minutes) do
-      items = FEEDS.flat_map { |feed| fetch_feed(feed[:url], feed[:source]) }
+  def latest(limit: 20, lang: "en")
+    feeds = FEEDS[lang] || FEEDS["en"]
+    Rails.cache.fetch("news_feed_#{lang}", expires_in: 15.minutes) do
+      items = feeds.flat_map { |feed| fetch_feed(feed[:url], feed[:source]) }
       items.sort_by { |a| a[:published_at] || Time.at(0) }.reverse.first(limit)
     end
   end

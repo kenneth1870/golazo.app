@@ -35,18 +35,20 @@ function NewsCard({ article, featured }) {
 }
 
 export default function NewsPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [articles, setArticles] = useState([])
   const [loading, setLoading]   = useState(true)
   const [source, setSource]     = useState(null)
 
   useEffect(() => {
-    fetch("/api/v1/news")
+    setLoading(true)
+    setSource(null)
+    fetch(`/api/v1/news?lang=${i18n.language}`)
       .then(r => r.json())
       .then(setArticles)
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, [i18n.language])
 
   const allLabel = t("news.all")
   const sources  = [allLabel, ...new Set(articles.map(a => a.source))]

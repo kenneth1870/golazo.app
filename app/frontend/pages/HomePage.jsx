@@ -11,13 +11,14 @@ import FavoriteTeamPicker from "../components/FavoriteTeamPicker"
 const FALLBACK_IMGS = ["/images/img_1.jpg", "/images/img_3.jpg", "/images/img_2.jpg"]
 
 function useLatestNews() {
+  const { i18n } = useTranslation()
   const [news, setNews] = useState([])
   useEffect(() => {
-    fetch("/api/v1/news")
+    fetch(`/api/v1/news?lang=${i18n.language}`)
       .then(r => r.json())
       .then(data => setNews(data.slice(0, 3)))
       .catch(() => {})
-  }, [])
+  }, [i18n.language])
   return news
 }
 

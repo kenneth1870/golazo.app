@@ -2,14 +2,16 @@ module Api
   module V1
     class NewsController < BaseController
       def index
-        render json: NewsService.new.latest(limit: 30)
+        lang = params[:lang].presence_in(%w[en es pt fr de ar ja ko]) || "en"
+        render json: NewsService.new.latest(limit: 30, lang: lang)
       rescue => e
         Rails.logger.error("[NewsController] #{e.message}")
         render json: []
       end
 
       def show
-        article = NewsService.new.latest(limit: 30).find { |a| a[:id] == params[:id] }
+        lang = params[:lang].presence_in(%w[en es pt fr de ar ja ko]) || "en"
+        article = NewsService.new.latest(limit: 30, lang: lang).find { |a| a[:id] == params[:id] }
         if article
           render json: article
         else
