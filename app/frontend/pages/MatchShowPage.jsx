@@ -751,7 +751,8 @@ export default function MatchShowPage() {
   const [toast, setToast]       = useState(null)
   const [showNotifBanner, setShowNotifBanner] = useState(false)
   const [notifEnabled, setNotifEnabled] = useState(false)
-  const toastTimer = useRef(null)
+  const toastTimer  = useRef(null)
+  const swipeStartX = useRef(null)
 
   // Detect if live
   const statusShort = data?.fixture?.fixture?.status?.short
@@ -878,7 +879,6 @@ export default function MatchShowPage() {
   const TABS        = TAB_KEYS.map(k => ({ key: k, label: t(`match.${k}`) }))
 
   // Swipe between tabs
-  const swipeStartX = useRef(null)
   function handleTabSwipeStart(e) { swipeStartX.current = e.touches[0].clientX }
   function handleTabSwipeEnd(e) {
     if (swipeStartX.current === null) return
