@@ -257,6 +257,8 @@ class CleanupFakeDataAndReseedWc < ActiveRecord::Migration[8.1]
     end.compact
 
     if valid_ids.any?
+      execute("DELETE FROM goals       WHERE match_id IN (SELECT id FROM matches WHERE competition_id = #{wc_id} AND id NOT IN (#{valid_ids.join(', ')}))")
+      execute("DELETE FROM match_stats WHERE match_id IN (SELECT id FROM matches WHERE competition_id = #{wc_id} AND id NOT IN (#{valid_ids.join(', ')}))")
       execute("DELETE FROM matches WHERE competition_id = #{wc_id} AND id NOT IN (#{valid_ids.join(', ')})")
     end
   end
