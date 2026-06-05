@@ -7,9 +7,8 @@ class NewsService
       { url: "https://www.goal.com/feeds/en/news",                             source: "Goal.com"        },
     ],
     "es" => [
-      { url: "https://feeds.bbci.co.uk/mundo/deportes/rss.xml",               source: "BBC Mundo"       },
       { url: "https://espndeportes.espn.com/espn/rss/deportes/soccer/noticias", source: "ESPN Deportes"  },
-      { url: "https://www.marca.com/rss/futbol.xml",                           source: "Marca"           },
+      { url: "https://e00-marca.uecdn.es/rss/futbol.xml",                       source: "Marca"          },
     ],
     "pt" => [
       { url: "https://www.goal.com/feeds/pt/news",                             source: "Goal.com"        },
