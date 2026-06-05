@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useParams, Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 const SOURCE_COLORS = {
   "BBC Sport": "#b80000",
@@ -22,7 +23,9 @@ function ArticleSkeleton() {
 }
 
 export default function NewsShowPage() {
-  const { id } = useParams()
+  const { id }   = useParams()
+  const { i18n } = useTranslation()
+  const lang     = i18n.language.split("-")[0]
   const [article, setArticle]   = useState(null)
   const [content, setContent]   = useState(null)
   const [loading, setLoading]   = useState(true)
@@ -33,10 +36,12 @@ export default function NewsShowPage() {
     setArticle(null)
     setContent(null)
 
-    // Fetch article meta and full content in parallel
+    // Fetch article meta and full content in parallel, passing lang so the
+    // controller searches the correct locale's feed (e.g. Spanish articles
+    // have IDs derived from Spanish URLs — not found in the English feed)
     Promise.all([
-      fetch(`/api/v1/news/${id}`).then(r => r.ok ? r.json() : null),
-      fetch(`/api/v1/news/${id}/content`).then(r => r.ok ? r.json() : null),
+      fetch(`/api/v1/news/${id}?lang=${lang}`).then(r => r.ok ? r.json() : null),
+      fetch(`/api/v1/news/${id}/content?lang=${lang}`).then(r => r.ok ? r.json() : null),
     ])
       .then(([meta, body]) => {
         if (!meta) { setNotFound(true); return }
