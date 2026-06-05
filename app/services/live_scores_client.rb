@@ -571,12 +571,31 @@ class LiveScoresClient
       },
     }
 
+    # Lineups from separate endpoints; fall back to embedded detail["lineups"]
     lineups = [normalize_lineup_team(home_lu), normalize_lineup_team(away_lu)].compact
-    h2h     = normalize_h2h(h2h_raw, home_id, away_id)
-    stats   = normalize_stats_response(stats_raw, home_name, away_name)
+    lineups = normalize_lineups(detail["lineups"] || []) if lineups.empty? && detail["lineups"].present?
 
-    raw_events = detail["events"] || detail["incidents"] || []
-    events = raw_events.is_a?(Array) ? normalize_events(raw_events) : []
+    h2h = normalize_h2h(h2h_raw, home_id, away_id)
+
+    # Stats: API returns Array of team-stat objects; normalize_stats handles that.
+    # normalize_stats_response handles legacy Hash format.
+    stats = stats_raw.is_a?(Array) ? normalize_stats(stats_raw) : normalize_stats_response(stats_raw, home_name, away_name)
+    # Fallback: stats embedded directly in match detail response
+    if stats.empty?
+      inline = detail["stats"] || detail["statistics"] || []
+      stats  = inline.is_a?(Array) ? normalize_stats(inline) : normalize_stats_response(inline, home_name, away_name)
+    end
+
+    # Events: FotMob may wrap in a Hash like {"ongoing":[...],"aggregated":[...]};
+    # find the first Array value, or try incidents directly.
+    events_arr = [detail["events"], detail["incidents"]].find { |e| e.is_a?(Array) }
+    if events_arr.nil?
+      ev         = detail["events"] || detail["incidents"]
+      events_arr = ev.is_a?(Hash) ? (ev.values.find { |v| v.is_a?(Array) } || []) : []
+    end
+    events = normalize_events(events_arr)
+
+    Rails.logger.debug("[MatchDetail #{match_id}] stats=#{stats_raw.class} events_src=#{(detail['events'] || detail['incidents']).class} lineups=#{lineups.length} h2h_matches=#{h2h[:matches]&.length || 0}")
 
     { fixture: fixture, events: events, stats: stats, lineups: lineups, h2h: h2h }
   end
