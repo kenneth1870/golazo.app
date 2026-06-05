@@ -53,19 +53,21 @@ export default function Hero({ nextMatch }) {
     <div className="hero overlay" style={{ backgroundImage: "url('/images/bg_3.jpg')" }}>
       <div className="container">
         <div className="row align-items-center">
-          <div className="col-lg-5 ml-auto">
-            <h1 className="text-white">Mundial 2026</h1>
-            <p>Live scores, real-time stats, and every goal from the FIFA World Cup 2026 — USA · Canada · Mexico.</p>
+          <div className="col-12 col-lg-6 ml-auto" style={{ paddingTop: "1rem", paddingBottom: "1rem" }}>
+            <h1 className="text-white" style={{ fontSize: "clamp(1.8rem, 6vw, 3rem)" }}>Mundial 2026</h1>
+            <p style={{ fontSize: "clamp(.82rem, 2.5vw, 1rem)" }}>
+              Live scores, real-time stats, and every goal from the FIFA World Cup 2026 — USA · Canada · Mexico.
+            </p>
             <Countdown targetDate={target} label={label} />
-            <p>
-              <a href="#" className="btn btn-primary py-3 px-4 mr-3"
-                onClick={e => { e.preventDefault(); navigate("/scores/live") }}>
+            <p style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              <a href="#" className="btn btn-primary py-2 px-4"
+                onClick={e => { e.preventDefault(); navigate("/scores/today") }}>
                 Live Scores
               </a>
-              <a href="#" className="btn btn-primary py-3 px-4"
-                onClick={e => { e.preventDefault(); navigate("/scores/fixtures") }}
+              <a href="#" className="btn btn-primary py-2 px-4"
+                onClick={e => { e.preventDefault(); navigate("/mundial/schedule") }}
                 style={{ background: "transparent", borderColor: "rgba(255,255,255,.4)" }}>
-                Fixtures
+                Schedule
               </a>
             </p>
           </div>

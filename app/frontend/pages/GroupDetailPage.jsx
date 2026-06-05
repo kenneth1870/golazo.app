@@ -27,8 +27,8 @@ export default function GroupDetailPage() {
           <div className="col-lg-5 mb-4">
             <div className="widget-next-match">
               <div className="widget-title"><h3>Group {group} — Standings</h3></div>
-              <div className="widget-body p-0">
-                <table className="table custom-table mb-0">
+              <div className="widget-body p-0" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+                <table className="table custom-table mb-0" style={{ minWidth: 340 }}>
                   <thead>
                     <tr><th>#</th><th>Team</th><th>MP</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr>
                   </thead>

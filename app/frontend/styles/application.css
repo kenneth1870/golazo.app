@@ -151,10 +151,10 @@ a:hover{color:var(--accent);opacity:.85}
   background:var(--accent);border-color:var(--accent);color:#fff!important;
 }
 
-/* Mobile toggle button */
+/* Mobile toggle button — 44px min touch target */
 .mobile-toggle{
   background:none;border:1px solid var(--border);color:#fff;
-  width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;
   font-size:1.2rem;cursor:pointer;flex-shrink:0;
 }
 .mobile-toggle:hover{background:var(--surface2)}
@@ -179,8 +179,8 @@ a:hover{color:var(--accent);opacity:.85}
 }
 .site-mobile-menu-close{
   background:none;border:none;cursor:pointer;
-  color:var(--muted);font-size:1.1rem;width:32px;height:32px;
-  display:flex;align-items:center;justify-content:center;border-radius:6px;
+  color:var(--muted);font-size:1.1rem;width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;border-radius:6px;flex-shrink:0;
 }
 .site-mobile-menu-close:hover{background:var(--surface2);color:#fff}
 
@@ -221,6 +221,7 @@ a:hover{color:var(--accent);opacity:.85}
 /* ─── Tab Bar ────────────────────────────────────────── */
 .tab-bar{background:var(--surface);border-bottom:1px solid var(--border);z-index:99}
 .sticky-tabs{position:sticky;top:57px}
+@media(max-width:992px){.sticky-tabs{top:53px}}
 .tab-bar__inner{display:flex;gap:0;padding:0 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .tab-bar__inner::-webkit-scrollbar{display:none}
 .tab-bar__inner--scroll{flex-wrap:nowrap}
@@ -298,10 +299,11 @@ a:hover{color:var(--accent);opacity:.85}
 .match-row__meta{font-size:.7rem;color:var(--muted);text-align:right;flex-shrink:0;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:576px){
   .match-row{padding:10px 12px;gap:8px}
-  .match-row__status{width:52px}
+  .match-row__status{width:48px}
   .team-name{font-size:.8rem}
-  .flag-xs{width:26px;height:26px}
-  .match-row__meta{display:none}
+  .flag-xs{width:24px;height:24px}
+  .match-row__meta{max-width:52px;font-size:.6rem}
+  .score-pill{min-width:58px;padding:4px 8px;font-size:.9rem}
 }
 
 /* ─── Competition blocks ─────────────────────────────── */
@@ -412,11 +414,19 @@ a:hover{color:var(--accent);opacity:.85}
 .scoreboard__share:hover{background:rgba(255,255,255,.12);color:#fff}
 .scoreboard__share.copied{color:#10b981;border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.08)}
 @media(max-width:576px){
-  .scoreboard{padding:28px 0 22px}
-  .scoreboard__crest{width:60px;height:60px}
-  .scoreboard__score{font-size:3.2rem;letter-spacing:-2px}
-  .scoreboard__team-name{font-size:.85rem;max-width:100px}
-  .scoreboard__score-block{min-width:100px}
+  .scoreboard{padding:24px 0 20px}
+  .scoreboard__crest{width:56px;height:56px}
+  .scoreboard__score{font-size:3rem;letter-spacing:-2px}
+  .scoreboard__team-name{font-size:.82rem;max-width:110px;white-space:normal;text-align:center;line-height:1.2}
+  .scoreboard__score-block{min-width:90px}
+  .scoreboard__footer{gap:10px;margin-top:16px}
+}
+@media(max-width:400px){
+  .scoreboard__crest{width:46px;height:46px}
+  .scoreboard__score{font-size:2.4rem;letter-spacing:-1px}
+  .scoreboard__score-sep{font-size:2rem}
+  .scoreboard__team-name{font-size:.75rem;max-width:90px}
+  .scoreboard__score-block{min-width:72px}
 }
 
 /* ─── Tab counts / dots ──────────────────────────────── */
@@ -483,10 +493,22 @@ a:hover{color:var(--accent);opacity:.85}
 /* ─── Match detail sections ──────────────────────────── */
 .match-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:16px}
 .match-section__title{font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 16px}
+@media(max-width:576px){
+  .match-section{padding:14px 16px}
+}
 
 /* ─── Lineup components ──────────────────────────────── */
 .lineups-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:600px){.lineups-grid{grid-template-columns:1fr}}
+
+/* ─── Mobile lineup pitch: smaller player dots ───────── */
+@media(max-width:480px){
+  .player-dot{min-width:30px;max-width:34px}
+  .player-dot__circle{width:26px;height:26px;font-size:.62rem}
+  .player-dot__name{font-size:.48rem;max-width:30px}
+  .player-dot__pos{font-size:.42rem}
+  .lineup-pitch{padding:10px 4px 8px}
+}
 
 .pos-legend{
   display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;
@@ -763,6 +785,10 @@ a:hover{color:var(--accent);opacity:.85}
 .countdown-wrap span{background:rgba(255,255,255,.1);padding:12px 16px;border-radius:8px;text-align:center;min-width:68px}
 .countdown-wrap span strong{display:block;font-size:1.8rem;font-weight:900;color:#fff;line-height:1}
 .countdown-wrap span small{font-size:.65rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1px}
+@media(max-width:480px){
+  .countdown-wrap span{min-width:52px;padding:8px 10px}
+  .countdown-wrap span strong{font-size:1.4rem}
+}
 
 /* ─── Stat bars ──────────────────────────────────────── */
 .stat-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
@@ -945,4 +971,18 @@ a:hover{color:var(--accent);opacity:.85}
   .venue-card{padding:14px}
   .news-card{padding:16px}
   .tab-link{padding:10px 12px;font-size:.72rem}
+  /* Prediction bars: tighter on mobile */
+  .prediction-bar-row{grid-template-columns:1fr 2fr 32px;gap:6px}
+  .prediction-bar-row__label{font-size:.72rem}
+  .prediction-bar-row__pct{font-size:.72rem}
+  /* Match event layout */
+  .match-event{gap:6px;padding:6px 8px}
+  .match-event__team{display:none}
+  /* News card image height */
+  .news-card__img{height:150px}
+  .news-card--featured .news-card__img{height:200px}
+  /* Widget title */
+  .widget-title h3{font-size:.75rem!important}
+  /* Page hero */
+  .page-hero .container{padding:2rem 1rem}
 }

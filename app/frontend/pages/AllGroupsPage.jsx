@@ -12,8 +12,8 @@ function StandingsTable({ group, rows, onNavigate }) {
         <h3 style={{ margin: 0 }}>Group {group}</h3>
         <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#ee1e46" }}>Matches →</span>
       </div>
-      <div className="widget-body p-0">
-        <table className="table custom-table mb-0" style={{ fontSize: "0.8rem" }}>
+      <div className="widget-body p-0" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <table className="table custom-table mb-0" style={{ fontSize: "0.8rem", minWidth: 380 }}>
           <thead>
             <tr>
               <th style={{ width: 28 }}>#</th>

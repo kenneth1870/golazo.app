@@ -55,49 +55,45 @@ export default function MatchCard({ match, onClick }) {
 
   return (
     <div
-      className="d-flex team-vs"
+      className="team-vs"
       onClick={onClick}
-      style={{ cursor: "pointer", marginBottom: 30 }}
+      style={{ cursor: "pointer", marginBottom: 30, display: "flex", alignItems: "center", padding: "16px 12px" }}
     >
-      {/* Score */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+      {/* Home team */}
+      <div style={{ flex: 1, textAlign: "center", minWidth: 0 }}>
+        <TeamFlag src={match.home_team?.flag_url} code={match.home_team?.code} name={match.home_team?.name} />
+        <h3 style={{ fontSize: "clamp(.75rem, 3vw, 1rem)", margin: "4px 0 2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {match.home_team?.name?.toUpperCase()}
+          {homeResult && <ResultBadge result={homeResult} />}
+        </h3>
+        <ul className="list-unstyled" style={{ fontSize: ".72rem", color: "var(--muted)", margin: 0 }}>
+          {homeGoals.map(g => <li key={g.id}>⚽ {g.player_name} {g.minute}&apos;</li>)}
+        </ul>
+      </div>
+
+      {/* Score / kickoff */}
+      <div style={{ flexShrink: 0, textAlign: "center", padding: "0 12px", minWidth: 70 }}>
         {isLive && (
-          <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.65rem", fontWeight: 700, color: "#ee1e46", letterSpacing: 1 }}>
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: "0.65rem", fontWeight: 700, color: "#ee1e46", letterSpacing: 1, marginBottom: 4 }}>
             <span className="live-dot" /> LIVE
           </span>
         )}
-        <span className="score" style={{ fontSize: hasScore ? undefined : "1rem" }}>
+        <span className="score" style={{ fontSize: hasScore ? undefined : ".9rem" }}>
           {hasScore ? `${match.home_score}–${match.away_score}` : kickoff}
         </span>
-        {isFinished && <span style={{ fontSize: "0.65rem", color: "var(--muted)", letterSpacing: 1 }}>FT</span>}
-      </div>
-
-      {/* Home team */}
-      <div className="team-1 w-50">
-        <div className="team-details w-100 text-center">
-          <TeamFlag src={match.home_team?.flag_url} code={match.home_team?.code} name={match.home_team?.name} />
-          <h3>
-            {match.home_team?.name?.toUpperCase()}
-            {homeResult && <ResultBadge result={homeResult} />}
-          </h3>
-          <ul className="list-unstyled">
-            {homeGoals.map(g => <li key={g.id}>⚽ {g.player_name} {g.minute}&apos;</li>)}
-          </ul>
-        </div>
+        {isFinished && <div style={{ fontSize: "0.62rem", color: "var(--muted)", letterSpacing: 1, marginTop: 2 }}>FT</div>}
       </div>
 
       {/* Away team */}
-      <div className="team-2 w-50">
-        <div className="team-details w-100 text-center">
-          <TeamFlag src={match.away_team?.flag_url} code={match.away_team?.code} name={match.away_team?.name} />
-          <h3>
-            {match.away_team?.name?.toUpperCase()}
-            {awayResult && <ResultBadge result={awayResult} />}
-          </h3>
-          <ul className="list-unstyled">
-            {awayGoals.map(g => <li key={g.id}>⚽ {g.player_name} {g.minute}&apos;</li>)}
-          </ul>
-        </div>
+      <div style={{ flex: 1, textAlign: "center", minWidth: 0 }}>
+        <TeamFlag src={match.away_team?.flag_url} code={match.away_team?.code} name={match.away_team?.name} />
+        <h3 style={{ fontSize: "clamp(.75rem, 3vw, 1rem)", margin: "4px 0 2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {match.away_team?.name?.toUpperCase()}
+          {awayResult && <ResultBadge result={awayResult} />}
+        </h3>
+        <ul className="list-unstyled" style={{ fontSize: ".72rem", color: "var(--muted)", margin: 0 }}>
+          {awayGoals.map(g => <li key={g.id}>⚽ {g.player_name} {g.minute}&apos;</li>)}
+        </ul>
       </div>
     </div>
   )

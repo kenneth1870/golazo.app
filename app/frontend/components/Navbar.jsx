@@ -202,7 +202,7 @@ export default function Navbar() {
           {/* Search in drawer */}
           <button
             onClick={() => { setDrawerOpen(false); setSearchOpen(true) }}
-            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: 8, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", marginRight: 8 }}
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: 8, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", marginRight: 8, flexShrink: 0 }}
           >
             <SearchIcon />
           </button>
@@ -329,7 +329,7 @@ export default function Navbar() {
             <div className="d-lg-none ml-auto" style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <button
                 onClick={() => setSearchOpen(true)}
-                style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 6, display: "flex" }}
+                style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 0, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
               >
                 <SearchIcon />
               </button>
