@@ -1,8 +1,16 @@
+# The async adapter only works within a single process. In production the web
+# server and the Solid Queue workers run in separate processes, so broadcasts
+# fired from background jobs (live scores, goals, stats) would never reach the
+# WebSocket connections held by Puma. Solid Cable is a database-backed adapter
+# that works across processes (and hosts), so live updates actually arrive.
 development:
   adapter: async
 
 test:
   adapter: test
 
+# No `connects_to:` key → Solid Cable uses the primary database (single-DB app).
 production:
-  adapter: async
+  adapter: solid_cable
+  polling_interval: 0.1.seconds
+  message_retention: 1.day

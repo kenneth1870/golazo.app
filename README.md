@@ -22,15 +22,22 @@ Live scores, real-time stats, and every goal from the FIFA World Cup 2026 (USA Â
 
 ### Requirements
 
-- Ruby 3.3+
-- Node 20+
+- Ruby 3.2.2 (pinned in `.ruby-version`; 3.3 has an actionview SyntaxError on darwin25)
+- Node 22.x
 - PostgreSQL 15+
 
 ### Environment variables
 
 ```
 DATABASE_URL=postgres://...
-RAPIDAPI_KEY=your_rapidapi_key    # free-api-live-football-data on RapidAPI
+RAPIDAPI_KEY=your_rapidapi_key       # free-api-live-football-data on RapidAPI (required)
+FOOTBALL_DATA_API_KEY=...            # football-data.org, for one-off WC metadata sync (optional)
+ADMIN_API_TOKEN=...                  # Bearer token required by the write endpoints
+                                     #   (matches#update, goals#create, stats/upsert).
+                                     #   If unset, those endpoints reject every request.
+ALLOWED_ORIGINS=https://your-host    # comma-separated CORS allowlist (default http://localhost:3036)
+SENTRY_DSN=...                       # error monitoring (optional; inert if unset)
+RAPIDAPI_WC_LEAGUE_ID=4              # override the FotMob WC league id if needed
 ```
 
 ### Install & run
@@ -38,12 +45,23 @@ RAPIDAPI_KEY=your_rapidapi_key    # free-api-live-football-data on RapidAPI
 ```bash
 bundle install
 npm install
-rails db:create db:migrate
+rails db:create db:migrate db:seed   # seed loads WC teams, group fixtures, and the knockout bracket
 
 # Two terminals:
 rails server    # http://localhost:3000
 npm run dev     # Vite HMR on :3036
 ```
+
+### Production notes
+
+- **Caching** uses Solid Cache and **Action Cable** uses Solid Cable â€” both backed by the
+  primary Postgres DB so they work across the web and Solid Queue worker processes. (The
+  `async` cable adapter only works in a single process and would silently drop live updates.)
+- **Recurring syncs** are defined once in `config/recurring.yml` (production only) and run
+  inside Puma via the Solid Queue plugin.
+- **Rate limiting** is enforced by `rack-attack` (see `config/initializers/rack_attack.rb`).
+- **Schedule data** lives in `db/world_cup_group_fixtures.yml`; reload it any time with
+  `rails golazo:load_schedule` (group fixtures + knockout bracket).
 
 ## Key files
 

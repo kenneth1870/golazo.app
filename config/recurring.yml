@@ -1,11 +1,10 @@
+# Single source of truth for Solid Queue recurring tasks (do not also define
+# these under a dispatcher's `recurring_tasks` in queue.yml — that double-runs
+# them). Production-only on purpose: each run hits the paid RapidAPI, so we
+# don't want them firing during local development.
 production:
   sync_live_scores:
     class: SyncLiveScoresJob
-    schedule: "every 1 minute"
-    queue: default
-
-  sync_live_matches:
-    class: SyncLiveMatchesJob
     schedule: "every 1 minute"
     queue: default
 

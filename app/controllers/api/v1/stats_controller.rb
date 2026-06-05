@@ -1,6 +1,8 @@
 module Api
   module V1
     class StatsController < BaseController
+      before_action :require_admin!, only: :upsert
+
       def upsert
         match = Match.find(params[:match_id])
         stat = match.match_stats.find_or_initialize_by(team_id: params[:stat][:team_id])

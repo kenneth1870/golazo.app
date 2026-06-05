@@ -1,6 +1,8 @@
 module Api
   module V1
     class GoalsController < BaseController
+      before_action :require_admin!, only: :create
+
       def create
         match = Match.find(params[:match_id])
         goal = match.goals.build(goal_params)

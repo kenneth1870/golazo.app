@@ -18,7 +18,7 @@ class LiveScoresClient
     11 => "live",       # Half time (alt)
     12 => "live",       # Break time
     13 => "postponed",  # Interrupted
-    14 => "postponed",  # Abandoned
+    14 => "postponed"  # Abandoned
   }.freeze
 
   STATUS_SHORT_MAP = {
@@ -35,7 +35,7 @@ class LiveScoresClient
     11 => "HT",
     12 => "BT",
     13 => "INT",
-    14 => "ABD",
+    14 => "ABD"
   }.freeze
 
   def initialize
@@ -98,7 +98,7 @@ class LiveScoresClient
         score:    Thread.new { get("football-get-match-score",     eventid: match_id) },
         status:   Thread.new { get("football-get-match-status",    eventid: match_id) },
         location: Thread.new { get("football-get-match-location",  eventid: match_id) },
-        stats:    Thread.new { get("football-get-match-all-stats", eventid: match_id) },
+        stats:    Thread.new { get("football-get-match-all-stats", eventid: match_id) }
       }
       threads.each do |k, t|
         results[k] = t.join(8)&.value || {}
@@ -127,7 +127,7 @@ class LiveScoresClient
   # basic fixture detail built from list data. Used as a last-resort fallback
   # when the full detail API returns nothing.
   def match_from_list(match_id)
-    [Date.today - 1, Date.today, Date.today + 1].each do |d|
+    [ Date.today - 1, Date.today, Date.today + 1 ].each do |d|
       list = matches_for_date(d)
       found = list.find { |m| m[:external_id].to_s == match_id.to_s }
       return build_detail_from_list(found) if found
@@ -179,7 +179,7 @@ class LiveScoresClient
     530    => { name: "Botola Pro (Morocco)",         logo: nil, country: "MAR" },
     516    => { name: "Ligue Pro (Algeria)",          logo: nil, country: "DZA" },
     8972   => { name: "USL Championship",            logo: nil, country: "USA" },
-    9305   => { name: "Primera División (Argentina)",logo: nil, country: "ARG" },
+    9305   => { name: "Primera División (Argentina)", logo: nil, country: "ARG" },
     144    => { name: "Liga Boliviana",               logo: nil, country: "BOL" },
     344    => { name: "U-21 Friendlies",              logo: nil, country: "INT" },
     918053 => { name: "Division 3 (Sweden)",          logo: nil, country: "SWE" },
@@ -189,7 +189,7 @@ class LiveScoresClient
     # Summer 2026 tournaments
     6      => { name: "Copa América 2026",            logo: nil, country: "INT" },
     940476 => { name: "FIFA Club World Cup 2025",     logo: nil, country: "INT" },
-    936234 => { name: "Copa América 2026",            logo: nil, country: "INT" },
+    936234 => { name: "Copa América 2026",            logo: nil, country: "INT" }
   }.freeze
 
   # League IDs that are explicitly excluded even if they pass other filters.
@@ -197,7 +197,7 @@ class LiveScoresClient
     926232,  # UEFA U-17 Championship
     344,     # U-21 Friendlies
     925953,  # Women's Friendlies
-    896469,  # Asian Qualifiers
+    896469  # Asian Qualifiers
   ]).freeze
 
   # Top domestic league IDs (FotMob IDs). Any league with country="INT" is
@@ -226,7 +226,7 @@ class LiveScoresClient
     138,  # Copa Sudamericana
     6,    # Copa América (recurring FotMob ID)
     940476, # FIFA Club World Cup 2025
-    936234, # Copa América 2026 (alternate FotMob ID)
+    936234 # Copa América 2026 (alternate FotMob ID)
   ]).freeze
 
   # Builds a leagueId → {name, logo, country} map from the raw match list
@@ -279,14 +279,14 @@ class LiveScoresClient
       home: {
         name:  m.dig("home", "name")  || m.dig("homeTeam", "name"),
         logo:  team_logo(m.dig("home", "id") || m.dig("homeTeam", "id"), m.dig("home", "logo") || m.dig("homeTeam", "logo")),
-        score: m.dig("home", "score") || m.dig("homeScore", "current") || m["homeGoals"],
+        score: m.dig("home", "score") || m.dig("homeScore", "current") || m["homeGoals"]
       },
       away: {
         name:      m.dig("away", "name")      || m.dig("awayTeam", "name"),
         logo:      team_logo(m.dig("away", "id") || m.dig("awayTeam", "id"), m.dig("away", "logo") || m.dig("awayTeam", "logo")),
         score:     m.dig("away", "score")     || m.dig("awayScore", "current") || m["awayGoals"],
-        red_cards: m.dig("away", "redCards"),
-      },
+        red_cards: m.dig("away", "redCards")
+      }
     }
   end
 
@@ -309,35 +309,35 @@ class LiveScoresClient
         "status" => {
           "short"   => status_short,
           "long"    => raw.dig("status", "description") || status_short,
-          "elapsed" => elapsed,
+          "elapsed" => elapsed
         },
-        "venue" => { "name" => raw.dig("venue", "name") || raw["venue"], "city" => nil },
+        "venue" => { "name" => raw.dig("venue", "name") || raw["venue"], "city" => nil }
       },
       "league" => {
         "id"      => raw["leagueId"] || raw.dig("league", "id"),
         "name"    => raw.dig("league", "name") || raw["leagueName"],
         "logo"    => raw.dig("league", "logo"),
         "country" => raw.dig("league", "country") || raw["country"],
-        "round"   => raw["round"] || raw["roundName"],
+        "round"   => raw["round"] || raw["roundName"]
       },
       "teams" => {
         "home" => {
           "id"     => raw.dig("home", "id") || raw.dig("homeTeam", "id"),
           "name"   => raw.dig("home", "name") || raw.dig("homeTeam", "name"),
           "logo"   => raw.dig("home", "logo") || raw.dig("homeTeam", "logo"),
-          "winner" => home_wins,
+          "winner" => home_wins
         },
         "away" => {
           "id"     => raw.dig("away", "id") || raw.dig("awayTeam", "id"),
           "name"   => raw.dig("away", "name") || raw.dig("awayTeam", "name"),
           "logo"   => raw.dig("away", "logo") || raw.dig("awayTeam", "logo"),
-          "winner" => away_wins,
-        },
+          "winner" => away_wins
+        }
       },
       "goals" => {
         "home" => home_score,
-        "away" => away_score,
-      },
+        "away" => away_score
+      }
     }
 
     events  = normalize_events(raw["events"] || raw["incidents"] || [])
@@ -360,7 +360,7 @@ class LiveScoresClient
         assist:   e.dig("assist", "name") || e["assistName"],
         type:     type,
         detail:   detail,
-        comments: e["comments"],
+        comments: e["comments"]
       }
     end
   end
@@ -372,7 +372,7 @@ class LiveScoresClient
       {
         team:  { name: team_data.dig("team", "name") || team_data["teamName"],
                  logo: team_data.dig("team", "logo") },
-        stats: stats_raw.map { |s| { type: s["type"] || s["name"], value: s["value"] } },
+        stats: stats_raw.map { |s| { type: s["type"] || s["name"], value: s["value"] } }
       }
     end
   end
@@ -390,7 +390,7 @@ class LiveScoresClient
         subs:      (t["substitutes"] || t["subs"] || []).map { |p|
           { name: p.dig("player", "name"), number: p.dig("player", "number"), pos: p.dig("player", "pos") }
         },
-        coach:     t.dig("coach", "name"),
+        coach:     t.dig("coach", "name")
       }
     end
   end
@@ -406,7 +406,7 @@ class LiveScoresClient
     11 => "G",                          # GK
     (30..59) => "D",                    # Defenders
     (60..99) => "M",                    # Midfielders
-    (100..149) => "F",                  # Forwards
+    (100..149) => "F"                  # Forwards
   }.freeze
 
   def fetch_raw_matches(date)
@@ -483,7 +483,7 @@ class LiveScoresClient
       formation: lu["formation"],
       start_xi:  starters,
       subs:      subs,
-      coach:     nil,
+      coach:     nil
     }
   end
 
@@ -498,7 +498,7 @@ class LiveScoresClient
         status:     m.dig("status", "finished") ? "finished" : "scheduled",
         home: { name: m.dig("home", "name"), score: parts[0]&.to_i },
         away: { name: m.dig("away", "name"), score: parts[1]&.to_i },
-        competition: { name: m.dig("league", "name") },
+        competition: { name: m.dig("league", "name") }
       }
     end
     { summary: summary, matches: matches }
@@ -514,12 +514,12 @@ class LiveScoresClient
     [
       {
         team: { name: home_name },
-        stats: stat_keys.map { |k| { type: k.to_s.humanize, value: home_stats[k] } },
+        stats: stat_keys.map { |k| { type: k.to_s.humanize, value: home_stats[k] } }
       },
       {
         team: { name: away_name },
-        stats: stat_keys.map { |k| { type: k.to_s.humanize, value: away_stats[k] } },
-      },
+        stats: stat_keys.map { |k| { type: k.to_s.humanize, value: away_stats[k] } }
+      }
     ]
   end
 
@@ -557,27 +557,27 @@ class LiveScoresClient
         "id"     => match_id,
         "date"   => detail["matchTimeUTCDate"] || status["utcTime"],
         "status" => { "short" => short, "long" => long_status, "elapsed" => elapsed },
-        "venue"  => { "name" => location["name"], "city" => location["city"] },
+        "venue"  => { "name" => location["name"], "city" => location["city"] }
       },
       "league" => {
         "id"      => detail["leagueId"],
         "name"    => detail["leagueName"],
         "logo"    => league_logo,
         "country" => detail["countryCode"],
-        "round"   => detail["leagueRoundName"],
+        "round"   => detail["leagueRoundName"]
       },
       "teams" => {
         "home" => { "id" => home_id, "name" => home_name, "logo" => home_logo, "winner" => home_wins },
-        "away" => { "id" => away_id, "name" => away_name, "logo" => away_logo, "winner" => away_wins },
+        "away" => { "id" => away_id, "name" => away_name, "logo" => away_logo, "winner" => away_wins }
       },
       "goals" => {
         "home" => home_score_obj["score"],
-        "away" => away_score_obj["score"],
-      },
+        "away" => away_score_obj["score"]
+      }
     }
 
     # Lineups from separate endpoints; fall back to embedded detail["lineups"]
-    lineups = [normalize_lineup_team(home_lu), normalize_lineup_team(away_lu)].compact
+    lineups = [ normalize_lineup_team(home_lu), normalize_lineup_team(away_lu) ].compact
     lineups = normalize_lineups(detail["lineups"] || []) if lineups.empty? && detail["lineups"].present?
 
     h2h = normalize_h2h(h2h_raw, home_id, away_id)
@@ -593,7 +593,7 @@ class LiveScoresClient
 
     # Events: FotMob may wrap in a Hash like {"ongoing":[...],"aggregated":[...]};
     # find the first Array value, or try incidents directly.
-    events_arr = [detail["events"], detail["incidents"]].find { |e| e.is_a?(Array) }
+    events_arr = [ detail["events"], detail["incidents"] ].find { |e| e.is_a?(Array) }
     if events_arr.nil?
       ev         = detail["events"] || detail["incidents"]
       events_arr = ev.is_a?(Hash) ? (ev.values.find { |v| v.is_a?(Array) } || []) : []
@@ -617,7 +617,7 @@ class LiveScoresClient
     status_short_to_long = {
       "NS" => "Not Started", "1H" => "First Half", "HT" => "Half Time",
       "2H" => "Second Half", "ET" => "Extra Time", "P"  => "Penalties",
-      "FT" => "Full Time", "AET" => "After Extra Time", "PEN" => "After Penalties",
+      "FT" => "Full Time", "AET" => "After Extra Time", "PEN" => "After Penalties"
     }
     short = m[:status_short] || (m[:status] == "finished" ? "FT" : m[:status] == "live" ? "1H" : "NS")
     elapsed = m[:minute].is_a?(Integer) ? m[:minute] : m[:minute].to_s.split(":").first.to_i.nonzero?
@@ -627,20 +627,20 @@ class LiveScoresClient
         "id"     => m[:external_id],
         "date"   => m[:kickoff_at],
         "status" => { "short" => short, "long" => status_short_to_long[short] || short, "elapsed" => elapsed },
-        "venue"  => { "name" => m[:venue], "city" => nil },
+        "venue"  => { "name" => m[:venue], "city" => nil }
       },
       "league" => {
         "id"      => m[:league_id],
         "name"    => m[:league_name],
         "logo"    => m[:league_logo],
         "country" => m[:league_country],
-        "round"   => nil,
+        "round"   => nil
       },
       "teams" => {
         "home" => { "id" => nil, "name" => m.dig(:home, :name), "logo" => m.dig(:home, :logo), "winner" => nil },
-        "away" => { "id" => nil, "name" => m.dig(:away, :name), "logo" => m.dig(:away, :logo), "winner" => nil },
+        "away" => { "id" => nil, "name" => m.dig(:away, :name), "logo" => m.dig(:away, :logo), "winner" => nil }
       },
-      "goals" => { "home" => m.dig(:home, :score), "away" => m.dig(:away, :score) },
+      "goals" => { "home" => m.dig(:home, :score), "away" => m.dig(:away, :score) }
     }
     { fixture: fixture, events: [], stats: [], lineups: [] }
   end
@@ -648,8 +648,9 @@ class LiveScoresClient
   def get(path, params = {})
     resp = @conn.get(path, params)
     JSON.parse(resp.body)
-  rescue Faraday::Error => e
-    Rails.logger.error("[LiveScoresClient] #{e.message}")
+  rescue Faraday::Error, JSON::ParserError => e
+    Rails.logger.error("[LiveScoresClient] #{path}: #{e.message}")
+    Sentry.capture_exception(e, extra: { path: path }) if defined?(Sentry) && Sentry.initialized?
     {}
   end
 end

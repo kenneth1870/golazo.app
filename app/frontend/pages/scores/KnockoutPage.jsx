@@ -12,6 +12,20 @@ const ROUNDS = [
 ]
 const THIRD_PLACE = "3rd Place"
 
+// Humanizes a knockout slot code into a short label shown until a real team is
+// resolved: "1A" → "Winner A", "2C" → "Runner-up C", "T3" → "3rd #3",
+// "W29"/"L30" → "Winner"/"Loser".
+function slotLabel(slot) {
+  if (!slot) return "TBD"
+  const wr = slot.match(/^([12])([A-L])$/)
+  if (wr) return `${wr[1] === "1" ? "Winner" : "Runner-up"} ${wr[2]}`
+  const t = slot.match(/^T(\d+)$/)
+  if (t) return `3rd #${t[1]}`
+  if (/^W\d+$/.test(slot)) return "Winner"
+  if (/^L\d+$/.test(slot)) return "Loser"
+  return "TBD"
+}
+
 // Official WC 2026 R32 matchups (group winner vs runner-up)
 const R32_SLOTS = [
   ["A1", "B2"], ["C1", "D2"], ["E1", "F2"], ["G1", "H2"],
@@ -44,8 +58,8 @@ function MatchSlot({ match, onClick }) {
           <img src={match.home_team.flag_url} alt="" className="flag-xs"
             onError={e => (e.target.style.display = "none")} />
         )}
-        <span className={`bracket-slot__name${isFinished && match.home_score > match.away_score ? " bracket-slot__name--winner" : ""}`}>
-          {match.home_team?.name ?? "TBD"}
+        <span className={`bracket-slot__name${isFinished && match.home_score > match.away_score ? " bracket-slot__name--winner" : ""}${match.home_team?.name ? "" : " bracket-slot__name--tbd"}`}>
+          {match.home_team?.name ?? slotLabel(match.home_slot)}
         </span>
         {hasScore && (
           <span className={`bracket-slot__score${isLive ? " bracket-slot__score--live" : ""}`}>
@@ -59,8 +73,8 @@ function MatchSlot({ match, onClick }) {
           <img src={match.away_team.flag_url} alt="" className="flag-xs"
             onError={e => (e.target.style.display = "none")} />
         )}
-        <span className={`bracket-slot__name${isFinished && match.away_score > match.home_score ? " bracket-slot__name--winner" : ""}`}>
-          {match.away_team?.name ?? "TBD"}
+        <span className={`bracket-slot__name${isFinished && match.away_score > match.home_score ? " bracket-slot__name--winner" : ""}${match.away_team?.name ? "" : " bracket-slot__name--tbd"}`}>
+          {match.away_team?.name ?? slotLabel(match.away_slot)}
         </span>
         {hasScore && (
           <span className={`bracket-slot__score${isLive ? " bracket-slot__score--live" : ""}`}>
@@ -180,11 +194,17 @@ export default function KnockoutPage() {
   const knockout   = matches.filter(m => !m.group_stage)
   const hasData    = knockout.length > 0
 
+  const byPos = (a, b) => (a.bracket_pos ?? 0) - (b.bracket_pos ?? 0)
+  // Exact round match — "Final" must not also capture "Quarter Final"/"Semi Final".
   const byRound = ROUNDS.reduce((acc, r) => {
-    acc[r.key] = knockout.filter(m => m.round?.toLowerCase().includes(r.key.toLowerCase()))
+    acc[r.key] = knockout
+      .filter(m => m.round?.toLowerCase() === r.key.toLowerCase())
+      .sort(byPos)
     return acc
   }, {})
-  const thirdPlace = knockout.filter(m => m.round?.toLowerCase().includes("3rd") || m.round?.toLowerCase().includes("third"))
+  const thirdPlace = knockout
+    .filter(m => m.round?.toLowerCase().includes("3rd") || m.round?.toLowerCase().includes("third"))
+    .sort(byPos)
 
   if (loading) {
     return (

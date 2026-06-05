@@ -1,7 +1,8 @@
 class WorldCupSync
   # WC 2026 league/season IDs on free-api-live-football-data.p.rapidapi.com
-  # Override via ENV if the API uses different IDs.
-  WC_LEAGUE_ID = (ENV["RAPIDAPI_WC_LEAGUE_ID"] || 77).to_i
+  # (FotMob-based). FotMob's FIFA World Cup league id is 4 — see
+  # FEATURED_DOMESTIC_LEAGUES in LiveScoresClient. Override via ENV if needed.
+  WC_LEAGUE_ID = (ENV["RAPIDAPI_WC_LEAGUE_ID"] || 4).to_i
   WC_SEASON_ID = (ENV["RAPIDAPI_WC_SEASON_ID"] || 2026).to_i
 
   # football-data.org uses "URY" for Uruguay; we store "URU"
@@ -11,7 +12,7 @@ class WorldCupSync
     1  => "scheduled",
     2  => "live", 3 => "live", 4 => "live", 5 => "live",
     6  => "finished", 7 => "finished", 8 => "finished",
-    11 => "live", 12 => "live",
+    11 => "live", 12 => "live"
   }.freeze
 
   def initialize(competition_code: "WC")
@@ -138,76 +139,64 @@ class WorldCupSync
     raise
   end
 
-  # Recalculate WC group standings purely from finished matches in the DB.
-  # Called after each match result is recorded, providing an always-accurate
-  # fallback independent of the external standings API.
+  # Recalculate WC group standings purely from finished matches in the DB,
+  # applying FIFA tiebreakers (see WorldCupStandings). Always-accurate fallback
+  # independent of the external standings API.
   def recalculate_standings_from_results(competition = nil)
     competition ||= Competition.find_by!(code: @code)
+    calc = WorldCupStandings.new(competition)
 
-    finished = Match.where(competition: competition, status: "finished")
-                    .where.not(home_score: nil)
-                    .includes(:home_team, :away_team)
-
-    # Accumulate per-team stats keyed by team id
-    stats = Hash.new do |h, k|
-      h[k] = { team: nil, played: 0, won: 0, drawn: 0, lost: 0,
-                goals_for: 0, goals_against: 0, points: 0 }
-    end
-
-    finished.each do |m|
-      hs = m.home_score
-      as = m.away_score
-      [
-        [m.home_team, hs, as],
-        [m.away_team, as, hs],
-      ].each do |team, gf, ga|
-        s = stats[team.id]
-        s[:team]           = team
-        s[:played]        += 1
-        s[:goals_for]     += gf
-        s[:goals_against] += ga
-        if gf > ga
-          s[:won]    += 1
-          s[:points] += 3
-        elsif gf == ga
-          s[:drawn]  += 1
-          s[:points] += 1
-        else
-          s[:lost] += 1
-        end
-      end
-    end
-
-    # Group teams by their group letter, rank by points → GD → GF
-    grouped = Team.where.not(group: nil).group_by(&:group)
-    grouped.each do |group_letter, teams|
-      ranked = teams.sort_by do |t|
-        s = stats[t.id]
-        gd = s[:goals_for] - s[:goals_against]
-        [-s[:points], -gd, -s[:goals_for], t.name]
-      end
-
-      ranked.each_with_index do |team, idx|
-        s = stats[team.id]
-        gd = s[:goals_for] - s[:goals_against]
-        Standing.find_or_initialize_by(team: team, competition: competition).tap do |st|
+    calc.groups.each do |group_letter, ranked|
+      ranked.each_with_index do |s, idx|
+        Standing.find_or_initialize_by(team: s.team, competition: competition).tap do |st|
           st.group_name    = group_letter
           st.rank          = idx + 1
-          st.played        = s[:played]
-          st.won           = s[:won]
-          st.drawn         = s[:drawn]
-          st.lost          = s[:lost]
-          st.goals_for     = s[:goals_for]
-          st.goals_against = s[:goals_against]
-          st.points        = s[:points]
+          st.played        = s.played
+          st.won           = s.won
+          st.drawn         = s.drawn
+          st.lost          = s.lost
+          st.goals_for     = s.goals_for
+          st.goals_against = s.goals_against
+          st.points        = s.points
           st.save!
         end
       end
     end
 
-    log("Standings recalculated from #{finished.count} finished matches")
+    log("Standings recalculated for #{calc.groups.size} groups")
   rescue => e
     log("recalculate_standings_from_results error: #{e.message}")
+  end
+
+  # Canonical WC 2026 group fixtures, kept as data (not baked into a migration)
+  # so the schedule can be re-imported idempotently when it changes.
+  def self.group_fixtures
+    YAML.load_file(Rails.root.join("db/world_cup_group_fixtures.yml"))
+  end
+
+  # Idempotently upserts the group-stage schedule. Preserves any status/scores
+  # already recorded for a fixture. Returns the number of fixtures imported.
+  def import_group_fixtures(fixtures = self.class.group_fixtures)
+    competition = Competition.find_by!(code: @code)
+    imported = 0
+
+    fixtures.each do |f|
+      home = Team.find_by(code: f["home"])
+      away = Team.find_by(code: f["away"])
+      next unless home && away
+
+      match = Match.find_or_initialize_by(home_team: home, away_team: away, competition: competition)
+      match.kickoff_at  = f["kickoff"]
+      match.venue       = f["venue"]
+      match.group_stage = f["group"]
+      match.round       = f["round"]
+      match.status    ||= "scheduled"
+      match.save!
+      imported += 1
+    end
+
+    log("Imported #{imported}/#{fixtures.size} group fixtures")
+    imported
   end
 
   private
@@ -331,32 +320,23 @@ class WorldCupSync
     "ksa"                          => "saudi arabia",
     # Algeria
     "algeria"                      => "algeria",
-    "algérie"                      => "algeria",
+    "algérie"                      => "algeria"
   }.freeze
 
   def normalize_team_name(name)
     TEAM_ALIASES[name.downcase] || name.downcase
   end
 
+  # normalize_team_name lowercases and applies TEAM_ALIASES; when a name has no
+  # alias it just lowercases. A single normalized query therefore subsumes the
+  # old "raw downcased" fallback (which could only ever match alias-less names
+  # the normalized query already covered).
   def find_match_by_teams(home_name, away_name)
-    home_normalized = normalize_team_name(home_name)
-    away_normalized = normalize_team_name(away_name)
-
-    # Exact match first
-    match = Match.joins(:home_team, :away_team)
-                 .where(status: %w[scheduled live])
-                 .find_by(
-                   "LOWER(home_teams_matches.name) = ? AND LOWER(away_teams_matches.name) = ?",
-                   home_normalized, away_normalized
-                 )
-    return match if match
-
-    # Alias-normalized match
     Match.joins(:home_team, :away_team)
          .where(status: %w[scheduled live])
          .find_by(
            "LOWER(home_teams_matches.name) = ? AND LOWER(away_teams_matches.name) = ?",
-           home_name.downcase, away_name.downcase
+           normalize_team_name(home_name), normalize_team_name(away_name)
          )
   rescue => e
     log("Match lookup error: #{e.message}")
@@ -369,7 +349,7 @@ class WorldCupSync
       home_score: match.home_score,
       away_score: match.away_score,
       status:     match.status,
-      minute:     minute,
+      minute:     minute
     })
   end
 

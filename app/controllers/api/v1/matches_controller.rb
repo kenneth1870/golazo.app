@@ -1,6 +1,8 @@
 module Api
   module V1
     class MatchesController < BaseController
+      before_action :require_admin!, only: :update
+
       def index
         scope = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition)
 
@@ -11,11 +13,11 @@ module Api
         scope = scope.by_group(params[:group]) if params[:group].present?
 
         scope = case params[:filter]
-                when "live"     then scope.live
-                when "today"    then scope.today
-                when "upcoming" then scope.upcoming.limit(30)
-                else scope.order(kickoff_at: :asc).limit(200)
-                end
+        when "live"     then scope.live
+        when "today"    then scope.today
+        when "upcoming" then scope.upcoming.limit(30)
+        else scope.order(kickoff_at: :asc).limit(200)
+        end
 
         render json: scope
       end

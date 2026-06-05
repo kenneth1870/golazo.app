@@ -15,11 +15,6 @@ namespace :golazo do
     WorldCupSync.new.sync_live
   end
 
-  desc "Sync live scores via RapidAPI (all 125+ leagues)"
-  task sync_live_scores: :environment do
-    LiveScoresSync.new.sync
-  end
-
   desc "Sync standings for a competition (COMPETITION=WC)"
   task sync_standings: :environment do
     code = ENV.fetch("COMPETITION", "WC")
@@ -30,4 +25,18 @@ namespace :golazo do
   task sync_football_data: :environment do
     WorldCupSync.new.sync_from_football_data
   end
+
+  desc "Import/refresh the WC group-stage schedule from db/world_cup_group_fixtures.yml"
+  task load_group_fixtures: :environment do
+    WorldCupSync.new(competition_code: "WC").import_group_fixtures
+  end
+
+  desc "Create the knockout bracket fixtures and (re)populate them from results"
+  task load_knockout: :environment do
+    WorldCupKnockout.new.ensure_fixtures!
+    WorldCupKnockout.rebuild!
+  end
+
+  desc "Load the full WC schedule (group fixtures + knockout bracket)"
+  task load_schedule: %i[load_group_fixtures load_knockout]
 end

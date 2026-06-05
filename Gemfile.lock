@@ -240,6 +240,8 @@ GEM
     raabro (1.4.0)
     racc (1.8.1)
     rack (3.2.6)
+    rack-attack (6.8.0)
+      rack (>= 1.0, < 4)
     rack-cors (3.0.0)
       logger
       rack (>= 3.0.14)
@@ -332,6 +334,22 @@ GEM
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 4.0)
       websocket (~> 1.0)
+    sentry-rails (6.6.0)
+      railties (>= 5.2.0)
+      sentry-ruby (~> 6.6.0)
+    sentry-ruby (6.6.0)
+      bigdecimal
+      concurrent-ruby (~> 1.0, >= 1.0.2)
+      logger
+    solid_cable (3.0.12)
+      actioncable (>= 7.2)
+      activejob (>= 7.2)
+      activerecord (>= 7.2)
+      railties (>= 7.2)
+    solid_cache (1.0.10)
+      activejob (>= 7.2)
+      activerecord (>= 7.2)
+      railties (>= 7.2)
     solid_queue (1.4.0)
       activejob (>= 7.1)
       activerecord (>= 7.1)
@@ -413,10 +431,15 @@ DEPENDENCIES
   ostruct
   pg (~> 1.1)
   puma (>= 5.0)
+  rack-attack
   rack-cors
   rails (~> 8.1)
   rubocop-rails-omakase
   selenium-webdriver
+  sentry-rails
+  sentry-ruby
+  solid_cable
+  solid_cache
   solid_queue
   thruster
   tzinfo-data

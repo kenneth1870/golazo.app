@@ -14,10 +14,19 @@ gem "pg", "~> 1.1"
 gem "puma", ">= 5.0"
 # Background jobs + recurring scheduler
 gem "solid_queue"
+# Database-backed cache store (shared across web + worker processes, durable)
+gem "solid_cache"
+# Database-backed Action Cable adapter (cross-process pub/sub for live updates)
+gem "solid_cable"
 # Vite integration for React frontend
 gem "vite_rails"
 # CORS for API requests
 gem "rack-cors"
+# Rate limiting / throttling for the public API
+gem "rack-attack"
+# Error monitoring (no-op unless SENTRY_DSN is set)
+gem "sentry-ruby"
+gem "sentry-rails"
 # HTTP client for external APIs
 gem "faraday"
 gem "faraday-retry"

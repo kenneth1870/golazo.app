@@ -3,11 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Golazo — Mundial 2026</title>
-  <meta name="description" content="Live World Cup 2026 scores, fixtures, and stats">
+  <% meta = @meta || PageMeta.for(request.path) %>
+  <% image_url = request.base_url + meta.image %>
+  <title><%= meta.title %></title>
+  <meta name="description" content="<%= meta.description %>">
+  <link rel="canonical" href="<%= request.original_url %>">
   <meta name="theme-color" content="#ee1e46">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/images/icon-192.png">
+
+  <%# Open Graph / Twitter — section-aware so shared links unfurl meaningfully %>
+  <meta property="og:site_name" content="Golazo">
+  <meta property="og:title" content="<%= meta.title %>">
+  <meta property="og:description" content="<%= meta.description %>">
+  <meta property="og:type" content="<%= meta.type %>">
+  <meta property="og:url" content="<%= request.original_url %>">
+  <meta property="og:image" content="<%= image_url %>">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= meta.title %>">
+  <meta name="twitter:description" content="<%= meta.description %>">
+  <meta name="twitter:image" content="<%= image_url %>">
+
   <%= csrf_meta_tags %>
 
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">

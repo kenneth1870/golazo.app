@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_05_073247) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_05_080200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -56,19 +56,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_073247) do
 
   create_table "matches", force: :cascade do |t|
     t.integer "away_score"
-    t.bigint "away_team_id", null: false
+    t.string "away_slot"
+    t.bigint "away_team_id"
+    t.integer "bracket_pos"
     t.bigint "competition_id"
     t.datetime "created_at", null: false
     t.integer "external_id"
     t.string "group_stage"
     t.integer "home_score"
-    t.bigint "home_team_id", null: false
+    t.string "home_slot"
+    t.bigint "home_team_id"
     t.datetime "kickoff_at"
     t.string "round"
     t.string "status"
     t.datetime "updated_at", null: false
     t.string "venue"
     t.index ["away_team_id"], name: "index_matches_on_away_team_id"
+    t.index ["bracket_pos"], name: "index_matches_on_bracket_pos"
     t.index ["competition_id"], name: "index_matches_on_competition_id"
     t.index ["external_id"], name: "index_matches_on_external_id", unique: true
     t.index ["home_team_id"], name: "index_matches_on_home_team_id"
@@ -85,6 +89,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_073247) do
     t.datetime "updated_at", null: false
     t.text "voter_tokens", default: "[]", null: false
     t.index ["match_external_id"], name: "index_predictions_on_match_external_id", unique: true
+  end
+
+  create_table "solid_cable_messages", force: :cascade do |t|
+    t.binary "channel", null: false
+    t.bigint "channel_hash", null: false
+    t.datetime "created_at", null: false
+    t.binary "payload", null: false
+    t.index ["channel"], name: "index_solid_cable_messages_on_channel"
+    t.index ["channel_hash"], name: "index_solid_cable_messages_on_channel_hash"
+    t.index ["created_at"], name: "index_solid_cable_messages_on_created_at"
+  end
+
+  create_table "solid_cache_entries", force: :cascade do |t|
+    t.integer "byte_size", null: false
+    t.datetime "created_at", null: false
+    t.binary "key", null: false
+    t.bigint "key_hash", null: false
+    t.binary "value", null: false
+    t.index ["byte_size"], name: "index_solid_cache_entries_on_byte_size"
+    t.index ["key_hash", "byte_size"], name: "index_solid_cache_entries_on_key_hash_and_byte_size"
+    t.index ["key_hash"], name: "index_solid_cache_entries_on_key_hash", unique: true
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|

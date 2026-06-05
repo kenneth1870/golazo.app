@@ -287,6 +287,12 @@ WC_FIXTURES.each do |f|
   )
 end
 
-puts "#{Match.where(competition: wc_comp).count} WC matches seeded"
+# Knockout bracket — fixtures start as TBD slots and auto-populate from group
+# results / earlier-round winners (see WorldCupKnockout).
+WorldCupKnockout.new(competition: wc_comp).ensure_fixtures!
+WorldCupKnockout.rebuild!
+
+puts "#{Match.where(competition: wc_comp).where.not(group_stage: nil).count} WC group matches seeded"
+puts "#{Match.where(competition: wc_comp, group_stage: nil).count} WC knockout fixtures seeded"
 puts "#{Match.count} total matches"
 puts "Done! ✓"

@@ -1,15 +1,1 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
-one:
-  name: MyString
-  code: MyString
-  flag_url: MyString
-  group: MyString
-  confederation: MyString
-
-two:
-  name: MyString
-  code: MyString
-  flag_url: MyString
-  group: MyString
-  confederation: MyString
+# Intentionally empty — service/model tests build their own data inline.

@@ -1,6 +1,7 @@
 class Match < ApplicationRecord
-  belongs_to :home_team, class_name: "Team"
-  belongs_to :away_team, class_name: "Team"
+  # Optional: knockout fixtures exist before their teams are known (TBD slots).
+  belongs_to :home_team, class_name: "Team", optional: true
+  belongs_to :away_team, class_name: "Team", optional: true
   belongs_to :competition, optional: true
   has_many :goals, dependent: :destroy
   has_many :match_stats, dependent: :destroy
@@ -13,6 +14,11 @@ class Match < ApplicationRecord
   scope :upcoming, -> { where(status: "scheduled").order(:kickoff_at) }
   scope :by_competition, ->(code) { joins(:competition).where(competitions: { code: code }) }
   scope :by_group, ->(g) { where(group_stage: g) }
+  scope :group_stage, -> { where.not(group_stage: nil) }
+  scope :knockout,    -> { where(group_stage: nil) }
+
+  def knockout? = group_stage.blank?
+  def teams_decided? = home_team_id.present? && away_team_id.present?
 
   def as_json(options = {})
     super(options.merge(
@@ -23,6 +29,10 @@ class Match < ApplicationRecord
         match_stats: {},
         competition: { only: %i[id name code logo country] }
       }
-    ))
+    )).merge(
+      "home_slot" => home_slot,
+      "away_slot" => away_slot,
+      "bracket_pos" => bracket_pos
+    )
   end
 end
