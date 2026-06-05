@@ -39,12 +39,17 @@ class WorldCupSync
     log("Updated #{updated} matches")
   end
 
-  # Sync standings for the WC competition using the RapidAPI standings endpoint
+  # Sync standings for the WC competition.
+  # Tries the external API first; falls back to computing from DB results.
   def sync_standings(competition = nil)
     competition ||= Competition.find_by!(code: @code)
 
     groups = @api.league_standings(WC_LEAGUE_ID, WC_SEASON_ID)
-    return log("No standings data returned") if groups.empty?
+    if groups.empty?
+      log("No standings from API — recalculating from DB results")
+      recalculate_standings_from_results(competition)
+      return
+    end
 
     log("Standings: #{groups.length} entries")
     groups.each { |entry| upsert_standing(entry, competition) }
@@ -62,6 +67,78 @@ class WorldCupSync
     sync_standings(competition)
     sync_today
     log("Done")
+  end
+
+  # Recalculate WC group standings purely from finished matches in the DB.
+  # Called after each match result is recorded, providing an always-accurate
+  # fallback independent of the external standings API.
+  def recalculate_standings_from_results(competition = nil)
+    competition ||= Competition.find_by!(code: @code)
+
+    finished = Match.where(competition: competition, status: "finished")
+                    .where.not(home_score: nil)
+                    .includes(:home_team, :away_team)
+
+    # Accumulate per-team stats keyed by team id
+    stats = Hash.new do |h, k|
+      h[k] = { team: nil, played: 0, won: 0, drawn: 0, lost: 0,
+                goals_for: 0, goals_against: 0, points: 0 }
+    end
+
+    finished.each do |m|
+      hs = m.home_score
+      as = m.away_score
+      [
+        [m.home_team, hs, as],
+        [m.away_team, as, hs],
+      ].each do |team, gf, ga|
+        s = stats[team.id]
+        s[:team]           = team
+        s[:played]        += 1
+        s[:goals_for]     += gf
+        s[:goals_against] += ga
+        if gf > ga
+          s[:won]    += 1
+          s[:points] += 3
+        elsif gf == ga
+          s[:drawn]  += 1
+          s[:points] += 1
+        else
+          s[:lost] += 1
+        end
+      end
+    end
+
+    # Group teams by their group letter, rank by points → GD → GF
+    grouped = Team.where.not(group: nil).group_by(&:group)
+    grouped.each do |group_letter, teams|
+      ranked = teams.sort_by do |t|
+        s = stats[t.id]
+        gd = s[:goals_for] - s[:goals_against]
+        [-s[:points], -gd, -s[:goals_for], t.name]
+      end
+
+      ranked.each_with_index do |team, idx|
+        s = stats[team.id]
+        gd = s[:goals_for] - s[:goals_against]
+        Standing.find_or_initialize_by(team: team, competition: competition).tap do |st|
+          st.group_name    = group_letter
+          st.rank          = idx + 1
+          st.played        = s[:played]
+          st.won           = s[:won]
+          st.drawn         = s[:drawn]
+          st.lost          = s[:lost]
+          st.goals_for     = s[:goals_for]
+          st.goals_against = s[:goals_against]
+          st.points        = s[:points]
+          st.save!
+        end
+      end
+    end
+
+    log("Standings recalculated from #{finished.count} finished matches")
+  rescue => e
+    log("recalculate_standings_from_results error: #{e.message}")
   end
 
   private
@@ -107,6 +184,12 @@ class WorldCupSync
 
     match.update!(attrs)
     broadcast_score(match, m[:minute]) if status == "live"
+
+    # Recalculate group standings after a WC match finishes
+    if status == "finished" && match.competition&.code == "WC"
+      RecalculateStandingsJob.perform_later
+    end
+
     true
   rescue => e
     log("Today sync error for #{home_name} v #{away_name}: #{e.message}")
@@ -140,7 +223,47 @@ class WorldCupSync
     log("Standing upsert error for #{team_name}: #{e.message}")
   end
 
+  # FotMob / RapidAPI uses different spellings for some WC nations.
+  # Map API name → DB name so sync survives naming mismatches.
+  TEAM_ALIASES = {
+    "korea republic"          => "south korea",
+    "republic of korea"       => "south korea",
+    "côte d'ivoire"           => "ivory coast",
+    "cote d'ivoire"           => "ivory coast",
+    "usa"                     => "united states",
+    "united states of america"=> "united states",
+    "bosnia and herzegovina"  => "bosnia & herz.",
+    "bosnia & herzegovina"    => "bosnia & herz.",
+    "dr congo"                => "dr congo",
+    "democratic republic of congo" => "dr congo",
+    "congo dr"                => "dr congo",
+    "new zealand"             => "new zealand",
+    "czechia"                 => "czechia",
+    "czech republic"          => "czechia",
+    "cape verde"              => "cape verde",
+    "cabo verde"              => "cape verde",
+    "saudi arabia"            => "saudi arabia",
+    "ksa"                     => "saudi arabia",
+  }.freeze
+
+  def normalize_team_name(name)
+    TEAM_ALIASES[name.downcase] || name.downcase
+  end
+
   def find_match_by_teams(home_name, away_name)
+    home_normalized = normalize_team_name(home_name)
+    away_normalized = normalize_team_name(away_name)
+
+    # Exact match first
+    match = Match.joins(:home_team, :away_team)
+                 .where(status: %w[scheduled live])
+                 .find_by(
+                   "LOWER(home_teams_matches.name) = ? AND LOWER(away_teams_matches.name) = ?",
+                   home_normalized, away_normalized
+                 )
+    return match if match
+
+    # Alias-normalized match
     Match.joins(:home_team, :away_team)
          .where(status: %w[scheduled live])
          .find_by(
