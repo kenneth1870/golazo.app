@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
 import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
+import ErrorBoundary from "./components/ErrorBoundary"
 
 import HomePage        from "./pages/HomePage"
 import ScoresPage      from "./pages/ScoresPage"
@@ -32,6 +33,7 @@ export default function App() {
       <Navbar />
 
       <main key={location.pathname} className="main-content page-transition">
+        <ErrorBoundary>
         <Routes>
           <Route path="/" element={<HomePage />} />
 
@@ -68,6 +70,7 @@ export default function App() {
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </ErrorBoundary>
       </main>
 
       <Footer />

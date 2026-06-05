@@ -11,8 +11,6 @@ module Api
         client = LiveScoresClient.new
         live = client.live_matches
 
-        # Group by league
-        grouped = live.group_by { |m| m["leagueId"] }
         render json: {
           count: live.length,
           matches: live

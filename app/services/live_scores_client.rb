@@ -100,7 +100,12 @@ class LiveScoresClient
         location: Thread.new { get("football-get-match-location",  eventid: match_id) },
         stats:    Thread.new { get("football-get-match-all-stats", eventid: match_id) },
       }
-      threads.each { |k, t| results[k] = t.value rescue {} }
+      threads.each do |k, t|
+        results[k] = t.join(8)&.value || {}
+      rescue => e
+        Rails.logger.warn("[LiveScoresClient] thread #{k} error: #{e.message}")
+        results[k] = {}
+      end
 
       detail   = results[:detail].dig("response", "detail") || {}
       score    = results[:score].dig("response", "scores") || []

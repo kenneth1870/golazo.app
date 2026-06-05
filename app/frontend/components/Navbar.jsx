@@ -34,7 +34,7 @@ function MundialMegaMenu({ t }) {
         </NavLink>
         <div className="mega-menu__divider" />
         <NavLink to="/scores/groups"    className={({ isActive }) => `mega-menu__link${isActive ? " active" : ""}`}>
-          <span className="mega-menu__link-icon">📊</span> Group Stage
+          <span className="mega-menu__link-icon">📊</span> {t("nav.groupStage")}
         </NavLink>
         <NavLink to="/scores/knockout"  className={({ isActive }) => `mega-menu__link${isActive ? " active" : ""}`}>
           <span className="mega-menu__link-icon">🏆</span> {t("nav.knockout")}

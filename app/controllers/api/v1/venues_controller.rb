@@ -12,7 +12,7 @@ module Api
         { name: "Rose Bowl",              city: "Pasadena, CA",        country: "USA", capacity: 88_565, group: "Group stage" },
         { name: "Lincoln Financial Field",city: "Philadelphia, PA",    country: "USA", capacity: 69_796, group: "Group stage" },
         { name: "Empower Field",          city: "Denver, CO",          country: "USA", capacity: 76_125, group: "Group stage" },
-        { name: "Seattle's Best",         city: "Seattle, WA",         country: "USA", capacity: 72_000, group: "Group stage" },
+        { name: "Lumen Field",             city: "Seattle, WA",         country: "USA", capacity: 72_000, group: "Group stage" },
         { name: "BC Place",               city: "Vancouver, BC",       country: "Canada", capacity: 54_500, group: "Group stage" },
         { name: "BMO Field",              city: "Toronto, ON",         country: "Canada", capacity: 45_736, group: "Group stage" },
         { name: "Estadio Akron",          city: "Guadalajara",         country: "Mexico", capacity: 49_850, group: "Group stage" },

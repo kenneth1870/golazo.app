@@ -14,7 +14,7 @@ module Api
                 when "live"     then scope.live
                 when "today"    then scope.today
                 when "upcoming" then scope.upcoming.limit(30)
-                else scope.order(kickoff_at: :asc)
+                else scope.order(kickoff_at: :asc).limit(200)
                 end
 
         render json: scope

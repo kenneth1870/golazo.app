@@ -26,7 +26,7 @@ module Api
         # Chinese
         "CN" => "zh", "TW" => "zh", "HK" => "zh",
         # Dutch
-        "NL" => "nl", "NL" => "nl",
+        "NL" => "nl",
         # Italian
         "IT" => "it",
         # Default → English

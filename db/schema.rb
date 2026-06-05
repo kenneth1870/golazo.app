@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_05_054716) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_05_073247) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -72,6 +72,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_054716) do
     t.index ["competition_id"], name: "index_matches_on_competition_id"
     t.index ["external_id"], name: "index_matches_on_external_id", unique: true
     t.index ["home_team_id"], name: "index_matches_on_home_team_id"
+    t.index ["kickoff_at"], name: "index_matches_on_kickoff_at"
+    t.index ["status"], name: "index_matches_on_status"
   end
 
   create_table "predictions", force: :cascade do |t|

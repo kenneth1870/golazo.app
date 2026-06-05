@@ -2,7 +2,7 @@ module Api
   module V1
     class FixturesController < BaseController
       def index
-        date = parse_date(params[:date]) || Date.tomorrow
+        date = parse_date(params[:date]) || Date.today
         matches = Match
           .where(kickoff_at: date.all_day)
           .includes(:home_team, :away_team, :competition)
