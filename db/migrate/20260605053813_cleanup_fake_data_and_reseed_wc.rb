@@ -190,6 +190,8 @@ class CleanupFakeDataAndReseedWc < ActiveRecord::Migration[8.1]
     SQL
 
     # 3. Remove orphan placeholder teams (not WC, not a known club)
+    # Must clear all FK references (matches already cleared above; standings next)
+    execute("DELETE FROM standings WHERE team_id IN (SELECT id FROM teams WHERE code NOT IN (#{keep}))")
     execute("UPDATE teams SET \"group\" = NULL WHERE code NOT IN (#{keep})")
     execute("DELETE FROM teams WHERE code NOT IN (#{keep})")
 
