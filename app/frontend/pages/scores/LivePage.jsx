@@ -20,6 +20,9 @@ function LiveMatchRow({ match, onMatchClick }) {
               onError={e => (e.target.style.display = "none")} />
           )}
           <span className="team-name">{match.home?.name}</span>
+          {match.home?.red_cards > 0 && (
+            <span className="red-card-badge">🟥{match.home.red_cards > 1 ? `×${match.home.red_cards}` : ""}</span>
+          )}
         </div>
         <div className="match-row__score">
           {hasScore
@@ -28,13 +31,13 @@ function LiveMatchRow({ match, onMatchClick }) {
           }
         </div>
         <div className="match-row__team match-row__team--away">
+          {match.away?.red_cards > 0 && (
+            <span className="red-card-badge">🟥{match.away.red_cards > 1 ? `×${match.away.red_cards}` : ""}</span>
+          )}
           <span className="team-name">{match.away?.name}</span>
           {match.away?.logo && (
             <img src={match.away.logo} alt="" className="flag-xs"
               onError={e => (e.target.style.display = "none")} />
-          )}
-          {match.away?.red_cards > 0 && (
-            <span className="red-card-badge" style={{ marginLeft: 4 }}>🟥×{match.away.red_cards}</span>
           )}
         </div>
       </div>

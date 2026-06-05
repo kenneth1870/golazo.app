@@ -638,17 +638,27 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t }) {
 }
 
 // ─── Goal flash toast ──────────────────────────────────
-function GoalToast({ text, visible }) {
+function GoalToast({ text, visible, onDismiss }) {
   if (!visible) return null
   return (
-    <div style={{
-      position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
-      background: "#ee1e46", color: "#fff", fontWeight: 800, fontSize: "1rem",
-      padding: "12px 28px", borderRadius: 40, zIndex: 9999,
-      boxShadow: "0 8px 32px rgba(238,30,70,.5)",
-      animation: "pageIn .25s ease",
-      whiteSpace: "nowrap",
-    }}>{text}</div>
+    <div
+      onClick={onDismiss}
+      style={{
+        position: "fixed", bottom: "calc(72px + env(safe-area-inset-bottom))",
+        left: "50%", transform: "translateX(-50%)",
+        background: "#ee1e46", color: "#fff", fontWeight: 800, fontSize: "0.92rem",
+        padding: "11px 22px 11px 18px", borderRadius: 40, zIndex: 9999,
+        boxShadow: "0 8px 32px rgba(238,30,70,.55)",
+        animation: "pageIn .25s ease",
+        whiteSpace: "nowrap", cursor: "pointer",
+        display: "flex", alignItems: "center", gap: 8,
+        maxWidth: "calc(100vw - 32px)",
+      }}
+    >
+      <span style={{ fontSize: "1.1rem" }}>⚽</span>
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{text}</span>
+      <span style={{ opacity: .6, fontSize: ".75rem", marginLeft: 4 }}>✕</span>
+    </div>
   )
 }
 
@@ -882,7 +892,7 @@ export default function MatchShowPage() {
 
   return (
     <div>
-      <GoalToast text={toast} visible={!!toast} />
+      <GoalToast text={toast} visible={!!toast} onDismiss={() => setToast(null)} />
 
       {/* Back bar — visible on mobile above scoreboard */}
       <div className="match-back-bar">

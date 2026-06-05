@@ -52,6 +52,7 @@ export default function Footer() {
     <footer className="footer-section">
       <div className="container">
 
+        {/* Full grid — hidden on mobile, shown on desktop */}
         <div className="footer-grid">
 
           {/* ── Brand ── */}
@@ -87,9 +88,7 @@ export default function Footer() {
             <h4 className="footer-col__title">{t("nav.scores")}</h4>
             <ul className="footer-links">
               <li><Link to="/scores/today">{t("time.today")}</Link></li>
-              <li>
-                <Link to="/scores/live">{t("nav.live")}</Link>
-              </li>
+              <li><Link to="/scores/live">{t("nav.live")}</Link></li>
               <li><Link to="/scores/results">{t("nav.results")}</Link></li>
               <li><Link to="/scores/fixtures">{t("nav.fixtures")}</Link></li>
               <li><Link to="/scores/groups">{t("nav.groupStage")}</Link></li>
@@ -129,7 +128,7 @@ export default function Footer() {
 
         </div>
 
-        {/* ── Bottom bar ── */}
+        {/* ── Bottom bar — always visible ── */}
         <div className="footer-bottom">
           <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.78rem" }}>
             {t("footer.copyright", { year: new Date().getFullYear() })}

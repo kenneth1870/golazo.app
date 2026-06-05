@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useParams, Link } from "react-router-dom"
+import { useParams, Link, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
 const SOURCE_COLORS = {
@@ -25,11 +25,13 @@ function ArticleSkeleton() {
 export default function NewsShowPage() {
   const { id }   = useParams()
   const { i18n } = useTranslation()
+  const navigate = useNavigate()
   const lang     = i18n.language.split("-")[0]
   const [article, setArticle]   = useState(null)
   const [content, setContent]   = useState(null)
   const [loading, setLoading]   = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [copied, setCopied]     = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -52,8 +54,24 @@ export default function NewsShowPage() {
       .finally(() => setLoading(false))
   }, [id])
 
+  function share() {
+    navigator.clipboard?.writeText(window.location.href).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
   if (loading) {
-    return <div className="site-section" style={{ padding: 0 }}><ArticleSkeleton /></div>
+    return (
+      <div style={{ padding: 0 }}>
+        <div className="match-back-bar">
+          <div className="container" style={{ maxWidth: 740 }}>
+            <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← Back</button>
+          </div>
+        </div>
+        <ArticleSkeleton />
+      </div>
+    )
   }
 
   if (notFound || !article) {
@@ -76,6 +94,23 @@ export default function NewsShowPage() {
 
   return (
     <article style={{ paddingBottom: 60 }}>
+
+      {/* Back bar */}
+      <div className="match-back-bar">
+        <div className="container" style={{ maxWidth: 740, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← Back</button>
+          <button
+            onClick={share}
+            style={{
+              background: "none", border: "1px solid var(--border)", borderRadius: 20,
+              padding: "5px 14px", color: copied ? "#10b981" : "var(--muted)",
+              fontSize: ".72rem", fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            {copied ? "✓ Copied" : "Share"}
+          </button>
+        </div>
+      </div>
 
       {/* Full-width hero photo */}
       {heroImage && (
@@ -130,14 +165,14 @@ export default function NewsShowPage() {
 
         {/* Article body */}
         {paragraphs.length > 0 ? (
-          <div style={{ fontSize: "1.05rem", lineHeight: 1.8, color: "rgba(255,255,255,.82)" }}>
+          <div style={{ fontSize: "clamp(1rem, 2.5vw, 1.1rem)", lineHeight: 1.85, color: "rgba(255,255,255,.84)" }}>
             {paragraphs.map((p, i) => (
-              <p key={i} style={{ marginBottom: 20 }}>{p}</p>
+              <p key={i} style={{ marginBottom: 22 }}>{p}</p>
             ))}
           </div>
         ) : article.summary ? (
           <p style={{
-            fontSize: "1.05rem", lineHeight: 1.75, color: "rgba(255,255,255,.75)",
+            fontSize: "clamp(1rem, 2.5vw, 1.1rem)", lineHeight: 1.85, color: "rgba(255,255,255,.78)",
             borderLeft: "3px solid var(--accent)", paddingLeft: 16, marginBottom: 28,
           }}>
             {article.summary}

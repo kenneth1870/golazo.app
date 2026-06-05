@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
 import BottomNav from "./components/BottomNav"
 import InstallPrompt from "./components/InstallPrompt"
+import ScrollToTop from "./components/ScrollToTop"
 import ErrorBoundary from "./components/ErrorBoundary"
 
 import HomePage        from "./pages/HomePage"
@@ -32,6 +33,7 @@ export default function App() {
   const location = useLocation()
   return (
     <div className="site-wrap">
+      <ScrollToTop />
       <Navbar />
 
       <main key={location.pathname} className="main-content page-transition">

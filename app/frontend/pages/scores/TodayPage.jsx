@@ -461,7 +461,21 @@ export default function TodayPage() {
 
         {/* Header row */}
         <div className="d-flex align-items-center justify-content-between mb-3" style={{ flexWrap: "wrap", gap: 8 }}>
-          <div style={{ fontWeight: 600, fontSize: "0.95rem", color: "#fff" }}>{label}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontWeight: 600, fontSize: "0.95rem", color: "#fff" }}>{label}</span>
+            {toISO(selected) !== toISO(new Date()) && (
+              <button
+                onClick={() => { setSelected(startOfDay()); setMatches([]) }}
+                style={{
+                  background: "rgba(238,30,70,.12)", border: "1px solid rgba(238,30,70,.3)",
+                  borderRadius: 20, padding: "3px 10px", color: "#ee1e46",
+                  fontSize: "0.68rem", fontWeight: 700, cursor: "pointer",
+                }}
+              >
+                Today
+              </button>
+            )}
+          </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: "0.78rem" }}>
             {liveCount > 0 && (
               <span style={{ display: "flex", alignItems: "center", gap: 5, color: "#ee1e46" }}>

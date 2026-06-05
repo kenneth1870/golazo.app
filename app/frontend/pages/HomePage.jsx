@@ -242,40 +242,73 @@ export default function HomePage() {
                 <div className="widget-title">
                   <h3>{t("home.upcomingMatches")}</h3>
                 </div>
-                <table className="table custom-table">
-                  <thead>
-                    <tr>
-                      <th>{t("table.date")}</th>
-                      <th>{t("table.home")}</th>
-                      <th></th>
-                      <th>{t("table.away")}</th>
-                      <th>{t("table.group")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {upcomingMatches.slice(0, 8).map(m => (
-                      <tr key={m.id} style={{ cursor: "pointer" }} onClick={() => navigate("/scores/fixtures")}>
-                        <td style={{ fontSize: "0.75rem", color: "gray" }}>
-                          {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString([], { month: "short", day: "numeric" }) : "TBD"}
-                        </td>
-                        <td>
-                          <div className="d-flex align-items-center" style={{ gap: 6 }}>
-                            {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt="" className="flag-xs" />}
-                            <strong className="text-white">{m.home_team?.code}</strong>
-                          </div>
-                        </td>
-                        <td style={{ color: "gray", fontSize: "0.75rem" }}>vs</td>
-                        <td>
-                          <div className="d-flex align-items-center" style={{ gap: 6 }}>
-                            {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt="" className="flag-xs" />}
-                            <strong className="text-white">{m.away_team?.code}</strong>
-                          </div>
-                        </td>
-                        <td style={{ color: "gray", fontSize: "0.75rem" }}>{m.group_stage}</td>
+
+                {/* Desktop: compact table */}
+                <div className="d-none d-md-block">
+                  <table className="table custom-table">
+                    <thead>
+                      <tr>
+                        <th>{t("table.date")}</th>
+                        <th>{t("table.home")}</th>
+                        <th></th>
+                        <th>{t("table.away")}</th>
+                        <th>{t("table.group")}</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {upcomingMatches.slice(0, 8).map(m => (
+                        <tr key={m.id} style={{ cursor: "pointer" }} onClick={() => navigate("/scores/fixtures")}>
+                          <td style={{ fontSize: "0.75rem", color: "gray" }}>
+                            {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString([], { month: "short", day: "numeric" }) : "TBD"}
+                          </td>
+                          <td>
+                            <div className="d-flex align-items-center" style={{ gap: 6 }}>
+                              {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt="" className="flag-xs" />}
+                              <strong className="text-white">{m.home_team?.code}</strong>
+                            </div>
+                          </td>
+                          <td style={{ color: "gray", fontSize: "0.75rem" }}>vs</td>
+                          <td>
+                            <div className="d-flex align-items-center" style={{ gap: 6 }}>
+                              {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt="" className="flag-xs" />}
+                              <strong className="text-white">{m.away_team?.code}</strong>
+                            </div>
+                          </td>
+                          <td style={{ color: "gray", fontSize: "0.75rem" }}>{m.group_stage}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile: match-row cards */}
+                <div className="d-md-none widget-body p-0">
+                  {upcomingMatches.slice(0, 6).map(m => (
+                    <div key={m.id} className="match-row match-row--clickable" onClick={() => navigate("/scores/fixtures")}>
+                      <div className="match-row__status">
+                        <span className="match-status-time" style={{ fontSize: "0.65rem" }}>
+                          {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString([], { month: "short", day: "numeric" }) : "TBD"}
+                        </span>
+                      </div>
+                      <div className="match-row__teams">
+                        <div className="match-row__team match-row__team--home">
+                          {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt="" className="flag-xs" onError={e => (e.target.style.display="none")} />}
+                          <span className="team-name">{m.home_team?.name}</span>
+                        </div>
+                        <div className="match-row__score">
+                          <span className="score-pill score-pill--vs">vs</span>
+                        </div>
+                        <div className="match-row__team match-row__team--away">
+                          <span className="team-name">{m.away_team?.name}</span>
+                          {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt="" className="flag-xs" onError={e => (e.target.style.display="none")} />}
+                        </div>
+                      </div>
+                      <div className="match-row__meta">
+                        {m.group_stage && <span style={{ fontSize: "0.62rem", color: "var(--muted)" }}>{m.group_stage}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 

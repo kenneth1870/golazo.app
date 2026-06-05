@@ -146,6 +146,7 @@ function PlaceholderBracket() {
       </div>
 
       {/* Visual R32 bracket preview */}
+      <div className="bracket-scroll-hint">← Swipe to see all rounds →</div>
       <div className="bracket-scroll-wrap">
         <div className="bracket">
           {/* R32 — show qualifier labels */}
@@ -227,6 +228,7 @@ export default function KnockoutPage() {
   return (
     <div className="site-section">
       <div className="container">
+        <div className="bracket-scroll-hint">← Swipe to see all rounds →</div>
         <div className="bracket-scroll-wrap">
           <div className="bracket">
             {ROUNDS.map(r => (

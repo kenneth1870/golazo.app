@@ -36,10 +36,38 @@ export default function TeamShowPage() {
 
   if (loading) {
     return (
-      <div className="site-section">
-        <div className="container">
-          <div className="loading-shimmer" style={{ height: 200, borderRadius: 12, marginBottom: 16 }} />
-          <div className="loading-shimmer" style={{ height: 300, borderRadius: 12 }} />
+      <div>
+        <div className="match-back-bar">
+          <div className="container" style={{ maxWidth: 700 }}>
+            <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← Back</button>
+          </div>
+        </div>
+        <div style={{ background: "linear-gradient(135deg, #0d1117 0%, #161b22 100%)", padding: "48px 0 32px", borderBottom: "1px solid var(--border)" }}>
+          <div className="container" style={{ maxWidth: 700 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+              <div className="loading-shimmer" style={{ width: 72, height: 72, borderRadius: 8, flexShrink: 0 }} />
+              <div>
+                <div className="loading-shimmer" style={{ width: 180, height: 22, borderRadius: 6, marginBottom: 8 }} />
+                <div className="loading-shimmer" style={{ width: 80, height: 14, borderRadius: 4 }} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="container" style={{ maxWidth: 700, paddingTop: 24 }}>
+          {[3, 2, 3].map((rows, bi) => (
+            <div key={bi} className="widget-next-match mb-4">
+              <div className="widget-title"><div className="loading-shimmer" style={{ width: 120, height: 14, borderRadius: 4 }} /></div>
+              <div className="widget-body p-0">
+                {Array.from({ length: rows }).map((_, i) => (
+                  <div key={i} className="match-row">
+                    <div className="loading-shimmer" style={{ width: 36, height: 12, borderRadius: 3 }} />
+                    <div style={{ flex: 1 }}><div className="loading-shimmer" style={{ width: "55%", height: 12, borderRadius: 3 }} /></div>
+                    <div className="loading-shimmer" style={{ width: 40, height: 20, borderRadius: 4 }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     )
@@ -76,12 +104,17 @@ export default function TeamShowPage() {
 
   return (
     <div>
-      {/* Team hero */}
-      <div style={{ background: "linear-gradient(135deg, #0d1117 0%, #161b22 100%)", borderBottom: "1px solid var(--border)", padding: "48px 0 32px" }}>
+      {/* Back bar */}
+      <div className="match-back-bar">
         <div className="container" style={{ maxWidth: 700 }}>
-          <div style={{ marginBottom: 16 }}>
-            <Link to="/mundial/teams" style={{ color: "var(--muted)", fontSize: "0.78rem" }}>← {t("nav.teams")}</Link>
-          </div>
+          <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back", "Back")}</button>
+        </div>
+      </div>
+
+      {/* Team hero */}
+      <div style={{ background: "linear-gradient(135deg, #0d1117 0%, #161b22 100%)", borderBottom: "1px solid var(--border)", padding: "32px 0 32px" }}>
+        <div className="container" style={{ maxWidth: 700 }}>
+          <div>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
             {team.flag_url && (
               <img src={team.flag_url} alt={team.name} className="logo-lg"
