@@ -3,5 +3,6 @@ class RecalculateStandingsJob < ApplicationJob
 
   def perform
     WorldCupSync.new(competition_code: "WC").recalculate_standings_from_results
+    Rails.cache.delete("standings_WC")
   end
 end

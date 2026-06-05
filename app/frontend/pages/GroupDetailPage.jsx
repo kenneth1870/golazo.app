@@ -2,9 +2,11 @@ import { useParams, useNavigate, Link } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { useMatches } from "../hooks/useMatches"
 import MatchRow from "../components/MatchRow"
+import { usePageMeta } from "../hooks/usePageMeta"
 
 export default function GroupDetailPage() {
   const { group }  = useParams()
+  usePageMeta(`Group ${group} — World Cup 2026`, `FIFA World Cup 2026 Group ${group} standings and match results.`)
   const navigate   = useNavigate()
   const onMatchClick = (m) => {
     if (m.external_id) navigate(`/matches/${m.external_id}`)

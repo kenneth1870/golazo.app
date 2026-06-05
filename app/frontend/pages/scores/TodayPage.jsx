@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import MatchRow from "../../components/MatchRow"
 import { useLocale } from "../../hooks/useLocale"
+import { usePageMeta } from "../../hooks/usePageMeta"
 
 // ─── Helpers ──────────────────────────────────────────
 function toISO(date) {
@@ -208,6 +209,7 @@ function EmptyState({ label, t }) {
 // ─── Main page ────────────────────────────────────────
 export default function TodayPage() {
   const { t } = useTranslation()
+  usePageMeta(t("time.today"), "Today's live football scores, results and fixtures — all competitions.")
   const [selected, setSelected] = useState(startOfDay)
   const [matches, setMatches]   = useState([])
   const [loading, setLoading]   = useState(true)

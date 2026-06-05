@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { usePageMeta } from "../../hooks/usePageMeta"
 
 function normalizeMatch(m) {
   return {
@@ -107,6 +108,7 @@ function useResultLabel(date, t) {
 
 export default function ResultsPage() {
   const { t }    = useTranslation()
+  usePageMeta(t("nav.results"), "Football match results — scores and goals for all completed matches.")
   const [date, setDate]       = useState(() => addDays(new Date(), -1))
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)

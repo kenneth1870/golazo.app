@@ -24,7 +24,37 @@ module Api
       ].freeze
 
       def index
-        render json: VENUES
+        wc = Competition.find_by(code: "WC")
+        matches_by_venue = if wc
+          Match.where(competition: wc)
+               .where.not(venue: [nil, ""])
+               .includes(:home_team, :away_team)
+               .order(:kickoff_at)
+               .group_by(&:venue)
+        else
+          {}
+        end
+
+        render json: VENUES.map { |v|
+          venue_matches = matches_by_venue.select { |k, _| k.to_s.start_with?(v[:name]) }
+                                          .values.flatten
+          v.merge(
+            matches: venue_matches.map { |m|
+              {
+                id:         m.id,
+                external_id: m.external_id,
+                kickoff_at:  m.kickoff_at,
+                status:      m.status,
+                round:       m.round,
+                group_stage: m.group_stage,
+                home_score:  m.home_score,
+                away_score:  m.away_score,
+                home_team: { name: m.home_team.name, flag_url: m.home_team.flag_url, code: m.home_team.code },
+                away_team: { name: m.away_team.name, flag_url: m.away_team.flag_url, code: m.away_team.code },
+              }
+            }
+          )
+        }
       end
     end
   end

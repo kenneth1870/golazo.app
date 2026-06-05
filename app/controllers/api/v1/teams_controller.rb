@@ -3,7 +3,7 @@ module Api
     class TeamsController < BaseController
       def index
         teams = Team.order(:group, :name)
-        teams = teams.where.not(group: [nil, ""]) if params[:competition] == "WC"
+        teams = teams.where.not(group: [nil, ""]) if params[:competition] == "WC" || params[:wc] == "1"
         render json: teams
       end
 

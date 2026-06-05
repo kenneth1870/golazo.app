@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { useMatches } from "../hooks/useMatches"
 import { useFavoriteTeam } from "../hooks/useFavoriteTeam"
 import { useLiveCount } from "../contexts/LiveContext"
+import { usePageMeta } from "../hooks/usePageMeta"
 import Hero from "../components/Hero"
 import MatchCard from "../components/MatchCard"
 import FavoriteTeamPicker from "../components/FavoriteTeamPicker"
@@ -72,6 +73,7 @@ function FavoriteTeamCard({ fav, todayMatches, upcomingMatches, navigate, t }) {
 
 export default function HomePage() {
   const { t } = useTranslation()
+  usePageMeta("FIFA World Cup 2026", "Live scores, fixtures, standings and stats for FIFA World Cup 2026 — USA, Canada & Mexico.")
   const navigate = useNavigate()
   const { matches: liveWC }         = useMatches("live",     { competition: "WC" })
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: "WC" })

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useExternalMatchChannel } from "../hooks/useExternalMatchChannel"
+import { usePageMeta } from "../hooks/usePageMeta"
 
 // ─── Live minute counter ──────────────────────────────
 function useLiveMinute(apiMinute, isLive) {
@@ -834,6 +835,10 @@ export default function MatchShowPage() {
 
   const homeName    = data?.fixture?.teams?.home?.name
   const awayName    = data?.fixture?.teams?.away?.name
+  usePageMeta(
+    homeName && awayName ? `${homeName} vs ${awayName}` : "Match",
+    homeName && awayName ? `Live score and stats: ${homeName} vs ${awayName} — FIFA World Cup 2026` : undefined
+  )
   const homeTeamId  = data?.fixture?.teams?.home?.id
   const awayTeamId  = data?.fixture?.teams?.away?.id
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { usePageMeta } from "../hooks/usePageMeta"
 
 function StandingsTable({ group, rows, onNavigate }) {
   return (
@@ -71,6 +72,7 @@ function StandingsTable({ group, rows, onNavigate }) {
 const GROUP_LETTERS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
 export default function AllGroupsPage() {
+  usePageMeta("Groups", "FIFA World Cup 2026 group standings — all 12 groups with points, goals and results.")
   const [grouped, setGrouped] = useState({})
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()

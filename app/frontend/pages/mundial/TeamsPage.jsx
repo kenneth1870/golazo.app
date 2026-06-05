@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { usePageMeta } from "../../hooks/usePageMeta"
 
 export default function TeamsPage() {
   const { t } = useTranslation()
+  usePageMeta(t("mundial.teamsTitle"), "All 48 teams in the FIFA World Cup 2026 — groups, flags and match schedules.")
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
 

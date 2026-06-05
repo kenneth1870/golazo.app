@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { usePageMeta } from "../hooks/usePageMeta"
 
 const SOURCE_COLORS = {
   "BBC Sport": "#b80000",
@@ -36,6 +37,7 @@ function NewsCard({ article, featured }) {
 
 export default function NewsPage() {
   const { t, i18n } = useTranslation()
+  usePageMeta(t("news.title"), "Latest football news — World Cup 2026, transfers, match previews and results.")
   const [articles, setArticles] = useState([])
   const [loading, setLoading]   = useState(true)
   const [source, setSource]     = useState(null)

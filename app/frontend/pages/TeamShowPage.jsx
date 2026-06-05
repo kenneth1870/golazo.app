@@ -1,12 +1,19 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
+import { usePageMeta } from "../hooks/usePageMeta"
 
 export default function TeamShowPage() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const [team, setTeam]       = useState(null)
   const [loading, setLoading] = useState(true)
   const [standing, setStanding] = useState(null)
+  usePageMeta(
+    team ? `${team.name} — World Cup 2026` : null,
+    team ? `${team.name} FIFA World Cup 2026 fixtures, results and group standings.` : null
+  )
 
   useEffect(() => {
     fetch(`/api/v1/teams/${id}`)
@@ -44,8 +51,8 @@ export default function TeamShowPage() {
         <div className="container">
           <div className="empty-state">
             <div className="empty-state__icon">⚽</div>
-            <h3>Team not found</h3>
-            <p><Link to="/mundial/teams" style={{ color: "var(--accent)" }}>← All Teams</Link></p>
+            <h3>{t("error.notFound")}</h3>
+            <p><Link to="/mundial/teams" style={{ color: "var(--accent)" }}>← {t("nav.teams")}</Link></p>
           </div>
         </div>
       </div>
@@ -57,13 +64,23 @@ export default function TeamShowPage() {
   const finished  = matches.filter(m => m.status === "finished").sort((a, b) => new Date(b.kickoff_at) - new Date(a.kickoff_at))
   const live      = matches.filter(m => m.status === "live")
 
+  // Last 5 finished results as W/D/L
+  const form = finished.slice(0, 5).reverse().map(m => {
+    const isHome   = m.home_team?.name === team.name
+    const myScore  = isHome ? m.home_score : m.away_score
+    const oppScore = isHome ? m.away_score : m.home_score
+    if (myScore > oppScore)  return "W"
+    if (myScore === oppScore) return "D"
+    return "L"
+  })
+
   return (
     <div>
       {/* Team hero */}
       <div style={{ background: "linear-gradient(135deg, #0d1117 0%, #161b22 100%)", borderBottom: "1px solid var(--border)", padding: "48px 0 32px" }}>
         <div className="container" style={{ maxWidth: 700 }}>
           <div style={{ marginBottom: 16 }}>
-            <Link to="/mundial/teams" style={{ color: "var(--muted)", fontSize: "0.78rem" }}>← All Teams</Link>
+            <Link to="/mundial/teams" style={{ color: "var(--muted)", fontSize: "0.78rem" }}>← {t("nav.teams")}</Link>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
             {team.flag_url && (
@@ -73,7 +90,7 @@ export default function TeamShowPage() {
             <div>
               <h1 style={{ margin: "0 0 4px", fontSize: "1.8rem", fontWeight: 900, color: "#fff" }}>{team.name}</h1>
               {team.code && <div style={{ fontSize: "0.8rem", color: "var(--muted)", letterSpacing: 2, textTransform: "uppercase" }}>{team.code}</div>}
-              {team.group && <div style={{ marginTop: 6, fontSize: "0.82rem", color: "#ee1e46", fontWeight: 700 }}>Group {team.group}</div>}
+              {team.group && <div style={{ marginTop: 6, fontSize: "0.82rem", color: "#ee1e46", fontWeight: 700 }}>{t("nav.group", { letter: team.group })}</div>}
             </div>
           </div>
 
@@ -81,18 +98,35 @@ export default function TeamShowPage() {
           {standing && (
             <div style={{ display: "flex", gap: 20, marginTop: 24, flexWrap: "wrap" }}>
               {[
-                ["Rank",   standing.rank ?? "–"],
-                ["Played", standing.played ?? 0],
-                ["Won",    standing.won ?? 0],
-                ["Drawn",  standing.drawn ?? 0],
-                ["Lost",   standing.lost ?? 0],
-                ["GD",     (standing.goal_diff ?? 0) > 0 ? `+${standing.goal_diff}` : standing.goal_diff ?? 0],
-                ["Points", standing.points ?? 0],
+                [t("table.pos"),    standing.rank ?? "–"],
+                [t("table.played"), standing.played ?? 0],
+                [t("table.won"),    standing.won ?? 0],
+                [t("table.drawn"),  standing.drawn ?? 0],
+                [t("table.lost"),   standing.lost ?? 0],
+                [t("table.gd"),     (standing.goal_diff ?? 0) > 0 ? `+${standing.goal_diff}` : standing.goal_diff ?? 0],
+                [t("table.points"), standing.points ?? 0],
               ].map(([label, val]) => (
                 <div key={label} style={{ textAlign: "center" }}>
                   <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "#fff" }}>{val}</div>
                   <div style={{ fontSize: "0.62rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>{label}</div>
                 </div>
+              ))}
+            </div>
+          )}
+
+          {/* Form guide */}
+          {form.length > 0 && (
+            <div style={{ marginTop: 18, display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".1em", marginRight: 4 }}>{t("scores.form", "Form")}</span>
+              {form.map((r, i) => (
+                <span key={i} style={{
+                  width: 26, height: 26, borderRadius: "50%", display: "inline-flex",
+                  alignItems: "center", justifyContent: "center",
+                  fontSize: "0.65rem", fontWeight: 800, color: "#fff",
+                  background: r === "W" ? "#10b981" : r === "D" ? "#f59e0b" : "#ef4444",
+                }}>
+                  {r}
+                </span>
               ))}
             </div>
           )}
@@ -104,7 +138,7 @@ export default function TeamShowPage() {
         {/* Live match */}
         {live.length > 0 && (
           <section className="match-section" style={{ borderColor: "rgba(238,30,70,.4)" }}>
-            <h3 className="match-section__title" style={{ color: "#ee1e46" }}>Playing Now</h3>
+            <h3 className="match-section__title" style={{ color: "#ee1e46" }}>{t("home.playingNow")}</h3>
             {live.map(m => <MatchLine key={m.id} match={m} teamName={team.name} navigate={navigate} />)}
           </section>
         )}
@@ -112,7 +146,7 @@ export default function TeamShowPage() {
         {/* Upcoming */}
         {upcoming.length > 0 && (
           <section className="match-section">
-            <h3 className="match-section__title">Upcoming Fixtures</h3>
+            <h3 className="match-section__title">{t("scores.upcomingFixtures")}</h3>
             {upcoming.slice(0, 6).map(m => <MatchLine key={m.id} match={m} teamName={team.name} navigate={navigate} />)}
           </section>
         )}
@@ -120,7 +154,7 @@ export default function TeamShowPage() {
         {/* Results */}
         {finished.length > 0 && (
           <section className="match-section">
-            <h3 className="match-section__title">Recent Results</h3>
+            <h3 className="match-section__title">{t("nav.results")}</h3>
             {finished.slice(0, 6).map(m => <MatchLine key={m.id} match={m} teamName={team.name} navigate={navigate} />)}
           </section>
         )}
@@ -128,8 +162,8 @@ export default function TeamShowPage() {
         {matches.length === 0 && (
           <div className="empty-state" style={{ marginTop: 40 }}>
             <div className="empty-state__icon">📅</div>
-            <h3>No matches found</h3>
-            <p>Fixtures will appear once the schedule is confirmed</p>
+            <h3>{t("noMatches")}</h3>
+            <p>{t("scores.noFixtures")}</p>
           </div>
         )}
       </div>

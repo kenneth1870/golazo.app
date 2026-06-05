@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { usePageMeta } from "../hooks/usePageMeta"
 
 const TYPE_ORDER = { world_cup: 0, cup: 1, league: 2 }
 const TYPE_LABEL = { world_cup: "World Cup", cup: "Cups & International", league: "Domestic Leagues" }
@@ -35,6 +36,7 @@ function LeagueCard({ competition, liveCount, onClick }) {
 
 export default function AllLeaguesPage() {
   const { t } = useTranslation()
+  usePageMeta(t("leagues.title"), "Live football leagues and competitions worldwide — scores, standings and fixtures.")
   const [competitions, setCompetitions] = useState([])
   const [liveMatches, setLiveMatches]   = useState([])
   const [loading, setLoading]           = useState(true)

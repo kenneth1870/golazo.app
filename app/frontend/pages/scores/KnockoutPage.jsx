@@ -1,15 +1,24 @@
 import { useMatches } from "../../hooks/useMatches"
 import { useNavigate } from "react-router-dom"
+import { usePageMeta } from "../../hooks/usePageMeta"
 
 // WC 2026: R32 → R16 → QF → SF → Final (+ 3rd place)
 const ROUNDS = [
-  { key: "Round of 32",    label: "R32",        count: 16 },
-  { key: "Round of 16",   label: "R16",         count: 8  },
+  { key: "Round of 32",    label: "R32",           count: 16 },
+  { key: "Round of 16",   label: "R16",            count: 8  },
   { key: "Quarter Final", label: "Quarter Finals", count: 4  },
-  { key: "Semi Final",    label: "Semi Finals",  count: 2  },
-  { key: "Final",         label: "Final",        count: 1  },
+  { key: "Semi Final",    label: "Semi Finals",    count: 2  },
+  { key: "Final",         label: "Final",          count: 1  },
 ]
 const THIRD_PLACE = "3rd Place"
+
+// Official WC 2026 R32 matchups (group winner vs runner-up)
+const R32_SLOTS = [
+  ["A1", "B2"], ["C1", "D2"], ["E1", "F2"], ["G1", "H2"],
+  ["I1", "J2"], ["K1", "L2"], ["B1", "A2"], ["D1", "C2"],
+  ["F1", "E2"], ["H1", "G2"], ["J1", "I2"], ["L1", "K2"],
+  ["A1*","B2*"], ["C1*","D2*"], ["E1*","F2*"], ["G1*","H2*"],
+]
 
 function MatchSlot({ match, onClick }) {
   const isLive     = match?.status === "live"
@@ -88,31 +97,82 @@ function RoundColumn({ label, matches, count, onMatchClick }) {
   )
 }
 
+function QualifierSlot({ label }) {
+  const isWinner = label.includes("1")
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 5,
+      padding: "5px 8px",
+      fontSize: "0.7rem", color: isWinner ? "rgba(255,255,255,.7)" : "rgba(255,255,255,.4)",
+      fontWeight: isWinner ? 700 : 400,
+    }}>
+      <span style={{
+        width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
+        background: isWinner ? "rgba(238,30,70,.2)" : "rgba(255,255,255,.06)",
+        border: `1px solid ${isWinner ? "rgba(238,30,70,.4)" : "rgba(255,255,255,.1)"}`,
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        fontSize: "0.55rem", fontWeight: 800, color: isWinner ? "#ee1e46" : "#555",
+      }}>
+        {label.replace("*", "").slice(-1)}
+      </span>
+      <span>Group {label.replace(/[12*]/g, "")} {isWinner ? "Winner" : "Runner-up"}</span>
+    </div>
+  )
+}
+
 function PlaceholderBracket() {
   return (
-    <div className="bracket-placeholder">
-      <div className="bracket-placeholder__icon">🏆</div>
-      <h3>Knockout bracket not yet determined</h3>
-      <p style={{ color: "#888", fontSize: "0.85rem", maxWidth: 340, margin: "0 auto" }}>
-        The 32 teams that advance from the group stage will appear here after July 2, 2026
-      </p>
-      <div className="bracket-preview">
-        {ROUNDS.map(r => (
-          <div key={r.key} className="bracket-preview__round">
-            <div className="bracket-preview__label">{r.label}</div>
-            <div className="bracket-preview__slots">
-              {Array.from({ length: r.count }).map((_, i) => (
-                <div key={i} className="bracket-preview__slot" />
+    <div>
+      <div style={{ textAlign: "center", padding: "24px 0 32px" }}>
+        <div style={{ fontSize: "2rem", marginBottom: 8 }}>🏆</div>
+        <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "0 0 6px" }}>Knockout bracket not yet determined</h3>
+        <p style={{ color: "var(--muted)", fontSize: "0.82rem", maxWidth: 340, margin: "0 auto" }}>
+          32 teams advance from the group stage — bracket locked after July 2, 2026
+        </p>
+      </div>
+
+      {/* Visual R32 bracket preview */}
+      <div className="bracket-scroll-wrap">
+        <div className="bracket">
+          {/* R32 — show qualifier labels */}
+          <div className="bracket-round" style={{ minWidth: 180 }}>
+            <div className="bracket-round__label">R32</div>
+            <div className="bracket-round__slots">
+              {R32_SLOTS.map(([home, away], i) => (
+                <div key={i} className="bracket-round__slot-wrap">
+                  <div className="bracket-slot bracket-slot--empty" style={{ minHeight: 60, flexDirection: "column", alignItems: "stretch", justifyContent: "center", padding: 0 }}>
+                    <QualifierSlot label={home} />
+                    <div className="bracket-slot__divider" />
+                    <QualifierSlot label={away} />
+                  </div>
+                </div>
               ))}
             </div>
           </div>
-        ))}
+
+          {/* Remaining rounds — empty slots */}
+          {ROUNDS.slice(1).map(r => (
+            <div key={r.key} className="bracket-round" style={{ minWidth: 160 }}>
+              <div className="bracket-round__label">{r.label}</div>
+              <div className="bracket-round__slots">
+                {Array.from({ length: r.count }).map((_, i) => (
+                  <div key={i} className="bracket-round__slot-wrap">
+                    <div className="bracket-slot bracket-slot--empty">
+                      <span className="bracket-slot__tbd">TBD</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
 }
 
 export default function KnockoutPage() {
+  usePageMeta("Knockout Stage", "FIFA World Cup 2026 knockout bracket — Round of 32, Round of 16, Quarter Finals, Semi Finals and Final.")
   const { matches, loading } = useMatches("all", { competition: "WC" })
   const navigate = useNavigate()
   const onMatchClick = (extId) => navigate(`/matches/${extId}`)

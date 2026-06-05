@@ -9,7 +9,7 @@ export default function FavoriteTeamPicker() {
   const ref = useRef(null)
 
   useEffect(() => {
-    fetch("/api/v1/teams")
+    fetch("/api/v1/teams?wc=1")
       .then(r => r.json())
       .then(data => setTeams(Array.isArray(data) ? data : []))
       .catch(() => {})

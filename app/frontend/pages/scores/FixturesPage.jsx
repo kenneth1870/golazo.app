@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import MatchRow from "../../components/MatchRow"
+import { usePageMeta } from "../../hooks/usePageMeta"
 
 function toISO(date) {
   const y = date.getFullYear()
@@ -102,6 +103,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick }) {
 
 export default function FixturesPage() {
   const { t }    = useTranslation()
+  usePageMeta(t("nav.fixtures"), "Upcoming football fixtures — kickoff times and schedules for all competitions.")
   const [selected, setSelected] = useState(() => addDays(new Date(), 1))
   const [matches, setMatches]   = useState([])
   const [loading, setLoading]   = useState(true)

@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
+import { usePageMeta } from "../../hooks/usePageMeta"
 
 export default function ScorersPage() {
   const { t } = useTranslation()
+  usePageMeta(t("mundial.scorersTitle"), "Top scorers at FIFA World Cup 2026 — goals, assists and games played.")
   const [scorers, setScorers] = useState([])
   const [loading, setLoading] = useState(true)
 

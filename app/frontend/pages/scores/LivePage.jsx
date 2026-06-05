@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { usePageMeta } from "../../hooks/usePageMeta"
 
 function LiveMatchRow({ match, onMatchClick }) {
   const hasScore = match.home?.score !== null && match.away?.score !== null
@@ -66,6 +67,7 @@ function CompetitionBlock({ leagueName, leagueLogo, leagueCountry, matches, onMa
 }
 
 export default function LivePage() {
+  usePageMeta("Live Scores", "All live football matches right now — scores, goals and minute-by-minute updates.")
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(null)

@@ -1,15 +1,23 @@
-import { NavLink, Outlet, Navigate } from "react-router-dom"
-
-const TABS = [
-  { path: "/scores/today", label: "Today" },
-]
+import { NavLink, Outlet } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 export default function ScoresPage() {
+  const { t } = useTranslation()
+
+  const TABS = [
+    { path: "/scores/today",    label: t("time.today")           },
+    { path: "/scores/live",     label: t("nav.live")             },
+    { path: "/scores/results",  label: t("nav.results")          },
+    { path: "/scores/fixtures", label: t("nav.fixtures")         },
+    { path: "/scores/groups",   label: t("nav.groupStage")       },
+    { path: "/scores/knockout", label: t("nav.knockout")         },
+  ]
+
   return (
     <div>
       <div className="page-hero" style={{ backgroundImage: "url('/images/bg_3.jpg')" }}>
         <div className="container">
-          <h1 className="page-hero__title">Scores</h1>
+          <h1 className="page-hero__title">{t("nav.scores")}</h1>
           <p className="page-hero__sub">All Competitions · Live Updates</p>
         </div>
       </div>
@@ -17,9 +25,9 @@ export default function ScoresPage() {
       <div className="tab-bar sticky-tabs">
         <div className="container">
           <div className="tab-bar__inner">
-            {TABS.map(t => (
-              <NavLink key={t.path} to={t.path} className={({ isActive }) => `tab-link${isActive ? " tab-link--active" : ""}`}>
-                {t.label}
+            {TABS.map(tab => (
+              <NavLink key={tab.path} to={tab.path} className={({ isActive }) => `tab-link${isActive ? " tab-link--active" : ""}`}>
+                {tab.label}
               </NavLink>
             ))}
           </div>

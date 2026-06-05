@@ -1,9 +1,13 @@
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { useMatches } from "../../hooks/useMatches"
 import MatchRow from "../../components/MatchRow"
 import { formatMatchDate } from "../../hooks/useLocalTime"
+import { usePageMeta } from "../../hooks/usePageMeta"
 
 export default function SchedulePage() {
+  const { t } = useTranslation()
+  usePageMeta(t("mundial.scheduleTitle"), "Full FIFA World Cup 2026 schedule — all 104 matches, kickoff times and venues.")
   const { matches, loading } = useMatches("all", { competition: "WC" })
   const navigate = useNavigate()
 
