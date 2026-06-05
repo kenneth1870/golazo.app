@@ -94,7 +94,7 @@ class LiveScoresClient
         detail:   Thread.new { get("football-get-match-detail",    eventid: match_id) },
         home_lu:  Thread.new { get("football-get-hometeam-lineup", eventid: match_id) },
         away_lu:  Thread.new { get("football-get-awayteam-lineup", eventid: match_id) },
-        h2h:      Thread.new { get("football-get-head-to-head",    eventid: match_id) },
+        h2h:      Thread.new { get("football-get-head-to-head",    matchId: match_id) },
         score:    Thread.new { get("football-get-match-score",     eventid: match_id) },
         status:   Thread.new { get("football-get-match-status",    eventid: match_id) },
         location: Thread.new { get("football-get-match-location",  eventid: match_id) },
@@ -108,7 +108,8 @@ class LiveScoresClient
       location = results[:location].dig("response", "location") || {}
       home_lu  = results[:home_lu].dig("response", "lineup")
       away_lu  = results[:away_lu].dig("response", "lineup")
-      h2h_raw  = results[:h2h].dig("response", "lineup") || {}
+      h2h_resp = results[:h2h].dig("response") || {}
+      h2h_raw  = h2h_resp.dig("h2h") || h2h_resp.dig("content", "h2h") || h2h_resp.dig("headToHead") || {}
       stats_raw = results[:stats].dig("response")
 
       return nil if detail.blank? && score.empty?
@@ -573,8 +574,9 @@ class LiveScoresClient
     lineups = [normalize_lineup_team(home_lu), normalize_lineup_team(away_lu)].compact
     h2h     = normalize_h2h(h2h_raw, home_id, away_id)
     stats   = normalize_stats_response(stats_raw, home_name, away_name)
+    events  = normalize_events(detail["events"] || detail["incidents"] || [])
 
-    { fixture: fixture, events: [], stats: stats, lineups: lineups, h2h: h2h }
+    { fixture: fixture, events: events, stats: stats, lineups: lineups, h2h: h2h }
   end
 
   # Normalized live matches keyed by external_id, for fallback lookups

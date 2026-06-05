@@ -916,56 +916,10 @@ export default function MatchShowPage() {
 
   if (loading) return <MatchSkeleton />
 
-  if (!data?.fixture) {
-    const isApiError = data?.error === "api_error"
-    return (
-      <div className="site-section">
-        <div className="container" style={{ maxWidth: 700 }}>
-          <button onClick={goBack} className="btn-back" style={{ marginBottom: 24 }}>← {t("error.back")}</button>
-          <div className="empty-state">
-            <div className="empty-state__pitch" />
-            <div className="empty-state__icon">{isApiError ? "🔌" : "⚽"}</div>
-            <h3>{isApiError ? t("error.dataUnavailable") : t("error.notFound")}</h3>
-            <p style={{ maxWidth: 300 }}>
-              {isApiError ? t("error.apiError") : t("error.matchRemoved")}
-            </p>
-            <div style={{ display: "flex", gap: 10, marginTop: 20, flexWrap: "wrap", justifyContent: "center" }}>
-              {isApiError && (
-                <button
-                  onClick={() => { setLoading(true); load().finally(() => setLoading(false)) }}
-                  style={{
-                    background: "var(--accent)", color: "#fff", border: "none",
-                    borderRadius: 8, padding: "9px 20px", fontWeight: 700,
-                    fontSize: "0.85rem", cursor: "pointer",
-                  }}
-                >
-                  {t("error.retry")}
-                </button>
-              )}
-              <button
-                onClick={goBack}
-                style={{
-                  background: "var(--surface2)", color: "var(--text)", border: "1px solid var(--border)",
-                  borderRadius: 8, padding: "9px 20px", fontWeight: 700,
-                  fontSize: "0.85rem", cursor: "pointer",
-                }}
-              >
-                ← {t("error.goBack")}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const hasFixture  = !!data?.fixture
+  const isApiError  = !hasFixture && data?.error === "api_error"
 
-  const eventCount  = data.events?.filter(e => ["Goal","Card","subst"].includes(e.type)).length ?? 0
-  const goalCount   = data.events?.filter(e => e.type === "Goal").length ?? 0
-  const hasEvents   = eventCount > 0
-  const hasStats    = data.stats?.length > 0
-  const hasLineups  = data.lineups?.some(l => l?.start_xi?.length > 0 || l?.startXI?.length > 0)
-  const hasH2H      = data.h2h?.matches?.length > 0
-  const TABS = TAB_KEYS.map(k => ({ key: k, label: t(`match.${k}`) }))
+  const eventCount  = data?.events?.filter(e => ["Goal","Card","subst"].includes(e.type)).length ?? 0
 
   function handleNotif() {
     if (notifEnabled) return
@@ -978,21 +932,42 @@ export default function MatchShowPage() {
 
   const notifSupported = typeof Notification !== "undefined"
 
+  const hasStats    = data?.stats?.length > 0
+  const hasLineups  = data?.lineups?.some(l => l?.start_xi?.length > 0)
+  const hasH2H      = data?.h2h?.matches?.length > 0
+  const hasEvents   = eventCount > 0
+  const goalCount   = data?.events?.filter(e => e.type === "Goal").length ?? 0
+  const TABS        = TAB_KEYS.map(k => ({ key: k, label: t(`match.${k}`) }))
+
   return (
     <div>
       <GoalToast text={toast} visible={!!toast} />
 
-      <Scoreboard
-        fixture={data.fixture}
-        isLive={isLive}
-        liveMinute={liveMinute}
-        matchId={id}
-        notifEnabled={notifEnabled}
-        notifSupported={notifSupported}
-        onNotif={handleNotif}
-      />
+      {/* Scoreboard — renders from fixture data or a minimal shell */}
+      {hasFixture
+        ? (
+          <Scoreboard
+            fixture={data.fixture}
+            isLive={isLive}
+            liveMinute={liveMinute}
+            matchId={id}
+            notifEnabled={notifEnabled}
+            notifSupported={notifSupported}
+            onNotif={handleNotif}
+          />
+        ) : (
+          <div style={{ background: "var(--surface1,#0d1117)", padding: "48px 0 36px" }}>
+            <div className="container" style={{ maxWidth: 700, textAlign: "center" }}>
+              <div style={{ fontSize: "2rem", marginBottom: 12, opacity: .3 }}>⚽</div>
+              <div style={{ color: "rgba(255,255,255,.4)", fontSize: "0.85rem" }}>
+                {isApiError ? t("error.dataUnavailable") : t("error.notFound")}
+              </div>
+            </div>
+          </div>
+        )
+      }
 
-      {/* Tab bar */}
+      {/* Tab bar — always visible */}
       <div className="tab-bar sticky-tabs">
         <div className="container" style={{ maxWidth: 740 }}>
           <div className="tab-bar__inner">
@@ -1021,8 +996,20 @@ export default function MatchShowPage() {
           <button onClick={goBack} className="btn-back">← Back</button>
           {isLive && (
             <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.7rem", color: "var(--muted)" }}>
-              <span className="live-dot" /> Updating every 20s
+              <span className="live-dot" /> {t("match.updatingEvery")}
             </span>
+          )}
+          {!hasFixture && (
+            <button
+              onClick={() => { setLoading(true); load().finally(() => setLoading(false)) }}
+              style={{
+                background: "var(--accent)", color: "#fff", border: "none",
+                borderRadius: 8, padding: "7px 16px", fontWeight: 700,
+                fontSize: "0.8rem", cursor: "pointer",
+              }}
+            >
+              {t("error.retry")}
+            </button>
           )}
         </div>
 
@@ -1045,7 +1032,7 @@ export default function MatchShowPage() {
         {/* Tab content */}
         {tab === "summary" && (
           <>
-            <PredictionPanel matchId={id} homeTeamName={homeName} awayTeamName={awayName} t={t} />
+            {hasFixture && <PredictionPanel matchId={id} homeTeamName={homeName} awayTeamName={awayName} t={t} />}
             {hasEvents
               ? <EventsTimeline events={data.events} homeTeam={homeName} t={t} />
               : (
@@ -1062,13 +1049,13 @@ export default function MatchShowPage() {
         )}
 
         {tab === "stats" && (
-          <StatsPanel stats={data.stats} home={data.fixture?.teams?.home} away={data.fixture?.teams?.away} t={t} />
+          <StatsPanel stats={data?.stats} home={data?.fixture?.teams?.home} away={data?.fixture?.teams?.away} t={t} />
         )}
 
-        {tab === "lineups" && <LineupsPanel lineups={data.lineups} t={t} />}
+        {tab === "lineups" && <LineupsPanel lineups={data?.lineups} t={t} />}
 
         {tab === "h2h" && (
-          <H2HPanel h2h={data.h2h} homeTeamName={homeName} awayTeamName={awayName} t={t} />
+          <H2HPanel h2h={data?.h2h} homeTeamName={homeName} awayTeamName={awayName} t={t} />
         )}
       </div>
     </div>
