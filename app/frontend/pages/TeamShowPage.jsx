@@ -114,7 +114,6 @@ export default function TeamShowPage() {
       {/* Team hero */}
       <div style={{ background: "linear-gradient(135deg, #0d1117 0%, #161b22 100%)", borderBottom: "1px solid var(--border)", padding: "32px 0 32px" }}>
         <div className="container" style={{ maxWidth: 700 }}>
-          <div>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
             {team.flag_url && (
               <img src={team.flag_url} alt={team.name} className="logo-lg"
