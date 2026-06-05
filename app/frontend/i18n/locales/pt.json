@@ -122,7 +122,9 @@
     "draw": "Empate",
     "fullTime": "Tempo Final",
     "halfTime": "Intervalo",
-    "substitutes": "Reservas"
+    "substitutes": "Reservas",
+    "statsNotProvided": "Estatísticas não disponíveis para esta partida",
+    "lineupsNotProvided": "Escalações não disponíveis para esta partida"
   },
   "error": {
     "dataUnavailable": "Dados temporariamente indisponíveis",

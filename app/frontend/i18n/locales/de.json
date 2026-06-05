@@ -122,7 +122,9 @@
     "draw": "Unentschieden",
     "fullTime": "Spielende",
     "halfTime": "Halbzeit",
-    "substitutes": "Auswechselspieler"
+    "substitutes": "Auswechselspieler",
+    "statsNotProvided": "Statistiken für dieses Spiel nicht verfügbar",
+    "lineupsNotProvided": "Aufstellungen für dieses Spiel nicht verfügbar"
   },
   "error": {
     "dataUnavailable": "Daten vorübergehend nicht verfügbar",

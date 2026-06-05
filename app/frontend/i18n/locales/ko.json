@@ -122,7 +122,9 @@
     "draw": "무승부",
     "fullTime": "경기 종료",
     "halfTime": "하프타임",
-    "substitutes": "후보 선수"
+    "substitutes": "후보 선수",
+    "statsNotProvided": "이 경기의 통계를 제공하지 않습니다",
+    "lineupsNotProvided": "이 경기의 라인업을 제공하지 않습니다"
   },
   "error": {
     "dataUnavailable": "데이터를 일시적으로 사용할 수 없습니다",

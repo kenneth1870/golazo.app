@@ -122,7 +122,9 @@
     "draw": "Nul",
     "fullTime": "Fin du Match",
     "halfTime": "Mi-Temps",
-    "substitutes": "Remplaçants"
+    "substitutes": "Remplaçants",
+    "statsNotProvided": "Statistiques non disponibles pour ce match",
+    "lineupsNotProvided": "Compositions non disponibles pour ce match"
   },
   "error": {
     "dataUnavailable": "Données temporairement indisponibles",

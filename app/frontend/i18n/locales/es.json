@@ -122,7 +122,9 @@
     "draw": "Empate",
     "fullTime": "Tiempo Completo",
     "halfTime": "Medio Tiempo",
-    "substitutes": "Suplentes"
+    "substitutes": "Suplentes",
+    "statsNotProvided": "Estadísticas no disponibles para este partido",
+    "lineupsNotProvided": "Alineaciones no disponibles para este partido"
   },
   "error": {
     "dataUnavailable": "Datos temporalmente no disponibles",

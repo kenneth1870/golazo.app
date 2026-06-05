@@ -122,7 +122,9 @@
     "draw": "引き分け",
     "fullTime": "試合終了",
     "halfTime": "ハーフタイム",
-    "substitutes": "控え選手"
+    "substitutes": "控え選手",
+    "statsNotProvided": "この試合の統計は提供されていません",
+    "lineupsNotProvided": "この試合のラインナップは提供されていません"
   },
   "error": {
     "dataUnavailable": "データが一時的に利用できません",

@@ -371,12 +371,17 @@ function StatBar({ label, homeVal, awayVal, isPct }) {
   )
 }
 
-function StatsPanel({ stats, home, away, t }) {
+function StatsPanel({ stats, home, away, t, statusShort }) {
+  const isFT = ["FT", "AET", "PEN"].includes(statusShort)
+  const isNS = statusShort === "NS"
+
   if (!stats?.length) return (
     <div className="empty-state" style={{ paddingTop: 40 }}>
       <div className="empty-state__icon">📊</div>
       <h3>{t("match.statsUnavailable")}</h3>
-      <p>{t("match.statsAppear") }</p>
+      <p style={{ maxWidth: 280, textAlign: "center" }}>
+        {isFT ? t("match.statsNotProvided") : isNS ? t("match.statsAppear") : t("match.statsAppear")}
+      </p>
     </div>
   )
 
@@ -391,6 +396,9 @@ function StatsPanel({ stats, home, away, t }) {
     <div className="empty-state" style={{ paddingTop: 40 }}>
       <div className="empty-state__icon">📊</div>
       <h3>{t("match.statsUnavailable")}</h3>
+      <p style={{ maxWidth: 280, textAlign: "center" }}>
+        {isFT ? t("match.statsNotProvided") : t("match.statsAppear")}
+      </p>
     </div>
   )
 
@@ -501,21 +509,20 @@ function PosLegend() {
   )
 }
 
-function LineupsPanel({ lineups, t }) {
-  if (!lineups?.length) return (
+function LineupsPanel({ lineups, t, statusShort }) {
+  const isFT = ["FT", "AET", "PEN"].includes(statusShort)
+  const noData = !lineups?.length
+
+  if (noData || !lineups.some(l => l?.start_xi?.length > 0)) return (
     <div className="empty-state" style={{ paddingTop: 40 }}>
       <div className="empty-state__icon">👕</div>
       <h3>{t("match.lineupsUnavailable")}</h3>
-      <p>{t("match.lineupsRelease")}</p>
+      <p style={{ maxWidth: 280, textAlign: "center" }}>
+        {isFT ? t("match.lineupsNotProvided") : t("match.lineupsRelease")}
+      </p>
     </div>
   )
   const [home, away] = lineups
-  if (!home?.start_xi?.length && !away?.start_xi?.length) return (
-    <div className="empty-state" style={{ paddingTop: 40 }}>
-      <div className="empty-state__icon">👕</div>
-      <h3>{t("match.lineupsUnavailable")}</h3>
-    </div>
-  )
   return (
     <div>
       <PosLegend />
@@ -1049,10 +1056,10 @@ export default function MatchShowPage() {
         )}
 
         {tab === "stats" && (
-          <StatsPanel stats={data?.stats} home={data?.fixture?.teams?.home} away={data?.fixture?.teams?.away} t={t} />
+          <StatsPanel stats={data?.stats} home={data?.fixture?.teams?.home} away={data?.fixture?.teams?.away} t={t} statusShort={statusShort} />
         )}
 
-        {tab === "lineups" && <LineupsPanel lineups={data?.lineups} t={t} />}
+        {tab === "lineups" && <LineupsPanel lineups={data?.lineups} t={t} statusShort={statusShort} />}
 
         {tab === "h2h" && (
           <H2HPanel h2h={data?.h2h} homeTeamName={homeName} awayTeamName={awayName} t={t} />

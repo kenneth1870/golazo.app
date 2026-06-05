@@ -122,7 +122,9 @@
     "draw": "تعادل",
     "fullTime": "نهاية المباراة",
     "halfTime": "نهاية الشوط الأول",
-    "substitutes": "البدلاء"
+    "substitutes": "البدلاء",
+    "statsNotProvided": "الإحصاءات غير متاحة لهذه المباراة",
+    "lineupsNotProvided": "التشكيلات غير متاحة لهذه المباراة"
   },
   "error": {
     "dataUnavailable": "البيانات غير متاحة مؤقتاً",

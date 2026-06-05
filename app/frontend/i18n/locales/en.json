@@ -122,7 +122,9 @@
     "draw": "Draw",
     "fullTime": "Full Time",
     "halfTime": "Half Time",
-    "substitutes": "Substitutes"
+    "substitutes": "Substitutes",
+    "statsNotProvided": "Stats not provided by the data source for this match",
+    "lineupsNotProvided": "Lineups not available for this match"
   },
   "error": {
     "dataUnavailable": "Data temporarily unavailable",
