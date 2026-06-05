@@ -25,4 +25,9 @@ namespace :golazo do
     code = ENV.fetch("COMPETITION", "WC")
     WorldCupSync.new(competition_code: code).sync_standings
   end
+
+  desc "Sync team and match external_ids from football-data.org"
+  task sync_football_data: :environment do
+    WorldCupSync.new.sync_from_football_data
+  end
 end

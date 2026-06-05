@@ -4,6 +4,9 @@ class WorldCupSync
   WC_LEAGUE_ID = (ENV["RAPIDAPI_WC_LEAGUE_ID"] || 77).to_i
   WC_SEASON_ID = (ENV["RAPIDAPI_WC_SEASON_ID"] || 2026).to_i
 
+  # football-data.org uses "URY" for Uruguay; we store "URU"
+  TLA_OVERRIDES = { "URY" => "URU" }.freeze
+
   STATUS_MAP = {
     1  => "scheduled",
     2  => "live", 3 => "live", 4 => "live", 5 => "live",
@@ -67,6 +70,72 @@ class WorldCupSync
     sync_standings(competition)
     sync_today
     log("Done")
+  end
+
+  # Sync teams and matches external_ids from football-data.org.
+  # Sets team.external_id + team.flag_url (SVG crest) and match.external_id on all 104 WC fixtures.
+  def sync_from_football_data
+    api_key = ENV["FOOTBALL_DATA_API_KEY"]
+    raise "FOOTBALL_DATA_API_KEY not set" if api_key.blank?
+
+    base    = "https://api.football-data.org/v4"
+    headers = { "X-Auth-Token" => api_key }
+
+    # ── Teams ──
+    teams_resp = JSON.parse(URI.open("#{base}/competitions/WC/teams?season=2026", headers).read)
+    fd_teams   = teams_resp["teams"] || []
+
+    updated_teams = 0
+    fd_teams.each do |ft|
+      tla  = TLA_OVERRIDES[ft["tla"]] || ft["tla"]
+      team = Team.find_by(code: tla)
+      unless team
+        # fallback: match by name
+        team = Team.find_by("LOWER(name) = ?", ft["name"].downcase)
+      end
+      next unless team
+
+      team.external_id = ft["id"]
+      team.flag_url    = ft["crest"] if ft["crest"].present?
+      team.save! if team.changed?
+      updated_teams += 1
+    end
+    log("Teams updated: #{updated_teams}/#{fd_teams.length}")
+
+    # ── Matches ──
+    matches_resp = JSON.parse(URI.open("#{base}/competitions/WC/matches?season=2026", headers).read)
+    fd_matches   = matches_resp["matches"] || []
+
+    competition = Competition.find_by!(code: "WC")
+    updated_matches = 0
+
+    fd_matches.each do |fm|
+      home_tla = fm.dig("homeTeam", "tla")
+      away_tla = fm.dig("awayTeam", "tla")
+      kickoff  = fm["utcDate"]
+      next unless home_tla && away_tla && kickoff
+
+      home_code = TLA_OVERRIDES[home_tla] || home_tla
+      away_code = TLA_OVERRIDES[away_tla] || away_tla
+      home_team = Team.find_by(code: home_code)
+      away_team = Team.find_by(code: away_code)
+      next unless home_team && away_team
+
+      match = Match.find_by(
+        home_team: home_team,
+        away_team: away_team,
+        competition: competition
+      )
+      next unless match
+
+      match.external_id = fm["id"]
+      match.save! if match.changed?
+      updated_matches += 1
+    end
+    log("Matches updated: #{updated_matches}/#{fd_matches.length}")
+  rescue => e
+    log("sync_from_football_data error: #{e.message}")
+    raise
   end
 
   # Recalculate WC group standings purely from finished matches in the DB.
