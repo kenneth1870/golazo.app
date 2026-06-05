@@ -38,7 +38,7 @@ export default function NewsPage() {
   const { t } = useTranslation()
   const [articles, setArticles] = useState([])
   const [loading, setLoading]   = useState(true)
-  const [source, setSource]     = useState("All")
+  const [source, setSource]     = useState(null)
 
   useEffect(() => {
     fetch("/api/v1/news")
@@ -50,7 +50,8 @@ export default function NewsPage() {
 
   const allLabel = t("news.all")
   const sources  = [allLabel, ...new Set(articles.map(a => a.source))]
-  const filtered = source === allLabel ? articles : articles.filter(a => a.source === source)
+  const active   = source ?? allLabel
+  const filtered = active === allLabel ? articles : articles.filter(a => a.source === active)
 
   return (
     <>
@@ -67,7 +68,7 @@ export default function NewsPage() {
             {sources.map(s => (
               <button
                 key={s}
-                className={`tab-link${source === s ? " tab-link--active" : ""}`}
+                className={`tab-link${active === s ? " tab-link--active" : ""}`}
                 onClick={() => setSource(s)}
               >
                 {s}
