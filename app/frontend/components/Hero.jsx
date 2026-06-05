@@ -28,9 +28,9 @@ function Countdown({ targetDate, label }) {
         </p>
       )}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-        {[["wks", t.weeks], ["days", t.days], ["hr", t.hours], ["min", t.minutes], ["sec", t.seconds]].map(([l, v]) => (
-          <span key={l} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center" }}>
-            <span style={{ display: "inline-block", background: "rgba(255,255,255,.12)", border: "1px solid rgba(255,255,255,.15)", padding: "8px 14px", borderRadius: 6, fontWeight: 900, fontSize: "1.6rem", color: "#fff", minWidth: 54, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
+        {[["wks", t.weeks, true], ["days", t.days, false], ["hr", t.hours, false], ["min", t.minutes, false], ["sec", t.seconds, false]].map(([l, v, mobileHide]) => (
+          <span key={l} className={mobileHide ? "hero-countdown__wks" : undefined} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center" }}>
+            <span className="hero-countdown-block" style={{ display: "inline-block", background: "rgba(255,255,255,.12)", border: "1px solid rgba(255,255,255,.15)", padding: "8px 14px", borderRadius: 6, fontWeight: 900, fontSize: "1.6rem", color: "#fff", minWidth: 54, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
               {String(v).padStart(2, "0")}
             </span>
             <span style={{ fontSize: ".6rem", color: "rgba(255,255,255,.45)", textTransform: "uppercase", letterSpacing: ".1em", marginTop: 5 }}>{l}</span>
@@ -57,7 +57,7 @@ export default function Hero({ nextMatch }) {
         <div className="row align-items-center">
           <div className="col-12 col-lg-6 ml-auto" style={{ paddingTop: "1rem", paddingBottom: "1rem" }}>
             <h1 className="text-white" style={{ fontSize: "clamp(1.8rem, 6vw, 3rem)" }}>{t("hero.title")}</h1>
-            <p style={{ fontSize: "clamp(.82rem, 2.5vw, 1rem)" }}>
+            <p style={{ fontSize: "clamp(.82rem, 2.5vw, 1rem)", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
               {t("hero.subtitle")}
             </p>
             <Countdown targetDate={target} label={label} />

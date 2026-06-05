@@ -120,10 +120,11 @@ export default function SearchBar({ onClose }) {
             }}
           />
           {loading && <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>…</span>}
-          <kbd onClick={onClose} style={{
+          <button onClick={onClose} style={{
             background: "var(--surface2)", border: "1px solid var(--border)",
-            borderRadius: 5, padding: "2px 6px", fontSize: "0.7rem", color: "var(--muted)", cursor: "pointer",
-          }}>ESC</kbd>
+            borderRadius: 6, padding: "4px 10px", fontSize: "0.72rem", color: "var(--muted)",
+            cursor: "pointer", fontFamily: "inherit", fontWeight: 600, flexShrink: 0,
+          }}>✕</button>
         </div>
 
         {/* Results */}
@@ -182,7 +183,7 @@ export default function SearchBar({ onClose }) {
           </div>
         )}
 
-        <div style={{ padding: "8px 16px", borderTop: "1px solid var(--border)", display: "flex", gap: 16, fontSize: "0.68rem", color: "#444" }}>
+        <div className="search-bar__footer">
           <span>↑↓ navigate</span><span>↵ select</span><span>ESC close</span>
         </div>
       </div>

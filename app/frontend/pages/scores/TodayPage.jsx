@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import MatchRow from "../../components/MatchRow"
 import { useLocale } from "../../hooks/useLocale"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { useFavoriteTeam } from "../../hooks/useFavoriteTeam"
 
 // ─── Helpers ──────────────────────────────────────────
 function toISO(date) {
@@ -40,25 +41,33 @@ function useDateLabel(date, t) {
 function DateStrip({ selected, onChange }) {
   const todayISO    = toISO(new Date())
   const selectedISO = toISO(selected)
+  const touchStartX = useRef(null)
 
-  // Show 7 days centred on selected (capped so we don't go too far into future)
-  const days = Array.from({ length: 7 }, (_, i) => addDays(selected, i - 3))
+  // 5 days centred on selected — fits comfortably on 375px
+  const days = Array.from({ length: 5 }, (_, i) => addDays(selected, i - 2))
+
+  function handleTouchStart(e) { touchStartX.current = e.touches[0].clientX }
+  function handleTouchEnd(e) {
+    if (touchStartX.current === null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    if (Math.abs(dx) > 50) onChange(addDays(selected, dx < 0 ? 1 : -1))
+    touchStartX.current = null
+  }
 
   return (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      gap: 4,
-      overflowX: "auto",
-      paddingBottom: 2,
-    }}>
+    <div
+      style={{ display: "flex", alignItems: "center", gap: 4 }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <button
         className="btn-nav"
-        style={{ flexShrink: 0 }}
+        style={{ flexShrink: 0, minWidth: 44, minHeight: 44 }}
         onClick={() => onChange(addDays(selected, -1))}
+        aria-label="Previous day"
       >←</button>
 
-      <div style={{ display: "flex", gap: 4, flex: 1, justifyContent: "center", flexWrap: "nowrap" }}>
+      <div style={{ display: "flex", gap: 4, flex: 1, justifyContent: "center" }}>
         {days.map(d => {
           const iso     = toISO(d)
           const isToday = iso === todayISO
@@ -72,20 +81,22 @@ function DateStrip({ selected, onChange }) {
                 color:        isSel ? "#fff" : isToday ? "var(--accent, #ee1e46)" : "var(--muted, #888)",
                 border:       isSel ? "1px solid var(--accent, #ee1e46)" : "1px solid var(--border, #2a2a2a)",
                 borderRadius: 8,
-                padding:      "6px 10px",
+                padding:      "8px 6px",
                 cursor:       "pointer",
-                fontSize:     "0.72rem",
+                fontSize:     "0.7rem",
                 fontWeight:   isSel ? 700 : 400,
                 whiteSpace:   "nowrap",
                 transition:   "all 0.15s",
-                minWidth:     52,
+                flex:         1,
+                minWidth:     44,
+                minHeight:    44,
                 textAlign:    "center",
               }}
             >
               <div style={{ fontWeight: isSel || isToday ? 700 : 400 }}>
                 {d.toLocaleDateString([], { weekday: "short" })}
               </div>
-              <div style={{ fontSize: "0.68rem", opacity: 0.8 }}>
+              <div style={{ fontSize: "0.65rem", opacity: 0.8 }}>
                 {d.toLocaleDateString([], { month: "short", day: "numeric" })}
               </div>
             </button>
@@ -95,8 +106,9 @@ function DateStrip({ selected, onChange }) {
 
       <button
         className="btn-nav"
-        style={{ flexShrink: 0 }}
+        style={{ flexShrink: 0, minWidth: 44, minHeight: 44 }}
         onClick={() => onChange(addDays(selected, 1))}
+        aria-label="Next day"
       >→</button>
     </div>
   )
@@ -133,6 +145,9 @@ function RealMatchRow({ match, onMatchClick }) {
               onError={e => (e.target.style.display = "none")} />
           )}
           <span className="team-name">{match.home_team?.name}</span>
+          {match.home_red_cards > 0 && (
+            <span className="red-card-badge">🟥{match.home_red_cards > 1 ? `×${match.home_red_cards}` : ""}</span>
+          )}
         </div>
         <div className="match-row__score">
           {hasScore
@@ -141,6 +156,9 @@ function RealMatchRow({ match, onMatchClick }) {
           }
         </div>
         <div className="match-row__team match-row__team--away">
+          {match.away_red_cards > 0 && (
+            <span className="red-card-badge">🟥{match.away_red_cards > 1 ? `×${match.away_red_cards}` : ""}</span>
+          )}
           <span className="team-name">{match.away_team?.name}</span>
           {match.away_team?.flag_url && (
             <img src={match.away_team.flag_url} alt="" className="flag-xs"
@@ -179,7 +197,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick }) {
             onError={e => (e.target.style.display = "none")} />
         )}
         <h3 style={{ margin: 0 }}>{comp?.name ?? "Other"}</h3>
-        <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{comp?.country}</span>
+        <span className="widget-meta-country" style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{comp?.country}</span>
         {hasLive && <span className="live-badge">LIVE</span>}
         {canNav && <span style={{ fontSize: "0.75rem", color: "#ee1e46" }}>→</span>}
       </div>
@@ -190,6 +208,111 @@ function CompetitionBlock({ matches, navigate, onMatchClick }) {
             : <MatchRow key={m.id} match={m} onClick={m.external_id ? () => onMatchClick(m.external_id, m) : undefined} />
         )}
       </div>
+    </div>
+  )
+}
+
+// ─── Fav team live alert ──────────────────────────────
+function FavTeamAlert({ match, onMatchClick, onDismiss }) {
+  if (!match) return null
+  const isLive = match.status === "live"
+  if (!isLive) return null
+
+  const home = match.home_team?.name
+  const away = match.away_team?.name
+  const score = match.home_score !== null && match.away_score !== null
+    ? `${match.home_score}–${match.away_score}` : null
+  const minute = match.minute ? `${match.minute}'` : "LIVE"
+
+  return (
+    <div style={{
+      background: "rgba(238,30,70,.12)", border: "1px solid rgba(238,30,70,.35)",
+      borderRadius: 12, padding: "12px 16px", marginBottom: 20,
+      display: "flex", alignItems: "center", gap: 12,
+      cursor: "pointer", animation: "pageIn .3s ease",
+    }}
+      onClick={() => match.external_id && onMatchClick(match.external_id, match)}
+    >
+      <span className="live-dot" style={{ flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 800, fontSize: ".85rem", color: "#ee1e46" }}>
+          Your team is playing now!
+        </div>
+        <div style={{ fontSize: ".78rem", color: "#e6edf3", marginTop: 2 }}>
+          {home} {score ? score : "vs"} {away}
+          <span style={{ marginLeft: 8, color: "#ee1e46", fontWeight: 700 }}>{minute}</span>
+        </div>
+      </div>
+      <button
+        onClick={e => { e.stopPropagation(); onDismiss() }}
+        style={{
+          background: "none", border: "none", color: "#888",
+          fontSize: "1rem", cursor: "pointer", padding: "0 4px", flexShrink: 0,
+        }}
+      >✕</button>
+    </div>
+  )
+}
+
+// ─── Skeleton block ───────────────────────────────────
+function SkeletonBlock({ rows = 3 }) {
+  return (
+    <div className="widget-next-match mb-4" style={{ overflow: "hidden" }}>
+      <div className="widget-title d-flex align-items-center" style={{ gap: 10 }}>
+        <div className="loading-shimmer" style={{ width: 28, height: 28, borderRadius: 4, flexShrink: 0 }} />
+        <div className="loading-shimmer" style={{ width: "40%", height: 14, borderRadius: 4 }} />
+      </div>
+      <div className="widget-body p-0">
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="match-row" style={{ pointerEvents: "none" }}>
+            <div className="loading-shimmer" style={{ width: 36, height: 12, borderRadius: 3 }} />
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+              <div className="loading-shimmer" style={{ width: "55%", height: 11, borderRadius: 3 }} />
+              <div className="loading-shimmer" style={{ width: "45%", height: 11, borderRadius: 3, alignSelf: "flex-end" }} />
+            </div>
+            <div className="loading-shimmer" style={{ width: 40, height: 20, borderRadius: 4 }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Pull-to-refresh indicator ────────────────────────
+function PullIndicator({ distance, refreshing }) {
+  const size   = Math.min(distance / 64, 1)
+  const radius = 10
+  const circ   = 2 * Math.PI * radius
+  const dash   = circ * size
+
+  return (
+    <div style={{
+      display: "flex", justifyContent: "center", alignItems: "center",
+      height: refreshing ? 48 : Math.min(distance * 0.6, 48),
+      overflow: "hidden", transition: refreshing ? "height 0.2s" : "none",
+    }}>
+      <svg width={28} height={28} viewBox="0 0 28 28"
+        style={{
+          transform: refreshing ? "none" : `rotate(${size * 360}deg)`,
+          transition: refreshing ? "none" : "none",
+          opacity: Math.max(size, refreshing ? 1 : 0),
+        }}
+      >
+        <circle cx={14} cy={14} r={radius} fill="none" stroke="rgba(238,30,70,.25)" strokeWidth={2.5} />
+        {refreshing ? (
+          <circle cx={14} cy={14} r={radius} fill="none" stroke="#ee1e46" strokeWidth={2.5}
+            strokeDasharray={`${circ * 0.6} ${circ * 0.4}`}
+            strokeLinecap="round"
+            style={{ transformOrigin: "50% 50%", animation: "spin 0.8s linear infinite" }}
+          />
+        ) : (
+          <circle cx={14} cy={14} r={radius} fill="none" stroke="#ee1e46" strokeWidth={2.5}
+            strokeDasharray={`${dash} ${circ - dash}`}
+            strokeDashoffset={circ / 4}
+            strokeLinecap="round"
+          />
+        )}
+      </svg>
     </div>
   )
 }
@@ -207,18 +330,27 @@ function EmptyState({ label, t }) {
 }
 
 // ─── Main page ────────────────────────────────────────
+const PULL_THRESHOLD = 64
+
 export default function TodayPage() {
   const { t } = useTranslation()
   usePageMeta(t("time.today"), "Today's live football scores, results and fixtures — all competitions.")
   const [selected, setSelected] = useState(startOfDay)
   const [matches, setMatches]   = useState([])
   const [loading, setLoading]   = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [pullDist, setPullDist]     = useState(0)
+  const [alertDismissed, setAlertDismissed] = useState(false)
+  const pullStartY  = useRef(null)
+  const isPulling   = useRef(false)
   const navigate     = useNavigate()
   const onMatchClick = (extId, match) => navigate(`/matches/${extId}`, { state: { preview: match } })
   const { timezone } = useLocale()
+  const [favTeam]   = useFavoriteTeam()
 
-  const load = useCallback((date) => {
-    setLoading(true)
+  const load = useCallback((date, isRefresh = false) => {
+    if (isRefresh) setRefreshing(true)
+    else setLoading(true)
     const iso    = toISO(date)
     const today  = toISO(new Date())
     const url    = iso === today ? "/api/v1/today" : `/api/v1/today?date=${iso}`
@@ -236,11 +368,11 @@ export default function TodayPage() {
         })
         setMatches(filtered)
       })
-      .catch(() => setMatches([]))
-      .finally(() => setLoading(false))
+      .catch(() => {})
+      .finally(() => { setLoading(false); setRefreshing(false) })
   }, [])
 
-  useEffect(() => { load(selected) }, [selected, load])
+  useEffect(() => { load(selected); setAlertDismissed(false) }, [selected, load])
 
   // Keyboard navigation
   useEffect(() => {
@@ -264,6 +396,28 @@ export default function TodayPage() {
     return () => clearInterval(iv)
   }, [selected, load, matches])
 
+  // Pull-to-refresh touch handlers
+  function onPTRStart(e) {
+    if (window.scrollY > 0) return
+    pullStartY.current = e.touches[0].clientY
+    isPulling.current = true
+  }
+  function onPTRMove(e) {
+    if (!isPulling.current || pullStartY.current === null) return
+    const dy = e.touches[0].clientY - pullStartY.current
+    if (dy <= 0) { setPullDist(0); return }
+    setPullDist(Math.min(dy, PULL_THRESHOLD * 1.5))
+  }
+  function onPTREnd() {
+    if (!isPulling.current) return
+    isPulling.current = false
+    if (pullDist >= PULL_THRESHOLD && !refreshing && !loading) {
+      load(selected, true)
+    }
+    setPullDist(0)
+    pullStartY.current = null
+  }
+
   const byComp = matches.reduce((acc, m) => {
     const key = m.competition?.id ?? m.competition?.code ?? "other"
     if (!acc[key]) acc[key] = []
@@ -280,8 +434,25 @@ export default function TodayPage() {
   const liveCount = matches.filter(m => m.status === "live").length
   const label     = useDateLabel(selected, t)
 
+  const favLiveMatch = !alertDismissed && favTeam ? matches.find(m =>
+    m.status === "live" && (
+      m.home_team?.name?.toLowerCase().includes(favTeam.name?.toLowerCase()) ||
+      m.away_team?.name?.toLowerCase().includes(favTeam.name?.toLowerCase())
+    )
+  ) : null
+
   return (
-    <div className="site-section">
+    <div
+      className="site-section"
+      onTouchStart={onPTRStart}
+      onTouchMove={onPTRMove}
+      onTouchEnd={onPTREnd}
+    >
+      {/* Pull-to-refresh indicator */}
+      {(pullDist > 4 || refreshing) && (
+        <PullIndicator distance={pullDist} refreshing={refreshing} />
+      )}
+
       <div className="container">
         {/* Date strip */}
         <div className="mb-4">
@@ -303,9 +474,20 @@ export default function TodayPage() {
           </div>
         </div>
 
+        {/* Favorite team live alert */}
+        <FavTeamAlert
+          match={favLiveMatch}
+          onMatchClick={onMatchClick}
+          onDismiss={() => setAlertDismissed(true)}
+        />
+
         {/* Content */}
         {loading ? (
-          <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
+          <>
+            <SkeletonBlock rows={3} />
+            <SkeletonBlock rows={2} />
+            <SkeletonBlock rows={4} />
+          </>
         ) : groups.length === 0 ? (
           <EmptyState label={label} t={t} />
         ) : (

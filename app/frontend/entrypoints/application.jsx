@@ -7,6 +7,13 @@ import App from "../App"
 import { LiveProvider } from "../contexts/LiveContext"
 import "../styles/application.css"
 
+// Register service worker for PWA caching + offline support
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {})
+  })
+}
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <I18nextProvider i18n={i18n}>

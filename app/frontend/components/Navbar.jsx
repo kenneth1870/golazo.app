@@ -255,9 +255,8 @@ export default function Navbar() {
           </div>
         </nav>
 
-        <div style={{ padding: "14px 20px", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ padding: "14px 20px", borderTop: "1px solid var(--border)" }}>
           <LanguageSwitcher />
-          <span style={{ fontSize: "0.68rem", color: "#333" }}>⌘K to search</span>
         </div>
       </div>
 
@@ -326,7 +325,7 @@ export default function Navbar() {
             </nav>
 
             {/* Mobile: search + hamburger */}
-            <div className="d-lg-none ml-auto" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div className="mobile-header-actions ml-auto">
               <button
                 onClick={() => setSearchOpen(true)}
                 style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 0, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center" }}

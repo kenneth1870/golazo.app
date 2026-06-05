@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Offline — Golazo</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0d1117;color:#e6edf3;font-family:'Montserrat',system-ui,sans-serif;
+         display:flex;flex-direction:column;align-items:center;justify-content:center;
+         min-height:100vh;text-align:center;padding:24px}
+    .icon{font-size:4rem;margin-bottom:24px;opacity:.6}
+    h1{font-size:1.5rem;font-weight:900;margin-bottom:12px;letter-spacing:-.01em}
+    p{color:#7d8590;font-size:.9rem;line-height:1.6;max-width:300px;margin-bottom:28px}
+    button{background:#ee1e46;color:#fff;border:none;border-radius:8px;
+           padding:12px 28px;font-size:.9rem;font-weight:700;cursor:pointer;
+           font-family:inherit;letter-spacing:.02em}
+    button:active{opacity:.85}
+  </style>
+</head>
+<body>
+  <div class="icon">⚽</div>
+  <h1>You're offline</h1>
+  <p>No internet connection. Cached scores may still be available — try going back.</p>
+  <button onclick="location.reload()">Try again</button>
+</body>
+</html>

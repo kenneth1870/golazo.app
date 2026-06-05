@@ -86,6 +86,45 @@ function FlagOrInitials({ name, src, size = 80 }) {
 }
 
 // ─── Scoreboard ────────────────────────────────────────
+function addToCalendar(fixture) {
+  const home = fixture?.teams?.home?.name ?? "Home"
+  const away = fixture?.teams?.away?.name ?? "Away"
+  const title = `${home} vs ${away}`
+  const start = fixture?.fixture?.date ? new Date(fixture.fixture.date) : null
+  if (!start) return
+  const end = new Date(start.getTime() + 105 * 60 * 1000) // 105 min
+
+  function fmt(d) {
+    return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "")
+  }
+
+  const loc = [fixture?.fixture?.venue?.name, fixture?.fixture?.venue?.city]
+    .filter(Boolean).join(", ")
+
+  const desc = `${fixture?.league?.name ?? ""} — watch live on Golazo`.trim()
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Golazo//EN",
+    "BEGIN:VEVENT",
+    `DTSTART:${fmt(start)}`,
+    `DTEND:${fmt(end)}`,
+    `SUMMARY:${title}`,
+    `DESCRIPTION:${desc}`,
+    loc ? `LOCATION:${loc}` : "",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].filter(Boolean).join("\r\n")
+
+  const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement("a")
+  a.href     = url
+  a.download = `${home.replace(/\s+/g, "_")}_vs_${away.replace(/\s+/g, "_")}.ics`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, notifEnabled, notifSupported }) {
   const [copied, setCopied] = useState(false)
   const home   = fixture?.teams?.home
@@ -235,6 +274,20 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
                 }}
               >
                 {notifEnabled ? "🔔 On" : "🔔 Alerts"}
+              </button>
+            )}
+            {isNS && fixture?.fixture?.date && (
+              <button
+                onClick={() => addToCalendar(fixture)}
+                title="Add to calendar"
+                style={{
+                  background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.15)",
+                  borderRadius: 20, padding: "5px 12px",
+                  color: "rgba(255,255,255,.5)",
+                  fontSize: ".72rem", fontWeight: 600, cursor: "pointer",
+                }}
+              >
+                📅 Calendar
               </button>
             )}
             <button onClick={share} className={`scoreboard__share${copied ? " copied" : ""}`}>
@@ -692,7 +745,7 @@ export default function MatchShowPage() {
 
   // Detect if live
   const statusShort = data?.fixture?.fixture?.status?.short
-  const isLive      = ["1H", "2H", "HT", "ET", "BT", "P"].includes(statusShort)
+  const isLive      = ["1H", "2H", "HT", "ET", "BT", "P", "INT"].includes(statusShort)
   const apiMinute   = data?.fixture?.fixture?.status?.elapsed
   const liveMinute  = useLiveMinute(apiMinute, isLive)
 
@@ -814,9 +867,34 @@ export default function MatchShowPage() {
   const goalCount   = data?.events?.filter(e => e.type === "Goal").length ?? 0
   const TABS        = TAB_KEYS.map(k => ({ key: k, label: t(`match.${k}`) }))
 
+  // Swipe between tabs
+  const swipeStartX = useRef(null)
+  function handleTabSwipeStart(e) { swipeStartX.current = e.touches[0].clientX }
+  function handleTabSwipeEnd(e) {
+    if (swipeStartX.current === null) return
+    const dx = e.changedTouches[0].clientX - swipeStartX.current
+    if (Math.abs(dx) < 60) { swipeStartX.current = null; return }
+    const idx = TAB_KEYS.indexOf(tab)
+    if (dx < 0 && idx < TAB_KEYS.length - 1) setTab(TAB_KEYS[idx + 1])
+    else if (dx > 0 && idx > 0)              setTab(TAB_KEYS[idx - 1])
+    swipeStartX.current = null
+  }
+
   return (
     <div>
       <GoalToast text={toast} visible={!!toast} />
+
+      {/* Back bar — visible on mobile above scoreboard */}
+      <div className="match-back-bar">
+        <div className="container" style={{ maxWidth: 740, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <button onClick={goBack} className="btn-back" style={{ padding: "10px 0" }}>← {t("match.back", "Back")}</button>
+          {isLive && (
+            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.7rem", color: "var(--muted)" }}>
+              <span className="live-dot" /> {t("match.updatingEvery")}
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* Scoreboard — renders from fixture data or a minimal shell */}
       {hasFixture
@@ -866,15 +944,9 @@ export default function MatchShowPage() {
       </div>
 
       <div className="container" style={{ maxWidth: 740, paddingTop: 20, paddingBottom: 40 }}>
-        {/* Back row */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-          <button onClick={goBack} className="btn-back">← Back</button>
-          {isLive && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.7rem", color: "var(--muted)" }}>
-              <span className="live-dot" /> {t("match.updatingEvery")}
-            </span>
-          )}
-          {!hasFixture && (
+        {/* Retry button — only shown when fixture failed to load */}
+        {!hasFixture && (
+          <div style={{ marginBottom: 20, textAlign: "center" }}>
             <button
               onClick={() => { setLoading(true); load().finally(() => setLoading(false)) }}
               style={{
@@ -885,8 +957,8 @@ export default function MatchShowPage() {
             >
               {t("error.retry")}
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Goal banner */}
         {goalCount > 0 && (
@@ -904,7 +976,8 @@ export default function MatchShowPage() {
           </div>
         )}
 
-        {/* Tab content */}
+        {/* Tab content — swipeable on mobile */}
+        <div onTouchStart={handleTabSwipeStart} onTouchEnd={handleTabSwipeEnd}>
         {tab === "summary" && (
           <>
             {hasFixture && <PredictionPanel matchId={id} homeTeamName={homeName} awayTeamName={awayName} t={t} />}
@@ -932,6 +1005,7 @@ export default function MatchShowPage() {
         {tab === "h2h" && (
           <H2HPanel h2h={data?.h2h} homeTeamName={homeName} awayTeamName={awayName} t={t} />
         )}
+        </div>
       </div>
     </div>
   )

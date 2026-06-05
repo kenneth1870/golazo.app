@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
 import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
+import BottomNav from "./components/BottomNav"
+import InstallPrompt from "./components/InstallPrompt"
 import ErrorBoundary from "./components/ErrorBoundary"
 
 import HomePage        from "./pages/HomePage"
@@ -74,6 +76,8 @@ export default function App() {
       </main>
 
       <Footer />
+      <BottomNav />
+      <InstallPrompt />
     </div>
   )
 }

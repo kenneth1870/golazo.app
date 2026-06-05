@@ -17,7 +17,7 @@ class LiveScoresClient
     10 => "live",       # Half time
     11 => "live",       # Half time (alt)
     12 => "live",       # Break time
-    13 => "postponed",  # Interrupted
+    13 => "live",       # Interrupted (suspended but not abandoned)
     14 => "postponed"  # Abandoned
   }.freeze
 
@@ -277,9 +277,10 @@ class LiveScoresClient
       minute:         minute,
       venue:          m.dig("venue", "name") || m["venue"],
       home: {
-        name:  m.dig("home", "name")  || m.dig("homeTeam", "name"),
-        logo:  team_logo(m.dig("home", "id") || m.dig("homeTeam", "id"), m.dig("home", "logo") || m.dig("homeTeam", "logo")),
-        score: m.dig("home", "score") || m.dig("homeScore", "current") || m["homeGoals"]
+        name:      m.dig("home", "name")  || m.dig("homeTeam", "name"),
+        logo:      team_logo(m.dig("home", "id") || m.dig("homeTeam", "id"), m.dig("home", "logo") || m.dig("homeTeam", "logo")),
+        score:     m.dig("home", "score") || m.dig("homeScore", "current") || m["homeGoals"],
+        red_cards: m.dig("home", "redCards")
       },
       away: {
         name:      m.dig("away", "name")      || m.dig("awayTeam", "name"),
@@ -542,8 +543,12 @@ class LiveScoresClient
     long_status = status.dig("reason", "long") || (finished ? "Full Time" : started ? "In Progress" : "Not Started")
     elapsed = nil
     if started && !finished
-      halfs = status["halfs"] || {}
-      elapsed = short == "HT" ? 45 : 90
+      # Prefer real live time from status; fall back to period defaults
+      raw_time = status.dig("liveTime", "long") || status["elapsed"] || detail.dig("status", "liveTime", "long")
+      if raw_time
+        elapsed = raw_time.to_s.include?(":") ? raw_time.to_s.split(":").first.to_i : raw_time.to_s.gsub(/[^\d]/, "").to_i.nonzero?
+      end
+      elapsed ||= (short == "HT" ? 45 : nil)
     end
 
     home_logo = "https://images.fotmob.com/image_resources/logo/teamlogo/#{home_id}_large.png"

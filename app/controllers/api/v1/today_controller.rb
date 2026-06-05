@@ -80,6 +80,8 @@ module Api
             logo:    m[:league_logo],
             country: m[:league_country],
           },
+          home_red_cards: m.dig(:home, :red_cards).to_i,
+          away_red_cards: m.dig(:away, :red_cards).to_i,
           home_team: { name: m.dig(:home, :name), flag_url: m.dig(:home, :logo) },
           away_team: { name: m.dig(:away, :name), flag_url: m.dig(:away, :logo) },
         }
