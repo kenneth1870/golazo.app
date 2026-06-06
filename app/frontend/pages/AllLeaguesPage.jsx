@@ -40,6 +40,7 @@ export default function AllLeaguesPage() {
   const [competitions, setCompetitions] = useState([])
   const [liveMatches, setLiveMatches]   = useState([])
   const [loading, setLoading]           = useState(true)
+  const [error, setError]               = useState(false)
   const navigate = useNavigate()
 
   const loadLive = () =>
@@ -48,15 +49,21 @@ export default function AllLeaguesPage() {
       .then(setLiveMatches)
       .catch(() => {})
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true)
+    setError(false)
     Promise.all([
       fetch("/api/v1/competitions").then(r => r.json()),
-      loadLive()
-    ]).then(([comps]) => {
-      setCompetitions(comps)
-    }).finally(() => setLoading(false))
+      loadLive(),
+    ])
+      .then(([comps]) => setCompetitions(comps))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false))
+  }
 
-    const iv = setInterval(loadLive, 30000)
+  useEffect(() => {
+    load()
+    const iv = setInterval(loadLive, 30_000)
     return () => clearInterval(iv)
   }, [])
 
@@ -93,6 +100,17 @@ export default function AllLeaguesPage() {
       <div className="site-section">
         <div className="container">
           <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="site-section">
+        <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
+          <p style={{ color: "#888", marginBottom: 16 }}>Failed to load competitions.</p>
+          <button className="btn btn-primary btn-sm" onClick={load}>Retry</button>
         </div>
       </div>
     )

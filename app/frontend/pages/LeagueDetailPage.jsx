@@ -50,6 +50,7 @@ function StandingsTable({ standings }) {
                             src={s.team.flag_url}
                             alt=""
                             className="flag-xs"
+                            loading="lazy"
                             onError={e => (e.target.style.display = "none")}
                           />
                         )}

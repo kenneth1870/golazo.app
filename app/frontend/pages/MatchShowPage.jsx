@@ -6,6 +6,46 @@ import { usePageMeta } from "../hooks/usePageMeta"
 import { useLiveMinute, useGoalNotifications } from "./match/useMatchLive"
 import PredictionPanel from "./match/PredictionPanel"
 
+// ─── Share button ─────────────────────────────────────
+function ShareButton({ homeName, awayName }) {
+  const [copied, setCopied] = useState(false)
+
+  function share() {
+    const title = homeName && awayName ? `${homeName} vs ${awayName} — Golazo` : "Golazo"
+    const url   = window.location.href
+    if (navigator.share) {
+      navigator.share({ title, url }).catch(() => {})
+    } else {
+      navigator.clipboard?.writeText(url).then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      }).catch(() => {})
+    }
+  }
+
+  return (
+    <button
+      onClick={share}
+      style={{
+        background: "none", border: "none", cursor: "pointer",
+        color: copied ? "#10b981" : "var(--muted)",
+        fontSize: "0.75rem", display: "flex", alignItems: "center", gap: 4,
+        padding: "6px 0", transition: "color .2s",
+      }}
+    >
+      {copied ? "✓ Copied" : (
+        <>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          Share
+        </>
+      )}
+    </button>
+  )
+}
+
 // ─── Position color map ────────────────────────────────
 const POS_STYLE = {
   G:  { bg: "#f59e0b", shadow: "rgba(245,158,11,.4)",  label: "GK"  },
@@ -898,11 +938,14 @@ export default function MatchShowPage() {
       <div className="match-back-bar">
         <div className="container" style={{ maxWidth: 740, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button onClick={goBack} className="btn-back" style={{ padding: "10px 0" }}>← {t("match.back", "Back")}</button>
-          {isLive && (
-            <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.7rem", color: "var(--muted)" }}>
-              <span className="live-dot" /> {t("match.updatingEvery")}
-            </span>
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {isLive && (
+              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.7rem", color: "var(--muted)" }}>
+                <span className="live-dot" /> {t("match.updatingEvery")}
+              </span>
+            )}
+            <ShareButton homeName={homeName} awayName={awayName} />
+          </div>
         </div>
       </div>
 

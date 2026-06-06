@@ -42,7 +42,7 @@ function StandingsTable({ group, rows, onNavigate }) {
                 <td>
                   <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                     {s.team?.flag_url && (
-                      <img src={s.team.flag_url} alt="" className="flag-xs"
+                      <img src={s.team.flag_url} alt="" className="flag-xs" loading="lazy"
                         onError={e => (e.target.style.display = "none")} />
                     )}
                     <span className="text-white" style={{ fontWeight: 600 }}>{s.team?.name}</span>
@@ -75,15 +75,20 @@ export default function AllGroupsPage() {
   usePageMeta("Groups", "FIFA World Cup 2026 group standings — all 12 groups with points, goals and results.")
   const [grouped, setGrouped] = useState({})
   const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState(false)
   const navigate = useNavigate()
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true)
+    setError(false)
     fetch("/api/v1/standings?competition=WC")
       .then(r => r.json())
       .then(data => setGrouped(data))
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { load() }, [])
 
   const groups = GROUP_LETTERS.filter(g => grouped[g]?.length > 0)
   const displayGroups = groups.length > 0 ? groups : GROUP_LETTERS
@@ -99,6 +104,17 @@ export default function AllGroupsPage() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="site-section">
+        <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
+          <p style={{ color: "#888", marginBottom: 16 }}>Failed to load group standings.</p>
+          <button className="btn btn-primary btn-sm" onClick={load}>Retry</button>
         </div>
       </div>
     )

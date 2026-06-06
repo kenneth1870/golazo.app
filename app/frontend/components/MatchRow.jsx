@@ -21,7 +21,7 @@ export default function MatchRow({ match, onClick, showDate = false }) {
 
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">
-          {match.home_team?.flag_url && <img src={match.home_team.flag_url} alt="" className="flag-xs" />}
+          {match.home_team?.flag_url && <img src={match.home_team.flag_url} alt="" className="flag-xs" loading="lazy" />}
           <span className="team-name">{match.home_team?.name}</span>
         </div>
 
@@ -34,7 +34,7 @@ export default function MatchRow({ match, onClick, showDate = false }) {
 
         <div className="match-row__team match-row__team--away">
           <span className="team-name">{match.away_team?.name}</span>
-          {match.away_team?.flag_url && <img src={match.away_team.flag_url} alt="" className="flag-xs" />}
+          {match.away_team?.flag_url && <img src={match.away_team.flag_url} alt="" className="flag-xs" loading="lazy" />}
         </div>
       </div>
 

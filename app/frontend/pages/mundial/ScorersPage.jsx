@@ -51,7 +51,7 @@ export default function ScorersPage() {
                       </td>
                       <td>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          {s.team?.crest && <img src={s.team.crest} alt="" className="logo-sm" />}
+                          {s.team?.crest && <img src={s.team.crest} alt="" className="logo-sm" loading="lazy" />}
                           <span>{s.team?.name}</span>
                         </div>
                       </td>

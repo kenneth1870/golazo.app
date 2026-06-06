@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback, useRef } from "react"
 
 // Module-level cache so every component sharing the same filter/params
 // reuses one in-flight request and one polling interval.
-const cache   = new Map()  // key → { data, ts, promise }
-const subs    = new Map()  // key → Set of setState callbacks
-const timers  = new Map()  // key → interval id
+const cache  = new Map()  // key → { data, ts, promise }
+const subs   = new Map()  // key → Set of setState callbacks
+const timers = new Map()  // key → { interval, onVisible }
 
 function cacheKey(filter, { competition, group } = {}) {
   return `${filter}|${competition || ""}|${group || ""}`
@@ -37,13 +37,22 @@ function subscribe(key, filter, opts, setState) {
   if (!subs.has(key)) subs.set(key, new Set())
   subs.get(key).add(setState)
 
-  // Start polling only once per key
   if (!timers.has(key)) {
     fetchKey(key, filter, opts)
-    const id = setInterval(() => fetchKey(key, filter, opts), 30000)
-    timers.set(key, id)
+
+    // Skip polling when the tab is hidden; re-fetch immediately on return
+    // if data is stale (older than the poll interval).
+    const poll = () => { if (!document.hidden) fetchKey(key, filter, opts) }
+    const onVisible = () => {
+      if (document.hidden) return
+      const cached = cache.get(key)
+      if (!cached?.ts || Date.now() - cached.ts > 25_000) fetchKey(key, filter, opts)
+    }
+
+    document.addEventListener("visibilitychange", onVisible)
+    const interval = setInterval(poll, 30_000)
+    timers.set(key, { interval, onVisible })
   } else {
-    // New subscriber — send cached data immediately if available
     const cached = cache.get(key)
     if (cached?.data) setState({ data: cached.data, loading: false, error: cached.error || null })
   }
@@ -54,7 +63,11 @@ function unsubscribe(key, setState) {
   if (!set) return
   set.delete(setState)
   if (set.size === 0) {
-    clearInterval(timers.get(key))
+    const timer = timers.get(key)
+    if (timer) {
+      clearInterval(timer.interval)
+      document.removeEventListener("visibilitychange", timer.onVisible)
+    }
     timers.delete(key)
     subs.delete(key)
   }
@@ -82,7 +95,7 @@ export function useMatches(filter = "all", opts = {}) {
 }
 
 export function useMatch(matchId) {
-  const [match, setMatch]   = useState(null)
+  const [match, setMatch]     = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
