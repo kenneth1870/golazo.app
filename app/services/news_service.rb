@@ -40,9 +40,11 @@ class NewsService
 
   def latest(limit: 20, lang: "en")
     feeds = FEEDS[lang] || FEEDS["en"]
-    Rails.cache.fetch("news_feed_#{lang}", expires_in: 15.minutes) do
+    Rails.cache.fetch("news_feed_v2_#{lang}", expires_in: 15.minutes) do
       items = feeds.flat_map { |feed| fetch_feed(feed[:url], feed[:source]) }
-      items.sort_by { |a| a[:published_at] || Time.at(0) }.reverse.first(limit)
+      items.uniq { |a| a[:link] }
+           .sort_by { |a| a[:published_at] || Time.at(0) }.reverse
+           .first(limit)
     end
   end
 
