@@ -21,17 +21,20 @@ export const SUPPORTED_LANGUAGES = [
   { code: "ko", label: "한국어",      flag: "🇰🇷", dir: "ltr" },
 ]
 
-// Initial language: only use explicitly saved preference, never navigator/browser language.
-// IP geolocation (useLocale.js) sets the language on first visit; manual picks are saved as golazo_lang.
-const savedLang = localStorage.getItem("golazo_lang")
+const SUPPORTED = ["en", "es", "pt", "fr", "de", "ar", "ja", "ko"]
+
+// Priority: 1) user-saved preference  2) device/browser language  3) English
+const savedLang  = localStorage.getItem("golazo_lang")
+const deviceLang = (navigator.language || navigator.userLanguage || "en").split("-")[0].toLowerCase()
+const initialLang = savedLang || (SUPPORTED.includes(deviceLang) ? deviceLang : "en")
 
 i18n
   .use(initReactI18next)
   .init({
     resources: { en: { translation: en }, es: { translation: es }, pt: { translation: pt }, fr: { translation: fr }, de: { translation: de }, ar: { translation: ar }, ja: { translation: ja }, ko: { translation: ko } },
-    lng: savedLang || "en",
+    lng: initialLang,
     fallbackLng: "en",
-    supportedLngs: ["en", "es", "pt", "fr", "de", "ar", "ja", "ko"],
+    supportedLngs: SUPPORTED,
     interpolation: { escapeValue: false },
   })
 

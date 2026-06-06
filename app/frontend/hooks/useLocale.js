@@ -9,30 +9,21 @@ export function useLocale() {
   )
 
   useEffect(() => {
-    // Skip if user already manually picked a language
-    const userPicked = localStorage.getItem("golazo_lang_manual")
-    if (userPicked) return
+    // If the user manually overrode the language, respect it — skip IP detection
+    if (localStorage.getItem("golazo_lang_manual")) return
 
     fetch("/api/v1/locale")
       .then(r => r.json())
       .then(data => {
         setLocale(data)
-
-        // Set timezone from IP geo (more accurate than browser default for VPN users)
         if (data.timezone) setTimezone(data.timezone)
-
-        // Auto-set language from IP unless user explicitly picked one via the language switcher
         if (data.language) {
           i18n.changeLanguage(data.language)
           localStorage.setItem("golazo_lang", data.language)
+          applyLangToDocument(data.language)
         }
-
-        // Set HTML lang + dir for RTL support
-        applyLangToDocument(i18n.language)
       })
-      .catch(() => {
-        // Fallback: use browser timezone (already set above)
-      })
+      .catch(() => {})
   }, [])
 
   // When language changes, update HTML attributes

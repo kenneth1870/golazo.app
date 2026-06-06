@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
+import { useLocale } from "./hooks/useLocale"
 import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
 import BottomNav from "./components/BottomNav"
@@ -31,6 +32,7 @@ import TeamShowPage    from "./pages/TeamShowPage"
 
 export default function App() {
   const location = useLocation()
+  useLocale() // auto-detect language from IP / device on every session
   return (
     <div className="site-wrap">
       <ScrollToTop />
