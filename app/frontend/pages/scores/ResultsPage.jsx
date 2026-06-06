@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 
 function normalizeMatch(m) {
   return {
@@ -112,18 +113,20 @@ export default function ResultsPage() {
   const [date, setDate]       = useState(() => addDays(new Date(), -1))
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState(false)
   const navigate = useNavigate()
   const onMatchClick = (extId) => navigate(`/matches/${extId}`)
 
   const load = useCallback((d) => {
     setLoading(true)
-    fetch(`/api/v1/results?date=${toISO(d)}`)
+    setError(false)
+    fetchWithTimeout(`/api/v1/results?date=${toISO(d)}`)
       .then(r => r.json())
       .then(data => {
         const finished = data.map(normalizeMatch).filter(m => m.status === "finished")
         setMatches(finished)
       })
-      .catch(() => setMatches([]))
+      .catch(() => { setError(true); setMatches([]) })
       .finally(() => setLoading(false))
   }, [])
 
@@ -172,6 +175,11 @@ export default function ResultsPage() {
 
         {loading ? (
           <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
+        ) : error ? (
+          <div style={{ textAlign: "center", paddingTop: 60 }}>
+            <p style={{ color: "#888", marginBottom: 16 }}>Failed to load results.</p>
+            <button className="btn btn-primary btn-sm" onClick={() => load(date)}>Retry</button>
+          </div>
         ) : groups.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state__icon">🏆</div>

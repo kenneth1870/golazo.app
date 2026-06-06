@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import MatchRow from "../../components/MatchRow"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 
 function toISO(date) {
   const y = date.getFullYear()
@@ -107,6 +108,7 @@ export default function FixturesPage() {
   const [selected, setSelected] = useState(() => addDays(new Date(), 1))
   const [matches, setMatches]   = useState([])
   const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState(false)
   const navigate = useNavigate()
   const onMatchClick = (m) => {
     if (m.external_id) navigate(`/matches/${m.external_id}`)
@@ -115,10 +117,11 @@ export default function FixturesPage() {
 
   const load = useCallback((date) => {
     setLoading(true)
-    fetch(`/api/v1/fixtures?date=${toISO(date)}`)
+    setError(false)
+    fetchWithTimeout(`/api/v1/fixtures?date=${toISO(date)}`)
       .then(r => r.json())
       .then(setMatches)
-      .catch(() => setMatches([]))
+      .catch(() => { setError(true); setMatches([]) })
       .finally(() => setLoading(false))
   }, [])
 
@@ -163,6 +166,11 @@ export default function FixturesPage() {
 
         {loading ? (
           <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
+        ) : error ? (
+          <div style={{ textAlign: "center", paddingTop: 60 }}>
+            <p style={{ color: "#888", marginBottom: 16 }}>Failed to load fixtures.</p>
+            <button className="btn btn-primary btn-sm" onClick={() => load(selected)}>Retry</button>
+          </div>
         ) : groups.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state__pitch" />

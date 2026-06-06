@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 
 function LiveMatchRow({ match, onMatchClick }) {
   const hasScore = match.home?.score !== null && match.away?.score !== null
@@ -71,20 +73,23 @@ function CompetitionBlock({ leagueName, leagueLogo, leagueCountry, matches, onMa
 
 export default function LivePage() {
   usePageMeta("Live Scores", "All live football matches right now — scores, goals and minute-by-minute updates.")
+  const { t } = useTranslation()
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState(false)
   const [lastUpdated, setLastUpdated] = useState(null)
   const navigate = useNavigate()
   const onMatchClick = (extId) => navigate(`/matches/${extId}`)
 
   const load = () =>
-    fetch("/api/v1/live_scores")
+    fetchWithTimeout("/api/v1/live_scores")
       .then(r => r.json())
       .then(data => {
         setMatches(data)
         setLastUpdated(new Date())
+        setError(false)
       })
-      .catch(() => {})
+      .catch(() => setError(true))
 
   useEffect(() => {
     load().finally(() => setLoading(false))
@@ -108,6 +113,19 @@ export default function LivePage() {
       <div className="site-section">
         <div className="container">
           <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="site-section">
+        <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
+          <p style={{ color: "#888", marginBottom: 16 }}>Failed to load live scores.</p>
+          <button className="btn btn-primary btn-sm" onClick={() => { setError(false); setLoading(true); load().finally(() => setLoading(false)) }}>
+            Retry
+          </button>
         </div>
       </div>
     )

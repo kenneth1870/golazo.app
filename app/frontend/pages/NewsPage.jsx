@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
+import { fetchWithTimeout } from "../utils/fetchWithTimeout"
 
 const SOURCE_COLORS = {
   "BBC Sport": "#b80000",
@@ -40,17 +41,21 @@ export default function NewsPage() {
   usePageMeta(t("news.title"), "Latest football news — World Cup 2026, transfers, match previews and results.")
   const [articles, setArticles] = useState([])
   const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState(false)
   const [source, setSource]     = useState(null)
 
-  useEffect(() => {
+  const loadNews = () => {
     setLoading(true)
+    setError(false)
     setSource(null)
-    fetch(`/api/v1/news?lang=${i18n.language}`)
+    fetchWithTimeout(`/api/v1/news?lang=${i18n.language}`)
       .then(r => r.json())
       .then(setArticles)
-      .catch(() => {})
+      .catch(() => { setError(true); setArticles([]) })
       .finally(() => setLoading(false))
-  }, [i18n.language])
+  }
+
+  useEffect(() => { loadNews() }, [i18n.language])
 
   const allLabel = t("news.all")
   const sources  = [allLabel, ...new Set(articles.map(a => a.source))]
@@ -91,6 +96,11 @@ export default function NewsPage() {
                   <div className="loading-shimmer" style={{ height: 220, borderRadius: 12 }} />
                 </div>
               ))}
+            </div>
+          ) : error ? (
+            <div style={{ textAlign: "center", paddingTop: 60 }}>
+              <p style={{ color: "#888", marginBottom: 16 }}>Failed to load news.</p>
+              <button className="btn btn-primary btn-sm" onClick={loadNews}>Retry</button>
             </div>
           ) : filtered.length === 0 ? (
             <div className="empty-state">

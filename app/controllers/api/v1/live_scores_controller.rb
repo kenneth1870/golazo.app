@@ -42,9 +42,10 @@ module Api
           minute:         m.dig("status", "liveTime", "long"),
           venue:          nil,
           home: {
-            name:  m.dig("home", "name"),
-            logo:  nil,
-            score: m.dig("home", "score"),
+            name:      m.dig("home", "name"),
+            logo:      nil,
+            score:     m.dig("home", "score"),
+            red_cards: m.dig("home", "redCards"),
           },
           away: {
             name:      m.dig("away", "name"),

@@ -30,6 +30,9 @@ module Api
           end
         end
 
+        # Primary API returned no events/stats/lineups → try API-Sports fallback
+        data = api_sports_fallback(data) if detail_empty?(data)
+
         broadcast_if_changed(external_id, data)
         render json: data
       rescue => e
@@ -38,6 +41,40 @@ module Api
       end
 
       private
+
+      def detail_empty?(data)
+        data[:fixture].present? &&
+          data[:events].to_a.empty? &&
+          data[:stats].to_a.empty? &&
+          data[:lineups].to_a.empty?
+      end
+
+      def api_sports_fallback(data)
+        home    = data.dig(:fixture, "teams", "home", "name")
+        away    = data.dig(:fixture, "teams", "away", "name")
+        kickoff = data.dig(:fixture, "fixture", "date")
+        return data unless home && away && kickoff
+
+        fallback = ApiSportsClient.new.match_detail(
+          home_name: home, away_name: away, kickoff_at: kickoff
+        )
+        return data unless fallback
+
+        Rails.logger.info("[MatchDetail] using API-Sports fallback for #{home} vs #{away}")
+
+        # Merge fallback — keep existing fixture (has correct FotMob IDs/venue) but
+        # fill in the missing events, stats, lineups, h2h from API-Sports.
+        data.merge(
+          events:  fallback[:events],
+          stats:   fallback[:stats],
+          lineups: fallback[:lineups],
+          h2h:     fallback[:h2h],
+          source:  "api_sports_fallback"
+        )
+      rescue => e
+        Rails.logger.warn("[MatchDetail] api_sports_fallback failed: #{e.message}")
+        data
+      end
 
       def broadcast_if_changed(fixture_id, data)
         return unless data[:fixture]

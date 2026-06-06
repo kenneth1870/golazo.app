@@ -5,6 +5,7 @@ import MatchRow from "../../components/MatchRow"
 import { useLocale } from "../../hooks/useLocale"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useFavoriteTeam } from "../../hooks/useFavoriteTeam"
+import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 
 // ─── Helpers ──────────────────────────────────────────
 function toISO(date) {
@@ -338,6 +339,7 @@ export default function TodayPage() {
   const [selected, setSelected] = useState(startOfDay)
   const [matches, setMatches]   = useState([])
   const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [pullDist, setPullDist]     = useState(0)
   const [alertDismissed, setAlertDismissed] = useState(false)
@@ -354,7 +356,8 @@ export default function TodayPage() {
     const iso    = toISO(date)
     const today  = toISO(new Date())
     const url    = iso === today ? "/api/v1/today" : `/api/v1/today?date=${iso}`
-    fetch(url)
+    setError(false)
+    fetchWithTimeout(url)
       .then(r => r.json())
       .then(raw => {
         // Filter by local kickoff date — the API uses UTC dates which can bleed
@@ -368,7 +371,7 @@ export default function TodayPage() {
         })
         setMatches(filtered)
       })
-      .catch(() => {})
+      .catch(() => { setError(true); setMatches([]) })
       .finally(() => { setLoading(false); setRefreshing(false) })
   }, [])
 
@@ -502,6 +505,15 @@ export default function TodayPage() {
             <SkeletonBlock rows={2} />
             <SkeletonBlock rows={4} />
           </>
+        ) : error ? (
+          <div className="empty-state">
+            <div className="empty-state__icon">⚠️</div>
+            <h3>{t("error.dataUnavailable", "Data unavailable")}</h3>
+            <p>{t("error.tryAgain", "Couldn't load matches. Check your connection.")}</p>
+            <button className="btn btn-sm btn-outline-light mt-3" onClick={() => load(selected)}>
+              {t("error.retry", "Retry")}
+            </button>
+          </div>
         ) : groups.length === 0 ? (
           <EmptyState label={label} t={t} />
         ) : (
