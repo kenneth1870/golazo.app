@@ -1099,3 +1099,13 @@ a:hover{color:var(--accent);opacity:.85}
   /* Page hero */
   .page-hero .container{padding:2rem 1rem}
 }
+
+/* ─── Page-level lazy-load spinner ─────────────────── */
+.spinner{
+  width:36px;height:36px;
+  border:3px solid rgba(255,255,255,.1);
+  border-top-color:var(--accent,#ee1e46);
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}

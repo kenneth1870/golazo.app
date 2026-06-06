@@ -7,12 +7,9 @@ export function LiveProvider({ children }) {
 
   useEffect(() => {
     const check = () =>
-      fetch("/api/v1/today")
+      fetch("/api/v1/live_count")
         .then(r => r.json())
-        .then(d => {
-          const all = Array.isArray(d) ? d : [...(d.real || []), ...(d.local || [])]
-          setLiveCount(all.filter(m => m.status === "live").length)
-        })
+        .then(d => setLiveCount(d.count ?? 0))
         .catch(() => {})
 
     check()

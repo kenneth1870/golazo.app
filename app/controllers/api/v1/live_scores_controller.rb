@@ -9,6 +9,17 @@ module Api
         render json: []
       end
 
+      # Lightweight endpoint — returns just the live match count.
+      # Used by LiveContext badge so it doesn't have to fetch all of /today.
+      def count
+        count = Rails.cache.fetch("live_match_count", expires_in: 30.seconds) do
+          LiveScoresClient.new.live_matches.length
+        rescue
+          0
+        end
+        render json: { count: count }
+      end
+
       private
 
       def normalize(m)

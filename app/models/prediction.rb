@@ -12,12 +12,20 @@ class Prediction < ApplicationRecord
   end
 
   def vote!(choice, token)
-    return { error: "already_voted" } if voted?(token)
     return { error: "invalid_choice" } unless %w[home draw away].include?(choice)
 
-    increment!("#{choice}_votes")
-    update_column(:voter_tokens, (tokens + [token]).last(1_000).to_json) if token.present?
-    as_json_result
+    result = nil
+    self.class.transaction do
+      locked = self.class.lock("FOR UPDATE").find(id)
+      if locked.voted?(token)
+        result = { error: "already_voted" }
+        raise ActiveRecord::Rollback
+      end
+      locked.increment!("#{choice}_votes")
+      locked.update_column(:voter_tokens, (locked.tokens + [token]).last(1_000).to_json) if token.present?
+      result = locked.as_json_result
+    end
+    result
   end
 
   def as_json_result

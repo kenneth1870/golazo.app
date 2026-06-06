@@ -13,14 +13,19 @@ const FALLBACK_IMGS = ["/images/img_1.jpg", "/images/img_3.jpg", "/images/img_2.
 
 function useLatestNews() {
   const { i18n } = useTranslation()
-  const [news, setNews] = useState([])
-  useEffect(() => {
+  const [news, setNews]   = useState([])
+  const [error, setError] = useState(false)
+
+  const load = () => {
+    setError(false)
     fetch(`/api/v1/news?lang=${i18n.language}`)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(data => setNews(data.slice(0, 3)))
-      .catch(() => {})
-  }, [i18n.language])
-  return news
+      .catch(() => setError(true))
+  }
+
+  useEffect(() => { load() }, [i18n.language]) // eslint-disable-line react-hooks/exhaustive-deps
+  return { news, newsError: error, retryNews: load }
 }
 
 function FavoriteTeamCard({ fav, todayMatches, upcomingMatches, navigate, t }) {
@@ -77,7 +82,7 @@ export default function HomePage() {
   const navigate = useNavigate()
   const { matches: liveWC }         = useMatches("live",     { competition: "WC" })
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: "WC" })
-  const latestNews = useLatestNews()
+  const { news: latestNews, newsError, retryNews } = useLatestNews()
   const [fav]  = useFavoriteTeam()
   const liveCount  = useLiveCount()
   // Show the live WC match in Hero if one is active, otherwise next upcoming
@@ -142,8 +147,18 @@ export default function HomePage() {
               <h2 className="heading">{t("home.latestNews")}</h2>
             </div>
           </div>
+          {newsError && (
+            <div className="row" style={{ marginBottom: 12 }}>
+              <div className="col-12" style={{ textAlign: "center", color: "var(--muted)", fontSize: "0.82rem" }}>
+                {t("error.newsUnavailable", "Couldn't load news.")}
+                <button onClick={retryNews} style={{ marginLeft: 8, background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "0.82rem", textDecoration: "underline" }}>
+                  {t("error.retry", "Retry")}
+                </button>
+              </div>
+            </div>
+          )}
           <div className="row no-gutters">
-            {(latestNews.length > 0 ? latestNews : [null, null, null]).map((post, i) => (
+            {(latestNews.length > 0 ? latestNews : newsError ? [] : [null, null, null]).map((post, i) => (
               <div key={i} className="col-md-4">
                 <Link to={post?.id ? `/news/${post.id}` : "/news"} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
                   <div className="post-entry">

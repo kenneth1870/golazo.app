@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react"
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { useLocale } from "./hooks/useLocale"
 import Navbar from "./components/Navbar"
@@ -7,28 +8,39 @@ import InstallPrompt from "./components/InstallPrompt"
 import ScrollToTop from "./components/ScrollToTop"
 import ErrorBoundary from "./components/ErrorBoundary"
 
-import HomePage        from "./pages/HomePage"
-import ScoresPage      from "./pages/ScoresPage"
-import TodayPage       from "./pages/scores/TodayPage"
-import LivePage        from "./pages/scores/LivePage"
-import ResultsPage     from "./pages/scores/ResultsPage"
-import FixturesPage    from "./pages/scores/FixturesPage"
-import GroupStagePage  from "./pages/scores/GroupStagePage"
-import KnockoutPage    from "./pages/scores/KnockoutPage"
-import GroupsPage      from "./pages/GroupsPage"
-import GroupDetailPage from "./pages/GroupDetailPage"
-import AllGroupsPage   from "./pages/AllGroupsPage"
-import MundialPage     from "./pages/MundialPage"
-import TeamsPage       from "./pages/mundial/TeamsPage"
-import SchedulePage    from "./pages/mundial/SchedulePage"
-import VenuesPage      from "./pages/mundial/VenuesPage"
-import ScorersPage     from "./pages/mundial/ScorersPage"
-import AllLeaguesPage  from "./pages/AllLeaguesPage"
-import LeagueDetailPage from "./pages/LeagueDetailPage"
-import NewsPage        from "./pages/NewsPage"
-import NewsShowPage    from "./pages/NewsShowPage"
-import MatchShowPage   from "./pages/MatchShowPage"
-import TeamShowPage    from "./pages/TeamShowPage"
+// Critical path — loaded eagerly (always needed on first paint)
+import HomePage   from "./pages/HomePage"
+import ScoresPage from "./pages/ScoresPage"
+import TodayPage  from "./pages/scores/TodayPage"
+
+// Secondary — lazy-loaded so they don't bloat the initial bundle
+const LivePage        = lazy(() => import("./pages/scores/LivePage"))
+const ResultsPage     = lazy(() => import("./pages/scores/ResultsPage"))
+const FixturesPage    = lazy(() => import("./pages/scores/FixturesPage"))
+const GroupStagePage  = lazy(() => import("./pages/scores/GroupStagePage"))
+const KnockoutPage    = lazy(() => import("./pages/scores/KnockoutPage"))
+const GroupsPage      = lazy(() => import("./pages/GroupsPage"))
+const GroupDetailPage = lazy(() => import("./pages/GroupDetailPage"))
+const AllGroupsPage   = lazy(() => import("./pages/AllGroupsPage"))
+const MundialPage     = lazy(() => import("./pages/MundialPage"))
+const TeamsPage       = lazy(() => import("./pages/mundial/TeamsPage"))
+const SchedulePage    = lazy(() => import("./pages/mundial/SchedulePage"))
+const VenuesPage      = lazy(() => import("./pages/mundial/VenuesPage"))
+const ScorersPage     = lazy(() => import("./pages/mundial/ScorersPage"))
+const AllLeaguesPage  = lazy(() => import("./pages/AllLeaguesPage"))
+const LeagueDetailPage = lazy(() => import("./pages/LeagueDetailPage"))
+const NewsPage        = lazy(() => import("./pages/NewsPage"))
+const NewsShowPage    = lazy(() => import("./pages/NewsShowPage"))
+const MatchShowPage   = lazy(() => import("./pages/MatchShowPage"))
+const TeamShowPage    = lazy(() => import("./pages/TeamShowPage"))
+
+function PageLoader() {
+  return (
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 200 }}>
+      <div className="spinner" />
+    </div>
+  )
+}
 
 export default function App() {
   const location = useLocation()
@@ -40,42 +52,43 @@ export default function App() {
 
       <main key={location.pathname} className="main-content page-transition">
         <ErrorBoundary>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
 
-          <Route path="/scores" element={<ScoresPage />}>
-            <Route index element={<Navigate to="/scores/today" replace />} />
-            <Route path="today"    element={<TodayPage />} />
-            <Route path="fixtures" element={<FixturesPage />} />
-            <Route path="live"     element={<LivePage />} />
-            <Route path="results"  element={<ResultsPage />} />
-            <Route path="groups"   element={<GroupStagePage />} />
-            <Route path="knockout" element={<KnockoutPage />} />
-          </Route>
+              <Route path="/scores" element={<ScoresPage />}>
+                <Route index element={<Navigate to="/scores/today" replace />} />
+                <Route path="today"    element={<TodayPage />} />
+                <Route path="fixtures" element={<FixturesPage />} />
+                <Route path="live"     element={<LivePage />} />
+                <Route path="results"  element={<ResultsPage />} />
+                <Route path="groups"   element={<GroupStagePage />} />
+                <Route path="knockout" element={<KnockoutPage />} />
+              </Route>
 
-          <Route path="/groups" element={<GroupsPage />}>
-            <Route index element={<AllGroupsPage />} />
-            <Route path=":group" element={<GroupDetailPage />} />
-          </Route>
+              <Route path="/groups" element={<GroupsPage />}>
+                <Route index element={<AllGroupsPage />} />
+                <Route path=":group" element={<GroupDetailPage />} />
+              </Route>
 
-          <Route path="/mundial" element={<MundialPage />}>
-            <Route index element={<Navigate to="/mundial/teams" replace />} />
-            <Route path="teams"    element={<TeamsPage />} />
-            <Route path="schedule" element={<SchedulePage />} />
-            <Route path="venues"   element={<VenuesPage />} />
-            <Route path="scorers"  element={<ScorersPage />} />
-          </Route>
+              <Route path="/mundial" element={<MundialPage />}>
+                <Route index element={<Navigate to="/mundial/teams" replace />} />
+                <Route path="teams"    element={<TeamsPage />} />
+                <Route path="schedule" element={<SchedulePage />} />
+                <Route path="venues"   element={<VenuesPage />} />
+                <Route path="scorers"  element={<ScorersPage />} />
+              </Route>
 
-          <Route path="/teams/:id"    element={<TeamShowPage />} />
-          <Route path="/leagues"      element={<AllLeaguesPage />} />
-          <Route path="/leagues/:code" element={<LeagueDetailPage />} />
-          <Route path="/matches/:id"  element={<MatchShowPage />} />
-          <Route path="/news"         element={<NewsPage />} />
-          <Route path="/news/:id"     element={<NewsShowPage />} />
+              <Route path="/teams/:id"     element={<TeamShowPage />} />
+              <Route path="/leagues"       element={<AllLeaguesPage />} />
+              <Route path="/leagues/:code" element={<LeagueDetailPage />} />
+              <Route path="/matches/:id"   element={<MatchShowPage />} />
+              <Route path="/news"          element={<NewsPage />} />
+              <Route path="/news/:id"      element={<NewsShowPage />} />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </ErrorBoundary>
       </main>
 

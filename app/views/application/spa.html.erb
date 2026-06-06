@@ -31,12 +31,6 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
 
-  <%# Template vendor CSS — icomoon icons, flaticon, owl carousel, AOS %>
-  <link rel="stylesheet" href="/fonts/icomoon/style.css">
-  <link rel="stylesheet" href="/fonts/flaticon/font/flaticon.css">
-  <link rel="stylesheet" href="/owl.carousel.min.css">
-  <link rel="stylesheet" href="/owl.theme.default.min.css">
-  <link rel="stylesheet" href="/aos.css">
 
   <%# Vite: React + Bootstrap + template CSS (all from application.css) %>
   <% if ViteRuby.instance.dev_server_running? %>
@@ -49,19 +43,6 @@
 
   <div id="root"></div>
 
-  <%# jQuery must load synchronously so it is available when main.js runs %>
-  <script src="/jquery-3.3.1.min.js"></script>
-  <script src="/bootstrap.min.js"></script>
-  <script src="/owl.carousel.min.js"></script>
-  <script src="/jquery.countdown.min.js"></script>
-  <script src="/jquery.easing.1.3.js"></script>
-  <script src="/aos.js"></script>
-  <script src="/jquery.fancybox.min.js"></script>
-  <script src="/jquery.stellar.min.js"></script>
-  <script src="/jquery.sticky.js"></script>
-
-  <%# main.js deferred so it runs after React mounts the DOM %>
-  <script src="/main.js" defer></script>
 
 </body>
 </html>

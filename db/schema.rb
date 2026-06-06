@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_05_080200) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_06_055645) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -71,12 +71,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_080200) do
     t.string "status"
     t.datetime "updated_at", null: false
     t.string "venue"
+    t.index ["away_team_id", "kickoff_at"], name: "index_matches_on_away_team_kickoff"
     t.index ["away_team_id"], name: "index_matches_on_away_team_id"
     t.index ["bracket_pos"], name: "index_matches_on_bracket_pos"
+    t.index ["competition_id", "kickoff_at"], name: "index_matches_on_competition_kickoff"
     t.index ["competition_id"], name: "index_matches_on_competition_id"
     t.index ["external_id"], name: "index_matches_on_external_id", unique: true
+    t.index ["home_team_id", "kickoff_at"], name: "index_matches_on_home_team_kickoff"
     t.index ["home_team_id"], name: "index_matches_on_home_team_id"
     t.index ["kickoff_at"], name: "index_matches_on_kickoff_at"
+    t.index ["status", "kickoff_at"], name: "index_matches_on_status_kickoff"
     t.index ["status"], name: "index_matches_on_status"
   end
 

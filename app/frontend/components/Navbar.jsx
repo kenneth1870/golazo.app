@@ -202,6 +202,7 @@ export default function Navbar() {
           {/* Search in drawer */}
           <button
             onClick={() => { setDrawerOpen(false); setSearchOpen(true) }}
+            aria-label="Search"
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: 8, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", marginRight: 8, flexShrink: 0 }}
           >
             <SearchIcon />
@@ -313,6 +314,7 @@ export default function Navbar() {
               <button
                 onClick={() => setSearchOpen(true)}
                 title="Search (⌘K)"
+                aria-label="Search (⌘K)"
                 className="nav-search-btn"
               >
                 <SearchIcon />
@@ -328,6 +330,7 @@ export default function Navbar() {
             <div className="mobile-header-actions ml-auto">
               <button
                 onClick={() => setSearchOpen(true)}
+                aria-label="Search"
                 style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 0, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
               >
                 <SearchIcon />

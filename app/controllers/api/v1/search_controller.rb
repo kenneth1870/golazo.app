@@ -19,7 +19,12 @@ module Api
             q: "%#{q}%"
           )
           .order(
-            Arel.sql("CASE WHEN status IN ('scheduled','live') AND kickoff_at >= '#{now.iso8601}' THEN 0 ELSE 1 END, ABS(EXTRACT(EPOCH FROM (kickoff_at - '#{now.iso8601}'))) ASC")
+            Arel.sql(
+              Match.sanitize_sql_array([
+                "CASE WHEN status IN ('scheduled','live') AND kickoff_at >= ? THEN 0 ELSE 1 END, ABS(EXTRACT(EPOCH FROM (kickoff_at - ?::timestamptz))) ASC",
+                now, now,
+              ])
+            )
           )
           .limit(5)
           .map do |m|

@@ -7,6 +7,7 @@ Rails.application.routes.draw do
       get "search",       to: "search#index"
       get "locale",       to: "locale#index"
       get "live_scores",  to: "live_scores#index"
+      get "live_count",   to: "live_scores#count"
       get "today",        to: "today#index"
       get "match_detail/:id",      to: "match_detail#show"
       get  "match_preview",             to: "match_detail#preview"
