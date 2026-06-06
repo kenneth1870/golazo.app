@@ -27,12 +27,20 @@
 
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+    <%# PWA manifest %>
+    <link rel="manifest" href="/manifest.json">
 
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
+    <%# Favicons %>
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" href="/images/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="icon" href="/images/favicon-16.png" type="image/png" sizes="16x16">
+    <link rel="icon" href="/images/icon-192.png"   type="image/png" sizes="192x192">
+
+    <%# Apple PWA %>
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-title" content="Golazo">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0d1117">
 
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
