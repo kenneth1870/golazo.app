@@ -2,6 +2,16 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { usePageMeta } from "../hooks/usePageMeta"
 
+// WC 2026: pos 0-1 qualify directly, pos 2 potentially (best 8 of 12 third-place), pos 3 eliminated
+function rowQualStyle(rank, rows) {
+  const complete = rows.length > 0 && rows.every(r => (r.played ?? 0) >= 3)
+  const alpha     = complete ? 1 : 0.45
+  if (rank === 0) return { background: `rgba(16,185,129,${0.12 * alpha})`,  borderLeft: `2px solid rgba(16,185,129,${alpha})` }
+  if (rank === 1) return { background: `rgba(16,185,129,${0.07 * alpha})`,  borderLeft: `2px solid rgba(16,185,129,${alpha * 0.6})` }
+  if (rank === 2) return { background: `rgba(245,158,11,${0.07 * alpha})`,  borderLeft: `2px solid rgba(245,158,11,${alpha * 0.5})` }
+  return           { background: `rgba(239,68,68,${0.05 * alpha})`,          borderLeft: "2px solid transparent" }
+}
+
 function StandingsTable({ group, rows, onNavigate }) {
   return (
     <div className="widget-next-match mb-4" style={{ cursor: "default" }}>
@@ -36,9 +46,11 @@ function StandingsTable({ group, rows, onNavigate }) {
                   Standings available after group stage begins
                 </td>
               </tr>
-            ) : rows.map((s, i) => (
-              <tr key={s.team?.id ?? i} style={{ background: i < 2 ? "rgba(16,185,129,.06)" : "transparent" }}>
-                <td style={{ color: i < 2 ? "#10b981" : "#666", fontWeight: 700 }}>{s.rank ?? i + 1}</td>
+            ) : rows.map((s, i) => {
+              const qs = rowQualStyle(i, rows)
+              return (
+              <tr key={s.team?.id ?? i} style={{ ...qs }}>
+                <td style={{ color: i < 2 ? "#10b981" : i === 2 ? "#f59e0b" : "#666", fontWeight: 700 }}>{s.rank ?? i + 1}</td>
                 <td>
                   <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                     {s.team?.flag_url && (
@@ -61,7 +73,8 @@ function StandingsTable({ group, rows, onNavigate }) {
                   <strong className="text-white">{s.points ?? 0}</strong>
                 </td>
               </tr>
-            ))}
+              )
+            })}
           </tbody>
         </table>
       </div>
@@ -123,6 +136,12 @@ export default function AllGroupsPage() {
   return (
     <div className="site-section">
       <div className="container">
+        <div className="qualify-legend" style={{ marginBottom: 20 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 5 }}><span className="qualify-legend__dot" style={{ background: "#10b981" }} /> Qualified</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 5 }}><span className="qualify-legend__dot" style={{ background: "#f59e0b" }} /> Possible 3rd</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 5 }}><span className="qualify-legend__dot" style={{ background: "#ef4444" }} /> Eliminated</span>
+          <span style={{ marginLeft: "auto", opacity: .5 }}>Lighter = provisional</span>
+        </div>
         <div className="row">
           {displayGroups.map(g => (
             <div key={g} className="col-lg-6 mb-4">

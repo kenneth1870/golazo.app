@@ -24,8 +24,12 @@ function MiniStandingsTable({ group, rows }) {
         </tr>
       </thead>
       <tbody>
-        {rows.map((s, i) => (
-          <tr key={i} style={{ borderTop: "1px solid var(--border)", background: i < 2 ? "rgba(238,30,70,.04)" : "transparent" }}>
+        {rows.map((s, i) => {
+          const complete = rows.every(r => (r.played ?? 0) >= 3)
+          const a = complete ? 1 : 0.4
+          const bg = i === 0 ? `rgba(16,185,129,${0.1*a})` : i === 1 ? `rgba(16,185,129,${0.05*a})` : i === 2 ? `rgba(245,158,11,${0.05*a})` : `rgba(239,68,68,${0.04*a})`
+          return (
+          <tr key={i} style={{ borderTop: "1px solid var(--border)", background: bg }}>
             <td style={{ padding: "5px 6px", display: "flex", alignItems: "center", gap: 6 }}>
               {i < 2 && <span style={{ width: 3, height: 14, borderRadius: 2, background: "#ee1e46", display: "inline-block", flexShrink: 0 }} />}
               {s.team?.flag_url && <img src={s.team.flag_url} alt="" loading="lazy" style={{ width: 16, height: 11, objectFit: "cover", borderRadius: 1, flexShrink: 0 }} onError={e => (e.target.style.display = "none")} />}
@@ -42,7 +46,8 @@ function MiniStandingsTable({ group, rows }) {
             </td>
             <td style={{ textAlign: "center", padding: "5px 4px", fontWeight: 800, color: "#fff" }}>{s.points ?? 0}</td>
           </tr>
-        ))}
+          )
+        })}
       </tbody>
     </table>
   )

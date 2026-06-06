@@ -37,9 +37,14 @@ export default function GroupDetailPage() {
                   <tbody>
                     {standings.length === 0 ? (
                       <tr><td colSpan={8} style={{ textAlign: "center", color: "gray", padding: "1.5rem" }}>No standings yet</td></tr>
-                    ) : standings.map(s => (
-                      <tr key={s.team.id}>
-                        <td>{s.rank}</td>
+                    ) : standings.map((s, i) => {
+                      const complete = standings.every(r => (r.played ?? 0) >= 3)
+                      const a = complete ? 1 : 0.4
+                      const bg = i === 0 ? `rgba(16,185,129,${0.1*a})` : i === 1 ? `rgba(16,185,129,${0.05*a})` : i === 2 ? `rgba(245,158,11,${0.05*a})` : `rgba(239,68,68,${0.04*a})`
+                      const rankColor = i === 0 || i === 1 ? "#10b981" : i === 2 ? "#f59e0b" : "#666"
+                      return (
+                      <tr key={s.team.id} style={{ background: bg }}>
+                        <td style={{ color: rankColor, fontWeight: 700 }}>{s.rank}</td>
                         <td>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             {s.team.flag_url && <img src={s.team.flag_url} alt="" className="flag-xs" />}
@@ -52,7 +57,8 @@ export default function GroupDetailPage() {
                         </td>
                         <td><strong className="text-white">{s.points}</strong></td>
                       </tr>
-                    ))}
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>

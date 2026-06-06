@@ -1,5 +1,5 @@
 import { useMatches } from "../../hooks/useMatches"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { usePageMeta } from "../../hooks/usePageMeta"
 
 // WC 2026: R32 → R16 → QF → SF → Final (+ 3rd place)
@@ -228,6 +228,13 @@ export default function KnockoutPage() {
   return (
     <div className="site-section">
       <div className="container">
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+          <Link to="/predictor" style={{
+            background: "rgba(238,30,70,.12)", border: "1px solid rgba(238,30,70,.3)",
+            borderRadius: 8, color: "#ee1e46", padding: "7px 14px",
+            fontSize: "0.78rem", fontWeight: 700, textDecoration: "none",
+          }}>🏆 Bracket Predictor →</Link>
+        </div>
         <div className="bracket-scroll-hint">← Swipe to see all rounds →</div>
         <div className="bracket-scroll-wrap">
           <div className="bracket">

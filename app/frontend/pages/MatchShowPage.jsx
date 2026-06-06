@@ -5,6 +5,39 @@ import { useExternalMatchChannel } from "../hooks/useExternalMatchChannel"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useLiveMinute, useGoalNotifications } from "./match/useMatchLive"
 import PredictionPanel from "./match/PredictionPanel"
+import { useReminders } from "../hooks/useReminders"
+
+// ─── Reminder button ──────────────────────────────────
+function ReminderButton({ match }) {
+  const { isReminded, addReminder, removeReminder } = useReminders()
+  const matchId = String(match?.external_id || match?.id || "")
+  if (!matchId || !match?.kickoff_at) return null
+  const kickoff = new Date(match.kickoff_at).getTime()
+  if (kickoff <= Date.now()) return null
+
+  const reminded = isReminded(matchId)
+  const toggle = async () => {
+    if (reminded) removeReminder(matchId)
+    else await addReminder(match)
+  }
+
+  return (
+    <button
+      onClick={toggle}
+      title={reminded ? "Remove reminder" : "Remind me at kickoff"}
+      style={{
+        background: reminded ? "rgba(16,185,129,.15)" : "none",
+        border: reminded ? "1px solid rgba(16,185,129,.4)" : "none",
+        borderRadius: 6, cursor: "pointer",
+        color: reminded ? "#10b981" : "var(--muted)",
+        fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 4,
+        padding: "5px 8px", transition: "all .2s",
+      }}
+    >
+      {reminded ? "🔔 Set" : "🔕 Remind"}
+    </button>
+  )
+}
 
 // ─── Share button ─────────────────────────────────────
 function ShareButton({ homeName, awayName }) {
@@ -938,12 +971,13 @@ export default function MatchShowPage() {
       <div className="match-back-bar">
         <div className="container" style={{ maxWidth: 740, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button onClick={goBack} className="btn-back" style={{ padding: "10px 0" }}>← {t("match.back", "Back")}</button>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {isLive && (
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.7rem", color: "var(--muted)" }}>
                 <span className="live-dot" /> {t("match.updatingEvery")}
               </span>
             )}
+            {!isLive && <ReminderButton match={data?.fixture ? { ...data.fixture.fixture, home_team: data.fixture.teams?.home, away_team: data.fixture.teams?.away, kickoff_at: data.fixture.fixture?.date, external_id: id } : null} />}
             <ShareButton homeName={homeName} awayName={awayName} />
           </div>
         </div>

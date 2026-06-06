@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import MatchRow from "../../components/MatchRow"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
+import { useReminders } from "../../hooks/useReminders"
 
 function toISO(date) {
   const y = date.getFullYear()
@@ -70,6 +71,30 @@ function DateStrip({ selected, onChange }) {
   )
 }
 
+function BellButton({ match }) {
+  const { isReminded, addReminder, removeReminder } = useReminders()
+  const id = String(match.external_id || match.id)
+  const reminded = isReminded(id)
+  const toggle = async (e) => {
+    e.stopPropagation()
+    if (reminded) removeReminder(id)
+    else await addReminder(match)
+  }
+  return (
+    <button
+      onClick={toggle}
+      title={reminded ? "Remove reminder" : "Remind me at kickoff"}
+      style={{
+        background: "none", border: "none", cursor: "pointer",
+        fontSize: "1rem", padding: "4px 6px", lineHeight: 1,
+        opacity: reminded ? 1 : 0.35, transition: "opacity .2s",
+      }}
+    >
+      {reminded ? "🔔" : "🔕"}
+    </button>
+  )
+}
+
 function CompetitionBlock({ matches, navigate, onMatchClick }) {
   const comp   = matches[0]?.competition
   const canNav = comp?.code && !String(comp.code).match(/^\d+$/)
@@ -91,11 +116,14 @@ function CompetitionBlock({ matches, navigate, onMatchClick }) {
       </div>
       <div className="widget-body p-0">
         {sorted.map(m => (
-          <MatchRow
-            key={m.id}
-            match={m}
-            onClick={() => onMatchClick(m)}
-          />
+          <div key={m.id} style={{ display: "flex", alignItems: "center" }}>
+            <div style={{ flex: 1 }}>
+              <MatchRow match={m} onClick={() => onMatchClick(m)} />
+            </div>
+            {m.status === "scheduled" && m.kickoff_at && new Date(m.kickoff_at) > new Date() && (
+              <BellButton match={m} />
+            )}
+          </div>
         ))}
       </div>
     </div>
