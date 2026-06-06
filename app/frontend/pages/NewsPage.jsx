@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { fetchWithTimeout } from "../utils/fetchWithTimeout"
+
+const PAGE_SIZE = 12
 
 const SOURCE_COLORS = {
   "BBC Sport": "#b80000",
@@ -39,28 +41,49 @@ function NewsCard({ article, featured }) {
 export default function NewsPage() {
   const { t, i18n } = useTranslation()
   usePageMeta(t("news.title"), "Latest football news — World Cup 2026, transfers, match previews and results.")
+
   const [articles, setArticles] = useState([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState(false)
   const [source, setSource]     = useState(null)
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
-  const loadNews = () => {
+  const sentinelRef = useRef(null)
+
+  const loadNews = useCallback(() => {
     setLoading(true)
     setError(false)
     setSource(null)
+    setVisibleCount(PAGE_SIZE)
     fetchWithTimeout(`/api/v1/news?lang=${i18n.language}`)
       .then(r => r.json())
       .then(setArticles)
       .catch(() => { setError(true); setArticles([]) })
       .finally(() => setLoading(false))
-  }
+  }, [i18n.language])
 
-  useEffect(() => { loadNews() }, [i18n.language])
+  useEffect(() => { loadNews() }, [loadNews])
 
   const allLabel = t("news.all")
   const sources  = [allLabel, ...new Set(articles.map(a => a.source))]
   const active   = source ?? allLabel
   const filtered = active === allLabel ? articles : articles.filter(a => a.source === active)
+  const visible  = filtered.slice(0, visibleCount)
+  const hasMore  = visibleCount < filtered.length
+
+  // Reset visible count when filter changes
+  useEffect(() => { setVisibleCount(PAGE_SIZE) }, [source])
+
+  // IntersectionObserver — load next page when sentinel enters viewport
+  useEffect(() => {
+    if (!sentinelRef.current || !hasMore) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisibleCount(n => n + PAGE_SIZE) },
+      { rootMargin: "200px" }
+    )
+    observer.observe(sentinelRef.current)
+    return () => observer.disconnect()
+  }, [hasMore, visible.length])
 
   return (
     <>
@@ -78,7 +101,7 @@ export default function NewsPage() {
               <button
                 key={s}
                 className={`tab-link${active === s ? " tab-link--active" : ""}`}
-                onClick={() => setSource(s)}
+                onClick={() => setSource(s === allLabel ? null : s)}
               >
                 {s}
               </button>
@@ -108,13 +131,27 @@ export default function NewsPage() {
               <h3>{t("news.noArticles")}</h3>
             </div>
           ) : (
-            <div className="row">
-              {filtered.map((article, i) => (
-                <div key={i} className={`col-lg-${i === 0 && active === allLabel ? "12" : "6"} mb-4`}>
-                  <NewsCard article={article} featured={i === 0 && active === allLabel} />
+            <>
+              <div className="row">
+                {visible.map((article, i) => (
+                  <div key={article.id ?? i} className={`col-lg-${i === 0 && active === allLabel ? "12" : "6"} mb-4`}>
+                    <NewsCard article={article} featured={i === 0 && active === allLabel} />
+                  </div>
+                ))}
+              </div>
+
+              {hasMore && (
+                <div ref={sentinelRef} style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
+                  <div className="spinner" />
                 </div>
-              ))}
-            </div>
+              )}
+
+              {!hasMore && filtered.length > PAGE_SIZE && (
+                <p style={{ textAlign: "center", color: "#555", fontSize: "0.8rem", paddingBottom: 24 }}>
+                  All {filtered.length} articles loaded
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -3,7 +3,7 @@ module Api
     class NewsController < BaseController
       def index
         lang = normalize_lang(params[:lang])
-        render json: NewsService.new.latest(limit: 30, lang: lang)
+        render json: NewsService.new.latest(limit: 60, lang: lang)
       rescue => e
         Rails.logger.error("[NewsController] #{e.message}")
         render json: []
