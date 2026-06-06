@@ -18,7 +18,7 @@ function LiveMatchRow({ match, onMatchClick }) {
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">
           {match.home?.logo && (
-            <img src={match.home.logo} alt="" className="flag-xs" loading="lazy"
+            <img src={match.home.logo} alt="" className="flag-xs" loading="eager"
               onError={e => (e.target.style.display = "none")} />
           )}
           <span className="team-name">{match.home?.name}</span>
@@ -38,7 +38,7 @@ function LiveMatchRow({ match, onMatchClick }) {
           )}
           <span className="team-name">{match.away?.name}</span>
           {match.away?.logo && (
-            <img src={match.away.logo} alt="" className="flag-xs" loading="lazy"
+            <img src={match.away.logo} alt="" className="flag-xs" loading="eager"
               onError={e => (e.target.style.display = "none")} />
           )}
         </div>
@@ -57,7 +57,7 @@ function CompetitionBlock({ leagueName, leagueLogo, leagueCountry, matches, onMa
     <div className="widget-next-match mb-4">
       <div className="widget-title d-flex align-items-center" style={{ gap: 10 }}>
         {leagueLogo && (
-          <img src={leagueLogo} alt="" className="logo-sm" loading="lazy"
+          <img src={leagueLogo} alt="" className="logo-sm" loading="eager"
             onError={e => (e.target.style.display = "none")} />
         )}
         <h3 style={{ margin: 0 }}>{leagueName ?? "Live"}</h3>

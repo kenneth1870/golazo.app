@@ -32,7 +32,7 @@ function MiniStandingsTable({ group, rows }) {
           <tr key={i} style={{ borderTop: "1px solid var(--border)", background: bg }}>
             <td style={{ padding: "5px 6px", display: "flex", alignItems: "center", gap: 6 }}>
               {i < 2 && <span style={{ width: 3, height: 14, borderRadius: 2, background: "#ee1e46", display: "inline-block", flexShrink: 0 }} />}
-              {s.team?.flag_url && <img src={s.team.flag_url} alt="" loading="lazy" style={{ width: 16, height: 11, objectFit: "cover", borderRadius: 1, flexShrink: 0 }} onError={e => (e.target.style.display = "none")} />}
+              {s.team?.flag_url && <img src={s.team.flag_url} alt="" loading="eager" style={{ width: 16, height: 11, objectFit: "cover", borderRadius: 1, flexShrink: 0 }} onError={e => (e.target.style.display = "none")} />}
               <Link to={`/teams/${s.team?.id}`} style={{ color: "#fff", textDecoration: "none", fontWeight: i < 2 ? 700 : 400 }}>
                 {s.team?.code || s.team?.name}
               </Link>

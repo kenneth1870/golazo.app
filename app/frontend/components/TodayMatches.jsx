@@ -43,7 +43,7 @@ function MatchRow({ match, onClick }) {
       <div className="d-flex align-items-center" style={{ flex: 1, justifyContent: "flex-end", gap: 8 }}>
         <span style={{ color: "#fff", fontWeight: 600, fontSize: "0.9rem" }}>{match.home_team?.name}</span>
         {match.home_team?.flag_url && (
-          <img src={match.home_team.flag_url} alt="" className="flag-xs" loading="lazy" />
+          <img src={match.home_team.flag_url} alt="" className="flag-xs" loading="eager" />
         )}
       </div>
 
@@ -66,7 +66,7 @@ function MatchRow({ match, onClick }) {
       {/* Away team */}
       <div className="d-flex align-items-center" style={{ flex: 1, gap: 8 }}>
         {match.away_team?.flag_url && (
-          <img src={match.away_team.flag_url} alt="" className="flag-xs" loading="lazy" />
+          <img src={match.away_team.flag_url} alt="" className="flag-xs" loading="eager" />
         )}
         <span style={{ color: "#fff", fontWeight: 600, fontSize: "0.9rem" }}>{match.away_team?.name}</span>
       </div>
@@ -86,7 +86,7 @@ function CompetitionGroup({ competition, matches, onMatchSelect }) {
     <div className="widget-next-match mb-4">
       <div className="widget-title d-flex align-items-center" style={{ gap: 10 }}>
         {competition.logo && (
-          <img src={competition.logo} alt="" className="logo-sm" loading="lazy" />
+          <img src={competition.logo} alt="" className="logo-sm" loading="eager" />
         )}
         <h3 style={{ margin: 0 }}>{competition.name}</h3>
         {competition.country && (

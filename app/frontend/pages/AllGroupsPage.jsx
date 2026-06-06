@@ -54,7 +54,7 @@ function StandingsTable({ group, rows, onNavigate }) {
                 <td>
                   <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                     {s.team?.flag_url && (
-                      <img src={s.team.flag_url} alt="" className="flag-xs" loading="lazy"
+                      <img src={s.team.flag_url} alt="" className="flag-xs" loading="eager"
                         onError={e => (e.target.style.display = "none")} />
                     )}
                     <span className="text-white" style={{ fontWeight: 600 }}>{s.team?.name}</span>
