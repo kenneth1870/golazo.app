@@ -94,30 +94,48 @@ function posStyle(pos) { return POS_STYLE[pos] || POS_STYLE.M }
 // ─── Event icon components ─────────────────────────────
 function EventIcon({ type, detail }) {
   if (type === "Goal") {
-    const label = detail === "Own Goal" ? "OG" : detail === "Penalty" ? "P" : null
-    return (
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
-        <span style={{ fontSize: "1.15rem" }}>⚽</span>
-        {label && <span style={{ fontSize: "0.6rem", fontWeight: 800, color: "#f59e0b", background: "rgba(245,158,11,.15)", padding: "1px 4px", borderRadius: 3 }}>{label}</span>}
-      </span>
-    )
+    if (detail === "Own Goal")   return <span title="Own Goal">⚽<span style={{ fontSize: "0.55rem", verticalAlign: "top", color: "#ef4444", fontWeight: 800 }}>OG</span></span>
+    if (detail === "Penalty")    return <span title="Penalty">⚽<span style={{ fontSize: "0.55rem", verticalAlign: "top", color: "#f59e0b", fontWeight: 800 }}>P</span></span>
+    if (detail === "Missed Penalty") return <span title="Missed Penalty" style={{ fontSize: "1.1rem" }}>❌</span>
+    return <span style={{ fontSize: "1.15rem" }}>⚽</span>
   }
   if (type === "Card") {
     if (detail === "Yellow Card") return (
-      <span style={{ display: "inline-block", width: 14, height: 18, background: "#f59e0b", borderRadius: 2, boxShadow: "0 2px 6px rgba(245,158,11,.5)", flexShrink: 0 }} />
+      <span style={{ display: "inline-block", width: 14, height: 18, background: "#f59e0b", borderRadius: 2, boxShadow: "0 2px 6px rgba(245,158,11,.5)", flexShrink: 0 }} title="Yellow Card" />
     )
     if (detail === "Red Card") return (
-      <span style={{ display: "inline-block", width: 14, height: 18, background: "#ef4444", borderRadius: 2, boxShadow: "0 2px 6px rgba(239,68,68,.5)", flexShrink: 0 }} />
+      <span style={{ display: "inline-block", width: 14, height: 18, background: "#ef4444", borderRadius: 2, boxShadow: "0 2px 6px rgba(239,68,68,.5)", flexShrink: 0 }} title="Red Card" />
     )
     if (detail === "Second Yellow Card") return (
-      <span style={{ display: "inline-flex", gap: 2, alignItems: "center" }}>
+      <span style={{ display: "inline-flex", gap: 2, alignItems: "center" }} title="Second Yellow">
         <span style={{ display: "inline-block", width: 10, height: 15, background: "#f59e0b", borderRadius: 2 }} />
         <span style={{ display: "inline-block", width: 10, height: 15, background: "#ef4444", borderRadius: 2 }} />
       </span>
     )
   }
-  if (type === "subst") return <span style={{ fontSize: "1rem" }}>🔄</span>
+  if (type === "subst")   return <span style={{ fontSize: "1rem" }} title="Substitution">🔄</span>
+  if (type === "Var") {
+    if (detail?.includes("cancelled") || detail?.includes("disallowed")) return <span title={detail}>📹❌</span>
+    if (detail?.includes("Penalty confirmed"))  return <span title={detail}>📹✅</span>
+    if (detail?.includes("Card upgrade"))       return <span title={detail}>📹🟥</span>
+    return <span title={detail || "VAR"}>📹</span>
+  }
+  if (type === "injury")  return <span style={{ fontSize: "1rem" }} title="Injury">🩹</span>
   return <span>•</span>
+}
+
+function PeriodDivider({ label }) {
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 10, margin: "8px 0",
+      color: "var(--muted)", fontSize: "0.68rem", fontWeight: 700, letterSpacing: 1,
+      textTransform: "uppercase",
+    }}>
+      <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+      <span style={{ padding: "2px 10px", background: "var(--surface2)", borderRadius: 12, whiteSpace: "nowrap" }}>{label}</span>
+      <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+    </div>
+  )
 }
 
 const STAT_ORDER = [
@@ -391,34 +409,68 @@ function FormPill({ result }) {
   )
 }
 
-function EventsTimeline({ events, homeTeam, t }) {
+function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t }) {
   if (!events?.length) return null
-  const relevant = events.filter(e => ["Goal", "Card", "subst"].includes(e.type))
+
+  const RELEVANT_TYPES = ["Goal", "Card", "subst", "Var", "injury"]
+  const relevant = events.filter(e => RELEVANT_TYPES.includes(e.type))
   if (!relevant.length) return null
+
+  // Separate regular time + penalty shootout events
+  const regularEvents  = relevant.filter(e => e.period !== "Penalty")
+  const penaltyEvents  = relevant.filter(e => e.period === "Penalty")
+
+  // Build list with period dividers inserted
+  const items = []
+  let htInserted  = false
+  let etInserted  = false
+  let et2Inserted = false
+
+  regularEvents.forEach(e => {
+    const min = e.minute ?? 0
+    if (!htInserted && min > 45) {
+      items.push({ _divider: "HT — Half Time" })
+      htInserted = true
+    }
+    if (!etInserted && min > 90) {
+      items.push({ _divider: "90' — Extra Time" })
+      etInserted = true
+    }
+    if (!et2Inserted && min > 105) {
+      items.push({ _divider: "105' — Extra Time 2nd Half" })
+      et2Inserted = true
+    }
+    items.push(e)
+  })
+
+  // Penalty shootout score trackers
+  let homeGoals = 0, awayGoals = 0
 
   return (
     <section className="match-section">
       <h3 className="match-section__title">{t("match.events")}</h3>
       <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        {relevant.map((e, i) => {
-          const isHome   = e.team?.name === homeTeam
-          const isGoal   = e.type === "Goal"
-          const isSub    = e.type === "subst"
-          const minuteStr = `${e.minute}${e.extra ? `+${e.extra}` : ""}'`
+        {items.map((e, i) => {
+          if (e._divider) return <PeriodDivider key={`d${i}`} label={e._divider} />
+
+          const isHome    = e.team?.name === homeTeam
+          const isGoal    = e.type === "Goal" && e.detail !== "Missed Penalty"
+          const isMissed  = e.type === "Goal" && e.detail === "Missed Penalty"
+          const isSub     = e.type === "subst"
+          const isVar     = e.type === "Var"
+          const isCard    = e.type === "Card"
+          const minuteStr = `${e.minute ?? ""}${e.extra ? `+${e.extra}` : ""}'`
+          const varCancelled = isVar && (e.detail?.toLowerCase().includes("cancel") || e.detail?.toLowerCase().includes("disallow"))
 
           return (
-            <div key={i} className={`match-event${isGoal ? " match-event--goal" : ""}${isSub ? " match-event--sub" : ""}`}
-              style={{ flexDirection: isHome ? "row" : "row-reverse" }}>
-
-              {/* Minute */}
+            <div key={i}
+              className={`match-event${isGoal ? " match-event--goal" : ""}${isSub ? " match-event--sub" : ""}${isVar ? " match-event--var" : ""}${isMissed ? " match-event--missed" : ""}`}
+              style={{ flexDirection: isHome ? "row" : "row-reverse", opacity: varCancelled ? 0.65 : 1 }}
+            >
               <span className="match-event__minute">{minuteStr}</span>
-
-              {/* Icon */}
               <span className="match-event__icon">
                 <EventIcon type={e.type} detail={e.detail} />
               </span>
-
-              {/* Player + assist/sub */}
               <div className="match-event__info" style={{ textAlign: isHome ? "left" : "right" }}>
                 <span className={`match-event__player${isGoal ? " match-event__player--goal" : ""}`}>
                   {e.player}
@@ -429,17 +481,60 @@ function EventsTimeline({ events, homeTeam, t }) {
                 {isSub && e.assist && (
                   <span className="match-event__assist"> ↑ {e.assist}</span>
                 )}
+                {isVar && e.detail && (
+                  <span className="match-event__assist" style={{ color: varCancelled ? "#ef4444" : "#10b981" }}>
+                    {" "}{e.detail}
+                    {e.comments ? ` — ${e.comments}` : ""}
+                  </span>
+                )}
+                {isMissed && (
+                  <span className="match-event__assist" style={{ color: "#ef4444" }}> missed penalty</span>
+                )}
               </div>
-
-              {/* Team name — only on goal/card */}
-              {!isSub && (
-                <span className="match-event__team" style={{ textAlign: isHome ? "right" : "left" }}>
+              {!isSub && !isVar && (
+                <span className="match-event__team" style={{ textAlign: isHome ? "right" : "left", fontSize: "0.68rem", color: "var(--muted)" }}>
                   {e.team?.name}
                 </span>
               )}
             </div>
           )
         })}
+
+        {/* Penalty shootout */}
+        {penaltyEvents.length > 0 && (
+          <>
+            <PeriodDivider label="Penalty Shootout" />
+            {penaltyEvents.map((e, i) => {
+              const isHome   = e.team?.name === homeTeam
+              const scored   = e.detail !== "Missed Penalty"
+              if (scored && isHome)  homeGoals++
+              if (scored && !isHome) awayGoals++
+
+              return (
+                <div key={`pk${i}`}
+                  className="match-event"
+                  style={{ flexDirection: isHome ? "row" : "row-reverse", opacity: scored ? 1 : 0.55 }}
+                >
+                  <span className="match-event__minute">{i + 1}</span>
+                  <span className="match-event__icon">
+                    {scored ? "✅" : "❌"}
+                  </span>
+                  <div className="match-event__info" style={{ textAlign: isHome ? "left" : "right" }}>
+                    <span className="match-event__player" style={{ color: scored ? "#fff" : "var(--muted)" }}>
+                      {e.player}
+                    </span>
+                    <span className="match-event__assist" style={{ color: scored ? "#10b981" : "#ef4444" }}>
+                      {scored ? " scored" : " missed"}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: "0.78rem", fontWeight: 900, color: "#fff", minWidth: 36, textAlign: isHome ? "right" : "left" }}>
+                    {homeGoals}–{awayGoals}
+                  </span>
+                </div>
+              )
+            })}
+          </>
+        )}
       </div>
     </section>
   )
@@ -940,7 +1035,7 @@ export default function MatchShowPage() {
   const hasFixture  = !!data?.fixture
   const isApiError  = !hasFixture && data?.error === "api_error"
 
-  const eventCount  = data?.events?.filter(e => ["Goal","Card","subst"].includes(e.type)).length ?? 0
+  const eventCount  = data?.events?.filter(e => ["Goal","Card","subst","Var","injury"].includes(e.type)).length ?? 0
 
   const notifSupported = typeof Notification !== "undefined"
 
@@ -1079,7 +1174,7 @@ export default function MatchShowPage() {
             {hasFixture && <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} t={t} />}
             {hasFixture && <PredictionPanel matchId={id} homeTeamName={homeName} awayTeamName={awayName} t={t} />}
             {hasEvents
-              ? <EventsTimeline events={data.events} homeTeam={homeName} t={t} />
+              ? <EventsTimeline events={data.events} homeTeam={homeName} awayTeam={awayName} statusShort={statusShort} t={t} />
               : (
                 <div className="empty-state">
                   <div style={{ fontSize: "2.5rem", marginBottom: 12, opacity: .3 }}>🏟️</div>

@@ -508,6 +508,9 @@ a:hover{color:var(--accent);opacity:.85}
 }
 .match-event--goal:hover{background:rgba(212,175,55,.12)!important}
 .match-event--sub{opacity:.7}
+.match-event--var{background:rgba(99,102,241,.07)!important;border-left:3px solid rgba(99,102,241,.4);margin-left:-3px}
+.match-event--var:hover{background:rgba(99,102,241,.12)!important}
+.match-event--missed{opacity:.5}
 .match-event__minute{
   width:40px;text-align:center;font-size:.72rem;font-weight:800;
   color:var(--muted);flex-shrink:0;font-variant-numeric:tabular-nums;
