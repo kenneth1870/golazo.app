@@ -1,4 +1,4 @@
-const CACHE_VERSION = "golazo-v4"
+const CACHE_VERSION = "golazo-v5"
 const STATIC_CACHE  = `${CACHE_VERSION}-static`
 const API_CACHE     = `${CACHE_VERSION}-api`
 
@@ -95,3 +95,43 @@ async function networkFirstApi(request) {
 function isStaticAsset(pathname) {
   return /\.(js|css|woff2?|ttf|otf|png|jpg|jpeg|svg|ico|webp|gif)$/.test(pathname)
 }
+
+// ── Push Notifications ────────────────────────────────
+self.addEventListener("push", event => {
+  if (!event.data) return
+
+  let payload = {}
+  try { payload = JSON.parse(event.data.text()) } catch {}
+
+  const title   = payload.title  || "Golazo ⚽"
+  const options = {
+    body:    payload.body  || "",
+    icon:    payload.icon  || "/images/apple-touch-icon.png?v=2",
+    badge:   payload.badge || "/images/badge-72.png",
+    tag:     "golazo-score",          // replace previous notification from same match
+    renotify: true,
+    data:    { url: payload.url || "/" },
+    vibrate: [200, 100, 200],
+  }
+
+  event.waitUntil(self.registration.showNotification(title, options))
+})
+
+// ── Notification click → open / focus app ────────────
+self.addEventListener("notificationclick", event => {
+  event.notification.close()
+  const url = event.notification.data?.url || "/"
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(clients => {
+      // Focus existing window if open
+      const existing = clients.find(c => c.url.includes(self.location.origin))
+      if (existing) {
+        existing.focus()
+        existing.navigate(url)
+      } else {
+        self.clients.openWindow(url)
+      }
+    })
+  )
+})

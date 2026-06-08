@@ -22,6 +22,10 @@ Rails.application.routes.draw do
       get "venues",       to: "venues#index"
       get "all_leagues",  to: "all_leagues#index"
       get "all_leagues/live", to: "all_leagues#live"
+      get  "vapid_public_key",         to: "push_subscriptions#vapid_key"
+      post "push_subscriptions",       to: "push_subscriptions#create"
+      put  "push_subscriptions/teams", to: "push_subscriptions#update_teams"
+      delete "push_subscriptions",     to: "push_subscriptions#destroy"
       resources :teams,    only: [:index, :show]
       resources :standings, only: [:index]
       resources :matches, only: [:index, :show, :update] do

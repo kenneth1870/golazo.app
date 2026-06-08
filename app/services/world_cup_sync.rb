@@ -351,6 +351,16 @@ class WorldCupSync
       status:     match.status,
       minute:     minute
     })
+
+    # Fire push notification to subscribers following either team (async)
+    SendGoalAlertJob.perform_later(
+      match_id:   match.id,
+      home_name:  match.home_team&.name.to_s,
+      away_name:  match.away_team&.name.to_s,
+      home_score: match.home_score.to_i,
+      away_score: match.away_score.to_i,
+      match_url:  "/matches/#{match.external_id || "db-#{match.id}"}"
+    )
   end
 
   def log(msg)

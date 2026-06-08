@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_06_055645) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_08_170250) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -93,6 +93,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_06_055645) do
     t.datetime "updated_at", null: false
     t.text "voter_tokens", default: "[]", null: false
     t.index ["match_external_id"], name: "index_predictions_on_match_external_id", unique: true
+  end
+
+  create_table "push_subscriptions", force: :cascade do |t|
+    t.string "auth", null: false
+    t.datetime "created_at", null: false
+    t.string "device_id"
+    t.text "endpoint", null: false
+    t.string "p256dh", null: false
+    t.string "team_ids", default: "[]"
+    t.datetime "updated_at", null: false
+    t.index ["device_id"], name: "index_push_subscriptions_on_device_id"
+    t.index ["endpoint"], name: "index_push_subscriptions_on_endpoint", unique: true
   end
 
   create_table "solid_cable_messages", force: :cascade do |t|

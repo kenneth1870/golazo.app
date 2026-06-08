@@ -6,6 +6,7 @@ import { usePageMeta } from "../hooks/usePageMeta"
 import { useLiveMinute, useGoalNotifications } from "./match/useMatchLive"
 import PredictionPanel from "./match/PredictionPanel"
 import { useReminders } from "../hooks/useReminders"
+import { usePushNotifications } from "../hooks/usePushNotifications"
 
 // ─── Reminder button ──────────────────────────────────
 function ReminderButton({ match }) {
@@ -735,20 +736,34 @@ function GoalToast({ text, visible, onDismiss }) {
   )
 }
 
-// ─── Notification permission banner ───────────────────
-function NotifBanner({ onAllow, onDismiss }) {
+// ─── Push notification banner for live matches ────────
+function LivePushBanner({ homeName, awayName, onDismiss }) {
+  const { supported, permission, subscribed, loading, subscribe } = usePushNotifications()
+  const [done, setDone] = useState(false)
+
+  if (!supported || permission === "denied" || subscribed || done) return null
+
+  const enable = async () => {
+    const teams = [homeName, awayName].filter(Boolean)
+    const res = await subscribe(teams)
+    if (res.ok || res.error === "Permission denied") setDone(true)
+  }
+
   return (
     <div style={{
-      background: "var(--surface2)", border: "1px solid var(--border)",
+      background: "var(--surface2)", border: "1px solid rgba(238,30,70,.3)",
       borderRadius: 10, padding: "12px 16px", marginBottom: 16,
       display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
     }}>
       <span style={{ fontSize: "1.2rem" }}>🔔</span>
-      <span style={{ flex: 1, fontSize: "0.82rem", color: "var(--text)" }}>Get notified on goals for this match</span>
-      <button onClick={onAllow} style={{
+      <span style={{ flex: 1, fontSize: "0.82rem", color: "var(--text)" }}>
+        Get goal alerts even when the app is closed
+      </span>
+      <button onClick={enable} disabled={loading} style={{
         background: "#ee1e46", color: "#fff", border: "none", borderRadius: 6,
         padding: "6px 14px", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer",
-      }}>Allow</button>
+        opacity: loading ? 0.6 : 1,
+      }}>{loading ? "…" : "Allow"}</button>
       <button onClick={onDismiss} style={{
         background: "none", color: "var(--muted)", border: "none", cursor: "pointer", fontSize: "0.8rem",
       }}>Not now</button>
@@ -823,7 +838,6 @@ export default function MatchShowPage() {
   const [tab, setTab]           = useState("summary")
   const [toast, setToast]       = useState(null)
   const [showNotifBanner, setShowNotifBanner] = useState(false)
-  const [notifEnabled, setNotifEnabled] = useState(false)
   const toastTimer  = useRef(null)
   const swipeStartX = useRef(null)
 
@@ -859,10 +873,10 @@ export default function MatchShowPage() {
       const name = scorer?.player ? `⚽ ${scorer.player}` : "⚽ GOAL!"
       showToast(name)
 
-      if (notifEnabled && Notification.permission === "granted") {
+      if (Notification.permission === "granted") {
         new Notification(`⚽ Goal! ${homeName} ${h}–${a} ${awayName}`, {
           body: scorer?.player ? `${scorer.player} ${scorer.minute}'` : "",
-          icon: "/images/img_1.jpg",
+          icon: "/images/apple-touch-icon.png?v=2",
         })
       }
     }
@@ -899,26 +913,16 @@ export default function MatchShowPage() {
         return { fixture: msg.fixture, events: msg.events, stats: msg.stats, lineups: msg.lineups }
       })
     }
-  }, [notifEnabled])
+  }, [])
 
   useExternalMatchChannel(isLive ? id : null, handleCableMessage)
 
-  // Notification permission prompt on live matches
+  // Show push banner on live matches when not yet granted
   useEffect(() => {
-    if (!isLive || notifEnabled) return
-    if (Notification.permission === "granted") {
-      setNotifEnabled(true)
-    } else if (Notification.permission === "default") {
-      setShowNotifBanner(true)
-    }
+    if (!isLive) return
+    if (typeof Notification === "undefined") return
+    if (Notification.permission === "default") setShowNotifBanner(true)
   }, [isLive])
-
-  function requestNotifPermission() {
-    Notification.requestPermission().then(p => {
-      setShowNotifBanner(false)
-      if (p === "granted") setNotifEnabled(true)
-    })
-  }
 
   // Back navigation
   function goBack() {
@@ -932,15 +936,6 @@ export default function MatchShowPage() {
   const isApiError  = !hasFixture && data?.error === "api_error"
 
   const eventCount  = data?.events?.filter(e => ["Goal","Card","subst"].includes(e.type)).length ?? 0
-
-  function handleNotif() {
-    if (notifEnabled) return
-    if (Notification.permission === "granted") {
-      setNotifEnabled(true)
-    } else {
-      requestNotifPermission()
-    }
-  }
 
   const notifSupported = typeof Notification !== "undefined"
 
@@ -991,9 +986,9 @@ export default function MatchShowPage() {
             isLive={isLive}
             liveMinute={liveMinute}
             matchId={id}
-            notifEnabled={notifEnabled}
+            notifEnabled={Notification?.permission === "granted"}
             notifSupported={notifSupported}
-            onNotif={handleNotif}
+            onNotif={() => {}}
           />
         ) : (
           <div style={{ background: "var(--surface1,#0d1117)", padding: "48px 0 36px" }}>
@@ -1045,6 +1040,15 @@ export default function MatchShowPage() {
               {t("error.retry")}
             </button>
           </div>
+        )}
+
+        {/* Live push notification banner */}
+        {showNotifBanner && isLive && (
+          <LivePushBanner
+            homeName={homeName}
+            awayName={awayName}
+            onDismiss={() => setShowNotifBanner(false)}
+          />
         )}
 
         {/* Goal banner */}
