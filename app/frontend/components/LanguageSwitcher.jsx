@@ -1,10 +1,12 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { SUPPORTED_LANGUAGES } from "../i18n"
 
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation()
   const [open, setOpen] = useState(false)
+  const [align, setAlign] = useState("right") // "left" or "right"
+  const btnRef = useRef(null)
 
   const currentLang = i18n.language?.split("-")[0] || "en"
   const current = SUPPORTED_LANGUAGES.find(l => l.code === currentLang)
@@ -20,11 +22,21 @@ export default function LanguageSwitcher() {
     setOpen(false)
   }
 
+  function handleToggle() {
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect()
+      // If there's ≥180px to the right of the button, open right; otherwise open left
+      setAlign(window.innerWidth - rect.left >= 180 ? "left" : "right")
+    }
+    setOpen(o => !o)
+  }
+
   return (
     <div className="lang-switcher" style={{ position: "relative" }}>
       <button
+        ref={btnRef}
         className="lang-btn"
-        onClick={() => setOpen(o => !o)}
+        onClick={handleToggle}
         title="Change language"
       >
         <span>{current.flag}</span>
@@ -34,7 +46,7 @@ export default function LanguageSwitcher() {
 
       {open && (
         <>
-          <div className="lang-dropdown">
+          <div className="lang-dropdown" style={{ [align]: 0 }}>
             {SUPPORTED_LANGUAGES.map(lang => (
               <button
                 key={lang.code}

@@ -55,7 +55,7 @@ export default function BottomNav() {
           <TodayIcon />
           {liveCount > 0 && <span className="bottom-nav__badge" />}
         </span>
-        <span className="bottom-nav__label">Today</span>
+        <span className="bottom-nav__label">{t("time.today")}</span>
       </NavLink>
 
       <NavLink
@@ -63,7 +63,7 @@ export default function BottomNav() {
         className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}
       >
         <MundialIcon />
-        <span className="bottom-nav__label">Mundial</span>
+        <span className="bottom-nav__label">{t("nav.mundial")}</span>
       </NavLink>
 
       <button
@@ -72,7 +72,7 @@ export default function BottomNav() {
         aria-label="Search"
       >
         <SearchIcon />
-        <span className="bottom-nav__label">{t("nav.search", "Search")}</span>
+        <span className="bottom-nav__label">{t("nav.search")}</span>
       </button>
     </nav>
     </>
