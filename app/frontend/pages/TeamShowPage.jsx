@@ -5,14 +5,22 @@ import { usePageMeta } from "../hooks/usePageMeta"
 import { useFavorites } from "../hooks/useFavorites"
 import { getTeamColor } from "../utils/teamColors"
 
+const POSITION_ORDER = { "Goalkeeper": 0, "Defender": 1, "Midfielder": 2, "Attacker": 3 }
+const POSITION_LABEL = { "Goalkeeper": "GK", "Defender": "DEF", "Midfielder": "MID", "Attacker": "ATT" }
+const POSITION_COLOR = { "Goalkeeper": "#f59e0b", "Defender": "#3b82f6", "Midfielder": "#10b981", "Attacker": "#ee1e46" }
+
 export default function TeamShowPage() {
   const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const { isFavorite, toggleFavorite } = useFavorites()
-  const [team, setTeam]       = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [standing, setStanding] = useState(null)
+  const [team, setTeam]             = useState(null)
+  const [loading, setLoading]       = useState(true)
+  const [standing, setStanding]     = useState(null)
+  const [squad, setSquad]           = useState(null)
+  const [squadLoading, setSquadLoading] = useState(false)
+  const [activeTab, setActiveTab]   = useState("overview")
+
   usePageMeta(
     team ? `${team.name} — World Cup 2026` : null,
     team ? `${team.name} FIFA World Cup 2026 fixtures, results and group standings.` : null,
@@ -37,6 +45,17 @@ export default function TeamShowPage() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [id])
+
+  // Lazy-load squad when user taps the Squad tab
+  useEffect(() => {
+    if (activeTab !== "squad" || squad !== null) return
+    setSquadLoading(true)
+    fetch(`/api/v1/teams/${id}/squad`)
+      .then(r => r.json())
+      .then(d => setSquad(d))
+      .catch(() => setSquad({ players: [], coach: null }))
+      .finally(() => setSquadLoading(false))
+  }, [activeTab, id, squad])
 
   if (loading) {
     return (
@@ -91,10 +110,12 @@ export default function TeamShowPage() {
     )
   }
 
-  const matches   = team.matches || []
-  const upcoming  = matches.filter(m => m.status === "scheduled").sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
-  const finished  = matches.filter(m => m.status === "finished").sort((a, b) => new Date(b.kickoff_at) - new Date(a.kickoff_at))
-  const live      = matches.filter(m => m.status === "live")
+  const matches    = team.matches || []
+  const upcoming   = matches.filter(m => m.status === "scheduled").sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
+  const finished   = matches.filter(m => m.status === "finished").sort((a, b) => new Date(b.kickoff_at) - new Date(a.kickoff_at))
+  const live       = matches.filter(m => m.status === "live")
+  const scorers    = team.scorers || []
+  const tstats     = team.tournament_stats || {}
 
   // Last 5 finished results as W/D/L
   const form = finished.slice(0, 5).reverse().map(m => {
@@ -105,6 +126,17 @@ export default function TeamShowPage() {
     if (myScore === oppScore) return "D"
     return "L"
   })
+
+  // Squad grouped by position
+  const squadByPosition = squad?.players?.length > 0
+    ? Object.entries(
+        squad.players.reduce((acc, p) => {
+          const pos = p.position || "Unknown"
+          ;(acc[pos] = acc[pos] || []).push(p)
+          return acc
+        }, {})
+      ).sort(([a], [b]) => (POSITION_ORDER[a] ?? 9) - (POSITION_ORDER[b] ?? 9))
+    : []
 
   return (
     <div>
@@ -185,39 +217,199 @@ export default function TeamShowPage() {
       </div>
       )})()}
 
+      {/* Tab bar */}
+      <div style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)", position: "sticky", top: 56, zIndex: 10 }}>
+        <div className="container" style={{ maxWidth: 700 }}>
+          <div style={{ display: "flex", gap: 0 }}>
+            {[
+              { key: "overview", label: "Overview" },
+              { key: "squad",    label: "Squad" },
+              { key: "stats",    label: "Stats" },
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  padding: "14px 20px", fontSize: "0.82rem", fontWeight: 700,
+                  color: activeTab === tab.key ? "#ee1e46" : "var(--muted)",
+                  borderBottom: activeTab === tab.key ? "2px solid #ee1e46" : "2px solid transparent",
+                  transition: "color .2s, border-color .2s",
+                }}
+              >{tab.label}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="container" style={{ maxWidth: 700, paddingTop: 16 }}>
 
-        {/* Live match */}
-        {live.length > 0 && (
-          <section className="match-section" style={{ borderColor: "rgba(238,30,70,.4)" }}>
-            <h3 className="match-section__title" style={{ color: "#ee1e46" }}>{t("home.playingNow")}</h3>
-            {live.map(m => <MatchLine key={m.id} match={m} teamName={team.name} navigate={navigate} />)}
-          </section>
-        )}
+        {/* ── Overview tab ── */}
+        {activeTab === "overview" && <>
+          {/* Live match */}
+          {live.length > 0 && (
+            <section className="match-section" style={{ borderColor: "rgba(238,30,70,.4)" }}>
+              <h3 className="match-section__title" style={{ color: "#ee1e46" }}>{t("home.playingNow")}</h3>
+              {live.map(m => <MatchLine key={m.id} match={m} teamName={team.name} navigate={navigate} />)}
+            </section>
+          )}
 
-        {/* Upcoming */}
-        {upcoming.length > 0 && (
-          <section className="match-section">
-            <h3 className="match-section__title">{t("scores.upcomingFixtures")}</h3>
-            {upcoming.slice(0, 6).map(m => <MatchLine key={m.id} match={m} teamName={team.name} navigate={navigate} />)}
-          </section>
-        )}
+          {/* Upcoming */}
+          {upcoming.length > 0 && (
+            <section className="match-section">
+              <h3 className="match-section__title">{t("scores.upcomingFixtures")}</h3>
+              {upcoming.slice(0, 6).map(m => <MatchLine key={m.id} match={m} teamName={team.name} navigate={navigate} />)}
+            </section>
+          )}
 
-        {/* Results */}
-        {finished.length > 0 && (
-          <section className="match-section">
-            <h3 className="match-section__title">{t("nav.results")}</h3>
-            {finished.slice(0, 6).map(m => <MatchLine key={m.id} match={m} teamName={team.name} navigate={navigate} />)}
-          </section>
-        )}
+          {/* Results */}
+          {finished.length > 0 && (
+            <section className="match-section">
+              <h3 className="match-section__title">{t("nav.results")}</h3>
+              {finished.slice(0, 6).map(m => <MatchLine key={m.id} match={m} teamName={team.name} navigate={navigate} />)}
+            </section>
+          )}
 
-        {matches.length === 0 && (
-          <div className="empty-state" style={{ marginTop: 40 }}>
-            <div className="empty-state__icon">📅</div>
-            <h3>{t("noMatches")}</h3>
-            <p>{t("scores.noFixtures")}</p>
+          {/* Tournament scorers from DB */}
+          {scorers.length > 0 && (
+            <section className="match-section">
+              <h3 className="match-section__title">Tournament Scorers</h3>
+              <div className="widget-body p-0">
+                {scorers.slice(0, 8).map((s, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--border)" }}>
+                    <span style={{ width: 22, fontSize: "0.72rem", color: "var(--muted)", fontWeight: 700 }}>{i + 1}</span>
+                    <span style={{ flex: 1, fontWeight: 600, fontSize: "0.85rem" }}>{s.name}</span>
+                    <span style={{ background: "rgba(238,30,70,.12)", color: "#ee1e46", borderRadius: 12, padding: "2px 10px", fontSize: "0.75rem", fontWeight: 900 }}>
+                      {s.goals} ⚽
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {matches.length === 0 && (
+            <div className="empty-state" style={{ marginTop: 40 }}>
+              <div className="empty-state__icon">📅</div>
+              <h3>{t("noMatches")}</h3>
+              <p>{t("scores.noFixtures")}</p>
+            </div>
+          )}
+        </>}
+
+        {/* ── Squad tab ── */}
+        {activeTab === "squad" && (
+          <div>
+            {squadLoading && (
+              <div style={{ paddingTop: 24 }}>
+                {[1,2,3].map(i => <div key={i} className="loading-shimmer" style={{ height: 44, borderRadius: 8, marginBottom: 10 }} />)}
+              </div>
+            )}
+
+            {!squadLoading && squadByPosition.length === 0 && (
+              <div className="empty-state" style={{ marginTop: 40 }}>
+                <div className="empty-state__icon">👕</div>
+                <h3>Squad not available</h3>
+                <p>Squad data will appear once available from the API</p>
+              </div>
+            )}
+
+            {!squadLoading && squadByPosition.map(([position, players]) => (
+              <div key={position} className="widget-next-match" style={{ marginBottom: 16 }}>
+                <div className="widget-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{
+                    background: POSITION_COLOR[position] || "var(--accent)",
+                    color: "#fff", borderRadius: 4, padding: "2px 8px",
+                    fontSize: "0.65rem", fontWeight: 800, letterSpacing: 1,
+                  }}>
+                    {POSITION_LABEL[position] || position.toUpperCase()}
+                  </span>
+                  <h3 style={{ margin: 0 }}>{position}s</h3>
+                </div>
+                <div className="widget-body p-0">
+                  {players.sort((a, b) => (a.number || 99) - (b.number || 99)).map(p => (
+                    <div key={p.id || p.name} style={{ display: "flex", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--border)", gap: 12 }}>
+                      {/* Shirt number */}
+                      <span style={{ width: 28, height: 28, borderRadius: 6, background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: 900, color: "var(--muted)", flexShrink: 0 }}>
+                        {p.number || "–"}
+                      </span>
+                      {/* Photo */}
+                      {p.photo ? (
+                        <img src={p.photo} alt={p.name}
+                          style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                          onError={e => (e.target.style.display = "none")} loading="eager" />
+                      ) : (
+                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem", flexShrink: 0 }}>👤</div>
+                      )}
+                      {/* Name */}
+                      <div style={{ flex: 1 }}>
+                        {p.id ? (
+                          <Link to={`/players/${p.id}?league=4&season=2026`} style={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>
+                            {p.name}
+                          </Link>
+                        ) : (
+                          <span style={{ fontWeight: 700, fontSize: "0.88rem" }}>{p.name}</span>
+                        )}
+                        {p.age && <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>Age {p.age}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
+
+        {/* ── Stats tab ── */}
+        {activeTab === "stats" && (
+          <div>
+            {tstats.played > 0 ? (
+              <>
+                <div className="widget-next-match" style={{ marginBottom: 16 }}>
+                  <div className="widget-title"><h3>Tournament Stats</h3></div>
+                  <div className="widget-body">
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                      {[
+                        ["Played",          tstats.played,         false],
+                        ["Goals Scored",    tstats.goals_scored,   true ],
+                        ["Goals Conceded",  tstats.goals_conceded, false],
+                        ["Goal Diff",       tstats.goal_diff > 0 ? `+${tstats.goal_diff}` : tstats.goal_diff, false],
+                        ["Clean Sheets",    tstats.clean_sheets,   false],
+                      ].map(([label, val, hi]) => (
+                        <div key={label} style={{ flex: "1 1 80px", minWidth: 72, textAlign: "center", background: "var(--surface2)", borderRadius: 10, padding: "14px 8px" }}>
+                          <div style={{ fontSize: "1.5rem", fontWeight: 900, color: hi ? "#ee1e46" : "#fff" }}>{val ?? "—"}</div>
+                          <div style={{ fontSize: "0.6rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: .5, marginTop: 3 }}>{label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {scorers.length > 0 && (
+                  <div className="widget-next-match">
+                    <div className="widget-title"><h3>Top Scorers</h3></div>
+                    <div className="widget-body p-0">
+                      {scorers.map((s, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--border)" }}>
+                          <span style={{ width: 22, fontSize: "0.72rem", color: "var(--muted)", fontWeight: 700 }}>{i + 1}</span>
+                          <span style={{ flex: 1, fontWeight: 600, fontSize: "0.85rem" }}>{s.name}</span>
+                          <span style={{ background: "rgba(238,30,70,.12)", color: "#ee1e46", borderRadius: 12, padding: "2px 10px", fontSize: "0.75rem", fontWeight: 900 }}>{s.goals} ⚽</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="empty-state" style={{ marginTop: 40 }}>
+                <div className="empty-state__icon">📊</div>
+                <h3>No stats yet</h3>
+                <p>Stats will appear after matches are played</p>
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
     </div>
   )
