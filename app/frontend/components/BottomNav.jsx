@@ -63,7 +63,7 @@ export default function BottomNav() {
         className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}
       >
         <MundialIcon />
-        <span className="bottom-nav__label">{t("nav.mundial")}</span>
+        <span className="bottom-nav__label">{t("nav.mundialShort")}</span>
       </NavLink>
 
       <button

@@ -6,6 +6,7 @@ export default function LanguageSwitcher() {
   const { i18n } = useTranslation()
   const [open, setOpen] = useState(false)
   const [align, setAlign] = useState("right") // "left" or "right"
+  const [dropUp, setDropUp] = useState(false)
   const btnRef = useRef(null)
 
   const currentLang = i18n.language?.split("-")[0] || "en"
@@ -25,8 +26,9 @@ export default function LanguageSwitcher() {
   function handleToggle() {
     if (!open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect()
-      // If there's ≥180px to the right of the button, open right; otherwise open left
       setAlign(window.innerWidth - rect.left >= 180 ? "left" : "right")
+      // Open upward if less than 180px below the button (footer near bottom nav)
+      setDropUp(window.innerHeight - rect.bottom < 180)
     }
     setOpen(o => !o)
   }
@@ -46,7 +48,7 @@ export default function LanguageSwitcher() {
 
       {open && (
         <>
-          <div className="lang-dropdown" style={{ [align]: 0 }}>
+          <div className="lang-dropdown" style={{ [align]: 0, ...(dropUp ? { bottom: "calc(100% + 6px)", top: "auto" } : {}) }}>
             {SUPPORTED_LANGUAGES.map(lang => (
               <button
                 key={lang.code}
