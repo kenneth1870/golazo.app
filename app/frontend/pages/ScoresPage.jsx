@@ -8,10 +8,10 @@ export default function ScoresPage() {
 
   const TABS = [
     { path: "/scores/today",    label: t("time.today"), live: liveCount > 0 },
-    { path: "/scores/results",  label: t("nav.results")          },
-    { path: "/scores/fixtures", label: t("nav.fixtures")         },
-    { path: "/scores/groups",   label: t("nav.groupStage")       },
-    { path: "/scores/knockout", label: t("nav.knockout")         },
+    { path: "/scores/results",  label: t("nav.results")    },
+    { path: "/scores/fixtures", label: t("nav.fixtures")   },
+    { path: "/scores/groups",   label: t("nav.groupStage") },
+    { path: "/scores/knockout", label: t("nav.knockout")   },
   ]
 
   return (
@@ -19,7 +19,7 @@ export default function ScoresPage() {
       <div className="page-hero" style={{ backgroundImage: "url('/images/bg_3.jpg')" }}>
         <div className="container">
           <h1 className="page-hero__title">{t("nav.scores")}</h1>
-          <p className="page-hero__sub">{t("scores.allCompetitions")}</p>
+          <p className="page-hero__sub">{t("scores.wcSubtitle")}</p>
         </div>
       </div>
 
@@ -27,9 +27,15 @@ export default function ScoresPage() {
         <div className="container">
           <div className="tab-bar__inner">
             {TABS.map(tab => (
-              <NavLink key={tab.path} to={tab.path} className={({ isActive }) => `tab-link${isActive ? " tab-link--active" : ""}`}>
-                {tab.label}
-                {tab.live && <span className="bottom-nav__badge" style={{ marginLeft: 5, position: "relative", display: "inline-block", verticalAlign: "middle" }} />}
+              <NavLink
+                key={tab.path}
+                to={tab.path}
+                className={({ isActive }) => `tab-link${isActive ? " tab-link--active" : ""}`}
+              >
+                {tab.live
+                  ? <><span className="live-dot" style={{ marginRight: 5 }} />{tab.label}</>
+                  : tab.label
+                }
               </NavLink>
             ))}
           </div>

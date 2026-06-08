@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://golazo.app/</loc><changefreq>hourly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://golazo.app/scores/today</loc><changefreq>hourly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://golazo.app/scores/results</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://golazo.app/scores/fixtures</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://golazo.app/scores/groups</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://golazo.app/scores/knockout</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://golazo.app/mundial</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://golazo.app/mundial/teams</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://golazo.app/mundial/schedule</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://golazo.app/mundial/venues</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://golazo.app/mundial/scorers</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://golazo.app/groups</loc><changefreq>hourly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://golazo.app/groups/A</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://golazo.app/groups/B</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://golazo.app/groups/C</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://golazo.app/groups/D</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://golazo.app/groups/E</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://golazo.app/groups/F</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://golazo.app/groups/G</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://golazo.app/groups/H</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://golazo.app/groups/I</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://golazo.app/groups/J</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://golazo.app/groups/K</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://golazo.app/groups/L</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://golazo.app/bracket</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://golazo.app/leaderboard</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://golazo.app/news</loc><changefreq>hourly</changefreq><priority>0.7</priority></url>
+</urlset>

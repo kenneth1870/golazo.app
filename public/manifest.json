@@ -35,17 +35,17 @@
   ],
   "shortcuts": [
     {
-      "name": "Live Scores",
-      "short_name": "Live",
-      "description": "See live matches right now",
-      "url": "/scores/live",
+      "name": "Today's Matches",
+      "short_name": "Today",
+      "description": "Live scores and today's fixtures",
+      "url": "/scores/today",
       "icons": [{ "src": "/images/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Today's Matches",
-      "short_name": "Today",
-      "description": "All matches today",
-      "url": "/scores/today",
+      "name": "Mundial 2026",
+      "short_name": "Mundial",
+      "description": "Teams, schedule and group standings",
+      "url": "/mundial",
       "icons": [{ "src": "/images/icon-192.png", "sizes": "192x192" }]
     }
   ],

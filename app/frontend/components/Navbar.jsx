@@ -224,7 +224,7 @@ export default function Navbar() {
           <div className="mobile-nav-item">
             <NavLink to="/scores/today" className={({ isActive }) => `mobile-nav-parent${isActive ? " active" : ""}`} style={{ textDecoration: "none" }}>
               <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                {t("nav.liveMatches", "Live Matches")}
+                {t("nav.liveMatches")}
                 {liveCount > 0 && <span className="live-dot" />}
               </span>
             </NavLink>
@@ -285,7 +285,7 @@ export default function Navbar() {
 
               {/* Live Matches */}
               <NavLink to="/scores/today" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
-                {t("nav.liveMatches", "Live Matches")}
+                {t("nav.liveMatches")}
                 {liveCount > 0 && <span className="live-dot" style={{ marginLeft: 5, verticalAlign: "middle" }} />}
               </NavLink>
 

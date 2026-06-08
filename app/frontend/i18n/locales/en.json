@@ -2,7 +2,7 @@
   "nav": {
     "home": "Home",
     "scores": "Scores",
-    "liveMatches": "Live Matches",
+    "liveMatches": "Scores",
     "live": "Live Matches",
     "results": "Results",
     "fixtures": "Fixtures",
@@ -69,7 +69,8 @@
     "allCompetitions": "Live scores & results across all competitions",
     "noMatchesToday": "No matches today",
     "yourMatches": "Your Matches",
-    "yourTeamLive": "Your team is playing!"
+    "yourTeamLive": "Your team is playing!",
+    "wcSubtitle": "FIFA World Cup 2026 · Live scores, results & fixtures"
   },
   "groups": {
     "title": "Groups",

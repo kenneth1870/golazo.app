@@ -14,7 +14,6 @@ import ScoresPage from "./pages/ScoresPage"
 import TodayPage  from "./pages/scores/TodayPage"
 
 // Secondary — lazy-loaded so they don't bloat the initial bundle
-const LivePage        = lazy(() => import("./pages/scores/LivePage"))
 const ResultsPage     = lazy(() => import("./pages/scores/ResultsPage"))
 const FixturesPage    = lazy(() => import("./pages/scores/FixturesPage"))
 const GroupStagePage  = lazy(() => import("./pages/scores/GroupStagePage"))

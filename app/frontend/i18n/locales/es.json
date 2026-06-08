@@ -2,7 +2,7 @@
   "nav": {
     "home": "Inicio",
     "scores": "Marcadores",
-    "liveMatches": "Partidos en Vivo",
+    "liveMatches": "Marcadores",
     "live": "En Vivo",
     "results": "Resultados",
     "fixtures": "Próximos Partidos",
@@ -69,7 +69,8 @@
     "allCompetitions": "Marcadores y resultados en todas las competiciones",
     "noMatchesToday": "Sin partidos hoy",
     "yourMatches": "Tus Partidos",
-    "yourTeamLive": "¡Tu equipo está jugando!"
+    "yourTeamLive": "¡Tu equipo está jugando!",
+    "wcSubtitle": "Copa Mundial FIFA 2026 · Marcadores, resultados y próximos partidos"
   },
   "groups": {
     "title": "Grupos",
