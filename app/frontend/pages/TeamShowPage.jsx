@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useFavorites } from "../hooks/useFavorites"
+import { getTeamColor } from "../utils/teamColors"
 
 export default function TeamShowPage() {
   const { t } = useTranslation()
@@ -128,7 +129,8 @@ export default function TeamShowPage() {
       </div>
 
       {/* Team hero */}
-      <div style={{ background: "linear-gradient(135deg, #0d1117 0%, #161b22 100%)", borderBottom: "1px solid var(--border)", padding: "32px 0 32px" }}>
+      {(() => { const tc = getTeamColor(team.name); return (
+      <div style={{ background: tc ? `linear-gradient(135deg, ${tc}22 0%, #0d1117 60%)` : "linear-gradient(135deg, #0d1117 0%, #161b22 100%)", borderBottom: `1px solid ${tc ? tc + "33" : "var(--border)"}`, borderTop: tc ? `3px solid ${tc}` : "none", padding: "32px 0 32px" }}>
         <div className="container" style={{ maxWidth: 700 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
             {team.flag_url && (
@@ -180,6 +182,7 @@ export default function TeamShowPage() {
           )}
         </div>
       </div>
+      )})()}
 
       <div className="container" style={{ maxWidth: 700, paddingTop: 16 }}>
 

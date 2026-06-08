@@ -7,6 +7,7 @@ import { useLiveMinute, useGoalNotifications } from "./match/useMatchLive"
 import PredictionPanel from "./match/PredictionPanel"
 import { useReminders } from "../hooks/useReminders"
 import { usePushNotifications } from "../hooks/usePushNotifications"
+import { getMatchColor } from "../utils/teamColors"
 
 // ─── Reminder button ──────────────────────────────────
 function ReminderButton({ match }) {
@@ -203,6 +204,7 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
   const [copied, setCopied] = useState(false)
   const home   = fixture?.teams?.home
   const away   = fixture?.teams?.away
+  const teamColor = getMatchColor(home?.name, away?.name)
   const goals  = fixture?.goals
   const status = fixture?.fixture?.status
   const isNS   = status?.short === "NS"
@@ -230,8 +232,8 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
     : null
 
   return (
-    <div className="scoreboard">
-      <div className="scoreboard__half scoreboard__half--home" />
+    <div className="scoreboard" style={teamColor ? { "--team-color": teamColor, "--team-color-dim": `${teamColor}22` } : {}}>
+      <div className="scoreboard__half scoreboard__half--home" style={teamColor ? { background: `linear-gradient(135deg, ${teamColor}18 0%, transparent 70%)` } : {}} />
       <div className="scoreboard__half scoreboard__half--away" />
 
       <div className="container scoreboard__inner" style={{ maxWidth: 740 }}>
