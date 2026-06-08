@@ -240,15 +240,6 @@ export default function Navbar() {
             <MobileGroupGrid />
           </MobileSection>
 
-          {/* Leagues */}
-          <MobileSection label={t("nav.allLeagues")} sectionKey="leagues">
-            {MOBILE_LEAGUES.map(item => (
-              <NavLink key={item.path} to={item.path} className={({ isActive }) => `mobile-nav-child${isActive ? " active" : ""}`}>
-                {item.label}
-              </NavLink>
-            ))}
-          </MobileSection>
-
           {/* News */}
           <div className="mobile-nav-item">
             <NavLink to="/news" className={({ isActive }) => `mobile-nav-parent${isActive ? " active" : ""}`} style={{ textDecoration: "none" }}>
@@ -296,15 +287,6 @@ export default function Navbar() {
                   <span className="nav-chevron">▼</span>
                 </NavLink>
                 <MundialMegaMenu t={t} />
-              </div>
-
-              {/* Leagues */}
-              <div className="nav-item has-dropdown">
-                <NavLink to="/leagues" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
-                  {t("nav.allLeagues")}
-                  <span className="nav-chevron">▼</span>
-                </NavLink>
-                <LeaguesDropdown t={t} />
               </div>
 
               <NavLink to="/news" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>

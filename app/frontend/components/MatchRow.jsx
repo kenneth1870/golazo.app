@@ -1,6 +1,9 @@
 import { formatKickoff, formatMatchDate } from "../hooks/useLocalTime"
+import { useTranslation } from "react-i18next"
+import { translateTeam } from "../i18n/teamNames"
 
 export default function MatchRow({ match, onClick, showDate = false }) {
+  const { i18n } = useTranslation()
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
   const hasScore   = match.home_score !== null && match.away_score !== null
@@ -22,7 +25,7 @@ export default function MatchRow({ match, onClick, showDate = false }) {
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">
           {match.home_team?.flag_url && <img src={match.home_team.flag_url} alt="" className="flag-xs" />}
-          <span className="team-name">{match.home_team?.name}</span>
+          <span className="team-name">{translateTeam(match.home_team?.name, i18n.language)}</span>
         </div>
 
         <div className="match-row__score">
@@ -33,7 +36,7 @@ export default function MatchRow({ match, onClick, showDate = false }) {
         </div>
 
         <div className="match-row__team match-row__team--away">
-          <span className="team-name">{match.away_team?.name}</span>
+          <span className="team-name">{translateTeam(match.away_team?.name, i18n.language)}</span>
           {match.away_team?.flag_url && <img src={match.away_team.flag_url} alt="" className="flag-xs" />}
         </div>
       </div>

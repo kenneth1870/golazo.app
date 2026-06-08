@@ -294,7 +294,7 @@ function PullIndicator({ distance, refreshing }) {
     <div style={{
       display: "flex", justifyContent: "center", alignItems: "center",
       height: refreshing ? 48 : Math.min(distance * 0.6, 48),
-      overflow: "hidden", transition: refreshing ? "height 0.2s" : "none",
+      overflow: "hidden", transition: "height 0.3s ease",
     }}>
       <svg width={28} height={28} viewBox="0 0 28 28"
         style={{
@@ -377,7 +377,7 @@ export default function TodayPage() {
         setMatches(filtered)
       })
       .catch(() => { setError(true); setMatches([]) })
-      .finally(() => { setLoading(false); setRefreshing(false) })
+      .finally(() => { setLoading(false); setTimeout(() => setRefreshing(false), 350) })
   }, [])
 
   useEffect(() => { load(selected); setAlertDismissed(false) }, [selected, load])

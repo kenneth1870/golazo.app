@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague } from "../i18n/leagueNames"
+import { translateTeam } from "../i18n/teamNames"
 import { useExternalMatchChannel } from "../hooks/useExternalMatchChannel"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useLiveMinute, useGoalNotifications } from "./match/useMatchLive"
@@ -54,10 +55,24 @@ function ShareButton({ homeName, awayName }) {
     if (navigator.share) {
       navigator.share({ title, url }).catch(() => {})
     } else {
-      navigator.clipboard?.writeText(url).then(() => {
+      const fallback = () => {
+        try {
+          const ta = document.createElement("textarea")
+          ta.value = url; ta.style.position = "fixed"; ta.style.opacity = "0"
+          document.body.appendChild(ta); ta.select()
+          document.execCommand("copy")
+          document.body.removeChild(ta)
+        } catch {}
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
-      }).catch(() => {})
+      }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+          setCopied(true); setTimeout(() => setCopied(false), 2000)
+        }).catch(fallback)
+      } else {
+        fallback()
+      }
     }
   }
 
@@ -222,10 +237,12 @@ function addToCalendar(fixture) {
 }
 
 function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, notifEnabled, notifSupported }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [copied, setCopied] = useState(false)
   const home   = fixture?.teams?.home
   const away   = fixture?.teams?.away
+  const homeName = translateTeam(home?.name, i18n.language)
+  const awayName = translateTeam(away?.name, i18n.language)
   const teamColor = getMatchColor(home?.name, away?.name)
   const goals  = fixture?.goals
   const status = fixture?.fixture?.status
@@ -237,12 +254,21 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
     const hs   = goals?.home ?? "?"
     const as   = goals?.away ?? "?"
     const text = isLive
-      ? `🔴 LIVE: ${home?.name} ${hs}–${as} ${away?.name}`
-      : `${home?.name} ${hs}–${as} ${away?.name}`
-    navigator.clipboard?.writeText(text).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
+      ? `🔴 LIVE: ${homeName} ${hs}–${as} ${awayName}`
+      : `${homeName} ${hs}–${as} ${awayName}`
+    const fallback = () => {
+      try {
+        const ta = document.createElement("textarea")
+        ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"
+        document.body.appendChild(ta); ta.select()
+        document.execCommand("copy")
+        document.body.removeChild(ta)
+      } catch {}
+      setCopied(true); setTimeout(() => setCopied(false), 2000)
+    }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }).catch(fallback)
+    } else { fallback() }
     onShare?.()
   }
 
@@ -320,7 +346,7 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
           <div className="scoreboard__team">
             <FlagOrInitials name={home?.name} src={home?.logo} size={76} />
             <div className={`scoreboard__team-name${home?.winner ? " scoreboard__team-name--winner" : ""}`}>
-              {home?.name}
+              {homeName}
             </div>
           </div>
 
@@ -332,12 +358,12 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
             </div>
             {home?.winner && (
               <div style={{ textAlign: "center", marginTop: 8, fontSize: ".6rem", fontWeight: 800, letterSpacing: ".1em", color: "#10b981" }}>
-                {home.name} WIN
+                {homeName} WIN
               </div>
             )}
             {away?.winner && (
               <div style={{ textAlign: "center", marginTop: 8, fontSize: ".6rem", fontWeight: 800, letterSpacing: ".1em", color: "#10b981" }}>
-                {away.name} WIN
+                {awayName} WIN
               </div>
             )}
           </div>
@@ -345,7 +371,7 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
           <div className="scoreboard__team scoreboard__team--away">
             <FlagOrInitials name={away?.name} src={away?.logo} size={76} />
             <div className={`scoreboard__team-name${away?.winner ? " scoreboard__team-name--winner" : ""}`}>
-              {away?.name}
+              {awayName}
             </div>
           </div>
         </div>
@@ -952,8 +978,8 @@ export default function MatchShowPage() {
   const apiMinute   = data?.fixture?.fixture?.status?.elapsed
   const liveMinute  = useLiveMinute(apiMinute, isLive)
 
-  const homeName    = data?.fixture?.teams?.home?.name
-  const awayName    = data?.fixture?.teams?.away?.name
+  const homeName    = translateTeam(data?.fixture?.teams?.home?.name, i18n.language)
+  const awayName    = translateTeam(data?.fixture?.teams?.away?.name, i18n.language)
   const homeLogo = data?.fixture?.teams?.home?.logo
   usePageMeta(
     homeName && awayName ? `${homeName} vs ${awayName}` : "Match",
