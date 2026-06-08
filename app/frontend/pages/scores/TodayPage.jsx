@@ -118,7 +118,7 @@ function DateStrip({ selected, onChange }) {
 }
 
 // ─── Real-match row (API shape) ────────────────────────
-function RealMatchRow({ match, onMatchClick }) {
+function RealMatchRow({ match, onMatchClick, flashing }) {
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
   const hasScore   = match.home_score !== null && match.away_score !== null
@@ -130,7 +130,7 @@ function RealMatchRow({ match, onMatchClick }) {
 
   return (
     <div
-      className={`match-row${isLive ? " match-row--live" : ""}${clickable ? " match-row--clickable" : ""}`}
+      className={`match-row${isLive ? " match-row--live" : ""}${clickable ? " match-row--clickable" : ""}${flashing ? " match-row--score-flash" : ""}`}
       onClick={clickable ? () => onMatchClick(match.external_id, match) : undefined}
     >
       <div className="match-row__status">
@@ -177,7 +177,7 @@ function RealMatchRow({ match, onMatchClick }) {
 }
 
 // ─── Competition block ────────────────────────────────
-function CompetitionBlock({ matches, navigate, onMatchClick }) {
+function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
   const { i18n } = useTranslation()
   const comp    = matches[0]?.competition
   const hasLive = matches.some(m => m.status === "live")
@@ -208,7 +208,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick }) {
       <div className="widget-body p-0">
         {sorted.map(m =>
           isReal
-            ? <RealMatchRow key={m.id} match={m} onMatchClick={onMatchClick} />
+            ? <RealMatchRow key={m.id} match={m} onMatchClick={onMatchClick} flashing={flashIds?.has(m.external_id ?? m.id)} />
             : <MatchRow key={m.id} match={m} onClick={m.external_id ? () => onMatchClick(m.external_id, m) : undefined} />
         )}
       </div>
@@ -347,6 +347,8 @@ export default function TodayPage() {
   const [refreshing, setRefreshing] = useState(false)
   const [pullDist, setPullDist]     = useState(0)
   const [alertDismissed, setAlertDismissed] = useState(false)
+  const [flashIds, setFlashIds] = useState(new Set())
+  const prevMatchesRef = useRef([])
   const pullStartY  = useRef(null)
   const isPulling   = useRef(false)
   const navigate     = useNavigate()
@@ -374,6 +376,20 @@ export default function TodayPage() {
           const localDate = new Date(ko).toLocaleDateString("en-CA", { timeZone: tz })
           return localDate === iso
         })
+        // Detect score changes to flash updated rows
+        const prev = prevMatchesRef.current
+        const changed = new Set()
+        filtered.forEach(m => {
+          const old = prev.find(p => p.id === m.id || p.external_id === m.external_id)
+          if (old && (old.home_score !== m.home_score || old.away_score !== m.away_score)) {
+            changed.add(m.external_id ?? m.id)
+          }
+        })
+        if (changed.size > 0) {
+          setFlashIds(changed)
+          setTimeout(() => setFlashIds(new Set()), 2000)
+        }
+        prevMatchesRef.current = filtered
         setMatches(filtered)
       })
       .catch(() => { setError(true); setMatches([]) })
@@ -560,6 +576,7 @@ export default function TodayPage() {
               matches={g}
               navigate={navigate}
               onMatchClick={onMatchClick}
+              flashIds={flashIds}
             />
           ))
         )}

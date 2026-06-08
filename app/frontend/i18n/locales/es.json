@@ -79,7 +79,17 @@
     "matches": "Grupo {{letter}} — Partidos",
     "noStandings": "Sin clasificación aún",
     "viewStandings": "Clasificación →",
-    "noStandingsYet": "Clasificación disponible cuando comience la fase de grupos"
+    "noStandingsYet": "Clasificación disponible cuando comience la fase de grupos",
+    "qualTitle": "Clasificación",
+    "qualified": "Clasificado",
+    "advancing": "En avance",
+    "eliminated": "Eliminado",
+    "thirdPending": "3.º · Pendiente",
+    "inContention": "En disputa",
+    "needsPts": "Necesita {{pts}}+ pts",
+    "from": "de",
+    "matches_one": "{{count}} partido",
+    "matches_other": "{{count}} partidos"
   },
   "mundial": {
     "subtitle": "FIFA Mundial · EE.UU. · Canadá · México · 11 Jun – 19 Jul",
@@ -87,10 +97,15 @@
     "scheduleTitle": "Calendario",
     "venuesTitle": "Estadios",
     "scorersTitle": "Goleadores — Mundial 2026",
+    "goldenBoot": "Carrera por la Bota de Oro",
+    "goldenBootLeader": "Líder del Torneo",
     "noScorers": "Sin goleadores aún",
     "scorersAppear": "Los goleadores aparecerán aquí cuando comience el torneo el 11 de junio de 2026",
     "capacity": "Capacidad",
-    "venueMatches": "{{count}} partidos"
+    "venueMatches": "{{count}} partidos",
+    "goals": "Goles",
+    "assists": "Asistencias",
+    "gamesPlayed": "PJ"
   },
   "table": {
     "pos": "#",

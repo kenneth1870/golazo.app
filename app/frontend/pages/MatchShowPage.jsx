@@ -161,6 +161,60 @@ const STAT_ORDER = [
   "Yellow Cards","Red Cards","Goalkeeper Saves","Passes %",
 ]
 
+// ─── Mini stats bar shown in Summary tab ──────────────
+function MiniStatsBar({ stats, homeName, awayName }) {
+  if (!stats?.length) return null
+  const [homeS, awayS] = stats
+  const getStat = (s, type) => s?.stats?.find(r => r.type === type)?.value
+  const possession = getStat(homeS, "Ball Possession")
+  const totalShots = [getStat(homeS, "Total Shots"), getStat(awayS, "Total Shots")]
+  const onTarget   = [getStat(homeS, "Shots on Goal"), getStat(awayS, "Shots on Goal")]
+
+  if (!possession && !totalShots[0]) return null
+
+  const homePoss  = parseInt(possession) || 50
+  const awayPoss  = 100 - homePoss
+
+  return (
+    <div style={{
+      background: "var(--surface2)", borderRadius: 10,
+      padding: "12px 16px", marginBottom: 16,
+      display: "flex", flexDirection: "column", gap: 8,
+    }}>
+      {/* Team labels */}
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", fontWeight: 700, color: "var(--muted)", marginBottom: 2 }}>
+        <span style={{ color: "#ee1e46" }}>{homeName}</span>
+        <span style={{ color: "var(--muted)", fontSize: "0.62rem" }}>STATS SNAPSHOT</span>
+        <span style={{ color: "#3b82f6" }}>{awayName}</span>
+      </div>
+
+      {/* Possession bar */}
+      {possession && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", marginBottom: 4 }}>
+            <span style={{ fontWeight: 700, color: "#fff" }}>{homePoss}%</span>
+            <span style={{ color: "var(--muted)", fontSize: "0.65rem" }}>Possession</span>
+            <span style={{ fontWeight: 700, color: "#fff" }}>{awayPoss}%</span>
+          </div>
+          <div style={{ display: "flex", height: 5, borderRadius: 3, overflow: "hidden" }}>
+            <div style={{ width: `${homePoss}%`, background: "#ee1e46", transition: "width .4s" }} />
+            <div style={{ flex: 1, background: "#3b82f6" }} />
+          </div>
+        </div>
+      )}
+
+      {/* Shots row */}
+      {totalShots[0] !== undefined && (
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem" }}>
+          <span style={{ fontWeight: 700, color: "#fff" }}>{totalShots[0] ?? 0}</span>
+          <span style={{ color: "var(--muted)", fontSize: "0.65rem" }}>Shots {onTarget[0] !== undefined ? `(${onTarget[0] ?? 0} / ${onTarget[1] ?? 0} on target)` : ""}</span>
+          <span style={{ fontWeight: 700, color: "#fff" }}>{totalShots[1] ?? 0}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function parseVal(v) {
   if (v === null || v === undefined) return 0
   return parseInt(String(v).replace("%", "")) || 0
@@ -1276,6 +1330,11 @@ export default function MatchShowPage() {
                   </p>
                 )}
               </section>
+            )}
+
+            {/* Mini stats snapshot — possession + shots at a glance */}
+            {hasStats && statusShort !== "NS" && (
+              <MiniStatsBar stats={data.stats} homeName={homeName} awayName={awayName} />
             )}
 
             {hasEvents

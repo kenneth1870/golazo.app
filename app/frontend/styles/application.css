@@ -286,6 +286,8 @@ a:hover{color:var(--accent);opacity:.85}
 }
 .match-row:last-child{border-bottom:none}
 .match-row--live{border-left:3px solid var(--accent);background:rgba(238,30,70,.03)}
+.match-row--score-flash{animation:scoreFlash 2s ease-out}
+@keyframes scoreFlash{0%{background:rgba(16,185,129,.25)}100%{background:transparent}}
 .match-row--clickable{cursor:pointer}
 @media(hover:hover){
   .match-row:hover{background:var(--surface2)}

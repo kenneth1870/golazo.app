@@ -79,7 +79,17 @@
     "matches": "Group {{letter}} — Matches",
     "noStandings": "No standings yet",
     "viewStandings": "Standings →",
-    "noStandingsYet": "Standings available after group stage begins"
+    "noStandingsYet": "Standings available after group stage begins",
+    "qualTitle": "Qualification",
+    "qualified": "Qualified",
+    "advancing": "Advancing",
+    "eliminated": "Eliminated",
+    "thirdPending": "3rd · Pending",
+    "inContention": "In Contention",
+    "needsPts": "Needs {{pts}}+ pts",
+    "from": "from",
+    "matches_one": "{{count}} match",
+    "matches_other": "{{count}} matches"
   },
   "mundial": {
     "subtitle": "FIFA World Cup · USA · Canada · Mexico · June 11 – July 19",
@@ -87,10 +97,15 @@
     "scheduleTitle": "Schedule",
     "venuesTitle": "Venues",
     "scorersTitle": "Top Scorers — World Cup 2026",
+    "goldenBoot": "Golden Boot Race",
+    "goldenBootLeader": "Tournament Leader",
     "noScorers": "No scorers yet",
     "scorersAppear": "Top scorers will appear here once the tournament begins on June 11, 2026",
     "capacity": "Capacity",
-    "venueMatches": "{{count}} matches"
+    "venueMatches": "{{count}} matches",
+    "goals": "Goals",
+    "assists": "Assists",
+    "gamesPlayed": "GP"
   },
   "table": {
     "pos": "#",
