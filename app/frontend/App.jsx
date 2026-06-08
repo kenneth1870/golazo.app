@@ -64,7 +64,7 @@ export default function App() {
                 <Route index element={<Navigate to="/scores/today" replace />} />
                 <Route path="today"    element={<TodayPage />} />
                 <Route path="fixtures" element={<FixturesPage />} />
-                <Route path="live"     element={<LivePage />} />
+                <Route path="live"     element={<Navigate to="/scores/today" replace />} />
                 <Route path="results"  element={<ResultsPage />} />
                 <Route path="groups"   element={<GroupStagePage />} />
                 <Route path="knockout" element={<KnockoutPage />} />

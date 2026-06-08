@@ -1,12 +1,13 @@
 import { NavLink, Outlet } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { useLiveCount } from "../contexts/LiveContext"
 
 export default function ScoresPage() {
   const { t } = useTranslation()
+  const liveCount = useLiveCount()
 
   const TABS = [
-    { path: "/scores/today",    label: t("time.today")           },
-    { path: "/scores/live",     label: t("nav.live")             },
+    { path: "/scores/today",    label: t("time.today"), live: liveCount > 0 },
     { path: "/scores/results",  label: t("nav.results")          },
     { path: "/scores/fixtures", label: t("nav.fixtures")         },
     { path: "/scores/groups",   label: t("nav.groupStage")       },
@@ -28,6 +29,7 @@ export default function ScoresPage() {
             {TABS.map(tab => (
               <NavLink key={tab.path} to={tab.path} className={({ isActive }) => `tab-link${isActive ? " tab-link--active" : ""}`}>
                 {tab.label}
+                {tab.live && <span className="bottom-nav__badge" style={{ marginLeft: 5, position: "relative", display: "inline-block", verticalAlign: "middle" }} />}
               </NavLink>
             ))}
           </div>
