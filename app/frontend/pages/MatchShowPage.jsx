@@ -852,9 +852,11 @@ export default function MatchShowPage() {
 
   const homeName    = data?.fixture?.teams?.home?.name
   const awayName    = data?.fixture?.teams?.away?.name
+  const homeLogo = data?.fixture?.teams?.home?.logo
   usePageMeta(
     homeName && awayName ? `${homeName} vs ${awayName}` : "Match",
-    homeName && awayName ? `Live score and stats: ${homeName} vs ${awayName} — FIFA World Cup 2026` : undefined
+    homeName && awayName ? `Live score and stats: ${homeName} vs ${awayName} — FIFA World Cup 2026` : undefined,
+    { type: "article", image: homeLogo || undefined }
   )
   const homeTeamId  = data?.fixture?.teams?.home?.id
   const awayTeamId  = data?.fixture?.teams?.away?.id

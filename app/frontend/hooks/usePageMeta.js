@@ -2,34 +2,34 @@ import { useEffect } from "react"
 
 const SITE = "Golazo · Mundial 2026"
 
-export function usePageMeta(title, description) {
+// Update <title>, <meta name="description">, and all OG/Twitter tags.
+// extras: { type, image } — optional overrides for og:type / og:image
+export function usePageMeta(title, description, extras = {}) {
   useEffect(() => {
-    document.title = title ? `${title} — ${SITE}` : SITE
+    const fullTitle = title ? `${title} — ${SITE}` : SITE
+    document.title = fullTitle
 
-    let metaDesc = document.querySelector("meta[name='description']")
-    if (!metaDesc) {
-      metaDesc = document.createElement("meta")
-      metaDesc.name = "description"
-      document.head.appendChild(metaDesc)
-    }
-    if (description) metaDesc.content = description
-
-    // OG tags
-    const og = (prop, val) => {
-      if (!val) return
-      let tag = document.querySelector(`meta[property='${prop}']`)
+    // Helper: find or create a meta tag and set its content
+    const setMeta = (selector, attrName, attrVal, content) => {
+      if (!content) return
+      let tag = document.querySelector(selector)
       if (!tag) {
         tag = document.createElement("meta")
-        tag.setAttribute("property", prop)
+        tag.setAttribute(attrName, attrVal)
         document.head.appendChild(tag)
       }
-      tag.content = val
+      tag.content = content
     }
-    og("og:title",       title ? `${title} — ${SITE}` : SITE)
-    og("og:description", description)
 
-    return () => {
-      document.title = SITE
-    }
-  }, [title, description])
+    setMeta("meta[name='description']",        "name",     "description",     description)
+    setMeta("meta[property='og:title']",        "property", "og:title",        fullTitle)
+    setMeta("meta[property='og:description']",  "property", "og:description",  description)
+    if (extras.type)  setMeta("meta[property='og:type']",   "property", "og:type",  extras.type)
+    if (extras.image) setMeta("meta[property='og:image']",  "property", "og:image", extras.image)
+    setMeta("meta[name='twitter:title']",       "name",     "twitter:title",       fullTitle)
+    setMeta("meta[name='twitter:description']", "name",     "twitter:description", description)
+    if (extras.image) setMeta("meta[name='twitter:image']", "name", "twitter:image", extras.image)
+
+    return () => { document.title = SITE }
+  }, [title, description, extras.type, extras.image]) // eslint-disable-line react-hooks/exhaustive-deps
 }

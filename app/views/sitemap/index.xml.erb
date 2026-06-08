@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <%# Static section pages %>
+  <% @static_urls.each do |path| %>
+  <url>
+    <loc><%= @base %><%= path %></loc>
+    <changefreq><%= path.include?("live") || path.include?("today") ? "always" : "daily" %></changefreq>
+    <priority><%= path == "/" ? "1.0" : "0.8" %></priority>
+  </url>
+  <% end %>
+
+  <%# Dynamic match pages %>
+  <% @matches.each do |match| %>
+  <url>
+    <loc><%= @base %>/matches/<%= match.id %></loc>
+    <lastmod><%= (match.updated_at || match.kickoff_at)&.strftime("%Y-%m-%d") %></lastmod>
+    <changefreq><%= match.status == "live" ? "always" : match.status == "scheduled" ? "daily" : "monthly" %></changefreq>
+    <priority>0.7</priority>
+  </url>
+  <% end %>
+
+  <%# Dynamic team pages %>
+  <% @teams.each do |team| %>
+  <url>
+    <loc><%= @base %>/teams/<%= team.id %></loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <% end %>
+
+</urlset>

@@ -1,1 +1,9 @@
-# See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://golazo.app/sitemap.xml
+
+# Block noisy API endpoints from crawling
+Disallow: /api/
+Disallow: /cable

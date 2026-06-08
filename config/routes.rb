@@ -45,6 +45,9 @@ Rails.application.routes.draw do
 
   mount ActionCable.server => "/cable"
 
+  # Sitemap
+  get "sitemap.xml", to: "sitemap#index", defaults: { format: :xml }
+
   get "*path", to: "application#spa", constraints: ->(req) { !req.xhr? && req.format.html? }
   root "application#spa"
 end

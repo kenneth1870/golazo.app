@@ -15,7 +15,8 @@ export default function TeamShowPage() {
   const [standing, setStanding] = useState(null)
   usePageMeta(
     team ? `${team.name} — World Cup 2026` : null,
-    team ? `${team.name} FIFA World Cup 2026 fixtures, results and group standings.` : null
+    team ? `${team.name} FIFA World Cup 2026 fixtures, results and group standings.` : null,
+    { image: team?.flag_url || undefined }
   )
 
   useEffect(() => {

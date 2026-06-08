@@ -29,6 +29,11 @@
 
   <%= csrf_meta_tags %>
 
+  <%# JSON-LD structured data for entity pages (match, team) %>
+  <% if meta.json_ld.present? %>
+    <script type="application/ld+json"><%= raw meta.json_ld.to_json %></script>
+  <% end %>
+
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
 
 
