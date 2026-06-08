@@ -248,6 +248,15 @@ class WorldCupSync
       RecalculateStandingsJob.perform_later
     end
 
+    # Grade score predictions after match finishes
+    if status == "finished" && match.external_id.present? && home_score && away_score
+      ScorePrediction.grade!(
+        match_external_id: match.external_id.to_s,
+        home_score: home_score.to_i,
+        away_score: away_score.to_i
+      )
+    end
+
     true
   rescue => e
     log("Today sync error for #{home_name} v #{away_name}: #{e.message}")

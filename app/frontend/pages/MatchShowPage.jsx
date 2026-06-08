@@ -5,6 +5,7 @@ import { useExternalMatchChannel } from "../hooks/useExternalMatchChannel"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useLiveMinute, useGoalNotifications } from "./match/useMatchLive"
 import PredictionPanel from "./match/PredictionPanel"
+import ScorePredictionPanel from "./match/ScorePredictionPanel"
 import { useReminders } from "../hooks/useReminders"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 import { getMatchColor } from "../utils/teamColors"
@@ -1073,6 +1074,7 @@ export default function MatchShowPage() {
         <div onTouchStart={handleTabSwipeStart} onTouchEnd={handleTabSwipeEnd}>
         {tab === "summary" && (
           <>
+            {hasFixture && <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} t={t} />}
             {hasFixture && <PredictionPanel matchId={id} homeTeamName={homeName} awayTeamName={awayName} t={t} />}
             {hasEvents
               ? <EventsTimeline events={data.events} homeTeam={homeName} t={t} />

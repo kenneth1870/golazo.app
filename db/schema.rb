@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_08_170250) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_08_173101) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -105,6 +105,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_170250) do
     t.datetime "updated_at", null: false
     t.index ["device_id"], name: "index_push_subscriptions_on_device_id"
     t.index ["endpoint"], name: "index_push_subscriptions_on_endpoint", unique: true
+  end
+
+  create_table "score_predictions", force: :cascade do |t|
+    t.integer "away_guess", null: false
+    t.string "away_team_name"
+    t.datetime "created_at", null: false
+    t.string "device_id", null: false
+    t.string "display_name"
+    t.integer "home_guess", null: false
+    t.string "home_team_name"
+    t.string "match_external_id", null: false
+    t.integer "points_earned"
+    t.datetime "updated_at", null: false
+    t.index ["device_id", "match_external_id"], name: "index_score_predictions_on_device_id_and_match_external_id", unique: true
+    t.index ["device_id"], name: "index_score_predictions_on_device_id"
+    t.index ["points_earned"], name: "index_score_predictions_on_points_earned"
   end
 
   create_table "solid_cable_messages", force: :cascade do |t|

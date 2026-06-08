@@ -34,6 +34,7 @@ const NewsShowPage    = lazy(() => import("./pages/NewsShowPage"))
 const MatchShowPage   = lazy(() => import("./pages/MatchShowPage"))
 const TeamShowPage          = lazy(() => import("./pages/TeamShowPage"))
 const BracketPredictorPage  = lazy(() => import("./pages/BracketPredictorPage"))
+const LeaderboardPage       = lazy(() => import("./pages/LeaderboardPage"))
 
 function PageLoader() {
   return (
@@ -85,6 +86,7 @@ export default function App() {
               <Route path="/leagues/:code" element={<LeagueDetailPage />} />
               <Route path="/matches/:id"   element={<MatchShowPage />} />
               <Route path="/predictor"     element={<BracketPredictorPage />} />
+              <Route path="/leaderboard"   element={<LeaderboardPage />} />
               <Route path="/news"          element={<NewsPage />} />
               <Route path="/news/:id"      element={<NewsShowPage />} />
 
