@@ -22,6 +22,7 @@ module Api
         render json: scorers.map { |s|
           {
             player: {
+              id:          s.dig("player", "id"),
               name:        s.dig("player", "name") || s["playerName"],
               nationality: s.dig("player", "nationality") || s["nationality"],
               photo:       s.dig("player", "photo"),

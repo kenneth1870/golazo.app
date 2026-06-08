@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
+import { Link } from "react-router-dom"
 import { usePageMeta } from "../../hooks/usePageMeta"
 
 export default function ScorersPage() {
@@ -46,7 +47,13 @@ export default function ScorersPage() {
                     <tr key={i}>
                       <td><strong className="text-white">{i + 1}</strong></td>
                       <td>
-                        <strong className="text-white">{s.player?.name}</strong>
+                        {s.player?.id ? (
+                          <Link to={`/players/${s.player.id}?league=4&season=2026`} style={{ color: "#fff", fontWeight: 700 }}>
+                            {s.player?.name}
+                          </Link>
+                        ) : (
+                          <strong className="text-white">{s.player?.name}</strong>
+                        )}
                         <div style={{ fontSize: "0.75rem", color: "gray" }}>{s.player?.nationality}</div>
                       </td>
                       <td>

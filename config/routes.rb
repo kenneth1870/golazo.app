@@ -30,6 +30,9 @@ Rails.application.routes.draw do
       put  "push_subscriptions/teams", to: "push_subscriptions#update_teams"
       delete "push_subscriptions",     to: "push_subscriptions#destroy"
       resources :teams,    only: [:index, :show]
+      resources :players,  only: [:show] do
+        collection { get :search }
+      end
       resources :standings, only: [:index]
       resources :matches, only: [:index, :show, :update] do
         resources :goals, only: [:create]
