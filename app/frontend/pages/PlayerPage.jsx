@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useParams, useSearchParams, useNavigate, Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 
 function StatBox({ label, value, highlight }) {
@@ -19,11 +20,12 @@ function StatBox({ label, value, highlight }) {
 }
 
 export default function PlayerPage() {
-  const { id }       = useParams()
+  const { t }         = useTranslation()
+  const { id }        = useParams()
   const [searchParams] = useSearchParams()
-  const navigate     = useNavigate()
-  const league       = searchParams.get("league") || "4"
-  const season       = searchParams.get("season") || "2026"
+  const navigate      = useNavigate()
+  const league        = searchParams.get("league") || "4"
+  const season        = searchParams.get("season") || "2026"
 
   const [player, setPlayer] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -59,12 +61,12 @@ export default function PlayerPage() {
     <div className="site-section">
       <div className="container" style={{ maxWidth: 600 }}>
         <div className="match-back-bar">
-          <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← Back</button>
+          <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back")}</button>
         </div>
         <div className="empty-state">
           <div className="empty-state__icon">👤</div>
-          <h3>Player not found</h3>
-          <p>Stats are available for players in the current season</p>
+          <h3>{t("player.notFound")}</h3>
+          <p>{t("player.statsUnavailable")}</p>
         </div>
       </div>
     </div>
@@ -77,7 +79,7 @@ export default function PlayerPage() {
       <div className="container" style={{ maxWidth: 600 }}>
         {/* Back bar */}
         <div className="match-back-bar">
-          <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← Back</button>
+          <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back")}</button>
         </div>
 
         {/* Hero */}
@@ -107,7 +109,7 @@ export default function PlayerPage() {
                     <span style={{ color: "var(--muted)", fontSize: "0.78rem" }}>🌍 {nationality}</span>
                   )}
                   {age && (
-                    <span style={{ color: "var(--muted)", fontSize: "0.78rem" }}>Age {age}</span>
+                    <span style={{ color: "var(--muted)", fontSize: "0.78rem" }}>{t("player.age", { age })}</span>
                   )}
                 </div>
                 {team?.name && (
@@ -124,17 +126,17 @@ export default function PlayerPage() {
         {/* Stats grid */}
         {stats && (
           <div className="widget-next-match" style={{ marginBottom: 20 }}>
-            <div className="widget-title"><h3>2026 World Cup Stats</h3></div>
+            <div className="widget-title"><h3>{t("player.wcStats")}</h3></div>
             <div className="widget-body">
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-                <StatBox label="Goals"      value={stats.goals}       highlight />
-                <StatBox label="Assists"    value={stats.assists} />
-                <StatBox label="Apps"       value={stats.appearances} />
-                <StatBox label="Minutes"    value={stats.minutes} />
-                <StatBox label="Rating"     value={stats.rating ? Number(stats.rating).toFixed(1) : null} />
-                <StatBox label="Yellow"     value={stats.yellow_cards} />
-                <StatBox label="Red"        value={stats.red_cards} />
-                <StatBox label="Key Passes" value={stats.key_passes} />
+                <StatBox label={t("player.goals")}     value={stats.goals}       highlight />
+                <StatBox label={t("player.assists")}   value={stats.assists} />
+                <StatBox label={t("player.apps")}      value={stats.appearances} />
+                <StatBox label={t("player.minutes")}   value={stats.minutes} />
+                <StatBox label={t("player.rating")}    value={stats.rating ? Number(stats.rating).toFixed(1) : null} />
+                <StatBox label={t("player.yellow")}    value={stats.yellow_cards} />
+                <StatBox label={t("player.red")}       value={stats.red_cards} />
+                <StatBox label={t("player.keyPasses")} value={stats.key_passes} />
               </div>
             </div>
           </div>
@@ -142,7 +144,7 @@ export default function PlayerPage() {
 
         {!stats?.goals && !stats?.appearances && (
           <div style={{ textAlign: "center", color: "var(--muted)", padding: "24px 0", fontSize: "0.85rem" }}>
-            Detailed stats not available for this player in this competition
+            {t("player.detailedStatsUnavailable")}
           </div>
         )}
       </div>

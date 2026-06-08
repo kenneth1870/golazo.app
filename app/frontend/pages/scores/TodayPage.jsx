@@ -216,6 +216,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick }) {
 
 // ─── Fav team live alert ──────────────────────────────
 function FavTeamAlert({ match, onMatchClick, onDismiss }) {
+  const { t } = useTranslation()
   if (!match) return null
   const isLive = match.status === "live"
   if (!isLive) return null
@@ -238,7 +239,7 @@ function FavTeamAlert({ match, onMatchClick, onDismiss }) {
       <span className="live-dot" style={{ flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 800, fontSize: ".85rem", color: "#ee1e46" }}>
-          Your team is playing now!
+          {t("scores.yourTeamLive")}
         </div>
         <div style={{ fontSize: ".78rem", color: "#e6edf3", marginTop: 2 }}>
           {home} {score ? score : "vs"} {away}
@@ -490,7 +491,7 @@ export default function TodayPage() {
                   fontSize: "0.68rem", fontWeight: 700, cursor: "pointer",
                 }}
               >
-                Today
+                {t("time.today")}
               </button>
             )}
           </div>
@@ -520,7 +521,7 @@ export default function TodayPage() {
               display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
               fontSize: "0.75rem", fontWeight: 700, color: "#ee1e46", textTransform: "uppercase", letterSpacing: 1,
             }}>
-              <span>★</span> Your Matches
+              <span>★</span> {t("scores.yourMatches")}
             </div>
             <div className="widget-next-match">
               <div className="widget-body p-0">

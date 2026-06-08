@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import MatchRow from "../components/MatchRow"
 import { useFavorites } from "../hooks/useFavorites"
 
-// Inline tabs — no nested routing needed for this page
-const TABS = ["Today", "Fixtures", "Results"]
-
-function StandingsTable({ standings }) {
+function StandingsTable({ standings, t }) {
   if (!standings || standings.length === 0) return null
 
   // Group by group_name if present
@@ -22,22 +20,22 @@ function StandingsTable({ standings }) {
       {Object.entries(groups).map(([group, rows]) => (
         <div key={group} className="mb-4">
           {group !== "Overall" && (
-            <div className="fixture-day__header">Group {group}</div>
+            <div className="fixture-day__header">{t("table.group")} {group}</div>
           )}
           <div className="table-responsive">
             <table className="table custom-table">
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Team</th>
-                  <th>P</th>
-                  <th>W</th>
-                  <th>D</th>
-                  <th>L</th>
-                  <th>GF</th>
-                  <th>GA</th>
-                  <th>GD</th>
-                  <th>Pts</th>
+                  <th>{t("table.pos")}</th>
+                  <th>{t("table.team")}</th>
+                  <th>{t("table.played")}</th>
+                  <th>{t("table.won")}</th>
+                  <th>{t("table.drawn")}</th>
+                  <th>{t("table.lost")}</th>
+                  <th>{t("table.gf")}</th>
+                  <th>{t("table.ga")}</th>
+                  <th>{t("table.gd")}</th>
+                  <th>{t("table.points")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -80,12 +78,13 @@ function StandingsTable({ standings }) {
 }
 
 export default function LeagueDetailPage() {
+  const { t } = useTranslation()
   const { code } = useParams()
   const { isFavorite, toggleFavorite } = useFavorites()
   const [competition, setCompetition] = useState(null)
   const [matches, setMatches]         = useState([])
   const [standings, setStandings]     = useState([])
-  const [tab, setTab]                 = useState("Today")
+  const [tab, setTab]                 = useState("today")
   const [loading, setLoading]         = useState(true)
 
   useEffect(() => {
@@ -116,16 +115,23 @@ export default function LeagueDetailPage() {
     .sort((a, b) => new Date(b.kickoff_at) - new Date(a.kickoff_at))
   const liveMatches     = matches.filter(m => m.status === "live")
 
+  // Tab definitions (keyed strings for comparison)
+  const TABS = [
+    { key: "today",     label: t("time.today") },
+    { key: "fixtures",  label: t("nav.fixtures") },
+    { key: "results",   label: t("nav.results") },
+  ]
+
   const displayedMatches =
-    tab === "Today"    ? [...liveMatches, ...todayMatches.filter(m => m.status !== "live")] :
-    tab === "Fixtures" ? upcoming :
+    tab === "today"    ? [...liveMatches, ...todayMatches.filter(m => m.status !== "live")] :
+    tab === "fixtures" ? upcoming :
                          results
 
   if (loading) {
     return (
       <div>
         <div className="page-hero" style={{ backgroundImage: "url('/images/bg_2.jpg')" }}>
-          <div className="container"><h1 className="page-hero__title">Loading...</h1></div>
+          <div className="container"><h1 className="page-hero__title">{t("loading")}</h1></div>
         </div>
         <div className="site-section container">
           <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
@@ -163,7 +169,7 @@ export default function LeagueDetailPage() {
                   fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", flexShrink: 0,
                 }}
               >
-                {isFavorite("competition", competition.id ?? code) ? "★ Following" : "☆ Follow"}
+                {isFavorite("competition", competition.id ?? code) ? t("team.following") : t("team.follow")}
               </button>
             )}
           </div>
@@ -173,24 +179,24 @@ export default function LeagueDetailPage() {
       <div className="tab-bar sticky-tabs">
         <div className="container">
           <div className="tab-bar__inner">
-            {TABS.map(t => (
+            {TABS.map(tabItem => (
               <button
-                key={t}
-                className={`tab-link${tab === t ? " tab-link--active" : ""}`}
-                onClick={() => setTab(t)}
+                key={tabItem.key}
+                className={`tab-link${tab === tabItem.key ? " tab-link--active" : ""}`}
+                onClick={() => setTab(tabItem.key)}
               >
-                {t}
-                {t === "Today" && liveMatches.length > 0 && (
+                {tabItem.label}
+                {tabItem.key === "today" && liveMatches.length > 0 && (
                   <span className="live-dot" style={{ marginLeft: 6 }} />
                 )}
               </button>
             ))}
             {standings.length > 0 && (
               <button
-                className={`tab-link${tab === "Standings" ? " tab-link--active" : ""}`}
-                onClick={() => setTab("Standings")}
+                className={`tab-link${tab === "standings" ? " tab-link--active" : ""}`}
+                onClick={() => setTab("standings")}
               >
-                Standings
+                {t("groups.viewStandings").replace(" →", "")}
               </button>
             )}
           </div>
@@ -199,22 +205,22 @@ export default function LeagueDetailPage() {
 
       <div className="site-section">
         <div className="container">
-          {tab === "Standings" ? (
-            <StandingsTable standings={standings} />
+          {tab === "standings" ? (
+            <StandingsTable standings={standings} t={t} />
           ) : displayedMatches.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state__icon">📅</div>
-              <h3>No {tab.toLowerCase()} matches</h3>
+              <h3>{t("noMatches")}</h3>
               <p>
-                {tab === "Today" ? "No matches scheduled today for this competition" :
-                 tab === "Fixtures" ? "No upcoming fixtures found" :
-                 "No results yet"}
+                {tab === "today"    ? t("time.noMatches", { date: t("time.today").toLowerCase() }) :
+                 tab === "fixtures" ? t("scores.noFixtures") :
+                 t("scores.noResults")}
               </p>
             </div>
           ) : (
             <div className="match-list">
               {displayedMatches.map(m => (
-                <MatchRow key={m.id} match={m} showDate={tab !== "Today"} />
+                <MatchRow key={m.id} match={m} showDate={tab !== "today"} />
               ))}
             </div>
           )}

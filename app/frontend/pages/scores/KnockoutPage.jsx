@@ -1,5 +1,6 @@
 import { useMatches } from "../../hooks/useMatches"
 import { useNavigate, Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../../hooks/usePageMeta"
 
 // WC 2026: R32 → R16 → QF → SF → Final (+ 3rd place)
@@ -135,13 +136,14 @@ function QualifierSlot({ label }) {
 }
 
 function PlaceholderBracket() {
+  const { t } = useTranslation()
   return (
     <div>
       <div style={{ textAlign: "center", padding: "24px 0 32px" }}>
         <div style={{ fontSize: "2rem", marginBottom: 8 }}>🏆</div>
-        <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "0 0 6px" }}>Knockout bracket not yet determined</h3>
+        <h3 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "0 0 6px" }}>{t("bracket.notYetDetermined")}</h3>
         <p style={{ color: "var(--muted)", fontSize: "0.82rem", maxWidth: 340, margin: "0 auto" }}>
-          32 teams advance from the group stage — bracket locked after July 2, 2026
+          {t("bracket.groupStageAdvance")}
         </p>
       </div>
 
@@ -187,7 +189,8 @@ function PlaceholderBracket() {
 }
 
 export default function KnockoutPage() {
-  usePageMeta("Knockout Stage", "FIFA World Cup 2026 knockout bracket — Round of 32, Round of 16, Quarter Finals, Semi Finals and Final.")
+  const { t } = useTranslation()
+  usePageMeta(t("bracket.knockoutStage"), "FIFA World Cup 2026 knockout bracket — Round of 32, Round of 16, Quarter Finals, Semi Finals and Final.")
   const { matches, loading } = useMatches("all", { competition: "WC" })
   const navigate = useNavigate()
   const onMatchClick = (extId) => navigate(`/matches/${extId}`)
@@ -233,7 +236,7 @@ export default function KnockoutPage() {
             background: "rgba(238,30,70,.12)", border: "1px solid rgba(238,30,70,.3)",
             borderRadius: 8, color: "#ee1e46", padding: "7px 14px",
             fontSize: "0.78rem", fontWeight: 700, textDecoration: "none",
-          }}>🏆 Bracket Predictor →</Link>
+          }}>🏆 {t("bracket.predictorLink")}</Link>
         </div>
         <div className="bracket-scroll-hint">← Swipe to see all rounds →</div>
         <div className="bracket-scroll-wrap">
@@ -252,7 +255,7 @@ export default function KnockoutPage() {
 
         {thirdPlace.length > 0 && (
           <div className="bracket-third-place">
-            <div className="bracket-round__label" style={{ marginBottom: 8 }}>3rd Place</div>
+            <div className="bracket-round__label" style={{ marginBottom: 8 }}>{t("bracket.thirdPlace")}</div>
             <div style={{ maxWidth: 260, margin: "0 auto" }}>
               <MatchSlot match={thirdPlace[0]} onClick={() => onMatchClick(thirdPlace[0].external_id)} />
             </div>

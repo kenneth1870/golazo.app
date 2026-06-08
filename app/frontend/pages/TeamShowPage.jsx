@@ -62,7 +62,7 @@ export default function TeamShowPage() {
       <div>
         <div className="match-back-bar">
           <div className="container" style={{ maxWidth: 700 }}>
-            <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← Back</button>
+            <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back")}</button>
           </div>
         </div>
         <div style={{ background: "linear-gradient(135deg, #0d1117 0%, #161b22 100%)", padding: "48px 0 32px", borderBottom: "1px solid var(--border)" }}>
@@ -138,12 +138,18 @@ export default function TeamShowPage() {
       ).sort(([a], [b]) => (POSITION_ORDER[a] ?? 9) - (POSITION_ORDER[b] ?? 9))
     : []
 
+  const TABS = [
+    { key: "overview", label: t("team.overview") },
+    { key: "squad",    label: t("team.squad") },
+    { key: "stats",    label: t("team.stats") },
+  ]
+
   return (
     <div>
       {/* Back bar */}
       <div className="match-back-bar">
         <div className="container" style={{ maxWidth: 700, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back", "Back")}</button>
+          <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back")}</button>
           {team && (
             <button
               onClick={() => toggleFavorite({ type: "team", id: team.id, name: team.name, flag_url: team.flag_url, group: team.group })}
@@ -155,7 +161,7 @@ export default function TeamShowPage() {
                 fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", transition: ".2s",
               }}
             >
-              {isFavorite("team", team.id) ? "★ Following" : "☆ Follow"}
+              {isFavorite("team", team.id) ? t("team.following") : t("team.follow")}
             </button>
           )}
         </div>
@@ -200,7 +206,7 @@ export default function TeamShowPage() {
           {/* Form guide */}
           {form.length > 0 && (
             <div style={{ marginTop: 18, display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".1em", marginRight: 4 }}>{t("scores.form", "Form")}</span>
+              <span style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".1em", marginRight: 4 }}>{t("scores.form")}</span>
               {form.map((r, i) => (
                 <span key={i} style={{
                   width: 26, height: 26, borderRadius: "50%", display: "inline-flex",
@@ -221,11 +227,7 @@ export default function TeamShowPage() {
       <div style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)", position: "sticky", top: 56, zIndex: 10 }}>
         <div className="container" style={{ maxWidth: 700 }}>
           <div style={{ display: "flex", gap: 0 }}>
-            {[
-              { key: "overview", label: "Overview" },
-              { key: "squad",    label: "Squad" },
-              { key: "stats",    label: "Stats" },
-            ].map(tab => (
+            {TABS.map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
@@ -273,7 +275,7 @@ export default function TeamShowPage() {
           {/* Tournament scorers from DB */}
           {scorers.length > 0 && (
             <section className="match-section">
-              <h3 className="match-section__title">Tournament Scorers</h3>
+              <h3 className="match-section__title">{t("team.tournamentScorers")}</h3>
               <div className="widget-body p-0">
                 {scorers.slice(0, 8).map((s, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--border)" }}>
@@ -309,8 +311,8 @@ export default function TeamShowPage() {
             {!squadLoading && squadByPosition.length === 0 && (
               <div className="empty-state" style={{ marginTop: 40 }}>
                 <div className="empty-state__icon">👕</div>
-                <h3>Squad not available</h3>
-                <p>Squad data will appear once available from the API</p>
+                <h3>{t("team.squadNotAvailable")}</h3>
+                <p>{t("team.squadDataAppear")}</p>
               </div>
             )}
 
@@ -350,7 +352,7 @@ export default function TeamShowPage() {
                         ) : (
                           <span style={{ fontWeight: 700, fontSize: "0.88rem" }}>{p.name}</span>
                         )}
-                        {p.age && <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>Age {p.age}</div>}
+                        {p.age && <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{t("player.age", { age: p.age })}</div>}
                       </div>
                     </div>
                   ))}
@@ -366,15 +368,15 @@ export default function TeamShowPage() {
             {tstats.played > 0 ? (
               <>
                 <div className="widget-next-match" style={{ marginBottom: 16 }}>
-                  <div className="widget-title"><h3>Tournament Stats</h3></div>
+                  <div className="widget-title"><h3>{t("team.tournamentStats")}</h3></div>
                   <div className="widget-body">
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
                       {[
-                        ["Played",          tstats.played,         false],
-                        ["Goals Scored",    tstats.goals_scored,   true ],
-                        ["Goals Conceded",  tstats.goals_conceded, false],
-                        ["Goal Diff",       tstats.goal_diff > 0 ? `+${tstats.goal_diff}` : tstats.goal_diff, false],
-                        ["Clean Sheets",    tstats.clean_sheets,   false],
+                        [t("team.played"),        tstats.played,         false],
+                        [t("team.goalsScored"),   tstats.goals_scored,   true ],
+                        [t("team.goalsConceded"), tstats.goals_conceded, false],
+                        [t("team.goalDiff"),      tstats.goal_diff > 0 ? `+${tstats.goal_diff}` : tstats.goal_diff, false],
+                        [t("team.cleanSheets"),   tstats.clean_sheets,   false],
                       ].map(([label, val, hi]) => (
                         <div key={label} style={{ flex: "1 1 80px", minWidth: 72, textAlign: "center", background: "var(--surface2)", borderRadius: 10, padding: "14px 8px" }}>
                           <div style={{ fontSize: "1.5rem", fontWeight: 900, color: hi ? "#ee1e46" : "#fff" }}>{val ?? "—"}</div>
@@ -387,7 +389,7 @@ export default function TeamShowPage() {
 
                 {scorers.length > 0 && (
                   <div className="widget-next-match">
-                    <div className="widget-title"><h3>Top Scorers</h3></div>
+                    <div className="widget-title"><h3>{t("team.topScorers")}</h3></div>
                     <div className="widget-body p-0">
                       {scorers.map((s, i) => (
                         <div key={i} style={{ display: "flex", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--border)" }}>
@@ -403,8 +405,8 @@ export default function TeamShowPage() {
             ) : (
               <div className="empty-state" style={{ marginTop: 40 }}>
                 <div className="empty-state__icon">📊</div>
-                <h3>No stats yet</h3>
-                <p>Stats will appear after matches are played</p>
+                <h3>{t("team.noStatsYet")}</h3>
+                <p>{t("team.statsAfterMatches")}</p>
               </div>
             )}
           </div>

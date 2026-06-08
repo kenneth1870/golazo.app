@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 
 const DISMISSED_KEY = "golazo_install_dismissed"
 
@@ -19,6 +20,7 @@ function isStandalone() {
 
 // ── iOS instruction banner ────────────────────────────
 function IOSBanner({ onDismiss }) {
+  const { t } = useTranslation()
   return (
     <div style={{
       position: "fixed", bottom: "calc(64px + env(safe-area-inset-bottom))",
@@ -32,7 +34,7 @@ function IOSBanner({ onDismiss }) {
         <span style={{ fontSize: "1.8rem", flexShrink: 0, lineHeight: 1 }}>⚽</span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 800, fontSize: ".9rem", color: "#fff", marginBottom: 6 }}>
-            Add Golazo to your Home Screen
+            {t("install.addToHomeScreen")}
           </div>
           <div style={{ fontSize: ".78rem", color: "#7d8590", lineHeight: 1.55 }}>
             Tap{" "}
@@ -45,10 +47,10 @@ function IOSBanner({ onDismiss }) {
               <svg width="12" height="14" viewBox="0 0 24 28" fill="currentColor">
                 <path d="M12 0L6 6h4v12h4V6h4L12 0zM2 20v6h20v-6h-2v4H4v-4H2z"/>
               </svg>
-              Share
+              {t("match.share")}
             </span>
             {" "}then{" "}
-            <strong style={{ color: "#e6edf3" }}>"Add to Home Screen"</strong>
+            <strong style={{ color: "#e6edf3" }}>{t("install.addToHomeScreen")}</strong>
             {" "}for live scores without the browser.
           </div>
         </div>
@@ -74,6 +76,7 @@ function IOSBanner({ onDismiss }) {
 
 // ── Android / Chrome install prompt ──────────────────
 function AndroidBanner({ onInstall, onDismiss }) {
+  const { t } = useTranslation()
   return (
     <div style={{
       position: "fixed", bottom: "calc(64px + env(safe-area-inset-bottom))", left: 12, right: 12,
@@ -86,10 +89,10 @@ function AndroidBanner({ onInstall, onDismiss }) {
       <span style={{ fontSize: "2rem", flexShrink: 0 }}>⚽</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 800, fontSize: ".9rem", color: "#fff", marginBottom: 2 }}>
-          Add Golazo to your home screen
+          {t("install.installApp")}
         </div>
         <div style={{ fontSize: ".75rem", color: "#7d8590", lineHeight: 1.4 }}>
-          Get live scores instantly — no browser needed
+          {t("install.tagline")}
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
@@ -101,7 +104,7 @@ function AndroidBanner({ onInstall, onDismiss }) {
             fontSize: ".78rem", cursor: "pointer", fontFamily: "inherit",
           }}
         >
-          Install
+          {t("install.installApp")}
         </button>
         <button
           onClick={onDismiss}
@@ -110,7 +113,7 @@ function AndroidBanner({ onInstall, onDismiss }) {
             fontSize: ".72rem", cursor: "pointer", fontFamily: "inherit", padding: "2px 0",
           }}
         >
-          Not now
+          {t("push.notNow")}
         </button>
       </div>
     </div>

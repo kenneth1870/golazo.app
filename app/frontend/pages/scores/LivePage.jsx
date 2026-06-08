@@ -122,9 +122,9 @@ export default function LivePage() {
     return (
       <div className="site-section">
         <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
-          <p style={{ color: "#888", marginBottom: 16 }}>Failed to load live scores.</p>
+          <p style={{ color: "#888", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
           <button className="btn btn-primary btn-sm" onClick={() => { setError(false); setLoading(true); load().finally(() => setLoading(false)) }}>
-            Retry
+            {t("error.retry")}
           </button>
         </div>
       </div>
@@ -137,12 +137,12 @@ export default function LivePage() {
         <div className="d-flex align-items-center justify-content-between mb-4">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span className="live-dot" />
-            <span style={{ fontWeight: 600 }}>{matches.length} matches live</span>
+            <span style={{ fontWeight: 600 }}>{t("live.matchesLive", { count: matches.length })}</span>
           </div>
           {lastUpdated && (
             <span style={{ fontSize: "0.72rem", color: "#666" }}>
-              Updated {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-              <span style={{ marginLeft: 6, color: "#555" }}>· refreshes every 30s</span>
+              {t("live.updated")} {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              <span style={{ marginLeft: 6, color: "#555" }}>· {t("live.refreshes")}</span>
             </span>
           )}
         </div>
@@ -150,8 +150,8 @@ export default function LivePage() {
         {groups.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state__pitch" /><div className="empty-state__icon">⚽</div>
-            <h3>No matches live right now</h3>
-            <p>Check back soon or browse fixtures for upcoming games</p>
+            <h3>{t("scores.noLive")}</h3>
+            <p>{t("live.checkBack")}</p>
           </div>
         ) : (
           groups.map((g, i) => (

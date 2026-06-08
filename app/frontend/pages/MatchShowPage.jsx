@@ -44,6 +44,7 @@ function ReminderButton({ match }) {
 
 // ─── Share button ─────────────────────────────────────
 function ShareButton({ homeName, awayName }) {
+  const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
 
   function share() {
@@ -69,13 +70,13 @@ function ShareButton({ homeName, awayName }) {
         padding: "6px 0", transition: "color .2s",
       }}
     >
-      {copied ? "✓ Copied" : (
+      {copied ? t("match.copied") : (
         <>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
             <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
           </svg>
-          Share
+          {t("match.share")}
         </>
       )}
     </button>
@@ -220,6 +221,7 @@ function addToCalendar(fixture) {
 }
 
 function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, notifEnabled, notifSupported }) {
+  const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
   const home   = fixture?.teams?.home
   const away   = fixture?.teams?.away
@@ -280,7 +282,7 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
             }}>
               <span className="live-dot" />
               {liveMinute ? `${liveMinute}'` : "LIVE"}
-              {isHT && " · Half Time"}
+              {isHT && t("match.halfTimeShort")}
             </div>
           ) : isFT ? (
             <div style={{
@@ -289,7 +291,7 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
               borderRadius: 20, padding: "5px 14px",
               fontSize: ".72rem", fontWeight: 700, color: "rgba(255,255,255,.5)", letterSpacing: ".06em",
             }}>
-              Full Time
+              {t("match.fullTime")}
             </div>
           ) : isNS && kickoffStr ? (
             <div style={{
@@ -382,11 +384,11 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
                   fontSize: ".72rem", fontWeight: 600, cursor: "pointer",
                 }}
               >
-                📅 Calendar
+                {t("match.calendar")}
               </button>
             )}
             <button onClick={share} className={`scoreboard__share${copied ? " copied" : ""}`}>
-              {copied ? "✓ Copied" : "Share"}
+              {copied ? t("match.copied") : t("match.share")}
             </button>
           </div>
         </div>
@@ -429,15 +431,15 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t }) {
   regularEvents.forEach(e => {
     const min = e.minute ?? 0
     if (!htInserted && min > 45) {
-      items.push({ _divider: "HT — Half Time" })
+      items.push({ _divider: t("match.htDivider") })
       htInserted = true
     }
     if (!etInserted && min > 90) {
-      items.push({ _divider: "90' — Extra Time" })
+      items.push({ _divider: t("match.etDivider") })
       etInserted = true
     }
     if (!et2Inserted && min > 105) {
-      items.push({ _divider: "105' — Extra Time 2nd Half" })
+      items.push({ _divider: t("match.et2Divider") })
       et2Inserted = true
     }
     items.push(e)
@@ -476,7 +478,7 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t }) {
                   {e.player}
                 </span>
                 {isGoal && e.assist && (
-                  <span className="match-event__assist"> assist: {e.assist}</span>
+                  <span className="match-event__assist"> {t("match.assist")}: {e.assist}</span>
                 )}
                 {isSub && e.assist && (
                   <span className="match-event__assist"> ↑ {e.assist}</span>
@@ -503,7 +505,7 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t }) {
         {/* Penalty shootout */}
         {penaltyEvents.length > 0 && (
           <>
-            <PeriodDivider label="Penalty Shootout" />
+            <PeriodDivider label={t("match.penaltyShootout")} />
             {penaltyEvents.map((e, i) => {
               const isHome   = e.team?.name === homeTeam
               const scored   = e.detail !== "Missed Penalty"
@@ -599,7 +601,7 @@ function StatsPanel({ stats, home, away, t, statusShort }) {
           {home?.logo && <img src={home.logo} alt="" className="logo-sm" onError={e => (e.target.style.display = "none")} />}
           <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#ee1e46" }}>{home?.name}</span>
         </div>
-        <h3 className="match-section__title" style={{ margin: 0 }}>Statistics</h3>
+        <h3 className="match-section__title" style={{ margin: 0 }}>{t("match.statistics")}</h3>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#3b82f6" }}>{away?.name}</span>
           {away?.logo && <img src={away.logo} alt="" className="logo-sm" onError={e => (e.target.style.display = "none")} />}
@@ -836,6 +838,7 @@ function GoalToast({ text, visible, onDismiss }) {
 
 // ─── Push notification banner for live matches ────────
 function LivePushBanner({ homeName, awayName, onDismiss }) {
+  const { t } = useTranslation()
   const { supported, permission, subscribed, loading, subscribe } = usePushNotifications()
   const [done, setDone] = useState(false)
 
@@ -855,16 +858,16 @@ function LivePushBanner({ homeName, awayName, onDismiss }) {
     }}>
       <span style={{ fontSize: "1.2rem" }}>🔔</span>
       <span style={{ flex: 1, fontSize: "0.82rem", color: "var(--text)" }}>
-        Get goal alerts even when the app is closed
+        {t("push.getAlertsWhenClosed")}
       </span>
       <button onClick={enable} disabled={loading} style={{
         background: "#ee1e46", color: "#fff", border: "none", borderRadius: 6,
         padding: "6px 14px", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer",
         opacity: loading ? 0.6 : 1,
-      }}>{loading ? "…" : "Allow"}</button>
+      }}>{loading ? "…" : t("push.allow")}</button>
       <button onClick={onDismiss} style={{
         background: "none", color: "var(--muted)", border: "none", cursor: "pointer", fontSize: "0.8rem",
-      }}>Not now</button>
+      }}>{t("push.notNow")}</button>
     </div>
   )
 }
@@ -1090,7 +1093,7 @@ export default function MatchShowPage() {
       {/* Back bar — visible on mobile above scoreboard */}
       <div className="match-back-bar">
         <div className="container" style={{ maxWidth: 740, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button onClick={goBack} className="btn-back" style={{ padding: "10px 0" }}>← {t("match.back", "Back")}</button>
+          <button onClick={goBack} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back")}</button>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {isLive && (
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.7rem", color: "var(--muted)" }}>
@@ -1203,13 +1206,13 @@ export default function MatchShowPage() {
             {["FT","AET","PEN"].includes(statusShort) && (
               <section className="match-section" style={{ marginBottom: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                  <h3 className="match-section__title" style={{ margin: 0 }}>AI Match Report</h3>
+                  <h3 className="match-section__title" style={{ margin: 0 }}>{t("match.aiMatchReport")}</h3>
                   <span style={{ fontSize: "0.62rem", background: "rgba(99,102,241,.15)", color: "#818cf8", padding: "2px 7px", borderRadius: 10, fontWeight: 700 }}>AI</span>
                 </div>
                 {aiLoading && (
                   <div style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--muted)", fontSize: "0.84rem" }}>
                     <div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
-                    Generating match report…
+                    {t("match.generating")}
                   </div>
                 )}
                 {aiSummary?.summary && (
@@ -1225,7 +1228,7 @@ export default function MatchShowPage() {
                 )}
                 {!aiLoading && !aiSummary && !aiError && (
                   <p style={{ fontSize: "0.82rem", color: "var(--muted)" }}>
-                    Match report will be available shortly after full time.
+                    {t("match.reportSoon")}
                   </p>
                 )}
               </section>

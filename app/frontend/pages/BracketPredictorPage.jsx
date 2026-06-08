@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useSearchParams } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { fetchWithTimeout } from "../utils/fetchWithTimeout"
 
@@ -124,7 +125,8 @@ function MatchCard({ match, onPick, roundIdx }) {
 }
 
 export default function BracketPredictorPage() {
-  usePageMeta("Bracket Predictor", "Pick your FIFA World Cup 2026 champion — fill out the knockout bracket and share your prediction.")
+  const { t } = useTranslation()
+  usePageMeta(t("bracket.title"), "Pick your FIFA World Cup 2026 champion — fill out the knockout bracket and share your prediction.")
   const [searchParams, setSearchParams] = useSearchParams()
   const [standings, setStandings] = useState({})
   const [picks, setPicks] = useState(() => decodePicks(searchParams.get("p")))
@@ -206,9 +208,9 @@ export default function BracketPredictorPage() {
         {/* Header */}
         <div style={{ marginBottom: 24, display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <div>
-            <h2 style={{ margin: "0 0 4px", fontSize: "1.25rem", fontWeight: 800 }}>Bracket Predictor</h2>
+            <h2 style={{ margin: "0 0 4px", fontSize: "1.25rem", fontWeight: 800 }}>{t("bracket.title")}</h2>
             <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.82rem" }}>
-              Click a team to advance them. Picks are saved in the URL.
+              {t("bracket.subtitle")}
             </p>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
@@ -217,14 +219,14 @@ export default function BracketPredictorPage() {
                 background: "none", border: "1px solid var(--border)", borderRadius: 8,
                 color: "var(--muted)", padding: "8px 14px", cursor: "pointer", fontSize: "0.78rem",
               }}>
-                Reset
+                {t("bracket.reset")}
               </button>
             )}
             <button onClick={share} style={{
               background: "var(--accent,#ee1e46)", border: "none", borderRadius: 8,
               color: "#fff", padding: "8px 16px", cursor: "pointer", fontSize: "0.82rem", fontWeight: 700,
             }}>
-              {copied ? "✓ Copied!" : "Share"}
+              {copied ? t("bracket.copied") : t("bracket.share")}
             </button>
           </div>
         </div>
@@ -239,7 +241,7 @@ export default function BracketPredictorPage() {
           }}>
             <span style={{ fontSize: "1.5rem" }}>🏆</span>
             <div>
-              <div style={{ fontSize: "0.7rem", color: "var(--muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".06em" }}>Your Champion</div>
+              <div style={{ fontSize: "0.7rem", color: "var(--muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".06em" }}>{t("bracket.yourChampion")}</div>
               <div style={{ fontWeight: 800, fontSize: "1.05rem", color: "#f59e0b" }}>{champion.name}</div>
             </div>
           </div>
@@ -278,7 +280,7 @@ export default function BracketPredictorPage() {
         </div>
 
         <p style={{ color: "var(--muted)", fontSize: "0.72rem", marginTop: 16, textAlign: "center" }}>
-          {totalPicks} / 31 matches picked · Notifications fire while the app is open
+          {t("bracket.matchesPicked", { count: totalPicks })}
         </p>
       </div>
     </div>

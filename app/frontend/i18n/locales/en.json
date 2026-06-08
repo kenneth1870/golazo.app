@@ -17,7 +17,9 @@
     "topScorers": "Top Scorers",
     "allLeagues": "All Leagues",
     "news": "News",
-    "search": "Search"
+    "search": "Search",
+    "back": "Back",
+    "allGroups": "All Groups"
   },
   "hero": {
     "title": "Mundial 2026",
@@ -38,7 +40,8 @@
     "noUpcoming": "No upcoming matches found",
     "liveNow_one": "{{count}} match live right now",
     "liveNow_other": "{{count}} matches live right now",
-    "followTeam": "Follow a team"
+    "followTeam": "Follow a team",
+    "liveNow": "{{count}} match live right now"
   },
   "time": {
     "today": "Today",
@@ -60,7 +63,12 @@
     "resultsAppear": "Results will appear here once matches are played",
     "noFixtures": "No upcoming fixtures",
     "bracketPending": "Knockout bracket not yet determined",
-    "advanceAfterGroups": "Teams advance after the group stage ends on July 2, 2026"
+    "advanceAfterGroups": "Teams advance after the group stage ends on July 2, 2026",
+    "form": "Form",
+    "allCompetitions": "Live scores & results across all competitions",
+    "noMatchesToday": "No matches today",
+    "yourMatches": "Your Matches",
+    "yourTeamLive": "Your team is playing!"
   },
   "groups": {
     "title": "Groups",
@@ -68,7 +76,8 @@
     "standings": "Group {{letter}} — Standings",
     "matches": "Group {{letter}} — Matches",
     "noStandings": "No standings yet",
-    "viewStandings": "Standings →"
+    "viewStandings": "Standings →",
+    "noStandingsYet": "Standings available after group stage begins"
   },
   "mundial": {
     "subtitle": "FIFA World Cup · USA · Canada · Mexico · June 11 – July 19",
@@ -78,7 +87,8 @@
     "scorersTitle": "Top Scorers — World Cup 2026",
     "noScorers": "No scorers yet",
     "scorersAppear": "Top scorers will appear here once the tournament begins on June 11, 2026",
-    "capacity": "Capacity"
+    "capacity": "Capacity",
+    "venueMatches": "{{count}} matches"
   },
   "table": {
     "pos": "#",
@@ -95,12 +105,14 @@
     "home": "Home",
     "away": "Away",
     "group": "Group",
-    "player": "Player"
+    "player": "Player",
+    "gf": "GF",
+    "ga": "GA"
   },
   "match": {
     "summary": "Summary",
     "stats": "Stats",
-    "lineups": "Lineups",
+    "lineups": "Line-ups",
     "h2h": "H2H",
     "events": "Match Events",
     "noEvents": "No events recorded",
@@ -127,7 +139,22 @@
     "halfTime": "Half Time",
     "substitutes": "Substitutes",
     "statsNotProvided": "Stats not provided by the data source for this match",
-    "lineupsNotProvided": "Lineups not available for this match"
+    "lineupsNotProvided": "Lineups not available for this match",
+    "back": "Back",
+    "share": "Share",
+    "copied": "✓ Copied",
+    "calendar": "📅 Calendar",
+    "aiMatchReport": "AI Match Report",
+    "generating": "Generating match report…",
+    "reportSoon": "Match report will be available shortly after full time.",
+    "penaltyShootout": "Penalty Shootout",
+    "htDivider": "HT — Half Time",
+    "etDivider": "90' — Extra Time",
+    "et2Divider": "105' — Extra Time 2nd Half",
+    "statistics": "Statistics",
+    "halfTimeShort": "· Half Time",
+    "assist": "Assist",
+    "votes": "{{count}} votes"
   },
   "error": {
     "dataUnavailable": "Data temporarily unavailable",
@@ -136,7 +163,11 @@
     "matchRemoved": "This fixture isn't in our database. It may have been cancelled or removed.",
     "retry": "Retry",
     "back": "Back",
-    "goBack": "Go back"
+    "goBack": "Go back",
+    "failedToLoad": "Failed to load group standings.",
+    "failedToLoadNews": "Failed to load news.",
+    "newsUnavailable": "Couldn't load news.",
+    "tryAgain": "Couldn't load matches. Check your connection."
   },
   "status": {
     "live": "LIVE",
@@ -154,12 +185,147 @@
     "title": "News",
     "subtitle": "Football stories from around the world",
     "noArticles": "No articles found",
-    "all": "All"
+    "all": "All",
+    "notFound": "Article not found",
+    "backToNews": "← Back to News",
+    "originalOn": "Original article on {{source}}",
+    "readOn": "Read on {{source}} ↗",
+    "allLoaded": "All {{count}} articles loaded"
   },
   "footer": {
     "follow": "Follow",
-    "copyright": "Copyright © {{year}} Golazo — Mundial 2026 Live Scores."
+    "copyright": "Copyright © {{year}} Golazo — Mundial 2026 Live Scores.",
+    "tagline": "Live scores, real-time stats, and every goal from FIFA World Cup 2026.",
+    "allGroups": "All Groups →"
+  },
+  "player": {
+    "notFound": "Player not found",
+    "statsUnavailable": "Stats are available for players in the current season",
+    "wcStats": "2026 World Cup Stats",
+    "goals": "Goals",
+    "assists": "Assists",
+    "apps": "Apps",
+    "minutes": "Minutes",
+    "rating": "Rating",
+    "yellow": "Yellow",
+    "red": "Red",
+    "keyPasses": "Key Passes",
+    "detailedStatsUnavailable": "Detailed stats not available for this player in this competition",
+    "age": "Age {{age}}"
+  },
+  "team": {
+    "overview": "Overview",
+    "squad": "Squad",
+    "stats": "Stats",
+    "squadNotAvailable": "Squad not available",
+    "squadDataAppear": "Squad data will appear once available from the API",
+    "tournamentStats": "Tournament Stats",
+    "played": "Played",
+    "goalsScored": "Goals Scored",
+    "goalsConceded": "Goals Conceded",
+    "goalDiff": "Goal Diff",
+    "cleanSheets": "Clean Sheets",
+    "noStatsYet": "No stats yet",
+    "statsAfterMatches": "Stats will appear after matches are played",
+    "topScorers": "Top Scorers",
+    "tournamentScorers": "Tournament Scorers",
+    "following": "★ Following",
+    "follow": "☆ Follow",
+    "coach": "Coach:",
+    "noUpcomingMatches": "No upcoming matches",
+    "noResultsYet": "No results yet",
+    "groupStanding": "Group Standing",
+    "liveMatches": "Live Matches",
+    "upcoming": "Upcoming",
+    "results": "Results"
+  },
+  "leaderboard": {
+    "title": "Prediction Leaderboard",
+    "subtitle": "3 pts = exact score · 1 pt = correct result",
+    "noPredictions": "No predictions yet",
+    "beFirst": "Be the first — predict a match score on any match page",
+    "pts": "pts",
+    "predictions_one": "{{count}} prediction",
+    "predictions_other": "{{count}} predictions",
+    "challengeFriend": "📤 Challenge a friend",
+    "myComparisons": "⚔️ My comparisons",
+    "linkCopied": "✓ Link copied!",
+    "predictOnFixtures": "Predict match scores on any fixture page before kickoff",
+    "you": "(you)"
+  },
+  "compare": {
+    "title": "Predictions vs Friend",
+    "vsSubtitle": "You vs {{name}}",
+    "sharePrompt": "Share your link with a friend to compare your World Cup predictions:",
+    "matchResults": "Match Results",
+    "noGradedYet": "No graded predictions yet",
+    "predictBeforeKickoff": "Predict match scores before kickoff — points are awarded at full time",
+    "browseMatches": "→ Browse today's matches",
+    "you": "You",
+    "friend": "Friend",
+    "copyLink": "Copy link",
+    "copied": "✓ Copied!",
+    "backToLeaderboard": "← Leaderboard",
+    "predicted": "Predicted: {{home}}–{{away}}"
+  },
+  "prediction": {
+    "title": "🎯 Score Prediction",
+    "submitLabel": "Predict score · 3pts exact / 1pt result",
+    "saving": "Saving…",
+    "invalidScore": "Enter valid scores (0–29)",
+    "lockedStarted": "Predictions locked — match has started",
+    "lockedEnded": "Predictions locked — match has ended"
+  },
+  "bracket": {
+    "title": "Bracket Predictor",
+    "subtitle": "Click a team to advance them. Picks are saved in the URL.",
+    "share": "Share",
+    "copied": "✓ Copied!",
+    "reset": "Reset",
+    "yourChampion": "Your Champion",
+    "matchesPicked": "{{count}} / 31 matches picked · Notifications fire while the app is open",
+    "groupStageAdvance": "Teams advance to the knockout round after the group stage ends",
+    "knockoutStage": "Knockout Stage",
+    "notYetDetermined": "Knockout bracket not yet determined",
+    "predictorLink": "Bracket Predictor",
+    "thirdPlace": "3rd Place"
+  },
+  "push": {
+    "getAlerts": "Get goal alerts",
+    "teamAlerts": "Get notified when {{team}} scores — even with the app closed.",
+    "generalAlerts": "Get notified when goals are scored — even with the app closed.",
+    "enable": "Enable alerts",
+    "enabling": "Enabling…",
+    "notNow": "Not now",
+    "getAlertsWhenClosed": "Get goal alerts even when the app is closed",
+    "allow": "Allow"
+  },
+  "standings": {
+    "qualified": "Qualified",
+    "possibleThird": "Possible 3rd",
+    "eliminated": "Eliminated",
+    "provisional": "Lighter = provisional",
+    "matchesLink": "Matches →"
   },
   "loading": "Loading...",
-  "noMatches": "No matches found"
+  "noMatches": "No matches found",
+  "search": {
+    "placeholder": "Search teams, players, matches…",
+    "noResults": "No results for \"{{query}}\"",
+    "hint": "Search for teams, players or matches",
+    "navigate": "↑↓ navigate",
+    "select": "↵ select",
+    "close": "esc close"
+  },
+  "install": {
+    "addToHomeScreen": "Add to Home Screen",
+    "installApp": "Install App",
+    "tagline": "Get live scores on your home screen"
+  },
+  "live": {
+    "matchesLive": "{{count}} matches live",
+    "updated": "Updated",
+    "refreshes": "Refreshes every 20s",
+    "checkBack": "Check back during match times"
+  }
 }

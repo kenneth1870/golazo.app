@@ -23,8 +23,8 @@ function ArticleSkeleton() {
 }
 
 export default function NewsShowPage() {
-  const { id }   = useParams()
-  const { i18n } = useTranslation()
+  const { id }      = useParams()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const lang     = i18n.language.split("-")[0]
   const [article, setArticle]   = useState(null)
@@ -66,7 +66,7 @@ export default function NewsShowPage() {
       <div style={{ padding: 0 }}>
         <div className="match-back-bar">
           <div className="container" style={{ maxWidth: 740 }}>
-            <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← Back</button>
+            <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back")}</button>
           </div>
         </div>
         <ArticleSkeleton />
@@ -80,8 +80,8 @@ export default function NewsShowPage() {
         <div className="container">
           <div className="empty-state">
             <div className="empty-state__icon">📰</div>
-            <h3>Article not found</h3>
-            <p><Link to="/news" style={{ color: "var(--accent)" }}>← Back to News</Link></p>
+            <h3>{t("news.notFound")}</h3>
+            <p><Link to="/news" style={{ color: "var(--accent)" }}>← {t("news.backToNews")}</Link></p>
           </div>
         </div>
       </div>
@@ -98,7 +98,7 @@ export default function NewsShowPage() {
       {/* Back bar */}
       <div className="match-back-bar">
         <div className="container" style={{ maxWidth: 740, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← Back</button>
+          <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back")}</button>
           <button
             onClick={share}
             style={{
@@ -107,7 +107,7 @@ export default function NewsShowPage() {
               fontSize: ".72rem", fontWeight: 600, cursor: "pointer",
             }}
           >
-            {copied ? "✓ Copied" : "Share"}
+            {copied ? t("match.copied") : t("match.share")}
           </button>
         </div>
       </div>
@@ -136,7 +136,7 @@ export default function NewsShowPage() {
 
         {/* Breadcrumb */}
         <div style={{ marginBottom: 20, fontSize: "0.78rem", color: "var(--muted)" }}>
-          <Link to="/news" style={{ color: "var(--accent)", textDecoration: "none" }}>News</Link>
+          <Link to="/news" style={{ color: "var(--accent)", textDecoration: "none" }}>{t("nav.news")}</Link>
           <span style={{ margin: "0 6px", opacity: .5 }}>›</span>
           <span>{article.source}</span>
         </div>
@@ -183,7 +183,7 @@ export default function NewsShowPage() {
         {article.link && (
           <div style={{ marginTop: 36, padding: "20px 0", borderTop: "1px solid var(--border)" }}>
             <p style={{ fontSize: "0.82rem", color: "var(--muted)", marginBottom: 12 }}>
-              Original article on {article.source}
+              {t("news.originalOn", { source: article.source })}
             </p>
             <a
               href={article.link}
@@ -196,7 +196,7 @@ export default function NewsShowPage() {
                 fontWeight: 700, fontSize: "0.85rem", textDecoration: "none",
               }}
             >
-              Read on {article.source} ↗
+              {t("news.readOn", { source: article.source })}
             </a>
           </div>
         )}
@@ -204,7 +204,7 @@ export default function NewsShowPage() {
         {/* Back */}
         <div style={{ marginTop: 32 }}>
           <Link to="/news" style={{ color: "var(--accent)", fontSize: "0.85rem", textDecoration: "none" }}>
-            ← Back to News
+            ← {t("news.backToNews")}
           </Link>
         </div>
 

@@ -196,8 +196,8 @@ export default function FixturesPage() {
           <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
         ) : error ? (
           <div style={{ textAlign: "center", paddingTop: 60 }}>
-            <p style={{ color: "#888", marginBottom: 16 }}>Failed to load fixtures.</p>
-            <button className="btn btn-primary btn-sm" onClick={() => load(selected)}>Retry</button>
+            <p style={{ color: "#888", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
+            <button className="btn btn-primary btn-sm" onClick={() => load(selected)}>{t("error.retry")}</button>
           </div>
         ) : groups.length === 0 ? (
           <div className="empty-state">

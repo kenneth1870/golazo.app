@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 
 function formatKickoff(utcDate) {
   return new Date(utcDate).toLocaleTimeString([], {
@@ -113,6 +114,7 @@ function CompetitionGroup({ competition, matches, onMatchSelect }) {
 }
 
 export default function TodayMatches({ onMatchSelect }) {
+  const { t } = useTranslation()
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -153,14 +155,14 @@ export default function TodayMatches({ onMatchSelect }) {
       <div className="container">
         <div className="row">
           <div className="col-12 title-section">
-            <h2 className="heading">Today — {today}</h2>
+            <h2 className="heading">{t("time.today")} — {today}</h2>
           </div>
         </div>
 
         {data.length === 0 ? (
           <div className="widget-next-match">
             <div className="widget-body text-center py-5">
-              <p style={{ color: "gray" }}>No matches scheduled today</p>
+              <p style={{ color: "gray" }}>{t("scores.noMatchesToday")}</p>
             </div>
           </div>
         ) : (

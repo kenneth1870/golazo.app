@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 
 const TYPE_ORDER = { world_cup: 0, cup: 1, league: 2 }
-const TYPE_LABEL = { world_cup: "World Cup", cup: "Cups & International", league: "Domestic Leagues" }
 
 function LeagueCard({ competition, liveCount, onClick }) {
   return (
@@ -109,8 +108,8 @@ export default function AllLeaguesPage() {
     return (
       <div className="site-section">
         <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
-          <p style={{ color: "#888", marginBottom: 16 }}>Failed to load competitions.</p>
-          <button className="btn btn-primary btn-sm" onClick={load}>Retry</button>
+          <p style={{ color: "#888", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
+          <button className="btn btn-primary btn-sm" onClick={load}>{t("error.retry")}</button>
         </div>
       </div>
     )
@@ -124,7 +123,7 @@ export default function AllLeaguesPage() {
           <p className="page-hero__sub">
             {totalLive > 0
               ? t("leagues.subtitle", { count: totalLive, comps: competitions.length })
-              : `${competitions.length} competitions`}
+              : t("leagues.available", { count: competitions.length })}
           </p>
         </div>
       </div>
@@ -152,7 +151,7 @@ export default function AllLeaguesPage() {
           {sortedTypes.map(type => (
             <div key={type} className="mb-5">
               <div className="title-section">
-                <h2 className="heading">{TYPE_LABEL[type] ?? type}</h2>
+                <h2 className="heading">{t(`leagues.type_${type}`, type)}</h2>
               </div>
               <div className="leagues-grid">
                 {byType[type].map(c => (

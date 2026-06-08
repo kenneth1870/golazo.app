@@ -45,7 +45,7 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
     const h = parseInt(homeVal)
     const a = parseInt(awayVal)
     if (isNaN(h) || isNaN(a) || h < 0 || a < 0) {
-      setError("Enter valid scores (0–29)")
+      setError(t("prediction.invalidScore"))
       return
     }
     setSaving(true)
@@ -69,7 +69,7 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
       if (data.error) setError(data.error)
       else setMyPred(data)
     } catch {
-      setError("Could not save. Try again.")
+      setError(t("error.dataUnavailable"))
     } finally {
       setSaving(false)
     }
@@ -80,7 +80,7 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
   return (
     <section className="match-section">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <h3 className="match-section__title" style={{ margin: 0 }}>🎯 Score Prediction</h3>
+        <h3 className="match-section__title" style={{ margin: 0 }}>{t("prediction.title")}</h3>
         {myPred?.points_earned != null && (
           <span style={{
             background: myPred.points_earned === 3 ? "rgba(16,185,129,.2)" : myPred.points_earned === 1 ? "rgba(245,158,11,.2)" : "rgba(239,68,68,.15)",
@@ -147,13 +147,13 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
                 fontSize: "0.85rem", cursor: "pointer", opacity: saving ? .6 : 1,
               }}
             >
-              {saving ? "Saving…" : "Predict score · 3pts exact / 1pt result"}
+              {saving ? t("prediction.saving") : t("prediction.submitLabel")}
             </button>
           </div>
         </div>
       ) : (
         <p style={{ color: "var(--muted)", fontSize: "0.82rem", textAlign: "center" }}>
-          Predictions locked — match has {isLive ? "started" : "ended"}
+          {isLive ? t("prediction.lockedStarted") : t("prediction.lockedEnded")}
         </p>
       )}
     </section>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 
 // WC 2026: pos 0-1 qualify directly, pos 2 potentially (best 8 of 12 third-place), pos 3 eliminated
@@ -12,7 +13,7 @@ function rowQualStyle(rank, rows) {
   return           { background: `rgba(239,68,68,${0.05 * alpha})`,          borderLeft: "2px solid transparent" }
 }
 
-function StandingsTable({ group, rows, onNavigate }) {
+function StandingsTable({ group, rows, onNavigate, t }) {
   return (
     <div className="widget-next-match mb-4" style={{ cursor: "default" }}>
       <div
@@ -20,30 +21,30 @@ function StandingsTable({ group, rows, onNavigate }) {
         style={{ gap: 8, cursor: "pointer" }}
         onClick={onNavigate}
       >
-        <h3 style={{ margin: 0 }}>Group {group}</h3>
-        <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#ee1e46" }}>Matches →</span>
+        <h3 style={{ margin: 0 }}>{t("nav.group", { letter: group })}</h3>
+        <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#ee1e46" }}>{t("standings.matchesLink")}</span>
       </div>
       <div className="widget-body p-0" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
         <table className="table custom-table mb-0" style={{ fontSize: "0.8rem", minWidth: 380 }}>
           <thead>
             <tr>
-              <th style={{ width: 28 }}>#</th>
-              <th>Team</th>
-              <th title="Played" style={{ textAlign: "center" }}>MP</th>
-              <th title="Won"    style={{ textAlign: "center" }}>W</th>
-              <th title="Drawn"  style={{ textAlign: "center" }}>D</th>
-              <th title="Lost"   style={{ textAlign: "center" }}>L</th>
-              <th title="Goals For"     style={{ textAlign: "center" }}>GF</th>
-              <th title="Goals Against" style={{ textAlign: "center" }}>GA</th>
-              <th title="Goal Difference" style={{ textAlign: "center" }}>GD</th>
-              <th title="Points" style={{ textAlign: "center", fontWeight: 700 }}>Pts</th>
+              <th style={{ width: 28 }}>{t("table.pos")}</th>
+              <th>{t("table.team")}</th>
+              <th title={t("table.played")} style={{ textAlign: "center" }}>{t("table.played")}</th>
+              <th title={t("table.won")}    style={{ textAlign: "center" }}>{t("table.won")}</th>
+              <th title={t("table.drawn")}  style={{ textAlign: "center" }}>{t("table.drawn")}</th>
+              <th title={t("table.lost")}   style={{ textAlign: "center" }}>{t("table.lost")}</th>
+              <th title="Goals For"         style={{ textAlign: "center" }}>{t("table.gf")}</th>
+              <th title="Goals Against"     style={{ textAlign: "center" }}>{t("table.ga")}</th>
+              <th title={t("table.gd")}     style={{ textAlign: "center" }}>{t("table.gd")}</th>
+              <th title={t("table.points")} style={{ textAlign: "center", fontWeight: 700 }}>{t("table.points")}</th>
             </tr>
           </thead>
           <tbody>
             {(!rows || rows.length === 0) ? (
               <tr>
                 <td colSpan={10} style={{ textAlign: "center", color: "#555", padding: "1.2rem", fontSize: "0.75rem" }}>
-                  Standings available after group stage begins
+                  {t("groups.noStandingsYet")}
                 </td>
               </tr>
             ) : rows.map((s, i) => {
@@ -85,6 +86,7 @@ function StandingsTable({ group, rows, onNavigate }) {
 const GROUP_LETTERS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
 export default function AllGroupsPage() {
+  const { t } = useTranslation()
   usePageMeta("Groups", "FIFA World Cup 2026 group standings — all 12 groups with points, goals and results.")
   const [grouped, setGrouped] = useState({})
   const [loading, setLoading] = useState(true)
@@ -126,8 +128,8 @@ export default function AllGroupsPage() {
     return (
       <div className="site-section">
         <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
-          <p style={{ color: "#888", marginBottom: 16 }}>Failed to load group standings.</p>
-          <button className="btn btn-primary btn-sm" onClick={load}>Retry</button>
+          <p style={{ color: "#888", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
+          <button className="btn btn-primary btn-sm" onClick={load}>{t("error.retry")}</button>
         </div>
       </div>
     )
@@ -137,10 +139,10 @@ export default function AllGroupsPage() {
     <div className="site-section">
       <div className="container">
         <div className="qualify-legend" style={{ marginBottom: 20 }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 5 }}><span className="qualify-legend__dot" style={{ background: "#10b981" }} /> Qualified</span>
-          <span style={{ display: "flex", alignItems: "center", gap: 5 }}><span className="qualify-legend__dot" style={{ background: "#f59e0b" }} /> Possible 3rd</span>
-          <span style={{ display: "flex", alignItems: "center", gap: 5 }}><span className="qualify-legend__dot" style={{ background: "#ef4444" }} /> Eliminated</span>
-          <span style={{ marginLeft: "auto", opacity: .5 }}>Lighter = provisional</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 5 }}><span className="qualify-legend__dot" style={{ background: "#10b981" }} /> {t("standings.qualified")}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 5 }}><span className="qualify-legend__dot" style={{ background: "#f59e0b" }} /> {t("standings.possibleThird")}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 5 }}><span className="qualify-legend__dot" style={{ background: "#ef4444" }} /> {t("standings.eliminated")}</span>
+          <span style={{ marginLeft: "auto", opacity: .5 }}>{t("standings.provisional")}</span>
         </div>
         <div className="row">
           {displayGroups.map(g => (
@@ -149,6 +151,7 @@ export default function AllGroupsPage() {
                 group={g}
                 rows={grouped[g] || []}
                 onNavigate={() => navigate(`/groups/${g}`)}
+                t={t}
               />
             </div>
           ))}

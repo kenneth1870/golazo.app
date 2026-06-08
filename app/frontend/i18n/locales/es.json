@@ -17,7 +17,9 @@
     "topScorers": "Goleadores",
     "allLeagues": "Todas las Ligas",
     "news": "Noticias",
-    "search": "Buscar"
+    "search": "Buscar",
+    "back": "Volver",
+    "allGroups": "Todos los Grupos"
   },
   "hero": {
     "title": "Mundial 2026",
@@ -38,7 +40,8 @@
     "noUpcoming": "No se encontraron próximos partidos",
     "liveNow_one": "{{count}} partido en vivo ahora",
     "liveNow_other": "{{count}} partidos en vivo ahora",
-    "followTeam": "Seguir un equipo"
+    "followTeam": "Seguir un equipo",
+    "liveNow": "{{count}} partido en vivo ahora"
   },
   "time": {
     "today": "Hoy",
@@ -60,7 +63,12 @@
     "resultsAppear": "Los resultados aparecerán aquí una vez que se jueguen los partidos",
     "noFixtures": "No hay próximos partidos",
     "bracketPending": "El cuadro eliminatorio aún no está definido",
-    "advanceAfterGroups": "Los equipos clasifican tras la fase de grupos el 2 de julio de 2026"
+    "advanceAfterGroups": "Los equipos clasifican tras la fase de grupos el 2 de julio de 2026",
+    "form": "Forma",
+    "allCompetitions": "Marcadores y resultados en todas las competiciones",
+    "noMatchesToday": "Sin partidos hoy",
+    "yourMatches": "Tus Partidos",
+    "yourTeamLive": "¡Tu equipo está jugando!"
   },
   "groups": {
     "title": "Grupos",
@@ -68,7 +76,8 @@
     "standings": "Grupo {{letter}} — Clasificación",
     "matches": "Grupo {{letter}} — Partidos",
     "noStandings": "Sin clasificación aún",
-    "viewStandings": "Clasificación →"
+    "viewStandings": "Clasificación →",
+    "noStandingsYet": "Clasificación disponible cuando comience la fase de grupos"
   },
   "mundial": {
     "subtitle": "FIFA Mundial · EE.UU. · Canadá · México · 11 Jun – 19 Jul",
@@ -78,7 +87,8 @@
     "scorersTitle": "Goleadores — Mundial 2026",
     "noScorers": "Sin goleadores aún",
     "scorersAppear": "Los goleadores aparecerán aquí cuando comience el torneo el 11 de junio de 2026",
-    "capacity": "Capacidad"
+    "capacity": "Capacidad",
+    "venueMatches": "{{count}} partidos"
   },
   "table": {
     "pos": "#",
@@ -95,7 +105,9 @@
     "home": "Local",
     "away": "Visitante",
     "group": "Grupo",
-    "player": "Jugador"
+    "player": "Jugador",
+    "gf": "GF",
+    "ga": "GC"
   },
   "match": {
     "summary": "Resumen",
@@ -127,7 +139,22 @@
     "halfTime": "Medio Tiempo",
     "substitutes": "Suplentes",
     "statsNotProvided": "Estadísticas no disponibles para este partido",
-    "lineupsNotProvided": "Alineaciones no disponibles para este partido"
+    "lineupsNotProvided": "Alineaciones no disponibles para este partido",
+    "back": "Volver",
+    "share": "Compartir",
+    "copied": "✓ Copiado",
+    "calendar": "📅 Calendario",
+    "aiMatchReport": "Informe IA del Partido",
+    "generating": "Generando informe del partido…",
+    "reportSoon": "El informe estará disponible poco después del tiempo completo.",
+    "penaltyShootout": "Tanda de Penales",
+    "htDivider": "MT — Medio Tiempo",
+    "etDivider": "90' — Prórroga",
+    "et2Divider": "105' — Segunda Parte de la Prórroga",
+    "statistics": "Estadísticas",
+    "halfTimeShort": "· Medio Tiempo",
+    "assist": "Asistencia",
+    "votes": "{{count}} votos"
   },
   "error": {
     "dataUnavailable": "Datos temporalmente no disponibles",
@@ -136,7 +163,11 @@
     "matchRemoved": "Este partido no está en nuestra base de datos. Puede haber sido cancelado.",
     "retry": "Reintentar",
     "back": "Volver",
-    "goBack": "Ir atrás"
+    "goBack": "Ir atrás",
+    "failedToLoad": "Error al cargar la clasificación de grupos.",
+    "failedToLoadNews": "No se pudieron cargar las noticias.",
+    "newsUnavailable": "No se pueden cargar las noticias.",
+    "tryAgain": "No se pudieron cargar los partidos. Comprueba tu conexión."
   },
   "status": {
     "live": "EN VIVO",
@@ -154,12 +185,147 @@
     "title": "Noticias",
     "subtitle": "Lo último del fútbol mundial",
     "noArticles": "No se encontraron artículos",
-    "all": "Todos"
+    "all": "Todos",
+    "notFound": "Artículo no encontrado",
+    "backToNews": "← Volver a Noticias",
+    "originalOn": "Artículo original en {{source}}",
+    "readOn": "Leer en {{source}} ↗",
+    "allLoaded": "{{count}} artículos cargados"
   },
   "footer": {
     "follow": "Síguenos",
-    "copyright": "Copyright © {{year}} Golazo — Marcadores Mundial 2026 en Vivo."
+    "copyright": "Copyright © {{year}} Golazo — Marcadores Mundial 2026 en Vivo.",
+    "tagline": "Marcadores en vivo, estadísticas en tiempo real y cada gol del Mundial 2026.",
+    "allGroups": "Todos los Grupos →"
+  },
+  "player": {
+    "notFound": "Jugador no encontrado",
+    "statsUnavailable": "Las estadísticas están disponibles para jugadores en la temporada actual",
+    "wcStats": "Estadísticas Mundial 2026",
+    "goals": "Goles",
+    "assists": "Asistencias",
+    "apps": "Partidos",
+    "minutes": "Minutos",
+    "rating": "Valoración",
+    "yellow": "Amarillas",
+    "red": "Rojas",
+    "keyPasses": "Pases Clave",
+    "detailedStatsUnavailable": "Estadísticas detalladas no disponibles para este jugador en esta competición",
+    "age": "Edad {{age}}"
+  },
+  "team": {
+    "overview": "Resumen",
+    "squad": "Plantilla",
+    "stats": "Estadísticas",
+    "squadNotAvailable": "Plantilla no disponible",
+    "squadDataAppear": "Los datos de la plantilla aparecerán cuando estén disponibles de la API",
+    "tournamentStats": "Estadísticas del Torneo",
+    "played": "Jugados",
+    "goalsScored": "Goles Marcados",
+    "goalsConceded": "Goles Encajados",
+    "goalDiff": "Diferencia de Goles",
+    "cleanSheets": "Porterías a Cero",
+    "noStatsYet": "Sin estadísticas aún",
+    "statsAfterMatches": "Las estadísticas aparecerán después de que se jueguen partidos",
+    "topScorers": "Máximos Goleadores",
+    "tournamentScorers": "Goleadores del Torneo",
+    "following": "★ Siguiendo",
+    "follow": "☆ Seguir",
+    "coach": "Entrenador:",
+    "noUpcomingMatches": "Sin próximos partidos",
+    "noResultsYet": "Sin resultados aún",
+    "groupStanding": "Clasificación del Grupo",
+    "liveMatches": "Partidos en Vivo",
+    "upcoming": "Próximos",
+    "results": "Resultados"
+  },
+  "leaderboard": {
+    "title": "Clasificación de Predicciones",
+    "subtitle": "3 pts = marcador exacto · 1 pt = resultado correcto",
+    "noPredictions": "Sin predicciones aún",
+    "beFirst": "Sé el primero — predice el marcador en cualquier página de partido",
+    "pts": "pts",
+    "predictions_one": "{{count}} predicción",
+    "predictions_other": "{{count}} predicciones",
+    "challengeFriend": "📤 Desafiar a un amigo",
+    "myComparisons": "⚔️ Mis comparaciones",
+    "linkCopied": "✓ ¡Enlace copiado!",
+    "predictOnFixtures": "Predice marcadores antes del inicio en cualquier página de partido",
+    "you": "(tú)"
+  },
+  "compare": {
+    "title": "Predicciones vs Amigo",
+    "vsSubtitle": "Tú vs {{name}}",
+    "sharePrompt": "Comparte este enlace con un amigo para comparar tus predicciones del Mundial:",
+    "matchResults": "Resultados de Partidos",
+    "noGradedYet": "Sin predicciones puntuadas aún",
+    "predictBeforeKickoff": "Predice marcadores antes del inicio — los puntos se otorgan al final",
+    "browseMatches": "→ Ver partidos de hoy",
+    "you": "Tú",
+    "friend": "Amigo",
+    "copyLink": "Copiar enlace",
+    "copied": "✓ ¡Copiado!",
+    "backToLeaderboard": "← Clasificación",
+    "predicted": "Predicción: {{home}}–{{away}}"
+  },
+  "prediction": {
+    "title": "🎯 Predicción de Marcador",
+    "submitLabel": "Predecir marcador · 3pts exacto / 1pt resultado",
+    "saving": "Guardando…",
+    "invalidScore": "Introduce marcadores válidos (0–29)",
+    "lockedStarted": "Predicciones cerradas — el partido ha comenzado",
+    "lockedEnded": "Predicciones cerradas — el partido ha terminado"
+  },
+  "bracket": {
+    "title": "Predictor de Cuadro",
+    "subtitle": "Haz clic en un equipo para avanzarlo. Las elecciones se guardan en la URL.",
+    "share": "Compartir",
+    "copied": "✓ ¡Copiado!",
+    "reset": "Reiniciar",
+    "yourChampion": "Tu Campeón",
+    "matchesPicked": "{{count}} / 31 partidos elegidos · Las notificaciones se envían mientras la app está abierta",
+    "groupStageAdvance": "Los equipos avanzan al cuadro eliminatorio tras la fase de grupos",
+    "knockoutStage": "Fase Eliminatoria",
+    "notYetDetermined": "El cuadro eliminatorio aún no está determinado",
+    "predictorLink": "Predictor de Cuadro",
+    "thirdPlace": "3er Puesto"
+  },
+  "push": {
+    "getAlerts": "Alertas de goles",
+    "teamAlerts": "Recibe notificaciones cuando {{team}} marca — incluso con la app cerrada.",
+    "generalAlerts": "Recibe notificaciones cuando se marcan goles — incluso con la app cerrada.",
+    "enable": "Activar alertas",
+    "enabling": "Activando…",
+    "notNow": "Ahora no",
+    "getAlertsWhenClosed": "Recibe alertas de goles incluso cuando la app está cerrada",
+    "allow": "Permitir"
+  },
+  "standings": {
+    "qualified": "Clasificado",
+    "possibleThird": "Posible 3.º",
+    "eliminated": "Eliminado",
+    "provisional": "Más claro = provisional",
+    "matchesLink": "Partidos →"
   },
   "loading": "Cargando...",
-  "noMatches": "No se encontraron partidos"
+  "noMatches": "No se encontraron partidos",
+  "search": {
+    "placeholder": "Buscar equipos, jugadores, partidos…",
+    "noResults": "Sin resultados para \"{{query}}\"",
+    "hint": "Busca equipos, jugadores o partidos",
+    "navigate": "↑↓ navegar",
+    "select": "↵ seleccionar",
+    "close": "esc cerrar"
+  },
+  "install": {
+    "addToHomeScreen": "Añadir a la pantalla de inicio",
+    "installApp": "Instalar App",
+    "tagline": "Marcadores en vivo en tu pantalla de inicio"
+  },
+  "live": {
+    "matchesLive": "{{count}} partidos en vivo",
+    "updated": "Actualizado",
+    "refreshes": "Se actualiza cada 20s",
+    "checkBack": "Vuelve durante los horarios de los partidos"
+  }
 }

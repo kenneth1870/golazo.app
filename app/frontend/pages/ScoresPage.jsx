@@ -18,7 +18,7 @@ export default function ScoresPage() {
       <div className="page-hero" style={{ backgroundImage: "url('/images/bg_3.jpg')" }}>
         <div className="container">
           <h1 className="page-hero__title">{t("nav.scores")}</h1>
-          <p className="page-hero__sub">All Competitions · Live Updates</p>
+          <p className="page-hero__sub">{t("scores.allCompetitions")}</p>
         </div>
       </div>
 

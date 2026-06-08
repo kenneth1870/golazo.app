@@ -97,7 +97,7 @@ export default function VenuesPage() {
                       </div>
                       {v.matches?.length > 0 && (
                         <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: 700 }}>
-                          {v.matches.length} matches {expanded[v.name] ? "▴" : "▾"}
+                          {t("mundial.venueMatches", { count: v.matches.length })} {expanded[v.name] ? "▴" : "▾"}
                         </span>
                       )}
                     </div>

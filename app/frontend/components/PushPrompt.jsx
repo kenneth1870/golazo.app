@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 
 const DISMISSED_KEY = "golazo_push_dismissed"
@@ -6,6 +7,7 @@ const DISMISSED_KEY = "golazo_push_dismissed"
 // Shown once per session after a user has viewed Today for 3 seconds.
 // Asks to enable goal alerts, optionally scoped to a favorite team.
 export default function PushPrompt({ favoriteTeamName = null }) {
+  const { t } = useTranslation()
   const { supported, permission, subscribed, loading, subscribe, unsubscribe } = usePushNotifications()
   const [visible,   setVisible]   = useState(false)
   const [done,      setDone]      = useState(false)
@@ -53,12 +55,12 @@ export default function PushPrompt({ favoriteTeamName = null }) {
       <span style={{ fontSize: "1.6rem", flexShrink: 0, marginTop: 2 }}>⚽</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "#fff", marginBottom: 4 }}>
-          Get goal alerts
+          {t("push.getAlerts")}
         </div>
         <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,.6)", marginBottom: 10 }}>
           {favoriteTeamName
-            ? `Get notified when ${favoriteTeamName} scores — even with the app closed.`
-            : "Get notified when goals are scored — even with the app closed."}
+            ? t("push.teamAlerts", { team: favoriteTeamName })
+            : t("push.generalAlerts")}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button
@@ -70,7 +72,7 @@ export default function PushPrompt({ favoriteTeamName = null }) {
               fontWeight: 700, cursor: "pointer", opacity: loading ? .6 : 1,
             }}
           >
-            {loading ? "Enabling…" : "Enable alerts"}
+            {loading ? t("push.enabling") : t("push.enable")}
           </button>
           <button
             onClick={dismiss}
@@ -81,7 +83,7 @@ export default function PushPrompt({ favoriteTeamName = null }) {
               cursor: "pointer",
             }}
           >
-            Not now
+            {t("push.notNow")}
           </button>
         </div>
       </div>

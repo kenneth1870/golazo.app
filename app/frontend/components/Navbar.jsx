@@ -43,9 +43,9 @@ function MundialMegaMenu({ t }) {
 
       <div className="mega-menu__col mega-menu__col--groups">
         <div className="mega-menu__section-label">
-          Groups
+          {t("nav.groups")}
           <NavLink to="/groups" style={{ marginLeft: "auto", fontSize: "0.68rem", color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
-            All →
+            {t("footer.allGroups")}
           </NavLink>
         </div>
         <div className="mega-menu__group-grid">
@@ -69,7 +69,7 @@ function LeaguesDropdown({ t }) {
   return (
     <div className="dropdown-menu-custom">
       <NavLink to="/leagues" className={({ isActive }) => `dropdown-item-custom${isActive ? " active" : ""}`}>
-        All Leagues
+        {t("nav.allLeagues")}
       </NavLink>
       <div className="dd-separator" />
       {[
@@ -91,10 +91,11 @@ function LeaguesDropdown({ t }) {
 
 // ─── Mobile group grid ────────────────────────────────
 function MobileGroupGrid() {
+  const { t } = useTranslation()
   return (
     <div style={{ padding: "10px 16px 14px" }}>
       <div style={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 8 }}>
-        Groups
+        {t("nav.groups")}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 6 }}>
         {GROUPS.map(g => (
@@ -111,7 +112,7 @@ function MobileGroupGrid() {
         to="/groups"
         style={{ display: "block", textAlign: "center", marginTop: 10, fontSize: "0.75rem", color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}
       >
-        All Groups →
+        {t("nav.allGroups")}
       </NavLink>
     </div>
   )
@@ -155,7 +156,7 @@ export default function Navbar() {
     { label: t("nav.topScorers"), path: "/mundial/scorers" },
   ]
   const MOBILE_LEAGUES = [
-    { label: "All Leagues",       path: "/leagues" },
+    { label: t("nav.allLeagues"), path: "/leagues" },
     { label: "Premier League",    path: "/leagues/PL" },
     { label: "La Liga",           path: "/leagues/LAL" },
     { label: "Bundesliga",        path: "/leagues/BL1" },
@@ -230,7 +231,7 @@ export default function Navbar() {
           </div>
 
           {/* Mundial */}
-          <MobileSection label="Mundial 2026" sectionKey="mundial">
+          <MobileSection label={t("nav.mundial")} sectionKey="mundial">
             {MOBILE_MUNDIAL.map(item => (
               <NavLink key={item.path} to={item.path} className={({ isActive }) => `mobile-nav-child${isActive ? " active" : ""}`}>
                 {item.label}

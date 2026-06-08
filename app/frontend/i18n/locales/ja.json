@@ -17,7 +17,9 @@
     "topScorers": "得点王",
     "allLeagues": "全リーグ",
     "news": "ニュース",
-    "search": "検索"
+    "search": "検索",
+    "back": "戻る",
+    "allGroups": "全グループ"
   },
   "hero": {
     "title": "ワールドカップ2026",
@@ -38,7 +40,8 @@
     "noUpcoming": "今後の試合は見つかりません",
     "liveNow_one": "{{count}}試合ライブ中",
     "liveNow_other": "{{count}}試合ライブ中",
-    "followTeam": "チームをフォロー"
+    "followTeam": "チームをフォロー",
+    "liveNow": "現在{{count}}試合ライブ中"
   },
   "time": {
     "today": "今日",
@@ -60,7 +63,12 @@
     "resultsAppear": "試合終了後に結果が表示されます",
     "noFixtures": "今後の試合なし",
     "bracketPending": "決勝トーナメントは未定",
-    "advanceAfterGroups": "グループステージ終了後（2026年7月2日）に進出チームが決定"
+    "advanceAfterGroups": "グループステージ終了後（2026年7月2日）に進出チームが決定",
+    "form": "フォーム",
+    "allCompetitions": "全大会のライブスコアと結果",
+    "noMatchesToday": "本日の試合はありません",
+    "yourMatches": "あなたの試合",
+    "yourTeamLive": "あなたのチームが試合中！"
   },
   "groups": {
     "title": "グループ",
@@ -68,7 +76,8 @@
     "standings": "グループ{{letter}} — 順位表",
     "matches": "グループ{{letter}} — 試合",
     "noStandings": "順位表なし",
-    "viewStandings": "順位表 →"
+    "viewStandings": "順位表 →",
+    "noStandingsYet": "グループステージ開始後に順位表が表示されます"
   },
   "mundial": {
     "subtitle": "FIFA W杯 · アメリカ · カナダ · メキシコ · 6/11 – 7/19",
@@ -78,7 +87,8 @@
     "scorersTitle": "得点王 — ワールドカップ2026",
     "noScorers": "得点王なし",
     "scorersAppear": "2026年6月11日の大会開幕後に表示されます",
-    "capacity": "収容人数"
+    "capacity": "収容人数",
+    "venueMatches": "{{count}}試合"
   },
   "table": {
     "pos": "#",
@@ -95,7 +105,9 @@
     "home": "ホーム",
     "away": "アウェイ",
     "group": "組",
-    "player": "選手"
+    "player": "選手",
+    "gf": "得",
+    "ga": "失"
   },
   "match": {
     "summary": "概要",
@@ -127,7 +139,22 @@
     "halfTime": "ハーフタイム",
     "substitutes": "控え選手",
     "statsNotProvided": "この試合の統計は提供されていません",
-    "lineupsNotProvided": "この試合のラインナップは提供されていません"
+    "lineupsNotProvided": "この試合のラインナップは提供されていません",
+    "back": "戻る",
+    "share": "シェア",
+    "copied": "✓ コピー済み",
+    "calendar": "📅 カレンダー",
+    "aiMatchReport": "AIマッチレポート",
+    "generating": "マッチレポートを生成中…",
+    "reportSoon": "試合終了後まもなくレポートが公開されます。",
+    "penaltyShootout": "PK戦",
+    "htDivider": "HT — ハーフタイム",
+    "etDivider": "90' — 延長戦",
+    "et2Divider": "105' — 延長後半",
+    "statistics": "統計",
+    "halfTimeShort": "· ハーフタイム",
+    "assist": "アシスト",
+    "votes": "{{count}}票"
   },
   "error": {
     "dataUnavailable": "データが一時的に利用できません",
@@ -136,7 +163,11 @@
     "matchRemoved": "この試合はデータベースにありません。中止された可能性があります。",
     "retry": "再試行",
     "back": "戻る",
-    "goBack": "前に戻る"
+    "goBack": "前に戻る",
+    "failedToLoad": "グループ順位表の読み込みに失敗しました。",
+    "failedToLoadNews": "ニュースの読み込みに失敗しました。",
+    "newsUnavailable": "ニュースを読み込めませんでした。",
+    "tryAgain": "試合を読み込めませんでした。接続を確認してください。"
   },
   "status": {
     "live": "LIVE",
@@ -154,12 +185,147 @@
     "title": "ニュース",
     "subtitle": "世界のサッカー最新情報",
     "noArticles": "記事が見つかりません",
-    "all": "すべて"
+    "all": "すべて",
+    "notFound": "記事が見つかりません",
+    "backToNews": "← ニュースに戻る",
+    "originalOn": "{{source}}の元記事",
+    "readOn": "{{source}}で読む ↗",
+    "allLoaded": "{{count}}件の記事を読み込みました"
   },
   "footer": {
     "follow": "フォロー",
-    "copyright": "Copyright © {{year}} Golazo — ワールドカップ2026ライブスコア."
+    "copyright": "Copyright © {{year}} Golazo — ワールドカップ2026ライブスコア.",
+    "tagline": "2026年FIFAワールドカップのライブスコア、リアルタイム統計、すべてのゴール。",
+    "allGroups": "全グループ →"
+  },
+  "player": {
+    "notFound": "選手が見つかりません",
+    "statsUnavailable": "統計は現在のシーズンの選手が対象です",
+    "wcStats": "ワールドカップ2026統計",
+    "goals": "得点",
+    "assists": "アシスト",
+    "apps": "出場",
+    "minutes": "分",
+    "rating": "評価",
+    "yellow": "イエロー",
+    "red": "レッド",
+    "keyPasses": "キーパス",
+    "detailedStatsUnavailable": "この大会でのこの選手の詳細統計はありません",
+    "age": "年齢 {{age}}"
+  },
+  "team": {
+    "overview": "概要",
+    "squad": "メンバー",
+    "stats": "統計",
+    "squadNotAvailable": "メンバーは利用できません",
+    "squadDataAppear": "APIからデータが取得され次第表示されます",
+    "tournamentStats": "大会統計",
+    "played": "試合数",
+    "goalsScored": "得点",
+    "goalsConceded": "失点",
+    "goalDiff": "得失点差",
+    "cleanSheets": "無失点",
+    "noStatsYet": "統計なし",
+    "statsAfterMatches": "試合後に統計が表示されます",
+    "topScorers": "得点王",
+    "tournamentScorers": "大会得点者",
+    "following": "★ フォロー中",
+    "follow": "☆ フォロー",
+    "coach": "監督：",
+    "noUpcomingMatches": "今後の試合なし",
+    "noResultsYet": "結果なし",
+    "groupStanding": "グループ順位",
+    "liveMatches": "ライブ試合",
+    "upcoming": "今後",
+    "results": "結果"
+  },
+  "leaderboard": {
+    "title": "予想ランキング",
+    "subtitle": "3点 = 正確なスコア · 1点 = 勝敗正解",
+    "noPredictions": "まだ予想なし",
+    "beFirst": "最初に予想しましょう — 試合ページでスコアを予想できます",
+    "pts": "点",
+    "predictions_one": "{{count}}件の予想",
+    "predictions_other": "{{count}}件の予想",
+    "challengeFriend": "📤 友達に挑戦",
+    "myComparisons": "⚔️ 比較結果",
+    "linkCopied": "✓ リンクをコピーしました！",
+    "predictOnFixtures": "キックオフ前に試合ページでスコアを予想",
+    "you": "（あなた）"
+  },
+  "compare": {
+    "title": "予想 vs 友達",
+    "vsSubtitle": "あなた vs {{name}}",
+    "sharePrompt": "このリンクを友達と共有してW杯の予想を比較しましょう：",
+    "matchResults": "試合結果",
+    "noGradedYet": "まだ採点された予想なし",
+    "predictBeforeKickoff": "キックオフ前に予想 — 試合終了後にポイントが付与されます",
+    "browseMatches": "→ 今日の試合を見る",
+    "you": "あなた",
+    "friend": "友達",
+    "copyLink": "リンクをコピー",
+    "copied": "✓ コピー済み！",
+    "backToLeaderboard": "← ランキング",
+    "predicted": "予想：{{home}}–{{away}}"
+  },
+  "prediction": {
+    "title": "🎯 スコア予想",
+    "submitLabel": "スコアを予想 · 3点=正確 / 1点=勝敗",
+    "saving": "保存中…",
+    "invalidScore": "有効なスコアを入力してください（0〜29）",
+    "lockedStarted": "予想は締め切られました — 試合が始まりました",
+    "lockedEnded": "予想は締め切られました — 試合が終了しました"
+  },
+  "bracket": {
+    "title": "トーナメント予想",
+    "subtitle": "チームをクリックして勝ち上がらせます。選択はURLに保存されます。",
+    "share": "シェア",
+    "copied": "✓ コピー済み！",
+    "reset": "リセット",
+    "yourChampion": "あなたの優勝予想",
+    "matchesPicked": "{{count}} / 31試合を予想 · 通知はアプリ使用中に届きます",
+    "groupStageAdvance": "グループステージ終了後に決勝トーナメントへ進出",
+    "knockoutStage": "決勝トーナメント",
+    "notYetDetermined": "決勝トーナメントはまだ決定していません",
+    "predictorLink": "ブラケット予想",
+    "thirdPlace": "3位決定戦"
+  },
+  "push": {
+    "getAlerts": "ゴール通知",
+    "teamAlerts": "{{team}}のゴールをお知らせ — アプリを閉じていても通知されます。",
+    "generalAlerts": "ゴールをお知らせ — アプリを閉じていても通知されます。",
+    "enable": "通知を有効にする",
+    "enabling": "有効化中…",
+    "notNow": "後で",
+    "getAlertsWhenClosed": "アプリを閉じていてもゴール通知を受け取る",
+    "allow": "許可"
+  },
+  "standings": {
+    "qualified": "突破",
+    "possibleThird": "3位通過の可能性",
+    "eliminated": "敗退",
+    "provisional": "薄い色 = 暫定",
+    "matchesLink": "試合 →"
   },
   "loading": "読込中...",
-  "noMatches": "試合が見つかりません"
+  "noMatches": "試合が見つかりません",
+  "search": {
+    "placeholder": "チーム、選手、試合を検索…",
+    "noResults": "「{{query}}」の検索結果はありません",
+    "hint": "チーム、選手、または試合を検索",
+    "navigate": "↑↓ 移動",
+    "select": "↵ 選択",
+    "close": "esc 閉じる"
+  },
+  "install": {
+    "addToHomeScreen": "ホーム画面に追加",
+    "installApp": "アプリをインストール",
+    "tagline": "ホーム画面でライブスコアを確認"
+  },
+  "live": {
+    "matchesLive": "{{count}}試合ライブ中",
+    "updated": "更新日時",
+    "refreshes": "20秒ごとに更新",
+    "checkBack": "試合時間中にご確認ください"
+  }
 }

@@ -1,14 +1,16 @@
 import { NavLink, Outlet } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
 export default function GroupsPage() {
+  const { t } = useTranslation()
   return (
     <div>
       <div className="page-hero" style={{ backgroundImage: "url('/images/bg_2.jpg')" }}>
         <div className="container">
-          <h1 className="page-hero__title">Groups</h1>
-          <p className="page-hero__sub">FIFA World Cup 2026 — 12 Groups</p>
+          <h1 className="page-hero__title">{t("groups.title")}</h1>
+          <p className="page-hero__sub">{t("groups.subtitle")}</p>
         </div>
       </div>
 
@@ -16,7 +18,7 @@ export default function GroupsPage() {
         <div className="container">
           <div className="tab-bar__inner tab-bar__inner--scroll">
             <NavLink to="/groups" end className={({ isActive }) => `tab-link${isActive ? " tab-link--active" : ""}`}>
-              All Groups
+              {t("nav.allGroups")}
             </NavLink>
             {GROUPS.map(g => (
               <NavLink key={g} to={`/groups/${g}`} className={({ isActive }) => `tab-link${isActive ? " tab-link--active" : ""}`}>

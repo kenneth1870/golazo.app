@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 
 function FlagOrInitials({ name, flagUrl, size = 24 }) {
   const [err, setErr] = useState(false)
@@ -27,6 +28,7 @@ function FlagOrInitials({ name, flagUrl, size = 24 }) {
 }
 
 export default function SearchBar({ onClose }) {
+  const { t } = useTranslation()
   const [query, setQuery]     = useState("")
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -113,7 +115,7 @@ export default function SearchBar({ onClose }) {
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search teams or matches…"
+            placeholder={t("search.placeholder")}
             style={{
               flex: 1, background: "none", border: "none", outline: "none",
               color: "#fff", fontSize: "1rem", fontFamily: "inherit",
@@ -148,9 +150,9 @@ export default function SearchBar({ onClose }) {
                     <FlagOrInitials name={r.code || r.name} flagUrl={r.flag_url} size={32} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.9rem" }}>{r.name}</div>
-                      {r.group && <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>Group {r.group}</div>}
+                      {r.group && <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{t("nav.group", { letter: r.group })}</div>}
                     </div>
-                    <span style={{ fontSize: "0.68rem", color: "var(--muted)", background: "var(--surface2)", padding: "2px 7px", borderRadius: 4 }}>Team</span>
+                    <span style={{ fontSize: "0.68rem", color: "var(--muted)", background: "var(--surface2)", padding: "2px 7px", borderRadius: 4 }}>{t("table.team")}</span>
                   </>
                 ) : (
                   <>
@@ -175,16 +177,16 @@ export default function SearchBar({ onClose }) {
           </div>
         ) : query.length >= 2 && !loading ? (
           <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--muted)", fontSize: "0.88rem" }}>
-            No results for "{query}"
+            {t("search.noResults", { query })}
           </div>
         ) : (
           <div style={{ padding: "20px 16px", fontSize: "0.78rem", color: "var(--muted)" }}>
-            Type a team name or country to search…
+            {t("search.hint")}
           </div>
         )}
 
         <div className="search-bar__footer">
-          <span>↑↓ navigate</span><span>↵ select</span><span>ESC close</span>
+          <span>{t("search.navigate")}</span><span>{t("search.select")}</span><span>{t("search.close")}</span>
         </div>
       </div>
     </>

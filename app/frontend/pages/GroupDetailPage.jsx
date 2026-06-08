@@ -1,10 +1,12 @@
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { useMatches } from "../hooks/useMatches"
 import MatchRow from "../components/MatchRow"
 import { usePageMeta } from "../hooks/usePageMeta"
 
 export default function GroupDetailPage() {
+  const { t }      = useTranslation()
   const { group }  = useParams()
   usePageMeta(`Group ${group} — World Cup 2026`, `FIFA World Cup 2026 Group ${group} standings and match results.`)
   const navigate   = useNavigate()
@@ -28,15 +30,24 @@ export default function GroupDetailPage() {
           {/* Standings */}
           <div className="col-lg-5 mb-4">
             <div className="widget-next-match">
-              <div className="widget-title"><h3>Group {group} — Standings</h3></div>
+              <div className="widget-title"><h3>{t("groups.standings", { letter: group })}</h3></div>
               <div className="widget-body p-0" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
                 <table className="table custom-table mb-0" style={{ minWidth: 340 }}>
                   <thead>
-                    <tr><th>#</th><th>Team</th><th>MP</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr>
+                    <tr>
+                      <th>{t("table.pos")}</th>
+                      <th>{t("table.team")}</th>
+                      <th>{t("table.played")}</th>
+                      <th>{t("table.won")}</th>
+                      <th>{t("table.drawn")}</th>
+                      <th>{t("table.lost")}</th>
+                      <th>{t("table.gd")}</th>
+                      <th>{t("table.points")}</th>
+                    </tr>
                   </thead>
                   <tbody>
                     {standings.length === 0 ? (
-                      <tr><td colSpan={8} style={{ textAlign: "center", color: "gray", padding: "1.5rem" }}>No standings yet</td></tr>
+                      <tr><td colSpan={8} style={{ textAlign: "center", color: "gray", padding: "1.5rem" }}>{t("groups.noStandings")}</td></tr>
                     ) : standings.map((s, i) => {
                       const complete = standings.every(r => (r.played ?? 0) >= 3)
                       const a = complete ? 1 : 0.4
@@ -68,12 +79,12 @@ export default function GroupDetailPage() {
           {/* Matches */}
           <div className="col-lg-7">
             <div className="widget-next-match">
-              <div className="widget-title"><h3>Group {group} — Matches</h3></div>
+              <div className="widget-title"><h3>{t("groups.matches", { letter: group })}</h3></div>
               <div className="widget-body p-0">
                 {loading
                   ? <div className="loading-shimmer m-3" style={{ height: 200, borderRadius: 8 }} />
                   : matches.length === 0
-                  ? <p style={{ color: "gray", textAlign: "center", padding: "2rem" }}>No matches found</p>
+                  ? <p style={{ color: "gray", textAlign: "center", padding: "2rem" }}>{t("noMatches")}</p>
                   : matches.map(m => <MatchRow key={m.id} match={m} showDate onClick={() => onMatchClick(m)} />)
                 }
               </div>

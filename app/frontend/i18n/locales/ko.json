@@ -17,7 +17,9 @@
     "topScorers": "득점왕",
     "allLeagues": "전체 리그",
     "news": "뉴스",
-    "search": "검색"
+    "search": "검색",
+    "back": "뒤로",
+    "allGroups": "전체 조"
   },
   "hero": {
     "title": "월드컵 2026",
@@ -38,7 +40,8 @@
     "noUpcoming": "예정된 경기가 없습니다",
     "liveNow_one": "{{count}}경기 라이브",
     "liveNow_other": "{{count}}경기 라이브",
-    "followTeam": "팀 팔로우"
+    "followTeam": "팀 팔로우",
+    "liveNow": "현재 {{count}}경기 생중계"
   },
   "time": {
     "today": "오늘",
@@ -60,7 +63,12 @@
     "resultsAppear": "경기 후 결과가 표시됩니다",
     "noFixtures": "예정 경기 없음",
     "bracketPending": "토너먼트 대진표 미정",
-    "advanceAfterGroups": "2026년 7월 2일 조별리그 이후 진출팀 결정"
+    "advanceAfterGroups": "2026년 7월 2일 조별리그 이후 진출팀 결정",
+    "form": "폼",
+    "allCompetitions": "모든 대회의 실시간 스코어 및 결과",
+    "noMatchesToday": "오늘 경기가 없습니다",
+    "yourMatches": "내 경기",
+    "yourTeamLive": "내 팀이 경기 중!"
   },
   "groups": {
     "title": "조",
@@ -68,7 +76,8 @@
     "standings": "{{letter}}조 — 순위",
     "matches": "{{letter}}조 — 경기",
     "noStandings": "아직 순위 없음",
-    "viewStandings": "순위 →"
+    "viewStandings": "순위 →",
+    "noStandingsYet": "조별리그 시작 후 순위가 표시됩니다"
   },
   "mundial": {
     "subtitle": "FIFA 월드컵 · 미국·캐나다·멕시코 · 6/11–7/19",
@@ -78,7 +87,8 @@
     "scorersTitle": "득점왕 — 월드컵 2026",
     "noScorers": "아직 득점왕 없음",
     "scorersAppear": "2026년 6월 11일 대회 시작 후 표시됩니다",
-    "capacity": "수용 인원"
+    "capacity": "수용 인원",
+    "venueMatches": "{{count}}경기"
   },
   "table": {
     "pos": "#",
@@ -95,7 +105,9 @@
     "home": "홈",
     "away": "원정",
     "group": "조",
-    "player": "선수"
+    "player": "선수",
+    "gf": "득점",
+    "ga": "실점"
   },
   "match": {
     "summary": "요약",
@@ -127,7 +139,22 @@
     "halfTime": "하프타임",
     "substitutes": "후보 선수",
     "statsNotProvided": "이 경기의 통계를 제공하지 않습니다",
-    "lineupsNotProvided": "이 경기의 라인업을 제공하지 않습니다"
+    "lineupsNotProvided": "이 경기의 라인업을 제공하지 않습니다",
+    "back": "뒤로",
+    "share": "공유",
+    "copied": "✓ 복사됨",
+    "calendar": "📅 캘린더",
+    "aiMatchReport": "AI 경기 보고서",
+    "generating": "경기 보고서 생성 중…",
+    "reportSoon": "경기 종료 후 곧 보고서가 제공됩니다.",
+    "penaltyShootout": "승부차기",
+    "htDivider": "HT — 하프타임",
+    "etDivider": "90' — 연장전",
+    "et2Divider": "105' — 연장 후반",
+    "statistics": "통계",
+    "halfTimeShort": "· 하프타임",
+    "assist": "어시스트",
+    "votes": "{{count}}표"
   },
   "error": {
     "dataUnavailable": "데이터를 일시적으로 사용할 수 없습니다",
@@ -136,7 +163,11 @@
     "matchRemoved": "이 경기는 데이터베이스에 없습니다. 취소되었을 수 있습니다.",
     "retry": "다시 시도",
     "back": "뒤로",
-    "goBack": "돌아가기"
+    "goBack": "돌아가기",
+    "failedToLoad": "조별 순위를 불러오지 못했습니다.",
+    "failedToLoadNews": "뉴스를 불러오지 못했습니다.",
+    "newsUnavailable": "뉴스를 불러올 수 없습니다.",
+    "tryAgain": "경기를 불러오지 못했습니다. 연결 상태를 확인하세요."
   },
   "status": {
     "live": "라이브",
@@ -154,12 +185,147 @@
     "title": "뉴스",
     "subtitle": "세계 축구 최신 소식",
     "noArticles": "기사를 찾을 수 없습니다",
-    "all": "전체"
+    "all": "전체",
+    "notFound": "기사를 찾을 수 없습니다",
+    "backToNews": "← 뉴스로 돌아가기",
+    "originalOn": "{{source}}의 원본 기사",
+    "readOn": "{{source}}에서 읽기 ↗",
+    "allLoaded": "{{count}}개 기사 모두 불러왔습니다"
   },
   "footer": {
     "follow": "팔로우",
-    "copyright": "Copyright © {{year}} Golazo — 월드컵 2026 라이브 스코어."
+    "copyright": "Copyright © {{year}} Golazo — 월드컵 2026 라이브 스코어.",
+    "tagline": "2026 FIFA 월드컵 실시간 스코어, 실시간 통계, 모든 골.",
+    "allGroups": "전체 조 →"
+  },
+  "player": {
+    "notFound": "선수를 찾을 수 없습니다",
+    "statsUnavailable": "현재 시즌 선수의 통계를 사용할 수 있습니다",
+    "wcStats": "월드컵 2026 통계",
+    "goals": "골",
+    "assists": "도움",
+    "apps": "출전",
+    "minutes": "분",
+    "rating": "평점",
+    "yellow": "옐로카드",
+    "red": "레드카드",
+    "keyPasses": "키 패스",
+    "detailedStatsUnavailable": "이 대회에서 이 선수의 상세 통계를 사용할 수 없습니다",
+    "age": "나이 {{age}}"
+  },
+  "team": {
+    "overview": "개요",
+    "squad": "명단",
+    "stats": "통계",
+    "squadNotAvailable": "명단을 사용할 수 없습니다",
+    "squadDataAppear": "API에서 데이터가 제공되면 명단이 표시됩니다",
+    "tournamentStats": "대회 통계",
+    "played": "경기 수",
+    "goalsScored": "득점",
+    "goalsConceded": "실점",
+    "goalDiff": "득실차",
+    "cleanSheets": "무실점",
+    "noStatsYet": "아직 통계 없음",
+    "statsAfterMatches": "경기 후 통계가 표시됩니다",
+    "topScorers": "득점왕",
+    "tournamentScorers": "대회 득점자",
+    "following": "★ 팔로우 중",
+    "follow": "☆ 팔로우",
+    "coach": "감독:",
+    "noUpcomingMatches": "예정 경기 없음",
+    "noResultsYet": "아직 결과 없음",
+    "groupStanding": "조 순위",
+    "liveMatches": "라이브 경기",
+    "upcoming": "예정",
+    "results": "결과"
+  },
+  "leaderboard": {
+    "title": "예측 리더보드",
+    "subtitle": "3점 = 정확한 스코어 · 1점 = 승패 정답",
+    "noPredictions": "아직 예측 없음",
+    "beFirst": "첫 번째가 되세요 — 경기 페이지에서 스코어를 예측하세요",
+    "pts": "점",
+    "predictions_one": "{{count}}건 예측",
+    "predictions_other": "{{count}}건 예측",
+    "challengeFriend": "📤 친구에게 도전",
+    "myComparisons": "⚔️ 내 비교",
+    "linkCopied": "✓ 링크 복사됨!",
+    "predictOnFixtures": "킥오프 전 경기 페이지에서 스코어 예측",
+    "you": "(나)"
+  },
+  "compare": {
+    "title": "예측 vs 친구",
+    "vsSubtitle": "나 vs {{name}}",
+    "sharePrompt": "이 링크를 친구와 공유하여 월드컵 예측을 비교하세요:",
+    "matchResults": "경기 결과",
+    "noGradedYet": "아직 채점된 예측 없음",
+    "predictBeforeKickoff": "킥오프 전 예측 — 경기 종료 후 점수 부여",
+    "browseMatches": "→ 오늘 경기 보기",
+    "you": "나",
+    "friend": "친구",
+    "copyLink": "링크 복사",
+    "copied": "✓ 복사됨!",
+    "backToLeaderboard": "← 리더보드",
+    "predicted": "예측: {{home}}–{{away}}"
+  },
+  "prediction": {
+    "title": "🎯 스코어 예측",
+    "submitLabel": "스코어 예측 · 3점=정확 / 1점=승패",
+    "saving": "저장 중…",
+    "invalidScore": "유효한 스코어를 입력하세요 (0–29)",
+    "lockedStarted": "예측 마감 — 경기가 시작되었습니다",
+    "lockedEnded": "예측 마감 — 경기가 종료되었습니다"
+  },
+  "bracket": {
+    "title": "대진표 예측",
+    "subtitle": "팀을 클릭하여 진출시킵니다. 선택은 URL에 저장됩니다.",
+    "share": "공유",
+    "copied": "✓ 복사됨!",
+    "reset": "초기화",
+    "yourChampion": "우승 예측",
+    "matchesPicked": "{{count}} / 31경기 예측 완료 · 알림은 앱 사용 중에 전송됩니다",
+    "groupStageAdvance": "조별 리그 종료 후 토너먼트 진출",
+    "knockoutStage": "토너먼트",
+    "notYetDetermined": "토너먼트 대진표가 아직 결정되지 않았습니다",
+    "predictorLink": "대진표 예측",
+    "thirdPlace": "3위"
+  },
+  "push": {
+    "getAlerts": "골 알림",
+    "teamAlerts": "{{team}} 득점 시 알림 — 앱을 닫아도 알려드립니다.",
+    "generalAlerts": "골 득점 시 알림 — 앱을 닫아도 알려드립니다.",
+    "enable": "알림 활성화",
+    "enabling": "활성화 중…",
+    "notNow": "나중에",
+    "getAlertsWhenClosed": "앱을 닫아도 골 알림 받기",
+    "allow": "허용"
+  },
+  "standings": {
+    "qualified": "진출",
+    "possibleThird": "3위 진출 가능",
+    "eliminated": "탈락",
+    "provisional": "연한 색 = 잠정",
+    "matchesLink": "경기 →"
   },
   "loading": "로딩 중...",
-  "noMatches": "경기를 찾을 수 없습니다"
+  "noMatches": "경기를 찾을 수 없습니다",
+  "search": {
+    "placeholder": "팀, 선수, 경기 검색…",
+    "noResults": "\"{{query}}\" 검색 결과 없음",
+    "hint": "팀, 선수 또는 경기를 검색하세요",
+    "navigate": "↑↓ 이동",
+    "select": "↵ 선택",
+    "close": "esc 닫기"
+  },
+  "install": {
+    "addToHomeScreen": "홈 화면에 추가",
+    "installApp": "앱 설치",
+    "tagline": "홈 화면에서 실시간 스코어 확인"
+  },
+  "live": {
+    "matchesLive": "{{count}}경기 생중계",
+    "updated": "업데이트됨",
+    "refreshes": "20초마다 업데이트",
+    "checkBack": "경기 시간에 다시 확인하세요"
+  }
 }

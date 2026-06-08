@@ -122,8 +122,8 @@ export default function NewsPage() {
             </div>
           ) : error ? (
             <div style={{ textAlign: "center", paddingTop: 60 }}>
-              <p style={{ color: "#888", marginBottom: 16 }}>Failed to load news.</p>
-              <button className="btn btn-primary btn-sm" onClick={loadNews}>Retry</button>
+              <p style={{ color: "#888", marginBottom: 16 }}>{t("error.failedToLoadNews")}</p>
+              <button className="btn btn-primary btn-sm" onClick={loadNews}>{t("error.retry")}</button>
             </div>
           ) : filtered.length === 0 ? (
             <div className="empty-state">
@@ -148,7 +148,7 @@ export default function NewsPage() {
 
               {!hasMore && filtered.length > PAGE_SIZE && (
                 <p style={{ textAlign: "center", color: "#555", fontSize: "0.8rem", paddingBottom: 24 }}>
-                  All {filtered.length} articles loaded
+                  {t("news.allLoaded", { count: filtered.length })}
                 </p>
               )}
             </>

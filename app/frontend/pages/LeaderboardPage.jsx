@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate, Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 
 const DEVICE_KEY = "golazo_device_id"
@@ -15,6 +16,7 @@ function getDeviceId() {
 }
 
 export default function LeaderboardPage() {
+  const { t } = useTranslation()
   usePageMeta("Prediction Leaderboard", "Top score predictors for FIFA World Cup 2026 — who called the most goals?")
   const navigate  = useNavigate()
   const [rows, setRows]       = useState([])
@@ -44,14 +46,14 @@ export default function LeaderboardPage() {
     <div className="site-section">
       <div className="container" style={{ maxWidth: 600 }}>
         <div className="match-back-bar" style={{ marginBottom: 0 }}>
-          <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← Back</button>
+          <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back")}</button>
         </div>
 
         <div style={{ padding: "32px 0 20px", textAlign: "center" }}>
           <div style={{ fontSize: "2.5rem", marginBottom: 8 }}>🏆</div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 900, color: "#fff", margin: "0 0 4px" }}>Prediction Leaderboard</h1>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 900, color: "#fff", margin: "0 0 4px" }}>{t("leaderboard.title")}</h1>
           <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 16px" }}>
-            3 pts = exact score · 1 pt = correct result
+            {t("leaderboard.subtitle")}
           </p>
           <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
             <button
@@ -64,7 +66,7 @@ export default function LeaderboardPage() {
                 fontWeight: 700, cursor: "pointer", transition: ".2s",
               }}
             >
-              {copied ? "✓ Link copied!" : "📤 Challenge a friend"}
+              {copied ? t("leaderboard.linkCopied") : t("leaderboard.challengeFriend")}
             </button>
             <Link to={`/compare?friend=${encodeURIComponent(deviceId)}`}
               style={{
@@ -73,7 +75,7 @@ export default function LeaderboardPage() {
                 fontSize: "0.78rem", fontWeight: 700, textDecoration: "none",
               }}
             >
-              ⚔️ My comparisons
+              {t("leaderboard.myComparisons")}
             </Link>
           </div>
         </div>
@@ -83,8 +85,8 @@ export default function LeaderboardPage() {
         ) : rows.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state__icon">🎯</div>
-            <h3>No predictions yet</h3>
-            <p>Be the first — predict a match score on any match page</p>
+            <h3>{t("leaderboard.noPredictions")}</h3>
+            <p>{t("leaderboard.beFirst")}</p>
           </div>
         ) : (
           <div className="widget-next-match">
@@ -107,17 +109,17 @@ export default function LeaderboardPage() {
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 700, fontSize: "0.9rem", color: isMe ? "#ee1e46" : "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {r.display_name}{isMe && " (you)"}
+                        {r.display_name}{isMe && ` ${t("leaderboard.you")}`}
                       </div>
                       <div style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 2 }}>
-                        {r.predictions_made} prediction{r.predictions_made !== 1 ? "s" : ""}
+                        {t(r.predictions_made !== 1 ? "leaderboard.predictions_other" : "leaderboard.predictions_one", { count: r.predictions_made })}
                       </div>
                     </div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
                       <div style={{ fontWeight: 900, fontSize: "1.1rem", color: i === 0 ? "#f59e0b" : "#fff" }}>
                         {r.total_points}
                       </div>
-                      <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>pts</div>
+                      <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>{t("leaderboard.pts")}</div>
                     </div>
                   </div>
                 )
@@ -127,7 +129,7 @@ export default function LeaderboardPage() {
         )}
 
         <p style={{ textAlign: "center", marginTop: 20, fontSize: "0.72rem", color: "var(--muted)" }}>
-          Predict match scores on any fixture page before kickoff
+          {t("leaderboard.predictOnFixtures")}
         </p>
       </div>
     </div>

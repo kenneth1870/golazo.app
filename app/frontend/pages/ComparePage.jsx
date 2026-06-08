@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useSearchParams, useNavigate, Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 
 const DEVICE_KEY = "golazo_device_id"
@@ -29,6 +30,7 @@ function PtsBadge({ pts }) {
 }
 
 export default function ComparePage() {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   usePageMeta("Prediction Comparison", "Compare your FIFA World Cup 2026 score predictions with a friend.")
@@ -98,17 +100,17 @@ export default function ComparePage() {
       <div className="container" style={{ maxWidth: 640 }}>
         {/* Back */}
         <div className="match-back-bar" style={{ marginBottom: 0 }}>
-          <button onClick={() => navigate("/leaderboard")} className="btn-back" style={{ padding: "10px 0" }}>← Leaderboard</button>
+          <button onClick={() => navigate("/leaderboard")} className="btn-back" style={{ padding: "10px 0" }}>{t("compare.backToLeaderboard")}</button>
         </div>
 
         {/* Header */}
         <div style={{ textAlign: "center", padding: "28px 0 20px" }}>
           <div style={{ fontSize: "2rem", marginBottom: 8 }}>⚔️</div>
-          <h1 style={{ fontSize: "1.4rem", fontWeight: 900, color: "#fff", margin: "0 0 4px" }}>Predictions vs Friend</h1>
+          <h1 style={{ fontSize: "1.4rem", fontWeight: 900, color: "#fff", margin: "0 0 4px" }}>{t("compare.title")}</h1>
           <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: 0 }}>
             {friendData?.display_name
-              ? `You vs ${friendData.display_name}`
-              : "Share your link with a friend to compare"}
+              ? t("compare.vsSubtitle", { name: friendData.display_name })
+              : t("compare.sharePrompt").split(":")[0]}
           </p>
         </div>
 
@@ -117,7 +119,7 @@ export default function ComparePage() {
           <div className="widget-next-match" style={{ marginBottom: 20 }}>
             <div className="widget-body">
               <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,.75)", margin: "0 0 12px" }}>
-                Share this link with a friend to compare your World Cup predictions:
+                {t("compare.sharePrompt")}
               </p>
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <code style={{
@@ -136,7 +138,7 @@ export default function ComparePage() {
                     flexShrink: 0, transition: "background .2s",
                   }}
                 >
-                  {copied ? "✓ Copied!" : "Copy link"}
+                  {copied ? t("compare.copied") : t("compare.copyLink")}
                 </button>
               </div>
             </div>
@@ -155,9 +157,9 @@ export default function ComparePage() {
                   border: "1px solid rgba(238,30,70,.2)", borderRadius: 12, padding: "16px 8px",
                 }}>
                   <div style={{ fontSize: "2rem", fontWeight: 900, color: "#ee1e46" }}>{myData?.total_points ?? 0}</div>
-                  <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginTop: 4 }}>You</div>
+                  <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginTop: 4 }}>{t("compare.you")}</div>
                   <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,.6)", marginTop: 2, fontWeight: 700 }}>
-                    {myData?.display_name || "You"}
+                    {myData?.display_name || t("compare.you")}
                   </div>
                 </div>
                 {friendData && (
@@ -166,9 +168,9 @@ export default function ComparePage() {
                     border: "1px solid rgba(99,102,241,.2)", borderRadius: 12, padding: "16px 8px",
                   }}>
                     <div style={{ fontSize: "2rem", fontWeight: 900, color: "#818cf8" }}>{friendData.total_points ?? 0}</div>
-                    <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginTop: 4 }}>Friend</div>
+                    <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginTop: 4 }}>{t("compare.friend")}</div>
                     <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,.6)", marginTop: 2, fontWeight: 700 }}>
-                      {friendData.display_name || "Friend"}
+                      {friendData.display_name || t("compare.friend")}
                     </div>
                   </div>
                 )}
@@ -179,21 +181,21 @@ export default function ComparePage() {
             {allMatchIds.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-state__icon">🎯</div>
-                <h3>No graded predictions yet</h3>
-                <p>Predict match scores before kickoff — points are awarded at full time</p>
-                <Link to="/scores/today" style={{ color: "var(--accent)", fontWeight: 700 }}>→ Browse today's matches</Link>
+                <h3>{t("compare.noGradedYet")}</h3>
+                <p>{t("compare.predictBeforeKickoff")}</p>
+                <Link to="/scores/today" style={{ color: "var(--accent)", fontWeight: 700 }}>{t("compare.browseMatches")}</Link>
               </div>
             ) : (
               <div className="widget-next-match">
                 <div className="widget-title">
-                  <h3>Match Results</h3>
+                  <h3>{t("compare.matchResults")}</h3>
                 </div>
                 <div className="widget-body p-0">
                   {/* Header row */}
                   <div style={{ display: "flex", padding: "8px 16px", borderBottom: "1px solid var(--border)", fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: .5 }}>
-                    <span style={{ flex: 1 }}>Match</span>
-                    <span style={{ width: 60, textAlign: "center" }}>You</span>
-                    {friendData && <span style={{ width: 60, textAlign: "center" }}>Friend</span>}
+                    <span style={{ flex: 1 }}>{t("table.team")}</span>
+                    <span style={{ width: 60, textAlign: "center" }}>{t("compare.you")}</span>
+                    {friendData && <span style={{ width: 60, textAlign: "center" }}>{t("compare.friend")}</span>}
                   </div>
 
                   {allMatchIds.map(matchId => {
@@ -211,7 +213,7 @@ export default function ComparePage() {
                           </div>
                           {mine && (
                             <div style={{ fontSize: "0.68rem", color: "var(--muted)", marginTop: 2 }}>
-                              Predicted: {mine.home_guess}–{mine.away_guess}
+                              {t("compare.predicted", { home: mine.home_guess, away: mine.away_guess })}
                             </div>
                           )}
                         </div>

@@ -65,7 +65,7 @@ export default function Footer() {
               </div>
             </Link>
             <p style={{ color: "var(--muted)", fontSize: "0.82rem", lineHeight: 1.65, margin: "0 0 18px", maxWidth: 220 }}>
-              Live scores, fixtures, and stats for the FIFA World Cup 2026 — USA, Canada & Mexico.
+              {t("footer.tagline")}
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               {SOCIAL.map(s => (
@@ -98,7 +98,7 @@ export default function Footer() {
 
           {/* ── Mundial ── */}
           <div className="footer-col">
-            <h4 className="footer-col__title">Mundial 2026</h4>
+            <h4 className="footer-col__title">{t("nav.mundial")}</h4>
             <ul className="footer-links">
               <li><Link to="/mundial/teams">{t("nav.teams")}</Link></li>
               <li><Link to="/mundial/schedule">{t("nav.schedule")}</Link></li>
@@ -112,9 +112,9 @@ export default function Footer() {
           {/* ── Groups ── */}
           <div className="footer-col">
             <h4 className="footer-col__title">
-              Groups
+              {t("nav.groups")}
               <Link to="/groups" style={{ marginLeft: "auto", fontSize: "0.68rem", color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
-                All →
+                {t("footer.allGroups")}
               </Link>
             </h4>
             <div className="footer-group-grid">

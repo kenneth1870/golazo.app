@@ -1,21 +1,24 @@
 import { NavLink, Outlet } from "react-router-dom"
-
-const TABS = [
-  { path: "/mundial/teams",   label: "Teams" },
-  { path: "/mundial/schedule",label: "Schedule" },
-  { path: "/mundial/venues",  label: "Venues" },
-  { path: "/mundial/scorers", label: "Top Scorers" },
-]
+import { useTranslation } from "react-i18next"
 
 export default function MundialPage() {
+  const { t } = useTranslation()
+
+  const TABS = [
+    { path: "/mundial/teams",   label: t("nav.teams") },
+    { path: "/mundial/schedule",label: t("nav.schedule") },
+    { path: "/mundial/venues",  label: t("nav.venues") },
+    { path: "/mundial/scorers", label: t("nav.topScorers") },
+  ]
+
   return (
     <div>
       <div className="page-hero page-hero--mundial" style={{ backgroundImage: "url('/images/bg_1.jpg')" }}>
         <div className="container">
           <div className="mundial-hero-content">
             <img src="/images/SOCCER.png" alt="WC 2026" style={{ height: 60, marginBottom: 16 }} onError={e => e.target.style.display='none'} />
-            <h1 className="page-hero__title">Mundial 2026</h1>
-            <p className="page-hero__sub">FIFA World Cup · USA · Canada · Mexico · June 11 – July 19</p>
+            <h1 className="page-hero__title">{t("nav.mundial")}</h1>
+            <p className="page-hero__sub">{t("mundial.subtitle")}</p>
           </div>
         </div>
       </div>
@@ -23,9 +26,9 @@ export default function MundialPage() {
       <div className="tab-bar sticky-tabs">
         <div className="container">
           <div className="tab-bar__inner">
-            {TABS.map(t => (
-              <NavLink key={t.path} to={t.path} className={({ isActive }) => `tab-link${isActive ? " tab-link--active" : ""}`}>
-                {t.label}
+            {TABS.map(tab => (
+              <NavLink key={tab.path} to={tab.path} className={({ isActive }) => `tab-link${isActive ? " tab-link--active" : ""}`}>
+                {tab.label}
               </NavLink>
             ))}
           </div>

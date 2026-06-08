@@ -87,7 +87,7 @@ export default function PredictionPanel({ matchId, homeTeamName, awayTeamName, t
           <div key={key} className={`prediction-bar-row${myVote === key ? " prediction-bar-row--mine" : ""}`}>
             <div className="prediction-bar-row__label">
               {label}
-              {myVote === key && <span className="prediction-bar-row__you">✓ your vote</span>}
+              {myVote === key && <span className="prediction-bar-row__you">{t("match.yourVote")}</span>}
             </div>
             <div className="prediction-bar-row__track">
               <div
