@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { translateLeague } from "../i18n/leagueNames"
 import { useExternalMatchChannel } from "../hooks/useExternalMatchChannel"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useLiveMinute, useGoalNotifications } from "./match/useMatchLive"
@@ -265,7 +266,7 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
             <img src={fixture.league.logo} alt="" style={{ width: 18, height: 18, objectFit: "contain" }}
               onError={e => (e.target.style.display = "none")} />
           )}
-          <span>{fixture?.league?.name}</span>
+          <span>{translateLeague(fixture?.league?.name, i18n.language)}</span>
           {fixture?.league?.round && (
             <span className="scoreboard__round">{fixture.league.round}</span>
           )}
@@ -797,7 +798,7 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t }) {
               }}>
                 <div style={{ width: 80, flexShrink: 0 }}>
                   <div style={{ fontSize: ".65rem", color: "var(--muted)" }}>{date}</div>
-                  {m.competition?.name && <div style={{ fontSize: ".58rem", color: "#555", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80 }}>{m.competition.name}</div>}
+                  {m.competition?.name && <div style={{ fontSize: ".58rem", color: "#555", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80 }}>{translateLeague(m.competition.name, i18n.language)}</div>}
                 </div>
                 <span style={{ flex: 1, textAlign: "right", fontWeight: homeWon ? 800 : 500, color: homeWon ? "#fff" : "rgba(255,255,255,.5)", fontSize: ".8rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.home?.name}</span>
                 <span style={{ fontWeight: 900, color: "#fff", padding: "3px 12px", background: "var(--surface2)", borderRadius: 4, fontSize: ".9rem", flexShrink: 0, minWidth: 64, textAlign: "center" }}>{hs} – {as}</span>
@@ -929,7 +930,7 @@ function previewToFixture(m) {
 }
 
 export default function MatchShowPage() {
-  const { t }    = useTranslation()
+  const { t, i18n } = useTranslation()
   const { id }      = useParams()
   const navigate    = useNavigate()
   const location    = useLocation()

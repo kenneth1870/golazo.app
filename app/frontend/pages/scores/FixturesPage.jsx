@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { translateLeague } from "../../i18n/leagueNames"
 import MatchRow from "../../components/MatchRow"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
@@ -96,6 +97,7 @@ function BellButton({ match }) {
 }
 
 function CompetitionBlock({ matches, navigate, onMatchClick }) {
+  const { i18n } = useTranslation()
   const comp   = matches[0]?.competition
   const canNav = comp?.code && !String(comp.code).match(/^\d+$/)
   const sorted = [...matches].sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
@@ -110,7 +112,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick }) {
         {comp?.logo && (
           <img src={comp.logo} alt="" className="logo-sm" onError={e => (e.target.style.display = "none")} />
         )}
-        <h3 style={{ margin: 0 }}>{comp?.name ?? "Other"}</h3>
+        <h3 style={{ margin: 0 }}>{translateLeague(comp?.name, i18n.language) ?? "Other"}</h3>
         <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{comp?.country}</span>
         {canNav && <span style={{ fontSize: "0.75rem", color: "#ee1e46" }}>→</span>}
       </div>

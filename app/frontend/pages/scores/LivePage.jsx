@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { translateLeague } from "../../i18n/leagueNames"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 
@@ -51,6 +52,7 @@ function LiveMatchRow({ match, onMatchClick }) {
 }
 
 function CompetitionBlock({ leagueName, leagueLogo, leagueCountry, matches, onMatchClick }) {
+  const { i18n } = useTranslation()
   const sorted = [...matches].sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0))
 
   return (
@@ -60,7 +62,7 @@ function CompetitionBlock({ leagueName, leagueLogo, leagueCountry, matches, onMa
           <img src={leagueLogo} alt="" className="logo-sm" loading="eager"
             onError={e => (e.target.style.display = "none")} />
         )}
-        <h3 style={{ margin: 0 }}>{leagueName ?? "Live"}</h3>
+        <h3 style={{ margin: 0 }}>{translateLeague(leagueName, i18n.language) ?? "Live"}</h3>
         <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{leagueCountry}</span>
         <span className="live-badge">LIVE</span>
       </div>

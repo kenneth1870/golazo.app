@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { translateLeague } from "../../i18n/leagueNames"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 
@@ -65,6 +66,7 @@ function ResultRow({ match, onMatchClick }) {
 }
 
 function CompetitionBlock({ matches, onMatchClick }) {
+  const { i18n } = useTranslation()
   const comp   = matches[0]?.competition
   const sorted = [...matches].sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
 
@@ -75,7 +77,7 @@ function CompetitionBlock({ matches, onMatchClick }) {
           <img src={comp.logo} alt="" className="logo-sm"
             onError={e => (e.target.style.display = "none")} />
         )}
-        <h3 style={{ margin: 0 }}>{comp?.name ?? "Other"}</h3>
+        <h3 style={{ margin: 0 }}>{translateLeague(comp?.name, i18n.language) ?? "Other"}</h3>
         <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{comp?.country}</span>
       </div>
       <div className="widget-body p-0">

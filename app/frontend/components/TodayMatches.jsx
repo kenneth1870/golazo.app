@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
+import { translateLeague } from "../i18n/leagueNames"
 
 function formatKickoff(utcDate) {
   return new Date(utcDate).toLocaleTimeString([], {
@@ -89,7 +90,7 @@ function CompetitionGroup({ competition, matches, onMatchSelect }) {
         {competition.logo && (
           <img src={competition.logo} alt="" className="logo-sm" loading="eager" />
         )}
-        <h3 style={{ margin: 0 }}>{competition.name}</h3>
+        <h3 style={{ margin: 0 }}>{translateLeague(competition.name, i18n.language)}</h3>
         {competition.country && (
           <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem", marginLeft: "auto" }}>
             {competition.country}
@@ -114,7 +115,7 @@ function CompetitionGroup({ competition, matches, onMatchSelect }) {
 }
 
 export default function TodayMatches({ onMatchSelect }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
 
