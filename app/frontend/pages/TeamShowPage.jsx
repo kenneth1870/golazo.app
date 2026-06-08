@@ -2,11 +2,13 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
+import { useFavorites } from "../hooks/useFavorites"
 
 export default function TeamShowPage() {
   const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
+  const { isFavorite, toggleFavorite } = useFavorites()
   const [team, setTeam]       = useState(null)
   const [loading, setLoading] = useState(true)
   const [standing, setStanding] = useState(null)
@@ -106,8 +108,22 @@ export default function TeamShowPage() {
     <div>
       {/* Back bar */}
       <div className="match-back-bar">
-        <div className="container" style={{ maxWidth: 700 }}>
+        <div className="container" style={{ maxWidth: 700, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back", "Back")}</button>
+          {team && (
+            <button
+              onClick={() => toggleFavorite({ type: "team", id: team.id, name: team.name, flag_url: team.flag_url, group: team.group })}
+              title={isFavorite("team", team.id) ? "Unfollow team" : "Follow team"}
+              style={{
+                background: isFavorite("team", team.id) ? "rgba(238,30,70,.15)" : "rgba(255,255,255,.06)",
+                border: isFavorite("team", team.id) ? "1px solid rgba(238,30,70,.4)" : "1px solid rgba(255,255,255,.12)",
+                borderRadius: 20, padding: "5px 14px", color: isFavorite("team", team.id) ? "#ee1e46" : "rgba(255,255,255,.4)",
+                fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", transition: ".2s",
+              }}
+            >
+              {isFavorite("team", team.id) ? "★ Following" : "☆ Follow"}
+            </button>
+          )}
         </div>
       </div>
 

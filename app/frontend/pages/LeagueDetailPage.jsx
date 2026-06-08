@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useParams } from "react-router-dom"
 import MatchRow from "../components/MatchRow"
+import { useFavorites } from "../hooks/useFavorites"
 
 // Inline tabs — no nested routing needed for this page
 const TABS = ["Today", "Fixtures", "Results"]
@@ -80,6 +81,7 @@ function StandingsTable({ standings }) {
 
 export default function LeagueDetailPage() {
   const { code } = useParams()
+  const { isFavorite, toggleFavorite } = useFavorites()
   const [competition, setCompetition] = useState(null)
   const [matches, setMatches]         = useState([])
   const [standings, setStandings]     = useState([])
@@ -145,10 +147,25 @@ export default function LeagueDetailPage() {
                 onError={e => (e.target.style.display = "none")}
               />
             )}
-            <div>
+            <div style={{ flex: 1 }}>
               <h1 className="page-hero__title" style={{ marginBottom: 4 }}>{competition?.name}</h1>
               <p className="page-hero__sub" style={{ margin: 0 }}>{competition?.country}</p>
             </div>
+            {competition && (
+              <button
+                onClick={() => toggleFavorite({ type: "competition", id: competition.id ?? code, name: competition.name, code: competition.code ?? code, flag_url: competition.logo })}
+                title={isFavorite("competition", competition.id ?? code) ? "Unfollow league" : "Follow league"}
+                style={{
+                  background: isFavorite("competition", competition.id ?? code) ? "rgba(238,30,70,.15)" : "rgba(255,255,255,.1)",
+                  border: isFavorite("competition", competition.id ?? code) ? "1px solid rgba(238,30,70,.4)" : "1px solid rgba(255,255,255,.2)",
+                  borderRadius: 20, padding: "6px 16px",
+                  color: isFavorite("competition", competition.id ?? code) ? "#ee1e46" : "rgba(255,255,255,.6)",
+                  fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", flexShrink: 0,
+                }}
+              >
+                {isFavorite("competition", competition.id ?? code) ? "★ Following" : "☆ Follow"}
+              </button>
+            )}
           </div>
         </div>
       </div>

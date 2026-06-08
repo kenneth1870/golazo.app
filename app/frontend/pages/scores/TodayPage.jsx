@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import MatchRow from "../../components/MatchRow"
 import { useLocale } from "../../hooks/useLocale"
 import { usePageMeta } from "../../hooks/usePageMeta"
-import { useFavoriteTeam } from "../../hooks/useFavoriteTeam"
+import { useFavorites } from "../../hooks/useFavorites"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 import PushPrompt from "../../components/PushPrompt"
 
@@ -349,7 +349,8 @@ export default function TodayPage() {
   const navigate     = useNavigate()
   const onMatchClick = (extId, match) => navigate(`/matches/${extId}`, { state: { preview: match } })
   const { timezone } = useLocale()
-  const [favTeam]   = useFavoriteTeam()
+  const { favoriteTeams, favoriteTeamNames } = useFavorites()
+  const favTeam = favoriteTeams[0] ?? null
 
   const load = useCallback((date, isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
@@ -445,6 +446,16 @@ export default function TodayPage() {
     )
   ) : null
 
+  // "Your Matches" = any match involving a followed team today
+  const yourMatches = favoriteTeamNames.length > 0
+    ? matches.filter(m =>
+        favoriteTeamNames.some(name =>
+          m.home_team?.name?.toLowerCase().includes(name.toLowerCase()) ||
+          m.away_team?.name?.toLowerCase().includes(name.toLowerCase())
+        )
+      )
+    : []
+
   return (
     <div
       className="site-section"
@@ -501,6 +512,25 @@ export default function TodayPage() {
           onMatchClick={onMatchClick}
           onDismiss={() => setAlertDismissed(true)}
         />
+
+        {/* Your Matches — pinned section for followed teams */}
+        {!loading && yourMatches.length > 0 && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
+              fontSize: "0.75rem", fontWeight: 700, color: "#ee1e46", textTransform: "uppercase", letterSpacing: 1,
+            }}>
+              <span>★</span> Your Matches
+            </div>
+            <div className="widget-next-match">
+              <div className="widget-body p-0">
+                {yourMatches.map(m => (
+                  <MatchRow key={m.id} match={m} onClick={() => onMatchClick(m)} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Content */}
         {loading ? (
