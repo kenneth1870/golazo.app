@@ -257,6 +257,11 @@ class WorldCupSync
       )
     end
 
+    # Pre-warm AI match summary cache after match finishes (5 min delay)
+    if status == "finished" && match.id.present?
+      GenerateMatchSummaryJob.set(wait: 5.minutes).perform_later(match_id: match.id)
+    end
+
     true
   rescue => e
     log("Today sync error for #{home_name} v #{away_name}: #{e.message}")

@@ -23,6 +23,8 @@ module Api
                        .find_by(external_id: external_id)
           if match
             data = local_match_as_fixture(match)
+            # Merge db_id into fixture so frontend can call AI summary
+            data[:fixture]&.dig("fixture")&.merge!("db_id" => match.id)
           else
             # 2. Build a basic fixture from the cached date-list data
             data = client.match_from_list(external_id)
@@ -32,6 +34,13 @@ module Api
 
         # Primary API returned no events/stats/lineups → try API-Sports fallback
         data = api_sports_fallback(data) if detail_empty?(data)
+
+        # Inject db_id so frontend can call AI summary endpoint
+        local = Match.select(:id).find_by(external_id: external_id)
+        if local && data[:fixture].is_a?(Hash)
+          data[:fixture]["fixture"] ||= {}
+          data[:fixture]["fixture"]["db_id"] = local.id
+        end
 
         broadcast_if_changed(external_id, data)
         render json: data
@@ -127,6 +136,7 @@ module Api
         fixture = {
           "fixture" => {
             "id"     => match.external_id || match.id,
+            "db_id"  => match.id,
             "date"   => match.kickoff_at&.iso8601,
             "status" => status,
             "venue"  => { "name" => match.venue, "city" => nil },

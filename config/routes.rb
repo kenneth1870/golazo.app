@@ -41,6 +41,7 @@ Rails.application.routes.draw do
         resource :stats, only: [] do
           post :upsert, on: :collection
         end
+        get :ai_summary, to: "ai_summaries#show", on: :member
       end
     end
   end
