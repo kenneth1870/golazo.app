@@ -27,6 +27,12 @@ services:
         sync: false        # Bearer token for the write endpoints; set manually in Render dashboard
       - key: SENTRY_DSN
         sync: false        # optional error monitoring; leave unset to disable
+      - key: VAPID_PUBLIC_KEY
+        sync: false        # Web Push VAPID public key — generate with: rails webpush:generate_keys
+      - key: VAPID_PRIVATE_KEY
+        sync: false        # Web Push VAPID private key — keep secret
+      - key: VAPID_SUBJECT
+        sync: false        # mailto: address for push contact, e.g. mailto:you@example.com
       - key: RAILS_LOG_LEVEL
         value: info
       - key: WEB_CONCURRENCY
