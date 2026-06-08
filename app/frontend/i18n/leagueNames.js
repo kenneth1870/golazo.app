@@ -57,6 +57,7 @@ const ES = {
  */
 export function translateLeague(name, lang) {
   if (!name) return name
-  if (lang === "es" && ES[name]) return ES[name]
+  const base = (lang || "en").split("-")[0].toLowerCase()
+  if (base === "es" && ES[name]) return ES[name]
   return name
 }

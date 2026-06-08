@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { translateLeague } from "../../i18n/leagueNames"
 import MatchRow from "../../components/MatchRow"
 import { useLocale } from "../../hooks/useLocale"
 import { usePageMeta } from "../../hooks/usePageMeta"
@@ -177,6 +178,7 @@ function RealMatchRow({ match, onMatchClick }) {
 
 // ─── Competition block ────────────────────────────────
 function CompetitionBlock({ matches, navigate, onMatchClick }) {
+  const { i18n } = useTranslation()
   const comp    = matches[0]?.competition
   const hasLive = matches.some(m => m.status === "live")
   const isReal  = typeof matches[0]?.id === "string" && matches[0]?.id?.startsWith("ext_")
@@ -198,7 +200,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick }) {
           <img src={comp.logo} alt="" className="logo-sm"
             onError={e => (e.target.style.display = "none")} />
         )}
-        <h3 style={{ margin: 0 }}>{comp?.name ?? "Other"}</h3>
+        <h3 style={{ margin: 0 }}>{translateLeague(comp?.name, i18n.language) ?? "Other"}</h3>
         <span className="widget-meta-country" style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{comp?.country}</span>
         {hasLive && <span className="live-badge">LIVE</span>}
         {canNav && <span style={{ fontSize: "0.75rem", color: "#ee1e46" }}>→</span>}
