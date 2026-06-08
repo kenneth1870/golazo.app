@@ -49,7 +49,9 @@ export function usePushNotifications() {
 
       // Fetch VAPID public key from server
       const keyRes = await fetch("/api/v1/vapid_public_key")
+      if (!keyRes.ok) throw new Error("Failed to fetch server key")
       const { key } = await keyRes.json()
+      if (!key) throw new Error("Push notifications are not configured on this server")
 
       // Subscribe via PushManager
       const reg = await navigator.serviceWorker.ready
@@ -134,5 +136,13 @@ export function usePushNotifications() {
     "PushManager" in window &&
     "Notification" in window
 
-  return { supported, permission, subscribed, loading, subscribe, unsubscribe, updateTeams }
+  // On iOS, push notifications only work when installed as a PWA (added to home screen).
+  // navigator.standalone is true only in that case.
+  const isIos = typeof window !== "undefined" &&
+    /iphone|ipad|ipod/i.test(navigator.userAgent)
+  const isIosPwa = isIos && navigator.standalone === true
+  // Show iOS hint if on iOS but NOT installed as PWA
+  const needsIosInstall = isIos && !isIosPwa
+
+  return { supported, permission, subscribed, loading, subscribe, unsubscribe, updateTeams, needsIosInstall }
 }

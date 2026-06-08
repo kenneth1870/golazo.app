@@ -300,7 +300,10 @@
     "enabling": "Enabling…",
     "notNow": "Not now",
     "getAlertsWhenClosed": "Get goal alerts even when the app is closed",
-    "allow": "Allow"
+    "allow": "Allow",
+    "error": "Couldn't enable notifications. Please try again.",
+    "iosHint": "Add this app to your Home Screen first to enable notifications.",
+    "retry": "Retry"
   },
   "standings": {
     "qualified": "Qualified",

@@ -866,15 +866,23 @@ function GoalToast({ text, visible, onDismiss }) {
 // ─── Push notification banner for live matches ────────
 function LivePushBanner({ homeName, awayName, onDismiss }) {
   const { t } = useTranslation()
-  const { supported, permission, subscribed, loading, subscribe } = usePushNotifications()
-  const [done, setDone] = useState(false)
+  const { supported, permission, subscribed, loading, subscribe, needsIosInstall } = usePushNotifications()
+  const [done,   setDone]   = useState(false)
+  const [errMsg, setErrMsg] = useState(null)
 
-  if (!supported || permission === "denied" || subscribed || done) return null
+  if ((!supported && !needsIosInstall) || permission === "denied" || subscribed || done) return null
 
   const enable = async () => {
-    const teams = [homeName, awayName].filter(Boolean)
-    const res = await subscribe(teams)
-    if (res.ok || res.error === "Permission denied") setDone(true)
+    if (needsIosInstall) return
+    setErrMsg(null)
+    const res = await subscribe([homeName, awayName].filter(Boolean))
+    if (res.ok) {
+      setDone(true)
+    } else if (res.error === "Permission denied") {
+      setDone(true)
+    } else {
+      setErrMsg(res.error || t("push.error"))
+    }
   }
 
   return (
@@ -883,15 +891,24 @@ function LivePushBanner({ homeName, awayName, onDismiss }) {
       borderRadius: 10, padding: "12px 16px", marginBottom: 16,
       display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
     }}>
-      <span style={{ fontSize: "1.2rem" }}>🔔</span>
-      <span style={{ flex: 1, fontSize: "0.82rem", color: "var(--text)" }}>
-        {t("push.getAlertsWhenClosed")}
-      </span>
-      <button onClick={enable} disabled={loading} style={{
-        background: "#ee1e46", color: "#fff", border: "none", borderRadius: 6,
-        padding: "6px 14px", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer",
-        opacity: loading ? 0.6 : 1,
-      }}>{loading ? "…" : t("push.allow")}</button>
+      <span style={{ fontSize: "1.2rem" }}>{needsIosInstall ? "📲" : "🔔"}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ fontSize: "0.82rem", color: "var(--text)" }}>
+          {needsIosInstall ? t("push.iosHint") : t("push.getAlertsWhenClosed")}
+        </span>
+        {errMsg && (
+          <div style={{ fontSize: "0.72rem", color: "#f87171", marginTop: 4 }}>⚠ {errMsg}</div>
+        )}
+      </div>
+      {!needsIosInstall && (
+        <button onClick={enable} disabled={loading} style={{
+          background: "#ee1e46", color: "#fff", border: "none", borderRadius: 6,
+          padding: "6px 14px", fontWeight: 700, fontSize: "0.8rem",
+          cursor: loading ? "default" : "pointer", opacity: loading ? 0.6 : 1,
+        }}>
+          {loading ? "…" : errMsg ? t("push.retry") : t("push.allow")}
+        </button>
+      )}
       <button onClick={onDismiss} style={{
         background: "none", color: "var(--muted)", border: "none", cursor: "pointer", fontSize: "0.8rem",
       }}>{t("push.notNow")}</button>

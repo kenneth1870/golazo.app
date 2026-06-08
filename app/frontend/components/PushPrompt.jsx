@@ -8,22 +8,22 @@ const DISMISSED_KEY = "golazo_push_dismissed"
 // Asks to enable goal alerts, optionally scoped to a favorite team.
 export default function PushPrompt({ favoriteTeamName = null }) {
   const { t } = useTranslation()
-  const { supported, permission, subscribed, loading, subscribe, unsubscribe } = usePushNotifications()
-  const [visible,   setVisible]   = useState(false)
-  const [done,      setDone]      = useState(false)
+  const { supported, permission, subscribed, loading, subscribe, needsIosInstall } = usePushNotifications()
+  const [visible, setVisible] = useState(false)
+  const [done,    setDone]    = useState(false)
+  const [errMsg,  setErrMsg]  = useState(null)
 
   useEffect(() => {
-    if (!supported) return
+    if (!supported && !needsIosInstall) return
     if (permission === "denied") return
     if (subscribed) return
     const dismissed = sessionStorage.getItem(DISMISSED_KEY)
     if (dismissed) return
-    // Show after 3 s so it doesn't feel jarring
-    const t = setTimeout(() => setVisible(true), 3000)
-    return () => clearTimeout(t)
-  }, [supported, permission, subscribed])
+    const timer = setTimeout(() => setVisible(true), 3000)
+    return () => clearTimeout(timer)
+  }, [supported, needsIosInstall, permission, subscribed])
 
-  if (!supported || !visible || subscribed || done) return null
+  if (!visible || subscribed || done) return null
   if (permission === "denied") return null
 
   const dismiss = () => {
@@ -32,13 +32,16 @@ export default function PushPrompt({ favoriteTeamName = null }) {
   }
 
   const enable = async () => {
-    const teams = favoriteTeamName ? [favoriteTeamName] : []
-    const result = await subscribe(teams)
+    if (needsIosInstall) return // button shouldn't be reachable but guard anyway
+    setErrMsg(null)
+    const result = await subscribe(favoriteTeamName ? [favoriteTeamName] : [])
     if (result.ok) {
       setDone(true)
       setVisible(false)
     } else if (result.error === "Permission denied") {
       dismiss()
+    } else {
+      setErrMsg(result.error || t("push.error"))
     }
   }
 
@@ -52,28 +55,42 @@ export default function PushPrompt({ favoriteTeamName = null }) {
       display: "flex", alignItems: "flex-start", gap: 12,
       animation: "slideUp .3s ease",
     }}>
-      <span style={{ fontSize: "1.6rem", flexShrink: 0, marginTop: 2 }}>⚽</span>
+      <span style={{ fontSize: "1.6rem", flexShrink: 0, marginTop: 2 }}>
+        {needsIosInstall ? "📲" : "⚽"}
+      </span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "#fff", marginBottom: 4 }}>
           {t("push.getAlerts")}
         </div>
         <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,.6)", marginBottom: 10 }}>
-          {favoriteTeamName
+          {needsIosInstall
+            ? t("push.iosHint")
+            : favoriteTeamName
             ? t("push.teamAlerts", { team: favoriteTeamName })
             : t("push.generalAlerts")}
         </div>
+
+        {errMsg && (
+          <div style={{ fontSize: "0.75rem", color: "#f87171", marginBottom: 8 }}>
+            ⚠ {errMsg}
+          </div>
+        )}
+
         <div style={{ display: "flex", gap: 8 }}>
-          <button
-            onClick={enable}
-            disabled={loading}
-            style={{
-              background: "#ee1e46", color: "#fff", border: "none",
-              borderRadius: 8, padding: "7px 14px", fontSize: "0.8rem",
-              fontWeight: 700, cursor: "pointer", opacity: loading ? .6 : 1,
-            }}
-          >
-            {loading ? t("push.enabling") : t("push.enable")}
-          </button>
+          {!needsIosInstall && (
+            <button
+              onClick={enable}
+              disabled={loading}
+              style={{
+                background: "#ee1e46", color: "#fff", border: "none",
+                borderRadius: 8, padding: "7px 14px", fontSize: "0.8rem",
+                fontWeight: 700, cursor: loading ? "default" : "pointer",
+                opacity: loading ? .6 : 1,
+              }}
+            >
+              {loading ? t("push.enabling") : errMsg ? t("push.retry") : t("push.enable")}
+            </button>
+          )}
           <button
             onClick={dismiss}
             style={{

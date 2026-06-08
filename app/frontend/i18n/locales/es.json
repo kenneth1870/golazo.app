@@ -300,7 +300,10 @@
     "enabling": "Activando…",
     "notNow": "Ahora no",
     "getAlertsWhenClosed": "Recibe alertas de goles incluso cuando la app está cerrada",
-    "allow": "Permitir"
+    "allow": "Permitir",
+    "error": "No se pudieron activar las notificaciones. Inténtalo de nuevo.",
+    "iosHint": "Agrega esta app a tu pantalla de inicio para activar las notificaciones.",
+    "retry": "Reintentar"
   },
   "standings": {
     "qualified": "Clasificado",
