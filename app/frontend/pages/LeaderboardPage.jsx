@@ -1,15 +1,34 @@
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { usePageMeta } from "../hooks/usePageMeta"
 
 const DEVICE_KEY = "golazo_device_id"
+
+function getDeviceId() {
+  if (typeof localStorage === "undefined") return ""
+  let id = localStorage.getItem(DEVICE_KEY)
+  if (!id) {
+    id = crypto.randomUUID?.() || Math.random().toString(36).slice(2)
+    localStorage.setItem(DEVICE_KEY, id)
+  }
+  return id
+}
 
 export default function LeaderboardPage() {
   usePageMeta("Prediction Leaderboard", "Top score predictors for FIFA World Cup 2026 — who called the most goals?")
   const navigate  = useNavigate()
   const [rows, setRows]       = useState([])
   const [loading, setLoading] = useState(true)
-  const deviceId = typeof localStorage !== "undefined" ? (localStorage.getItem(DEVICE_KEY) || "") : ""
+  const [copied, setCopied]   = useState(false)
+  const deviceId = getDeviceId()
+
+  function copyShareLink() {
+    const url = `${window.location.origin}/compare?friend=${encodeURIComponent(deviceId)}`
+    navigator.clipboard?.writeText(url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    })
+  }
 
   useEffect(() => {
     fetch("/api/v1/score_predictions/leaderboard")
@@ -31,9 +50,32 @@ export default function LeaderboardPage() {
         <div style={{ padding: "32px 0 20px", textAlign: "center" }}>
           <div style={{ fontSize: "2.5rem", marginBottom: 8 }}>🏆</div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 900, color: "#fff", margin: "0 0 4px" }}>Prediction Leaderboard</h1>
-          <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: 0 }}>
+          <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 16px" }}>
             3 pts = exact score · 1 pt = correct result
           </p>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+            <button
+              onClick={copyShareLink}
+              style={{
+                background: copied ? "#10b981" : "rgba(238,30,70,.15)",
+                border: `1px solid ${copied ? "#10b981" : "rgba(238,30,70,.3)"}`,
+                color: copied ? "#fff" : "#ee1e46",
+                borderRadius: 20, padding: "6px 16px", fontSize: "0.78rem",
+                fontWeight: 700, cursor: "pointer", transition: ".2s",
+              }}
+            >
+              {copied ? "✓ Link copied!" : "📤 Challenge a friend"}
+            </button>
+            <Link to={`/compare?friend=${encodeURIComponent(deviceId)}`}
+              style={{
+                background: "rgba(99,102,241,.1)", border: "1px solid rgba(99,102,241,.25)",
+                color: "#818cf8", borderRadius: 20, padding: "6px 16px",
+                fontSize: "0.78rem", fontWeight: 700, textDecoration: "none",
+              }}
+            >
+              ⚔️ My comparisons
+            </Link>
+          </div>
         </div>
 
         {loading ? (

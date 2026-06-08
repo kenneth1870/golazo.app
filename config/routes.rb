@@ -14,6 +14,7 @@ Rails.application.routes.draw do
       get  "predictions/:match_id",     to: "predictions#show"
       post "predictions/:match_id/vote", to: "predictions#vote"
       get  "score_predictions/leaderboard",  to: "score_predictions#leaderboard"
+      get  "score_predictions/by_device",    to: "score_predictions#by_device"
       get  "score_predictions/:match_id",    to: "score_predictions#show"
       post "score_predictions/:match_id",    to: "score_predictions#create"
       get "fixtures",         to: "fixtures#index"

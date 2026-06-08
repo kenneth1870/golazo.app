@@ -55,6 +55,38 @@ module Api
           }
         }
       end
+
+      # GET /api/v1/score_predictions/by_device?device_id=xxx
+      # Returns all graded predictions for a device (for comparison page)
+      def by_device
+        device_id = params[:device_id].to_s.first(64)
+        return render json: { error: "device_id required" }, status: :bad_request if device_id.blank?
+
+        preds = ScorePrediction
+                  .where(device_id: device_id)
+                  .where.not(points_earned: nil) # only graded
+                  .order(updated_at: :desc)
+                  .limit(50)
+
+        total = preds.sum(:points_earned)
+        name  = preds.first&.display_name.presence || "Anonymous"
+
+        render json: {
+          device_id:    device_id,
+          display_name: name,
+          total_points: total,
+          predictions:  preds.map { |p|
+            {
+              match_external_id: p.match_external_id,
+              home_team_name:    p.home_team_name,
+              away_team_name:    p.away_team_name,
+              home_guess:        p.home_guess,
+              away_guess:        p.away_guess,
+              points_earned:     p.points_earned,
+            }
+          }
+        }
+      end
     end
   end
 end
