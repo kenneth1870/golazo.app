@@ -1,158 +1,163 @@
 require "set"
 
+# Primary live-scores client backed by API-Football v3 (api-sports.io).
+# Auth: x-apisports-key header. Base: https://v3.football.api-sports.io/
+#
+# Public interface (unchanged from old FotMob client so no controller changes needed):
+#   live_matches        → Array of normalized match hashes
+#   matches_for_date(d) → Array of normalized match hashes
+#   match_detail(id)    → { fixture:, events:, stats:, lineups:, h2h: } or nil
+#   match_from_list(id) → basic fixture hash or nil (fallback)
+#   league_standings(league_id, season) → Array of standing rows
+#   top_scorers(league_id, season)      → Array of scorer hashes
+#   leagues                             → Array of league hashes
+#   search_players(query)               → Array of player hashes
+
 class LiveScoresClient
-  # Raised when the API returns HTTP 429 so callers can apply a long back-off.
-  class RateLimitedError < StandardError; end
-  BASE_URL = "https://free-api-live-football-data.p.rapidapi.com/"
-  HOST     = "free-api-live-football-data.p.rapidapi.com"
+  BASE_URL = "https://v3.football.api-sports.io/".freeze
 
+  # API-Football v3 status short-code → our internal status
   STATUS_MAP = {
-    1  => "scheduled",
-    2  => "live",       # First half
-    3  => "live",       # Second half
-    4  => "live",       # Extra time
-    5  => "live",       # Penalty shootout
-    6  => "finished",   # Full time
-    7  => "finished",   # After extra time
-    8  => "finished",   # After penalties
-    9  => "postponed",  # Postponed
-    10 => "live",       # Half time
-    11 => "live",       # Half time (alt)
-    12 => "live",       # Break time
-    13 => "live",       # Interrupted (suspended but not abandoned)
-    14 => "postponed"  # Abandoned
+    "NS"   => "scheduled",
+    "TBD"  => "scheduled",
+    "1H"   => "live",
+    "HT"   => "live",
+    "2H"   => "live",
+    "ET"   => "live",
+    "BT"   => "live",
+    "P"    => "live",
+    "SUSP" => "live",
+    "INT"  => "live",
+    "LIVE" => "live",
+    "FT"   => "finished",
+    "AET"  => "finished",
+    "PEN"  => "finished",
+    "AWD"  => "finished",
+    "WO"   => "finished",
+    "PST"  => "postponed",
+    "CANC" => "postponed",
+    "ABD"  => "postponed",
   }.freeze
 
-  STATUS_SHORT_MAP = {
-    1  => "NS",
-    2  => "1H",
-    3  => "2H",
-    4  => "ET",
-    5  => "P",
-    6  => "FT",
-    7  => "AET",
-    8  => "PEN",
-    9  => "PPD",
-    10 => "HT",
-    11 => "HT",
-    12 => "BT",
-    13 => "INT",
-    14 => "ABD"
-  }.freeze
+  # API-Football v3 league IDs we care about
+  FEATURED_LEAGUES = Set.new([
+    1,    # FIFA World Cup
+    2,    # UEFA Champions League
+    3,    # UEFA Europa League
+    848,  # UEFA Conference League
+    531,  # UEFA Super Cup
+    39,   # Premier League
+    140,  # La Liga
+    78,   # Bundesliga
+    135,  # Serie A
+    61,   # Ligue 1
+    88,   # Eredivisie
+    94,   # Primeira Liga
+    262,  # Liga MX
+    71,   # Brasileirão Serie A
+    128,  # Argentine Liga Profesional
+    253,  # MLS
+    179,  # Scottish Premiership
+    203,  # Süper Lig
+    41,   # Championship (England)
+    9,    # FIFA Women's World Cup
+    13,   # Copa Libertadores
+    11,   # Copa Sudamericana
+    6,    # Copa América
+    15,   # FIFA Club World Cup
+    10,   # International Friendlies (Men)
+    667,  # Friendlies Clubs
+    777,  # FIFA World Cup - Qualification CONCACAF
+    780,  # FIFA World Cup - Qualification CONMEBOL
+    29,   # AFC Asian Cup
+    4,    # Euro Championship
+  ]).freeze
 
   def initialize
-    key = ENV["RAPIDAPI_KEY"]
-    raise "RAPIDAPI_KEY not configured" if key.blank?
+    key = ENV["APISPORTS_KEY"].presence || ENV["FOOTBALL_API_KEY"].presence || ENV["API_SPORTS_KEY"]
+    raise "APISPORTS_KEY not configured" if key.blank?
 
     @conn = Faraday.new(url: BASE_URL) do |f|
-      f.headers["x-rapidapi-key"]  = key
-      f.headers["x-rapidapi-host"] = HOST
-      f.headers["Content-Type"]    = "application/json"
-      f.request :retry, max: 2, interval: 1
-      f.response :raise_error
+      f.headers["x-apisports-key"] = key
+      f.options.timeout      = 10
+      f.options.open_timeout = 6
+      f.request :retry, max: 2, interval: 0.5
     end
   end
+
+  # ── Public interface ──────────────────────────────────────────────────────
 
   # Currently live matches across all leagues
   def live_matches
-    Rails.cache.fetch("live_scores_live_v2", expires_in: 5.minutes) do
-      data = get("football-current-live")
-      data.dig("response", "live") || data.dig("response", "liveMatches") || []
+    Rails.cache.fetch("live_scores_live_v3", expires_in: 1.minute) do
+      data = get("fixtures", live: "all")
+      (data.dig("response") || []).filter_map { |f| normalize_fixture(f) }
     end
-  rescue RateLimitedError
-    # Rate limited — cache empty result for 2 h so we stop hammering the quota
-    Rails.cache.write("live_scores_live_v2", [], expires_in: 2.hours)
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] live_matches: #{e.message}")
     []
   end
 
-  # All matches for a given date, normalized to a common shape.
-  # FotMob buckets matches by a European-offset date, so evening matches
-  # (after ~18:00 UTC) appear in the *next* UTC day. We fetch both days
-  # and merge; the frontend then filters by the user's local date.
-  # Sentinel stored in cache when the API is rate-limited, so we don't
-  # hammer the quota again for a long back-off window.
-  RATE_LIMITED_SENTINEL = "__rate_limited__".freeze
-
+  # All featured matches for a given date (UTC).
   def matches_for_date(date)
-    key = "live_scores_date_v9_#{date.to_date.iso8601}"
-
-    # Check for active rate-limit back-off
-    cached = Rails.cache.read(key)
-    return [] if cached == RATE_LIMITED_SENTINEL
-
-    Rails.cache.fetch(key, expires_in: 30.minutes) do
-      begin
-        raw = fetch_raw_matches(date.to_date) + fetch_raw_matches(date.to_date + 1)
-      rescue RateLimitedError
-        Rails.cache.write(key, RATE_LIMITED_SENTINEL, expires_in: 2.hours)
-        return []
-      end
-      raw.uniq! { |m| m["id"] || m["matchId"] }
-
-      # Guard against date+1 scheduled matches leaking into today's view.
-      # Allow through date 00:00 UTC → (date+1) 06:00 UTC so UTC-6 and earlier
-      # users still see their local late-night matches, while morning matches
-      # from the next calendar day are excluded.
-      window_start = date.to_date.beginning_of_day.utc
-      window_end   = (date.to_date + 1).beginning_of_day.utc + 6.hours
-      raw.select! do |m|
-        ts = m["startTimestamp"]
-        next true unless ts
-        t = Time.at(ts.to_i).utc
-        t >= window_start && t < window_end
-      end
-
-      league_map = build_league_map(raw)
-      raw.filter_map { |m| normalize_match(m, league_map) }
-         .select { |m| featured_league?(m, league_map) }
+    Rails.cache.fetch("live_scores_date_v10_#{date.to_date.iso8601}", expires_in: 10.minutes) do
+      data = get("fixtures", date: date.to_date.iso8601, timezone: "UTC")
+      (data.dig("response") || [])
+        .filter_map { |f| normalize_fixture(f) }
+        .select     { |m| featured_league?(m) }
     end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] matches_for_date(#{date}): #{e.message}")
+    []
   end
 
-  # Detailed match data using the correct `eventid` parameter.
-  # Fetches detail, lineups, H2H, score, location in parallel threads.
-  def match_detail(match_id)
-    Rails.cache.fetch("live_scores_detail_v3_#{match_id}", expires_in: 30.seconds) do
+  # Full match detail: fixture + events + lineups + stats + h2h in parallel.
+  def match_detail(fixture_id)
+    Rails.cache.fetch("live_scores_detail_v4_#{fixture_id}", expires_in: 30.seconds) do
       results = {}
       threads = {
-        detail:   Thread.new { get("football-get-match-detail",    eventid: match_id) },
-        home_lu:  Thread.new { get("football-get-hometeam-lineup", eventid: match_id) },
-        away_lu:  Thread.new { get("football-get-awayteam-lineup", eventid: match_id) },
-        h2h:      Thread.new { get("football-get-head-to-head",    eventid: match_id) },
-        score:    Thread.new { get("football-get-match-score",     eventid: match_id) },
-        status:   Thread.new { get("football-get-match-status",    eventid: match_id) },
-        location: Thread.new { get("football-get-match-location",  eventid: match_id) },
-        stats:    Thread.new { get("football-get-match-all-stats", eventid: match_id) }
+        fixture: Thread.new { get("fixtures",            id:      fixture_id) },
+        events:  Thread.new { get("fixtures/events",     fixture: fixture_id) },
+        lineups: Thread.new { get("fixtures/lineups",    fixture: fixture_id) },
+        stats:   Thread.new { get("fixtures/statistics", fixture: fixture_id) },
       }
       threads.each do |k, t|
-        results[k] = t.join(8)&.value || {}
+        results[k] = t.join(10)&.value || {}
       rescue => e
-        Rails.logger.warn("[LiveScoresClient] thread #{k} error: #{e.message}")
+        Rails.logger.warn("[LiveScoresClient] thread #{k}: #{e.message}")
         results[k] = {}
       end
 
-      detail   = results[:detail].dig("response", "detail") || {}
-      score    = results[:score].dig("response", "scores") || []
-      status   = results[:status].dig("response", "status") || {}
-      location = results[:location].dig("response", "location") || {}
-      home_lu  = results[:home_lu].dig("response", "lineup")
-      away_lu  = results[:away_lu].dig("response", "lineup")
-      h2h_resp = results[:h2h].dig("response") || {}
-      h2h_raw  = h2h_resp.dig("h2h") || h2h_resp.dig("content", "h2h") || h2h_resp.dig("headToHead") || {}
-      stats_raw = results[:stats].dig("response")
+      fx = results[:fixture].dig("response", 0)
+      return nil unless fx
 
-      return nil if detail.blank? && score.empty?
+      home_id = fx.dig("teams", "home", "id")
+      away_id = fx.dig("teams", "away", "id")
 
-      assemble_match_detail(detail, score, status, location, home_lu, away_lu, h2h_raw, stats_raw, match_id)
+      h2h_raw = if home_id && away_id
+        get("fixtures/headtohead", h2h: "#{home_id}-#{away_id}", last: 10).dig("response") || []
+      else
+        []
+      end
+
+      {
+        fixture:  build_fixture(fx),
+        events:   normalize_events(results[:events].dig("response")  || []),
+        stats:    normalize_stats(results[:stats].dig("response")    || []),
+        lineups:  normalize_lineups(results[:lineups].dig("response") || []),
+        h2h:      normalize_h2h(h2h_raw),
+      }
     end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] match_detail(#{fixture_id}): #{e.message}")
+    nil
   end
 
-  # Finds a match in the cached date lists (today ± 1 day) and returns a
-  # basic fixture detail built from list data. Used as a last-resort fallback
-  # when the full detail API returns nothing.
+  # Tries today ±1 day date-list caches; builds a minimal fixture from list data.
+  # Used as last-resort fallback when full detail API returns nothing.
   def match_from_list(match_id)
-    [ Date.today - 1, Date.today, Date.today + 1 ].each do |d|
-      list = matches_for_date(d)
-      found = list.find { |m| m[:external_id].to_s == match_id.to_s }
+    [Date.today - 1, Date.today, Date.today + 1].each do |d|
+      found = matches_for_date(d).find { |m| m[:external_id].to_s == match_id.to_s }
       return build_detail_from_list(found) if found
     end
     nil
@@ -161,516 +166,237 @@ class LiveScoresClient
     nil
   end
 
-  # Standings table for a league/season
+  # Standings for a league/season. Returns flat array of standing rows
+  # (groups already flattened so callers can re-group by group_name if needed).
   def league_standings(league_id, season_id)
-    Rails.cache.fetch("live_scores_standings_#{league_id}_#{season_id}", expires_in: 10.minutes) do
-      data = get("football-get-league-standing", leagueId: league_id, seasonId: season_id)
-      data.dig("response", "standing") ||
-        data.dig("response", "standings") || []
+    Rails.cache.fetch("live_scores_standings_v2_#{league_id}_#{season_id}", expires_in: 10.minutes) do
+      data = get("standings", league: league_id, season: season_id)
+      groups = data.dig("response", 0, "league", "standings") || []
+      groups.flatten
     end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] standings: #{e.message}")
+    []
   end
 
-  # Top scorers for a league/season
+  # Top scorers for a league/season. Returns raw API-Football response array.
   def top_scorers(league_id, season_id)
-    Rails.cache.fetch("live_scores_scorers_#{league_id}_#{season_id}", expires_in: 30.minutes) do
-      data = get("football-get-league-topscorers", leagueId: league_id, seasonId: season_id)
-      data.dig("response", "topScorers") ||
-        data.dig("response", "scorers") || []
+    Rails.cache.fetch("live_scores_scorers_v2_#{league_id}_#{season_id}", expires_in: 30.minutes) do
+      data = get("players/topscorers", league: league_id, season: season_id)
+      data.dig("response") || []
     end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] top_scorers: #{e.message}")
+    []
   end
 
-  # All available leagues
+  # All leagues (cached 24 h).
   def leagues
-    data = get("football-get-all-leagues")
-    data.dig("response", "leagues") || []
+    Rails.cache.fetch("live_scores_leagues_v2", expires_in: 24.hours) do
+      data = get("leagues", current: "true")
+      data.dig("response") || []
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] leagues: #{e.message}")
+    []
   end
 
-  # Search players by name
+  # Player search by name.
   def search_players(query)
-    data = get("football-players-search", search: query)
-    data.dig("response", "suggestions") || []
+    season = Date.today.year
+    data = get("players", search: query, season: season)
+    data.dig("response") || []
+  rescue => e
+    Rails.logger.warn("[LiveScoresClient] search_players: #{e.message}")
+    []
   end
+
+  # ── Private ───────────────────────────────────────────────────────────────
 
   private
 
-  # Known FotMob league IDs that don't appear in the all-leagues endpoint
-  KNOWN_LEAGUES = {
-    914609 => { name: "International Friendlies",   logo: nil, country: "INT" },
-    925953 => { name: "Women's Friendlies",          logo: nil, country: "INT" },
-    926232 => { name: "UEFA U-17 Championship",      logo: nil, country: "INT" },
-    896469 => { name: "Asian Qualifiers",            logo: nil, country: "INT" },
-    530    => { name: "Botola Pro (Morocco)",         logo: nil, country: "MAR" },
-    516    => { name: "Ligue Pro (Algeria)",          logo: nil, country: "DZA" },
-    8972   => { name: "USL Championship",            logo: nil, country: "USA" },
-    9305   => { name: "Primera División (Argentina)", logo: nil, country: "ARG" },
-    144    => { name: "Liga Boliviana",               logo: nil, country: "BOL" },
-    344    => { name: "U-21 Friendlies",              logo: nil, country: "INT" },
-    918053 => { name: "Division 3 (Sweden)",          logo: nil, country: "SWE" },
-    931430 => { name: "Division 4 (Sweden)",          logo: nil, country: "SWE" },
-    918043 => { name: "Division 4 (Sweden)",          logo: nil, country: "SWE" },
-    916345 => { name: "USL League One",               logo: nil, country: "USA" },
-    # Summer 2026 tournaments
-    6      => { name: "Copa América 2026",            logo: nil, country: "INT" },
-    940476 => { name: "FIFA Club World Cup 2025",     logo: nil, country: "INT" },
-    936234 => { name: "Copa América 2026",            logo: nil, country: "INT" }
-  }.freeze
+  def featured_league?(match)
+    lid     = match[:league_id].to_i
+    country = match[:league_country].to_s
+    name    = match[:league_name].to_s.downcase
 
-  # League IDs that are explicitly excluded even if they pass other filters.
-  EXCLUDED_LEAGUES = Set.new([
-    926232,  # UEFA U-17 Championship
-    344,     # U-21 Friendlies
-    925953,  # Women's Friendlies
-    896469  # Asian Qualifiers
-  ]).freeze
+    # Filter out women's competitions
+    return false if name.match?(/\bwomen\b|\bfemale\b|\bwsl\b|\bnwsl\b/)
 
-  # Top domestic league IDs (FotMob IDs). Any league with country="INT" is
-  # always included; these are the domestic leagues we also want to show.
-  FEATURED_DOMESTIC_LEAGUES = Set.new([
-    47,   # Premier League (England)
-    87,   # La Liga (Spain)
-    54,   # Bundesliga (Germany)
-    55,   # Serie A (Italy)
-    53,   # Ligue 1 (France)
-    244,  # UEFA Champions League
-    73,   # UEFA Europa League
-    931,  # UEFA Conference League
-    384,  # Eredivisie (Netherlands)
-    332,  # Primeira Liga (Portugal)
-    239,  # Liga MX (Mexico)
-    133,  # Brasileirão (Brazil)
-    108,  # Argentine Primera División
-    242,  # MLS (USA)
-    218,  # Scottish Premiership
-    67,   # Süper Lig (Turkey)
-    41,   # Championship (England)
-    4,    # FIFA World Cup
-    9,    # FIFA Women's World Cup
-    137,  # Copa Libertadores
-    138,  # Copa Sudamericana
-    6,    # Copa América (recurring FotMob ID)
-    940476, # FIFA Club World Cup 2025
-    936234 # Copa América 2026 (alternate FotMob ID)
-  ]).freeze
+    # All international/world competitions are included
+    return true if country == "World"
 
-  # Builds a leagueId → {name, logo, country} map from the raw match list
-  def build_league_map(raw_matches)
-    ids = raw_matches.map { |m| m["leagueId"] }.compact.uniq
-    return {} if ids.empty?
-
-    all = Rails.cache.fetch("live_scores_all_leagues", expires_in: 24.hours) do
-      data = get("football-get-all-leagues")
-      (data.dig("response", "leagues") || []).each_with_object({}) { |l, h| h[l["id"]] = l }
-    end
-
-    ids.each_with_object({}) do |id, map|
-      if (league = all[id])
-        map[id] = { name: league["name"], logo: league["logo"], country: league["ccode"] }
-      elsif (known = KNOWN_LEAGUES[id])
-        map[id] = known
-      else
-        map[id] = { name: nil, logo: nil, country: "UNKNOWN" }
-      end
-    end
+    # Featured domestic leagues by ID
+    FEATURED_LEAGUES.include?(lid)
   end
 
-  # Normalizes a match object (live or scheduled/finished) to the common shape
-  # that controllers return to the frontend.
-  def normalize_match(m, league_map = {})
-    status_code = m.dig("status", "code") || m["statusId"] || m["status"]
-    status      = STATUS_MAP[status_code.to_i]
-    return nil if status.nil?
-
-    minute_raw = m.dig("status", "liveTime", "long") || m.dig("status", "elapsed") || m["minute"]
-    minute = minute_raw.to_s.include?(":") ? minute_raw.to_s.split(":").first.to_i : minute_raw.to_s.gsub(/[^\d]/, "").to_i.nonzero?
-    lid      = m["leagueId"] || m.dig("league", "id")
-    lg       = league_map[lid] || {}
+  # Normalize a raw API-Football fixture object to our internal shape.
+  # This is the same shape that today_controller's normalize_api expects.
+  def normalize_fixture(f)
+    short  = f.dig("fixture", "status", "short")
+    status = STATUS_MAP[short]
+    return nil unless status
 
     {
-      external_id:    m["id"] || m["matchId"],
-      league_id:      lid,
-      league_name:    m.dig("league", "name") || m["leagueName"] || lg[:name],
-      league_logo:    m.dig("league", "logo") || m["leagueLogo"] || lg[:logo],
-      league_country: m.dig("league", "country") || m["country"] || lg[:country],
-      kickoff_at:     begin
-                        ts = m["startTimestamp"] || (m["timeTS"] && m["timeTS"] / 1000)
-                        ts ? Time.at(ts).utc.iso8601 : (m["kickoff"] || m["date"])
-                      end,
+      external_id:    f.dig("fixture", "id"),
+      league_id:      f.dig("league", "id"),
+      league_name:    f.dig("league", "name"),
+      league_logo:    f.dig("league", "logo"),
+      league_country: f.dig("league", "country"),
+      kickoff_at:     f.dig("fixture", "date"),
       status:         status,
-      status_short:   STATUS_SHORT_MAP[status_code.to_i],
-      minute:         minute,
-      venue:          m.dig("venue", "name") || m["venue"],
+      status_short:   short,
+      minute:         f.dig("fixture", "status", "elapsed"),
+      venue:          f.dig("fixture", "venue", "name"),
       home: {
-        name:      m.dig("home", "name")  || m.dig("homeTeam", "name"),
-        logo:      team_logo(m.dig("home", "id") || m.dig("homeTeam", "id"), m.dig("home", "logo") || m.dig("homeTeam", "logo")),
-        score:     m.dig("home", "score") || m.dig("homeScore", "current") || m["homeGoals"],
-        red_cards: m.dig("home", "redCards")
+        name:      f.dig("teams", "home", "name"),
+        logo:      f.dig("teams", "home", "logo"),
+        score:     f.dig("goals", "home"),
+        red_cards: nil,
       },
       away: {
-        name:      m.dig("away", "name")      || m.dig("awayTeam", "name"),
-        logo:      team_logo(m.dig("away", "id") || m.dig("awayTeam", "id"), m.dig("away", "logo") || m.dig("awayTeam", "logo")),
-        score:     m.dig("away", "score")     || m.dig("awayScore", "current") || m["awayGoals"],
-        red_cards: m.dig("away", "redCards")
-      }
+        name:      f.dig("teams", "away", "name"),
+        logo:      f.dig("teams", "away", "logo"),
+        score:     f.dig("goals", "away"),
+        red_cards: nil,
+      },
     }
   end
 
-  # Normalizes a raw match-detail response into the shape MatchShowPage expects
-  # that MatchShowPage.jsx expects.
-  def normalize_detail(raw)
-    status_code  = raw.dig("status", "code") || raw["statusId"]
-    status_short = STATUS_SHORT_MAP[status_code.to_i] || "NS"
-    elapsed      = raw.dig("status", "liveTime", "long") || raw.dig("status", "elapsed")
-
-    home_score = raw.dig("home", "score") || raw.dig("homeScore", "current")
-    away_score = raw.dig("away", "score") || raw.dig("awayScore", "current")
-    home_wins  = home_score.to_i > away_score.to_i if home_score && away_score
-    away_wins  = away_score.to_i > home_score.to_i if home_score && away_score
-
-    fixture = {
+  # Build the fixture hash in the shape MatchShowPage.jsx expects.
+  def build_fixture(fx)
+    {
       "fixture" => {
-        "id"     => raw["id"] || raw["matchId"],
-        "date"   => raw["startTimestamp"] ? Time.at(raw["startTimestamp"]).utc.iso8601 : raw["kickoff"],
+        "id"     => fx.dig("fixture", "id"),
+        "date"   => fx.dig("fixture", "date"),
         "status" => {
-          "short"   => status_short,
-          "long"    => raw.dig("status", "description") || status_short,
-          "elapsed" => elapsed
+          "short"   => fx.dig("fixture", "status", "short"),
+          "long"    => fx.dig("fixture", "status", "long"),
+          "elapsed" => fx.dig("fixture", "status", "elapsed"),
         },
-        "venue" => { "name" => raw.dig("venue", "name") || raw["venue"], "city" => nil }
+        "venue" => {
+          "name" => fx.dig("fixture", "venue", "name"),
+          "city" => fx.dig("fixture", "venue", "city"),
+        },
       },
       "league" => {
-        "id"      => raw["leagueId"] || raw.dig("league", "id"),
-        "name"    => raw.dig("league", "name") || raw["leagueName"],
-        "logo"    => raw.dig("league", "logo"),
-        "country" => raw.dig("league", "country") || raw["country"],
-        "round"   => raw["round"] || raw["roundName"]
+        "id"      => fx.dig("league", "id"),
+        "name"    => fx.dig("league", "name"),
+        "logo"    => fx.dig("league", "logo"),
+        "country" => fx.dig("league", "country"),
+        "round"   => fx.dig("league", "round"),
       },
       "teams" => {
         "home" => {
-          "id"     => raw.dig("home", "id") || raw.dig("homeTeam", "id"),
-          "name"   => raw.dig("home", "name") || raw.dig("homeTeam", "name"),
-          "logo"   => raw.dig("home", "logo") || raw.dig("homeTeam", "logo"),
-          "winner" => home_wins
+          "id"     => fx.dig("teams", "home", "id"),
+          "name"   => fx.dig("teams", "home", "name"),
+          "logo"   => fx.dig("teams", "home", "logo"),
+          "winner" => fx.dig("teams", "home", "winner"),
         },
         "away" => {
-          "id"     => raw.dig("away", "id") || raw.dig("awayTeam", "id"),
-          "name"   => raw.dig("away", "name") || raw.dig("awayTeam", "name"),
-          "logo"   => raw.dig("away", "logo") || raw.dig("awayTeam", "logo"),
-          "winner" => away_wins
-        }
+          "id"     => fx.dig("teams", "away", "id"),
+          "name"   => fx.dig("teams", "away", "name"),
+          "logo"   => fx.dig("teams", "away", "logo"),
+          "winner" => fx.dig("teams", "away", "winner"),
+        },
       },
       "goals" => {
-        "home" => home_score,
-        "away" => away_score
-      }
+        "home" => fx.dig("goals", "home"),
+        "away" => fx.dig("goals", "away"),
+      },
     }
-
-    events  = normalize_events(raw["events"] || raw["incidents"] || [])
-    stats   = normalize_stats(raw["stats"] || raw["statistics"] || [])
-    lineups = normalize_lineups(raw["lineups"] || [])
-
-    { fixture: fixture, events: events, stats: stats, lineups: lineups }
   end
 
   def normalize_events(raw)
     raw.map do |e|
-      type   = infer_event_type(e["type"] || e["incidentType"])
-      detail = e["detail"] || e["incidentClass"] || type
-
       {
-        minute:   e["time"] || e.dig("time", "elapsed") || e["minute"],
+        minute:   e.dig("time", "elapsed"),
         extra:    e.dig("time", "extra"),
-        team:     { name: e.dig("team", "name") || e["teamName"], logo: e.dig("team", "logo") },
-        player:   e.dig("player", "name") || e["playerName"],
-        assist:   e.dig("assist", "name") || e["assistName"],
-        type:     type,
-        detail:   detail,
-        comments: e["comments"]
+        team:     { name: e.dig("team", "name"),     logo: e.dig("team", "logo") },
+        player:   e.dig("player", "name"),
+        assist:   e.dig("assist", "name"),
+        type:     e["type"].to_s,
+        detail:   e["detail"] || e["type"].to_s,
+        comments: e["comments"],
       }
     end
   end
 
   def normalize_stats(raw)
-    return [] unless raw.is_a?(Array)
-    raw.map do |team_data|
-      stats_raw = team_data["statistics"] || team_data["stats"] || []
+    raw.map do |td|
       {
-        team:  { name: team_data.dig("team", "name") || team_data["teamName"],
-                 logo: team_data.dig("team", "logo") },
-        stats: stats_raw.map { |s| { type: s["type"] || s["name"], value: s["value"] } }
+        team:  { name: td.dig("team", "name"), logo: td.dig("team", "logo") },
+        stats: (td["statistics"] || []).map { |s| { type: s["type"], value: s["value"] } },
       }
     end
   end
 
   def normalize_lineups(raw)
-    return [] unless raw.is_a?(Array)
     raw.map do |t|
       {
         team:      { name: t.dig("team", "name"), logo: t.dig("team", "logo"), colors: t.dig("team", "colors") },
         formation: t["formation"],
-        start_xi:  (t["startXI"] || t["startingXI"] || []).map { |p|
-          { name: p.dig("player", "name"), number: p.dig("player", "number"),
-            pos: p.dig("player", "pos"), grid: p.dig("player", "grid") }
+        start_xi:  (t["startXI"] || []).map { |p|
+          pl = p["player"] || {}
+          { name: pl["name"], number: pl["number"], pos: pl["pos"], grid: pl["grid"] }
         },
-        subs:      (t["substitutes"] || t["subs"] || []).map { |p|
-          { name: p.dig("player", "name"), number: p.dig("player", "number"), pos: p.dig("player", "pos") }
+        subs:      (t["substitutes"] || []).map { |p|
+          pl = p["player"] || {}
+          { name: pl["name"], number: pl["number"], pos: pl["pos"] }
         },
-        coach:     t.dig("coach", "name")
+        coach:     t.dig("coach", "name"),
       }
     end
   end
 
-  def infer_event_type(raw_type)
-    return "Goal"  if raw_type.to_s.match?(/goal/i)
-    return "Card"  if raw_type.to_s.match?(/card|yellow|red/i)
-    return "subst" if raw_type.to_s.match?(/sub|substitut/i)
-    raw_type.to_s
-  end
-
-  POSITION_MAP = {
-    11 => "G",                          # GK
-    (30..59) => "D",                    # Defenders
-    (60..99) => "M",                    # Midfielders
-    (100..149) => "F"                  # Forwards
-  }.freeze
-
-  def fetch_raw_matches(date)
-    data = get("football-get-matches-by-date", date: date.strftime("%Y%m%d"))
-    data.dig("response", "matches") ||
-      data.dig("response", "fixtures") ||
-      data.dig("response", "live") || []
-  rescue RateLimitedError
-    raise  # propagate so matches_for_date can apply the 2-hour back-off
-  rescue => e
-    Rails.logger.warn("[LiveScoresClient] fetch_raw_matches #{date} failed: #{e.message}")
-    []
-  end
-
-  def featured_league?(match, league_map)
-    lid     = match[:league_id]
-    country = match[:league_country] || league_map.dig(lid, :country)
-    name    = (match[:league_name] || "").downcase
-    home    = (match.dig(:home, :name) || "").downcase
-    away    = (match.dig(:away, :name) || "").downcase
-
-    return false if EXCLUDED_LEAGUES.include?(lid.to_i)
-    return false if name.include?("women") || name.include?("female") || name.include?("girl")
-    return false if home.end_with?("(w)") || away.end_with?("(w)")
-
-    return true if country == "INT"
-    FEATURED_DOMESTIC_LEAGUES.include?(lid.to_i)
-  end
-
-  def team_logo(id, fallback = nil)
-    return fallback if fallback.present?
-    return nil unless id.present?
-    "https://images.fotmob.com/image_resources/logo/teamlogo/#{id}_large.png"
-  end
-
-  def pos_from_id(position_id)
-    return "G" if position_id == 11
-    return "D" if position_id&.between?(30, 59)
-    return "M" if position_id&.between?(60, 99)
-    return "F" if position_id&.between?(100, 149)
-    "M"
-  end
-
-  def pos_from_y(y)
-    return "G" if y.to_f < 0.2
-    return "D" if y.to_f < 0.5
-    return "M" if y.to_f < 0.75
-    "F"
-  end
-
-  def normalize_lineup_team(lu)
-    return nil unless lu
-    starters = (lu["starters"] || []).map do |p|
-      y = p.dig("verticalLayout", "y")
-      x = p.dig("verticalLayout", "x")
-      pos = pos_from_id(p["positionId"]) || pos_from_y(y)
-      { name: p["name"], number: p["shirtNumber"]&.to_i, pos: pos, grid: nil, x: x, y: y }
-    end
-
-    # Assign grid rows by clustering y values
-    rows = starters.map { |p| p[:y].to_f }.uniq.sort
-    starters.each do |p|
-      row_idx = rows.index(p[:y].to_f) || 0
-      row_players = starters.select { |q| q[:y] == p[:y] }.sort_by { |q| q[:x].to_f }
-      col_idx = row_players.index(p) || 0
-      p[:grid] = "#{row_idx + 1}:#{col_idx + 1}"
-    end
-
-    subs = (lu["subs"] || []).map do |p|
-      pos = pos_from_id(p["positionId"])
-      { name: p["name"], number: p["shirtNumber"]&.to_i, pos: pos }
-    end
-
-    {
-      team:      { name: lu["name"], logo: "https://images.fotmob.com/image_resources/logo/teamlogo/#{lu['id']}_large.png", colors: nil },
-      formation: lu["formation"],
-      start_xi:  starters,
-      subs:      subs,
-      coach:     nil
-    }
-  end
-
-  def normalize_h2h(h2h_raw, home_id, away_id)
-    return { summary: nil, matches: [] } if h2h_raw.blank?
-    summary = h2h_raw["summary"]
-    matches = (h2h_raw["matches"] || []).map do |m|
-      score_str = m.dig("status", "scoreStr") || ""
-      parts = score_str.split("-").map(&:strip)
+  def normalize_h2h(raw)
+    matches = raw.map do |fx|
       {
-        kickoff_at: m.dig("time", "utcTime"),
-        status:     m.dig("status", "finished") ? "finished" : "scheduled",
-        home: { name: m.dig("home", "name"), score: parts[0]&.to_i },
-        away: { name: m.dig("away", "name"), score: parts[1]&.to_i },
-        competition: { name: m.dig("league", "name") }
+        kickoff_at:  fx.dig("fixture", "date"),
+        status:      fx.dig("fixture", "status", "long") || "Finished",
+        home: {
+          name:  fx.dig("teams", "home", "name"),
+          logo:  fx.dig("teams", "home", "logo"),
+          score: fx.dig("goals", "home") || fx.dig("score", "fulltime", "home"),
+        },
+        away: {
+          name:  fx.dig("teams", "away", "name"),
+          logo:  fx.dig("teams", "away", "logo"),
+          score: fx.dig("goals", "away") || fx.dig("score", "fulltime", "away"),
+        },
+        competition: { name: fx.dig("league", "name") },
       }
     end
-    { summary: summary, matches: matches }
+    { summary: nil, matches: matches }
   end
 
-  def normalize_stats_response(stats_raw, home_name, away_name)
-    return [] unless stats_raw.is_a?(Hash)
-    home_stats = stats_raw["homeTeamStats"] || stats_raw["home"] || {}
-    away_stats = stats_raw["awayTeamStats"] || stats_raw["away"] || {}
-    return [] if home_stats.blank? && away_stats.blank?
-
-    stat_keys = (home_stats.keys + away_stats.keys).uniq
-    [
-      {
-        team: { name: home_name },
-        stats: stat_keys.map { |k| { type: k.to_s.humanize, value: home_stats[k] } }
-      },
-      {
-        team: { name: away_name },
-        stats: stat_keys.map { |k| { type: k.to_s.humanize, value: away_stats[k] } }
-      }
-    ]
-  end
-
-  def assemble_match_detail(detail, score, status, location, home_lu, away_lu, h2h_raw, stats_raw, match_id)
-    home_score_obj = score.first || {}
-    away_score_obj = score.last || {}
-    home_name = detail.dig("homeTeam", "name") || home_score_obj["name"]
-    away_name = detail.dig("awayTeam", "name") || away_score_obj["name"]
-    home_id   = detail.dig("homeTeam", "id") || home_score_obj["id"]
-    away_id   = detail.dig("awayTeam", "id") || away_score_obj["id"]
-
-    finished = status["finished"] || detail["finished"]
-    started  = status["started"]  || detail["started"]
-    short = if !started then "NS"
-    elsif status.dig("reason", "short") then status.dig("reason", "short")
-    elsif finished then "FT"
-    else "1H"
-    end
-
-    long_status = status.dig("reason", "long") || (finished ? "Full Time" : started ? "In Progress" : "Not Started")
-    elapsed = nil
-    if started && !finished
-      # Prefer real live time from status; fall back to period defaults
-      raw_time = status.dig("liveTime", "long") || status["elapsed"] || detail.dig("status", "liveTime", "long")
-      if raw_time
-        elapsed = raw_time.to_s.include?(":") ? raw_time.to_s.split(":").first.to_i : raw_time.to_s.gsub(/[^\d]/, "").to_i.nonzero?
-      end
-      elapsed ||= (short == "HT" ? 45 : nil)
-    end
-
-    home_logo = "https://images.fotmob.com/image_resources/logo/teamlogo/#{home_id}_large.png"
-    away_logo = "https://images.fotmob.com/image_resources/logo/teamlogo/#{away_id}_large.png"
-    league_logo = "https://images.fotmob.com/image_resources/logo/leaguelogo/dark/#{detail['leagueId']}.png"
-    home_wins = finished && home_score_obj["score"].to_i > away_score_obj["score"].to_i
-    away_wins = finished && away_score_obj["score"].to_i > home_score_obj["score"].to_i
-
-    fixture = {
-      "fixture" => {
-        "id"     => match_id,
-        "date"   => detail["matchTimeUTCDate"] || status["utcTime"],
-        "status" => { "short" => short, "long" => long_status, "elapsed" => elapsed },
-        "venue"  => { "name" => location["name"], "city" => location["city"] }
-      },
-      "league" => {
-        "id"      => detail["leagueId"],
-        "name"    => detail["leagueName"],
-        "logo"    => league_logo,
-        "country" => detail["countryCode"],
-        "round"   => detail["leagueRoundName"]
-      },
-      "teams" => {
-        "home" => { "id" => home_id, "name" => home_name, "logo" => home_logo, "winner" => home_wins },
-        "away" => { "id" => away_id, "name" => away_name, "logo" => away_logo, "winner" => away_wins }
-      },
-      "goals" => {
-        "home" => home_score_obj["score"],
-        "away" => away_score_obj["score"]
-      }
-    }
-
-    # Lineups from separate endpoints; fall back to embedded detail["lineups"]
-    lineups = [ normalize_lineup_team(home_lu), normalize_lineup_team(away_lu) ].compact
-    lineups = normalize_lineups(detail["lineups"] || []) if lineups.empty? && detail["lineups"].present?
-
-    h2h = normalize_h2h(h2h_raw, home_id, away_id)
-
-    # Stats: API returns Array of team-stat objects; normalize_stats handles that.
-    # normalize_stats_response handles legacy Hash format.
-    stats = stats_raw.is_a?(Array) ? normalize_stats(stats_raw) : normalize_stats_response(stats_raw, home_name, away_name)
-    # Fallback: stats embedded directly in match detail response
-    if stats.empty?
-      inline = detail["stats"] || detail["statistics"] || []
-      stats  = inline.is_a?(Array) ? normalize_stats(inline) : normalize_stats_response(inline, home_name, away_name)
-    end
-
-    # Events: FotMob may wrap in a Hash like {"ongoing":[...],"aggregated":[...]};
-    # find the first Array value, or try incidents directly.
-    events_arr = [ detail["events"], detail["incidents"] ].find { |e| e.is_a?(Array) }
-    if events_arr.nil?
-      ev         = detail["events"] || detail["incidents"]
-      events_arr = ev.is_a?(Hash) ? (ev.values.find { |v| v.is_a?(Array) } || []) : []
-    end
-    events = normalize_events(events_arr)
-
-    Rails.logger.debug("[MatchDetail #{match_id}] stats=#{stats_raw.class} events_src=#{(detail['events'] || detail['incidents']).class} lineups=#{lineups.length} h2h_matches=#{h2h[:matches]&.length || 0}")
-
-    { fixture: fixture, events: events, stats: stats, lineups: lineups, h2h: h2h }
-  end
-
-  # Normalized live matches keyed by external_id, for fallback lookups
-  def live_matches_normalized
-    live_matches.filter_map { |m| normalize_match(m) }
-  rescue
-    []
-  end
-
-  # Build a basic fixture detail from a normalized list match (no events/stats/lineups)
   def build_detail_from_list(m)
-    status_short_to_long = {
+    status_long = {
       "NS" => "Not Started", "1H" => "First Half", "HT" => "Half Time",
-      "2H" => "Second Half", "ET" => "Extra Time", "P"  => "Penalties",
-      "FT" => "Full Time", "AET" => "After Extra Time", "PEN" => "After Penalties"
+      "2H" => "Second Half", "ET" => "Extra Time",  "P"  => "Penalties",
+      "FT" => "Full Time",  "AET" => "After Extra Time", "PEN" => "After Penalties",
     }
     short = m[:status_short] || (m[:status] == "finished" ? "FT" : m[:status] == "live" ? "1H" : "NS")
-    elapsed = m[:minute].is_a?(Integer) ? m[:minute] : m[:minute].to_s.split(":").first.to_i.nonzero?
 
     fixture = {
       "fixture" => {
         "id"     => m[:external_id],
         "date"   => m[:kickoff_at],
-        "status" => { "short" => short, "long" => status_short_to_long[short] || short, "elapsed" => elapsed },
-        "venue"  => { "name" => m[:venue], "city" => nil }
+        "status" => { "short" => short, "long" => status_long[short] || short, "elapsed" => m[:minute] },
+        "venue"  => { "name" => m[:venue], "city" => nil },
       },
       "league" => {
         "id"      => m[:league_id],
         "name"    => m[:league_name],
         "logo"    => m[:league_logo],
         "country" => m[:league_country],
-        "round"   => nil
+        "round"   => nil,
       },
       "teams" => {
         "home" => { "id" => nil, "name" => m.dig(:home, :name), "logo" => m.dig(:home, :logo), "winner" => nil },
-        "away" => { "id" => nil, "name" => m.dig(:away, :name), "logo" => m.dig(:away, :logo), "winner" => nil }
+        "away" => { "id" => nil, "name" => m.dig(:away, :name), "logo" => m.dig(:away, :logo), "winner" => nil },
       },
-      "goals" => { "home" => m.dig(:home, :score), "away" => m.dig(:away, :score) }
+      "goals" => { "home" => m.dig(:home, :score), "away" => m.dig(:away, :score) },
     }
     { fixture: fixture, events: [], stats: [], lineups: [] }
   end
@@ -678,19 +404,8 @@ class LiveScoresClient
   def get(path, params = {})
     resp = @conn.get(path, params)
     JSON.parse(resp.body)
-  rescue Faraday::TooManyRequestsError, Faraday::ClientError => e
-    # Detect 429 rate-limit by status code embedded in Faraday error
-    status = e.respond_to?(:response) && e.response ? e.response[:status].to_i : 0
-    if status == 429 || e.is_a?(Faraday::TooManyRequestsError)
-      Rails.logger.warn("[LiveScoresClient] #{path}: rate limited (429)")
-      raise RateLimitedError, "429 from #{path}"
-    end
-    Rails.logger.error("[LiveScoresClient] #{path}: #{e.message}")
-    Sentry.capture_exception(e, extra: { path: path }) if defined?(Sentry) && Sentry.initialized?
-    {}
-  rescue Faraday::Error, JSON::ParserError => e
-    Rails.logger.error("[LiveScoresClient] #{path}: #{e.message}")
-    Sentry.capture_exception(e, extra: { path: path }) if defined?(Sentry) && Sentry.initialized?
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] GET #{path} #{params}: #{e.message}")
     {}
   end
 end

@@ -7,4 +7,15 @@ export default defineConfig({
     RubyPlugin(),
     react(),
   ],
+  resolve: {
+    dedupe: ['react', 'react-dom', 'react-dom/client'],
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-dom/client'],
+  },
+  server: {
+    headers: {
+      'Cache-Control': 'no-store',
+    },
+  },
 })

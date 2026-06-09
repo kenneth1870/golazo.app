@@ -1,6 +1,6 @@
 class ApiSportsClient
   BASE_URL = "https://v3.football.api-sports.io/"
-  TOKEN    = ENV["API_SPORTS_KEY"].presence || ENV["FOOTBALL_API_KEY"]
+  TOKEN    = (ENV["APISPORTS_KEY"] || ENV["API_SPORTS_KEY"] || ENV["FOOTBALL_API_KEY"]).presence
 
   def initialize
     raise "API_SPORTS_KEY / FOOTBALL_API_KEY env var not set" if TOKEN.blank?

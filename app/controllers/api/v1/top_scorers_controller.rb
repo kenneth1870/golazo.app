@@ -1,15 +1,15 @@
 module Api
   module V1
     class TopScorersController < BaseController
-      # FotMob league/season IDs for well-known competitions
+      # API-Football v3 league IDs + seasons
       COMPETITION_IDS = {
-        "WC"  => { league_id: 4,   season_id: 2026 },
-        "CL"  => { league_id: 244, season_id: 2025 },
-        "PL"  => { league_id: 47,  season_id: 2025 },
-        "BL1" => { league_id: 54,  season_id: 2025 },
-        "SA"  => { league_id: 55,  season_id: 2025 },
-        "LAL" => { league_id: 87,  season_id: 2025 },
-        "L1"  => { league_id: 53,  season_id: 2025 },
+        "WC"  => { league_id: 1,   season_id: 2026 },
+        "CL"  => { league_id: 2,   season_id: 2024 },
+        "PL"  => { league_id: 39,  season_id: 2024 },
+        "BL1" => { league_id: 78,  season_id: 2024 },
+        "SA"  => { league_id: 135, season_id: 2024 },
+        "LAL" => { league_id: 140, season_id: 2024 },
+        "L1"  => { league_id: 61,  season_id: 2024 },
       }.freeze
 
       def index
@@ -19,22 +19,25 @@ module Api
 
         scorers = LiveScoresClient.new.top_scorers(league_id, season_id)
 
+        # API-Football v3 shape:
+        # { player: {id, name, photo}, statistics: [{team: {name, logo}, goals: {total, assists}, games: {appearences}}] }
         render json: scorers.map { |s|
+          stats = s.dig("statistics", 0) || {}
           {
             player: {
               id:          s.dig("player", "id"),
-              name:        s.dig("player", "name") || s["playerName"],
-              nationality: s.dig("player", "nationality") || s["nationality"],
+              name:        s.dig("player", "name"),
+              nationality: s.dig("player", "nationality"),
               photo:       s.dig("player", "photo"),
             },
             team: {
-              name:  s.dig("team", "name") || s["teamName"],
-              crest: s.dig("team", "logo") || s["teamLogo"],
-              tla:   s.dig("team", "tla"),
+              name:  stats.dig("team", "name"),
+              crest: stats.dig("team", "logo"),
+              tla:   nil,
             },
-            goals:   s["goals"]   || s["goalsScored"],
-            assists: s["assists"],
-            played:  s["played"]  || s["playedMatches"],
+            goals:   stats.dig("goals", "total"),
+            assists: stats.dig("goals", "assists"),
+            played:  stats.dig("games", "appearences"),
           }
         }
       rescue => e
