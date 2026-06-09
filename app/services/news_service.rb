@@ -40,7 +40,7 @@ class NewsService
 
   def latest(limit: 20, lang: "en")
     feeds = FEEDS[lang] || FEEDS["en"]
-    Rails.cache.fetch("news_feed_v2_#{lang}", expires_in: 15.minutes) do
+    Rails.cache.fetch("news_feed_v3_#{lang}", expires_in: 15.minutes) do
       threads = feeds.map { |feed| Thread.new { fetch_feed(feed[:url], feed[:source]) } }
       items   = threads.flat_map { |t| t.join(8)&.value || [] }
       items.uniq { |a| a[:link] }
@@ -165,7 +165,13 @@ class NewsService
     summary     = item.at_css("description")&.text&.then { |t| Nokogiri::HTML(t).text.strip.truncate(300) }
     pub_str     = item.at_css("pubDate")&.text&.strip
     published   = pub_str ? Time.parse(pub_str) : nil
-    image       = item.at_css("media|thumbnail, media|content, enclosure")&.attr("url")&.then { |u| upscale(u) }
+    image       = begin
+                    node = item.at_xpath(".//*[local-name()='thumbnail' or local-name()='content']") ||
+                           item.at_css("enclosure")
+                    node&.attr("url")&.then { |u| upscale(u) }
+                  rescue
+                    nil
+                  end
     id          = Digest::SHA1.hexdigest(link.to_s)[0, 12]
 
     {

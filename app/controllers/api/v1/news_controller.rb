@@ -37,7 +37,7 @@ module Api
 
       # Strips region suffix ("es-MX" → "es") and validates against supported locales
       def normalize_lang(raw)
-        code = raw.to_s.split("-").first.downcase
+        code = raw.to_s.split("-").first&.downcase
         code.presence_in(%w[en es pt fr de ar ja ko]) || "en"
       end
     end
