@@ -1233,12 +1233,15 @@ export default function MatchShowPage() {
     const isFinished = ["FT", "AET", "PEN"].includes(status)
     if (!isFinished || aiSummary || aiLoading || aiError) return
 
-    // Only fetch if we have a numeric match ID (our DB id, not external)
-    const matchDbId = data?.fixture?.fixture?.localId || data?.fixture?.fixture?.db_id
-    if (!matchDbId) return
+    // Prefer DB-id endpoint (WC matches); fall back to external match-detail endpoint
+    const lang        = i18n.language?.slice(0, 2) || "en"
+    const matchDbId   = data?.fixture?.fixture?.localId || data?.fixture?.fixture?.db_id
+    const summaryUrl  = matchDbId
+      ? `/api/v1/matches/${matchDbId}/ai_summary?lang=${lang}`
+      : `/api/v1/match_detail/${id}/ai_summary?lang=${lang}`
 
     setAiLoading(true)
-    fetch(`/api/v1/matches/${matchDbId}/ai_summary`)
+    fetch(summaryUrl)
       .then(r => r.json())
       .then(d => {
         if (d.summary) setAiSummary(d)

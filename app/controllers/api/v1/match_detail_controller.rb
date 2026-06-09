@@ -189,6 +189,50 @@ module Api
 
       public
 
+      # GET /api/v1/match_detail/:id/ai_summary?lang=es
+      # Generates an AI post-match report for any finished external match.
+      # Works for matches that don't exist in our DB (friendlies, leagues, etc.).
+      def ai_summary
+        unless ENV["ANTHROPIC_API_KEY"].present?
+          return render json: { error: "ai_unavailable" }, status: :service_unavailable
+        end
+
+        raw_id      = params[:id].to_s
+        lang        = params[:lang].to_s.presence || "en"
+        external_id = raw_id.sub(/\Aext-/, "").to_i
+        client      = LiveScoresClient.new
+
+        data = client.match_detail(external_id)
+
+        # Fallback: check DB for a synced WC match with this external_id
+        if data.nil? || data[:fixture].nil?
+          match = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition)
+                       .find_by(external_id: external_id)
+          if match
+            result = AiMatchSummaryService.new(match, lang: lang).call
+            return result ? render(json: result) : render(json: { error: "generation_failed" }, status: :service_unavailable)
+          end
+          return render json: { error: "not_found" }, status: :not_found
+        end
+
+        # Must be finished
+        status = data.dig(:fixture, "fixture", "status", "short")
+        unless %w[FT AET PEN].include?(status)
+          return render json: { error: "match_not_finished" }, status: :unprocessable_entity
+        end
+
+        result = AiMatchSummaryExternalService.new(data, lang: lang).call
+
+        if result
+          render json: result
+        else
+          render json: { error: "generation_failed" }, status: :service_unavailable
+        end
+      rescue => e
+        Rails.logger.error("[MatchDetail#ai_summary] #{e.message}")
+        render json: { error: "server_error" }, status: :internal_server_error
+      end
+
       def preview
         home_id = params[:home_team_id].to_i
         away_id = params[:away_team_id].to_i

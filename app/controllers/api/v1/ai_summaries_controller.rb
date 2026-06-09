@@ -1,30 +1,20 @@
 module Api
   module V1
-    # GET /api/v1/matches/:id/ai_summary
+    # GET /api/v1/matches/:id/ai_summary?lang=es
     class AiSummariesController < BaseController
       def show
         match = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition)
                      .find_by(id: params[:match_id])
 
-        unless match
-          return render json: { error: "not_found" }, status: :not_found
-        end
+        return render json: { error: "not_found" }, status: :not_found unless match
+        return render json: { error: "match_not_finished" }, status: :unprocessable_entity unless match.status == "finished"
+        return render json: { error: "ai_unavailable" }, status: :service_unavailable unless ENV["ANTHROPIC_API_KEY"].present?
 
-        unless match.status == "finished"
-          return render json: { error: "match_not_finished" }, status: :unprocessable_entity
-        end
+        lang      = params[:lang].to_s.presence || "en"
+        cache_key = "ai_match_summary_v3_#{match.id}_#{lang[0, 2].downcase}"
+        result    = Rails.cache.read(cache_key)
 
-        unless ENV["ANTHROPIC_API_KEY"].present?
-          return render json: { error: "ai_unavailable" }, status: :service_unavailable
-        end
-
-        # Kick off a background job to pre-warm cache on first request
-        # but also try to serve synchronously (it's fast with haiku)
-        result = Rails.cache.read("ai_match_summary_v2_#{match.id}")
-
-        if result.nil?
-          result = AiMatchSummaryService.new(match).call
-        end
+        result ||= AiMatchSummaryService.new(match, lang: lang).call
 
         if result
           render json: result
