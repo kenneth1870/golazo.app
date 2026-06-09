@@ -97,7 +97,7 @@ class LiveScoresClient
 
   # Currently live matches across all leagues (senior men's only)
   def live_matches
-    Rails.cache.fetch("live_scores_live_v5", expires_in: 1.minute) do
+    Rails.cache.fetch("live_scores_live_v6", expires_in: 1.minute) do
       data = get("fixtures", live: "all")
       (data.dig("response") || [])
         .filter_map { |f| normalize_fixture(f) }
@@ -110,7 +110,7 @@ class LiveScoresClient
 
   # All featured matches for a given date (UTC).
   def matches_for_date(date)
-    Rails.cache.fetch("live_scores_date_v12_#{date.to_date.iso8601}", expires_in: 10.minutes) do
+    Rails.cache.fetch("live_scores_date_v13_#{date.to_date.iso8601}", expires_in: 10.minutes) do
       data = get("fixtures", date: date.to_date.iso8601, timezone: "UTC")
       (data.dig("response") || [])
         .filter_map { |f| normalize_fixture(f) }
@@ -227,18 +227,23 @@ class LiveScoresClient
 
   def featured_league?(match)
     lid       = match[:league_id].to_i
+    country   = match[:league_country].to_s
     league    = match[:league_name].to_s
     home_team = match.dig(:home, :name).to_s
     away_team = match.dig(:away, :name).to_s
 
-    # Exclude if league name OR either team name contains youth/women pattern.
-    # e.g. "Finland U18 vs Norway U18" — age is in the team name, not the league.
+    # Exclude if league name OR either team name contains a youth/women pattern.
+    # Checked first so U21/U18 international friendlies are caught even when the
+    # league name is just "International Friendlies".
     check = "#{league} #{home_team} #{away_team}"
     return false if check.match?(EXCLUDED_LEAGUE_PATTERN)
 
-    # For World-level competitions, only show ones in our allowed ID list.
-    # This prevents random low-tier friendlies (Cambodia vs Myanmar, etc.)
-    # while still showing Copa América, Euro qualifiers, WC qualifiers, etc.
+    # Allow all senior international/world competitions (WC, Copa América,
+    # qualifiers, AND senior friendlies like Argentina vs Iceland).
+    # Youth/women are already excluded above by name.
+    return true if country == "World"
+
+    # Featured domestic leagues by ID
     FEATURED_LEAGUES.include?(lid)
   end
 
