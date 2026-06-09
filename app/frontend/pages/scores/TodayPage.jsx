@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague } from "../../i18n/leagueNames"
 import MatchRow from "../../components/MatchRow"
+import FlagImg from "../../components/FlagImg"
 import { useLocale } from "../../hooks/useLocale"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useFavorites } from "../../hooks/useFavorites"
@@ -143,10 +144,7 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
       </div>
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">
-          {match.home_team?.flag_url && (
-            <img src={match.home_team.flag_url} alt="" className="flag-xs"
-              onError={e => (e.target.style.display = "none")} />
-          )}
+          <FlagImg src={match.home_team?.flag_url} name={match.home_team?.name} size={16} className="flag-xs" />
           <span className="team-name">{match.home_team?.name}</span>
           {match.home_red_cards > 0 && (
             <span className="red-card-badge">🟥{match.home_red_cards > 1 ? `×${match.home_red_cards}` : ""}</span>
@@ -163,10 +161,7 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
             <span className="red-card-badge">🟥{match.away_red_cards > 1 ? `×${match.away_red_cards}` : ""}</span>
           )}
           <span className="team-name">{match.away_team?.name}</span>
-          {match.away_team?.flag_url && (
-            <img src={match.away_team.flag_url} alt="" className="flag-xs"
-              onError={e => (e.target.style.display = "none")} />
-          )}
+          <FlagImg src={match.away_team?.flag_url} name={match.away_team?.name} size={16} className="flag-xs" />
         </div>
       </div>
       <div className="match-row__meta">
@@ -196,10 +191,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
         style={{ gap: 10, cursor: canNav ? "pointer" : "default" }}
         onClick={canNav ? () => navigate(`/leagues/${comp.code}`) : undefined}
       >
-        {comp?.logo && (
-          <img src={comp.logo} alt="" className="logo-sm"
-            onError={e => (e.target.style.display = "none")} />
-        )}
+        <FlagImg src={comp?.logo} name={comp?.name} size={20} className="logo-sm" />
         <h3 style={{ margin: 0 }}>{translateLeague(comp?.name, i18n.language) ?? "Other"}</h3>
         <span className="widget-meta-country" style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{comp?.country}</span>
         {hasLive && <span className="live-badge">LIVE</span>}
@@ -479,14 +471,20 @@ export default function TodayPage() {
     return aLive - bLive || (a[0]?.competition?.name ?? "").localeCompare(b[0]?.competition?.name ?? "")
   })
 
+  // Exact team name matcher — avoids "Real" matching "Real Salt Lake", "Real Betis", etc.
+  function teamMatches(teamName, favName) {
+    if (!teamName || !favName) return false
+    return teamName.toLowerCase().trim() === favName.toLowerCase().trim()
+  }
+  function matchInvolvesAnyFav(m) {
+    return favoriteTeamNames.some(name =>
+      teamMatches(m.home_team?.name, name) || teamMatches(m.away_team?.name, name)
+    )
+  }
+
   // "My Teams" filter — only show competition blocks that include a followed team
   const groups = filterMyTeams && favoriteTeamNames.length > 0
-    ? allGroups.filter(g => g.some(m =>
-        favoriteTeamNames.some(name =>
-          m.home_team?.name?.toLowerCase().includes(name.toLowerCase()) ||
-          m.away_team?.name?.toLowerCase().includes(name.toLowerCase())
-        )
-      ))
+    ? allGroups.filter(g => g.some(matchInvolvesAnyFav))
     : allGroups
 
   const liveCount = todayMatches.filter(m => m.status === "live").length
@@ -494,19 +492,14 @@ export default function TodayPage() {
 
   const favLiveMatch = !alertDismissed && favTeam ? todayMatches.find(m =>
     m.status === "live" && (
-      m.home_team?.name?.toLowerCase().includes(favTeam.name?.toLowerCase()) ||
-      m.away_team?.name?.toLowerCase().includes(favTeam.name?.toLowerCase())
+      teamMatches(m.home_team?.name, favTeam.name) ||
+      teamMatches(m.away_team?.name, favTeam.name)
     )
   ) : null
 
   // "Your Matches" = any match involving a followed team today
   const yourMatches = favoriteTeamNames.length > 0
-    ? todayMatches.filter(m =>
-        favoriteTeamNames.some(name =>
-          m.home_team?.name?.toLowerCase().includes(name.toLowerCase()) ||
-          m.away_team?.name?.toLowerCase().includes(name.toLowerCase())
-        )
-      )
+    ? todayMatches.filter(matchInvolvesAnyFav)
     : []
 
   return (

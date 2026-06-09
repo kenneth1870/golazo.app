@@ -1107,6 +1107,15 @@ function relativeTime(published_at) {
   return `${Math.floor(diff / 86400)} d`
 }
 
+// Leagues whose names are specific enough to improve article matching.
+// Generic values like "Friendlies", "World Cup" flood results or match nothing.
+const NEWS_SEARCHABLE_LEAGUES = new Set([
+  "premier league", "la liga", "serie a", "bundesliga", "ligue 1",
+  "eredivisie", "primeira liga", "champions league", "europa league",
+  "conference league", "copa del rey", "fa cup", "carabao cup",
+  "mls", "copa america", "euros", "nations league", "libertadores",
+])
+
 function RelatedNewsPanel({ homeName, awayName, leagueName, lang, t }) {
   const [articles, setArticles] = useState([])
 
@@ -1117,13 +1126,21 @@ function RelatedNewsPanel({ homeName, awayName, leagueName, lang, t }) {
       .then(items => {
         if (!Array.isArray(items) || items.length === 0) return
 
-        // Build keyword set: all meaningful words from team + league names
-        const words = [homeName, awayName, leagueName]
+        // Only include league as a keyword when it's a well-known named competition
+        const leagueWords = leagueName &&
+          NEWS_SEARCHABLE_LEAGUES.has(leagueName.toLowerCase().trim())
+            ? leagueName.toLowerCase().split(/[\s\-\/]+/).filter(k => k.length > 3)
+            : []
+
+        // Build keyword set: all meaningful words from team names + (selective) league
+        const words = [...[homeName, awayName]
           .filter(Boolean)
           .flatMap(n => n.toLowerCase().split(/[\s\-\/]+/))
           .filter(k => k.length > 3)
-          // Remove overly generic words that appear in every article
-          .filter(k => !["copa", "world", "club", "real", "city", "mundial", "cup", "2026"].includes(k))
+          // Remove generic words that appear in every football article
+          .filter(k => !["real", "city", "club", "united", "atletico", "atleticó"].includes(k)),
+          ...leagueWords,
+        ]
 
         if (words.length === 0) return
 
@@ -1225,9 +1242,33 @@ export default function MatchShowPage() {
   const kickoffAt   = data?.fixture?.fixture?.date
   const homeLogo    = data?.fixture?.teams?.home?.logo
 
-  // Prev / next match from Today page context
-  const matchList = location.state?.matchList ?? []
-  const matchIdx  = location.state?.matchIdx  ?? -1
+  // Prev / next match navigation
+  // Primary: injected by TodayPage via router state (in-app nav)
+  // Fallback: fetch same-day matches when arriving via deep link (direct URL)
+  const [fallbackList, setFallbackList] = useState([])
+  const [fallbackIdx,  setFallbackIdx]  = useState(-1)
+
+  const stateList = location.state?.matchList ?? []
+  const stateIdx  = location.state?.matchIdx  ?? -1
+  const matchList = stateList.length > 0 ? stateList : fallbackList
+  const matchIdx  = stateList.length > 0 ? stateIdx  : fallbackIdx
+
+  // When arriving via deep link (no state), build a list from the same day's schedule
+  useEffect(() => {
+    if (stateList.length > 0 || !kickoffAt) return          // already have list
+    const date = kickoffAt.slice(0, 10)                      // "YYYY-MM-DD"
+    fetch(`/api/v1/today?date=${date}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(items => {
+        if (!Array.isArray(items) || items.length === 0) return
+        const idx = items.findIndex(m => String(m.external_id) === String(id))
+        if (idx === -1) return
+        setFallbackList(items)
+        setFallbackIdx(idx)
+      })
+      .catch(() => {})
+  }, [kickoffAt, stateList.length, id])
+
   const prevMatchNav = matchIdx > 0                    ? matchList[matchIdx - 1] : null
   const nextMatchNav = matchIdx < matchList.length - 1 ? matchList[matchIdx + 1] : null
   usePageMeta(

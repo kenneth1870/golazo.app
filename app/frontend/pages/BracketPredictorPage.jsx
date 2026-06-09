@@ -129,6 +129,7 @@ export default function BracketPredictorPage() {
   usePageMeta(t("bracket.title"), "Pick your FIFA World Cup 2026 champion — fill out the knockout bracket and share your prediction.")
   const [searchParams, setSearchParams] = useSearchParams()
   const [standings, setStandings] = useState({})
+  const [standingsLoading, setStandingsLoading] = useState(true)
   const [picks, setPicks] = useState(() => decodePicks(searchParams.get("p")))
   const [copied, setCopied] = useState(false)
   const [champion, setChampion] = useState(null)
@@ -138,6 +139,7 @@ export default function BracketPredictorPage() {
       .then(r => r.json())
       .then(setStandings)
       .catch(() => {})
+      .finally(() => setStandingsLoading(false))
   }, [])
 
   const rounds = buildBracket(standings, picks)
@@ -248,7 +250,19 @@ export default function BracketPredictorPage() {
         )}
 
         {/* Bracket */}
-        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16 }}>
+        {standingsLoading ? (
+          <div style={{ display: "flex", gap: 12, overflow: "hidden" }}>
+            {[16, 8, 4, 2, 1].map((count, ri) => (
+              <div key={ri} style={{ display: "flex", flexDirection: "column", gap: 6, flex: `0 0 ${ri === 4 ? 100 : 160}px` }}>
+                <div className="loading-shimmer" style={{ height: 12, borderRadius: 4, marginBottom: 6 }} />
+                {Array.from({ length: count }).map((_, i) => (
+                  <div key={i} className="loading-shimmer" style={{ height: 52, borderRadius: 10 }} />
+                ))}
+              </div>
+            ))}
+          </div>
+        ) : null}
+        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16, display: standingsLoading ? "none" : undefined }}>
           <div style={{ display: "flex", gap: 12, minWidth: "max-content", paddingBottom: 16 }}>
             {rounds.map((round, ri) => (
               <div key={ri} style={{ display: "flex", flexDirection: "column", gap: 0 }}>

@@ -19,9 +19,10 @@ export default function LeaderboardPage() {
   const { t } = useTranslation()
   usePageMeta("Prediction Leaderboard", "Top score predictors for FIFA World Cup 2026 — who called the most goals?")
   const navigate  = useNavigate()
-  const [rows, setRows]       = useState([])
-  const [loading, setLoading] = useState(true)
-  const [copied, setCopied]   = useState(false)
+  const [rows, setRows]             = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [copied, setCopied]         = useState(false)
+  const [visibleCount, setVisible]  = useState(25)
   const deviceId = getDeviceId()
 
   function copyShareLink() {
@@ -35,10 +36,15 @@ export default function LeaderboardPage() {
   useEffect(() => {
     fetch("/api/v1/score_predictions/leaderboard")
       .then(r => r.json())
-      .then(setRows)
+      .then(data => {
+        setRows(data)
+        // Expand list far enough to show the current user's row
+        const myIdx = data.findIndex(r => r.device_id === deviceId)
+        if (myIdx > 24) setVisible(myIdx + 5)
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, []) // eslint-disable-line
 
   const MEDALS = ["🥇", "🥈", "🥉"]
 
@@ -89,9 +95,10 @@ export default function LeaderboardPage() {
             <p>{t("leaderboard.beFirst")}</p>
           </div>
         ) : (
+          <>
           <div className="widget-next-match">
             <div className="widget-body p-0">
-              {rows.map((r, i) => {
+              {rows.slice(0, visibleCount).map((r, i) => {
                 const isMe = r.device_id === deviceId
                 return (
                   <div
@@ -126,6 +133,23 @@ export default function LeaderboardPage() {
               })}
             </div>
           </div>
+          {rows.length > visibleCount && (
+            <button
+              onClick={() => setVisible(v => v + 25)}
+              style={{
+                display: "block", width: "100%", marginTop: 12,
+                background: "var(--surface)", border: "1px solid var(--border)",
+                borderRadius: 10, padding: "10px 0", color: "var(--muted)",
+                fontSize: "0.82rem", fontWeight: 600, cursor: "pointer",
+                transition: "border-color .15s",
+              }}
+              onMouseEnter={e => (e.target.style.borderColor = "rgba(255,255,255,.2)")}
+              onMouseLeave={e => (e.target.style.borderColor = "var(--border)")}
+            >
+              {t("leaderboard.loadMore", `Show more (${rows.length - visibleCount} remaining)`)}
+            </button>
+          )}
+          </>
         )}
 
         <p style={{ textAlign: "center", marginTop: 20, fontSize: "0.72rem", color: "var(--muted)" }}>
