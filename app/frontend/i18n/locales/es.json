@@ -70,7 +70,9 @@
     "noMatchesToday": "Sin partidos hoy",
     "yourMatches": "Tus Partidos",
     "yourTeamLive": "¡Tu equipo está jugando!",
-    "wcSubtitle": "Copa Mundial FIFA 2026 · Marcadores, resultados y próximos partidos"
+    "wcSubtitle": "Copa Mundial FIFA 2026 · Marcadores, resultados y próximos partidos",
+    "filterAll": "Todos",
+    "myTeams": "Mis Equipos"
   },
   "groups": {
     "title": "Grupos",
@@ -89,7 +91,10 @@
     "needsPts": "Necesita {{pts}}+ pts",
     "from": "de",
     "matches_one": "{{count}} partido",
-    "matches_other": "{{count}} partidos"
+    "matches_other": "{{count}} partidos",
+    "matchday": "Jornada {{n}}",
+    "schedule": "Calendario",
+    "liveUpdate": "En vivo · actualizando"
   },
   "mundial": {
     "subtitle": "FIFA Mundial · EE.UU. · Canadá · México · 11 Jun – 19 Jul",
@@ -171,7 +176,10 @@
     "statistics": "Estadísticas",
     "halfTimeShort": "· Medio Tiempo",
     "assist": "Asistencia",
-    "votes": "{{count}} votos"
+    "votes": "{{count}} votos",
+    "goalTimeline": "Goles",
+    "prevMatch": "← Anterior",
+    "nextMatch": "Siguiente →"
   },
   "error": {
     "dataUnavailable": "Datos temporalmente no disponibles",
@@ -291,7 +299,8 @@
     "saving": "Guardando…",
     "invalidScore": "Introduce marcadores válidos (0–29)",
     "lockedStarted": "Predicciones cerradas — el partido ha comenzado",
-    "lockedEnded": "Predicciones cerradas — el partido ha terminado"
+    "lockedEnded": "Predicciones cerradas — el partido ha terminado",
+    "closesIn": "Cierra en {{time}}"
   },
   "bracket": {
     "title": "Predictor de Cuadro",

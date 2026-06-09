@@ -161,6 +161,80 @@ const STAT_ORDER = [
   "Yellow Cards","Red Cards","Goalkeeper Saves","Passes %",
 ]
 
+// ─── Score timeline (goal progression at a glance) ────
+function ScoreTimeline({ events, homeTeamRaw, homeName, awayName, t }) {
+  const goals = (events ?? []).filter(e => e.type === "Goal" && e.detail !== "Missed Penalty")
+  if (!goals.length) return null
+
+  let h = 0, a = 0
+  const moments = goals.map(e => {
+    const forHome = e.team?.name === homeTeamRaw
+    if (forHome) h++; else a++
+    return {
+      min:     `${e.minute ?? ""}${e.extra ? `+${e.extra}` : ""}'`,
+      player:  e.player,
+      isHome:  forHome,
+      isOG:    e.detail === "Own Goal",
+      isP:     e.detail === "Penalty",
+      score:   `${h}–${a}`,
+    }
+  })
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 10 }}>
+        ⚽ {t("match.goalTimeline")}
+      </div>
+      {/* Team labels */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 56px 1fr", gap: 8, marginBottom: 4 }}>
+        <div style={{ textAlign: "right", fontSize: "0.65rem", color: "#ee1e46", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>{homeName}</div>
+        <div />
+        <div style={{ textAlign: "left",  fontSize: "0.65rem", color: "#3b82f6", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>{awayName}</div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        {moments.map((m, i) => (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 56px 1fr", alignItems: "center", gap: 8, padding: "3px 0" }}>
+            {/* Home side */}
+            <div style={{ textAlign: "right" }}>
+              {m.isHome && (
+                <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1.3 }}>
+                  <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#fff" }}>
+                    {m.player}
+                    {m.isOG && <span style={{ color: "#ef4444", fontSize: "0.65rem" }}> OG</span>}
+                    {m.isP  && <span style={{ color: "#f59e0b", fontSize: "0.65rem" }}> P</span>}
+                  </span>
+                  <span style={{ fontSize: "0.68rem", color: "#ee1e46", fontWeight: 700 }}>{m.min}</span>
+                </div>
+              )}
+            </div>
+            {/* Score pill */}
+            <div style={{
+              textAlign: "center", fontWeight: 900, fontSize: "0.85rem", color: "#fff",
+              background: "var(--surface2)", borderRadius: 6, padding: "4px 6px",
+              border: "1px solid var(--border)", flexShrink: 0,
+            }}>
+              {m.score}
+            </div>
+            {/* Away side */}
+            <div>
+              {!m.isHome && (
+                <div style={{ display: "inline-flex", flexDirection: "column", lineHeight: 1.3 }}>
+                  <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#fff" }}>
+                    {m.player}
+                    {m.isOG && <span style={{ color: "#ef4444", fontSize: "0.65rem" }}> OG</span>}
+                    {m.isP  && <span style={{ color: "#f59e0b", fontSize: "0.65rem" }}> P</span>}
+                  </span>
+                  <span style={{ fontSize: "0.68rem", color: "#3b82f6", fontWeight: 700 }}>{m.min}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Mini stats bar shown in Summary tab ──────────────
 function MiniStatsBar({ stats, homeName, awayName }) {
   if (!stats?.length) return null
@@ -290,13 +364,14 @@ function addToCalendar(fixture) {
   URL.revokeObjectURL(url)
 }
 
-function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, notifEnabled, notifSupported }) {
+function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, notifEnabled, notifSupported, events }) {
   const { t, i18n } = useTranslation()
   const [copied, setCopied] = useState(false)
   const home   = fixture?.teams?.home
   const away   = fixture?.teams?.away
   const homeName = translateTeam(home?.name, i18n.language)
   const awayName = translateTeam(away?.name, i18n.language)
+  const homeRaw  = home?.name   // raw API name for event comparison
   const teamColor = getMatchColor(home?.name, away?.name)
   const goals  = fixture?.goals
   const status = fixture?.fixture?.status
@@ -307,9 +382,20 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
   function share() {
     const hs   = goals?.home ?? "?"
     const as   = goals?.away ?? "?"
-    const text = isLive
+    let text   = isLive
       ? `🔴 LIVE: ${homeName} ${hs}–${as} ${awayName}`
       : `${homeName} ${hs}–${as} ${awayName}`
+
+    // Append goal scorers for richer shares
+    const goalEvents = (events ?? []).filter(e => e.type === "Goal" && e.detail !== "Missed Penalty")
+    if (goalEvents.length > 0) {
+      const homeGoals = goalEvents.filter(e => e.team?.name === homeRaw).map(e => `${e.player} ${e.minute}'`).join(", ")
+      const awayGoals = goalEvents.filter(e => e.team?.name !== homeRaw).map(e => `${e.player} ${e.minute}'`).join(", ")
+      const scorerLine = [homeGoals, awayGoals].filter(Boolean).join(" | ")
+      if (scorerLine) text += `\n⚽ ${scorerLine}`
+    }
+    text += `\n${window.location.href}`
+
     const fallback = () => {
       try {
         const ta = document.createElement("textarea")
@@ -320,7 +406,10 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
       } catch {}
       setCopied(true); setTimeout(() => setCopied(false), 2000)
     }
-    if (navigator.clipboard) {
+    if (navigator.share && !navigator.userAgentData?.mobile) {
+      // Use native share on mobile
+      navigator.share({ title: `${homeName} vs ${awayName}`, text, url: window.location.href }).catch(() => {})
+    } else if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }).catch(fallback)
     } else { fallback() }
     onShare?.()
@@ -1049,9 +1138,18 @@ export default function MatchShowPage() {
   const apiMinute   = data?.fixture?.fixture?.status?.elapsed
   const liveMinute  = useLiveMinute(apiMinute, isLive)
 
-  const homeName    = translateTeam(data?.fixture?.teams?.home?.name, i18n.language)
-  const awayName    = translateTeam(data?.fixture?.teams?.away?.name, i18n.language)
-  const homeLogo = data?.fixture?.teams?.home?.logo
+  const homeTeamRaw = data?.fixture?.teams?.home?.name  // raw API name for event comparisons
+  const awayTeamRaw = data?.fixture?.teams?.away?.name
+  const homeName    = translateTeam(homeTeamRaw, i18n.language)
+  const awayName    = translateTeam(awayTeamRaw, i18n.language)
+  const kickoffAt   = data?.fixture?.fixture?.date
+  const homeLogo    = data?.fixture?.teams?.home?.logo
+
+  // Prev / next match from Today page context
+  const matchList = location.state?.matchList ?? []
+  const matchIdx  = location.state?.matchIdx  ?? -1
+  const prevMatchNav = matchIdx > 0                    ? matchList[matchIdx - 1] : null
+  const nextMatchNav = matchIdx < matchList.length - 1 ? matchList[matchIdx + 1] : null
   usePageMeta(
     homeName && awayName ? `${homeName} vs ${awayName}` : "Match",
     homeName && awayName ? `Live score and stats: ${homeName} vs ${awayName} — FIFA World Cup 2026` : undefined,
@@ -1190,9 +1288,42 @@ export default function MatchShowPage() {
 
       {/* Back bar — visible on mobile above scoreboard */}
       <div className="match-back-bar">
-        <div className="container" style={{ maxWidth: 740, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button onClick={goBack} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back")}</button>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="container" style={{ maxWidth: 740, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <button onClick={goBack} className="btn-back" style={{ padding: "10px 0", flexShrink: 0 }}>← {t("nav.back")}</button>
+
+          {/* Prev / next match navigation */}
+          {(prevMatchNav || nextMatchNav) && (
+            <div style={{ display: "flex", gap: 4, flex: 1, justifyContent: "center" }}>
+              {prevMatchNav && (
+                <button
+                  onClick={() => navigate(`/matches/${prevMatchNav.external_id}`, { state: { matchList, matchIdx: matchIdx - 1 } })}
+                  style={{
+                    background: "var(--surface2)", border: "1px solid var(--border)",
+                    borderRadius: 6, padding: "4px 10px", fontSize: "0.68rem",
+                    color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
+                  }}
+                  title={`${prevMatchNav.home_team?.name} vs ${prevMatchNav.away_team?.name}`}
+                >
+                  ← {translateTeam(prevMatchNav.home_team?.name, i18n.language)?.split(" ")[0]}
+                </button>
+              )}
+              {nextMatchNav && (
+                <button
+                  onClick={() => navigate(`/matches/${nextMatchNav.external_id}`, { state: { matchList, matchIdx: matchIdx + 1 } })}
+                  style={{
+                    background: "var(--surface2)", border: "1px solid var(--border)",
+                    borderRadius: 6, padding: "4px 10px", fontSize: "0.68rem",
+                    color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
+                  }}
+                  title={`${nextMatchNav.home_team?.name} vs ${nextMatchNav.away_team?.name}`}
+                >
+                  {translateTeam(nextMatchNav.home_team?.name, i18n.language)?.split(" ")[0]} →
+                </button>
+              )}
+            </div>
+          )}
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             {isLive && (
               <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.7rem", color: "var(--muted)" }}>
                 <span className="live-dot" /> {t("match.updatingEvery")}
@@ -1215,6 +1346,7 @@ export default function MatchShowPage() {
             notifEnabled={Notification?.permission === "granted"}
             notifSupported={notifSupported}
             onNotif={() => {}}
+            events={data.events}
           />
         ) : (
           <div style={{ background: "var(--surface1,#0d1117)", padding: "48px 0 36px" }}>
@@ -1277,27 +1409,22 @@ export default function MatchShowPage() {
           />
         )}
 
-        {/* Goal banner */}
+        {/* Score timeline — replaces goal banner with visual progression */}
         {goalCount > 0 && (
-          <div className="goal-banner" style={{ marginBottom: 20 }}>
-            {data.events.filter(e => e.type === "Goal").map((e, i) => (
-              <span key={i} className="goal-banner__item">
-                ⚽ {e.player} {e.minute}'
-                {e.detail !== "Goal" && (
-                  <span style={{ opacity: .65, fontSize: "0.7em", marginLeft: 3 }}>
-                    ({e.detail === "Own Goal" ? "OG" : "P"})
-                  </span>
-                )}
-              </span>
-            ))}
-          </div>
+          <ScoreTimeline
+            events={data.events}
+            homeTeamRaw={homeTeamRaw}
+            homeName={homeName}
+            awayName={awayName}
+            t={t}
+          />
         )}
 
         {/* Tab content — swipeable on mobile */}
         <div onTouchStart={handleTabSwipeStart} onTouchEnd={handleTabSwipeEnd}>
         {tab === "summary" && (
           <>
-            {hasFixture && <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} t={t} />}
+            {hasFixture && <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} kickoffAt={kickoffAt} t={t} />}
             {hasFixture && <PredictionPanel matchId={id} homeTeamName={homeName} awayTeamName={awayName} t={t} />}
 
             {/* AI Match Summary — shown after full time */}
@@ -1338,7 +1465,7 @@ export default function MatchShowPage() {
             )}
 
             {hasEvents
-              ? <EventsTimeline events={data.events} homeTeam={homeName} awayTeam={awayName} statusShort={statusShort} t={t} />
+              ? <EventsTimeline events={data.events} homeTeam={homeTeamRaw ?? homeName} awayTeam={awayTeamRaw ?? awayName} statusShort={statusShort} t={t} />
               : (
                 <div className="empty-state">
                   <div style={{ fontSize: "2.5rem", marginBottom: 12, opacity: .3 }}>🏟️</div>

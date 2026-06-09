@@ -70,7 +70,9 @@
     "noMatchesToday": "No matches today",
     "yourMatches": "Your Matches",
     "yourTeamLive": "Your team is playing!",
-    "wcSubtitle": "FIFA World Cup 2026 · Live scores, results & fixtures"
+    "wcSubtitle": "FIFA World Cup 2026 · Live scores, results & fixtures",
+    "filterAll": "All",
+    "myTeams": "My Teams"
   },
   "groups": {
     "title": "Groups",
@@ -89,7 +91,10 @@
     "needsPts": "Needs {{pts}}+ pts",
     "from": "from",
     "matches_one": "{{count}} match",
-    "matches_other": "{{count}} matches"
+    "matches_other": "{{count}} matches",
+    "matchday": "Matchday {{n}}",
+    "schedule": "Schedule",
+    "liveUpdate": "Live · updating"
   },
   "mundial": {
     "subtitle": "FIFA World Cup · USA · Canada · Mexico · June 11 – July 19",
@@ -171,7 +176,10 @@
     "statistics": "Statistics",
     "halfTimeShort": "· Half Time",
     "assist": "Assist",
-    "votes": "{{count}} votes"
+    "votes": "{{count}} votes",
+    "goalTimeline": "Goal Timeline",
+    "prevMatch": "← Prev",
+    "nextMatch": "Next →"
   },
   "error": {
     "dataUnavailable": "Data temporarily unavailable",
@@ -291,7 +299,8 @@
     "saving": "Saving…",
     "invalidScore": "Enter valid scores (0–29)",
     "lockedStarted": "Predictions locked — match has started",
-    "lockedEnded": "Predictions locked — match has ended"
+    "lockedEnded": "Predictions locked — match has ended",
+    "closesIn": "Closes in {{time}}"
   },
   "bracket": {
     "title": "Bracket Predictor",

@@ -348,11 +348,30 @@ export default function TodayPage() {
   const [pullDist, setPullDist]     = useState(0)
   const [alertDismissed, setAlertDismissed] = useState(false)
   const [flashIds, setFlashIds] = useState(new Set())
+  const [filterMyTeams, setFilterMyTeams] = useState(false)
   const prevMatchesRef = useRef([])
   const pullStartY  = useRef(null)
   const isPulling   = useRef(false)
   const navigate     = useNavigate()
-  const onMatchClick = (extId, match) => navigate(`/matches/${extId}`, { state: { preview: match } })
+  const onMatchClick = (extId, match) => {
+    const allClickable = matches.filter(m => m.external_id)
+    const idx = allClickable.findIndex(m => m.external_id === extId)
+    navigate(`/matches/${extId}`, {
+      state: {
+        preview: match,
+        matchList: allClickable.map(m => ({
+          external_id: m.external_id,
+          home_team: m.home_team,
+          away_team: m.away_team,
+          kickoff_at: m.kickoff_at,
+          status: m.status,
+          home_score: m.home_score,
+          away_score: m.away_score,
+        })),
+        matchIdx: idx,
+      }
+    })
+  }
   const { timezone } = useLocale()
   const { favoriteTeams, favoriteTeamNames } = useFavorites()
   const favTeam = favoriteTeams[0] ?? null
@@ -449,11 +468,21 @@ export default function TodayPage() {
     return acc
   }, {})
 
-  const groups = Object.values(byComp).sort((a, b) => {
+  const allGroups = Object.values(byComp).sort((a, b) => {
     const aLive = a.some(m => m.status === "live") ? 0 : 1
     const bLive = b.some(m => m.status === "live") ? 0 : 1
     return aLive - bLive || (a[0]?.competition?.name ?? "").localeCompare(b[0]?.competition?.name ?? "")
   })
+
+  // "My Teams" filter — only show competition blocks that include a followed team
+  const groups = filterMyTeams && favoriteTeamNames.length > 0
+    ? allGroups.filter(g => g.some(m =>
+        favoriteTeamNames.some(name =>
+          m.home_team?.name?.toLowerCase().includes(name.toLowerCase()) ||
+          m.away_team?.name?.toLowerCase().includes(name.toLowerCase())
+        )
+      ))
+    : allGroups
 
   const liveCount = matches.filter(m => m.status === "live").length
   const label     = useDateLabel(selected, t)
@@ -498,7 +527,7 @@ export default function TodayPage() {
 
         {/* Header row */}
         <div className="d-flex align-items-center justify-content-between mb-3" style={{ flexWrap: "wrap", gap: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <span style={{ fontWeight: 600, fontSize: "0.95rem", color: "#fff" }}>{label}</span>
             {toISO(selected) !== toISO(new Date()) && (
               <button
@@ -511,6 +540,35 @@ export default function TodayPage() {
               >
                 {t("time.today")}
               </button>
+            )}
+            {/* My Teams filter chips — only shown when user follows teams */}
+            {favoriteTeamNames.length > 0 && (
+              <div style={{ display: "flex", gap: 4 }}>
+                <button
+                  onClick={() => setFilterMyTeams(false)}
+                  style={{
+                    background: !filterMyTeams ? "var(--accent,#ee1e46)" : "var(--surface2,#1a1a1a)",
+                    border: "1px solid " + (!filterMyTeams ? "var(--accent,#ee1e46)" : "var(--border,#2a2a2a)"),
+                    color: !filterMyTeams ? "#fff" : "var(--muted,#888)",
+                    borderRadius: 20, padding: "3px 10px", fontSize: "0.68rem",
+                    fontWeight: 600, cursor: "pointer", transition: "all .15s",
+                  }}
+                >
+                  {t("scores.filterAll")}
+                </button>
+                <button
+                  onClick={() => setFilterMyTeams(true)}
+                  style={{
+                    background: filterMyTeams ? "rgba(238,30,70,.15)" : "var(--surface2,#1a1a1a)",
+                    border: "1px solid " + (filterMyTeams ? "rgba(238,30,70,.5)" : "var(--border,#2a2a2a)"),
+                    color: filterMyTeams ? "#ee1e46" : "var(--muted,#888)",
+                    borderRadius: 20, padding: "3px 10px", fontSize: "0.68rem",
+                    fontWeight: 600, cursor: "pointer", transition: "all .15s",
+                  }}
+                >
+                  ⭐ {t("scores.myTeams")}
+                </button>
+              </div>
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: "0.78rem" }}>
@@ -565,6 +623,18 @@ export default function TodayPage() {
             <p>{t("error.tryAgain", "Couldn't load matches. Check your connection.")}</p>
             <button className="btn btn-sm btn-outline-light mt-3" onClick={() => load(selected)}>
               {t("error.retry", "Retry")}
+            </button>
+          </div>
+        ) : groups.length === 0 && filterMyTeams ? (
+          <div className="empty-state">
+            <div className="empty-state__icon">⭐</div>
+            <h3>{t("scores.myTeams")}</h3>
+            <p>{t("scores.yourMatches")} — {t("time.noMatches", { date: label })}</p>
+            <button
+              onClick={() => setFilterMyTeams(false)}
+              style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 8, padding: "7px 18px", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", marginTop: 12 }}
+            >
+              {t("scores.filterAll")}
             </button>
           </div>
         ) : groups.length === 0 ? (

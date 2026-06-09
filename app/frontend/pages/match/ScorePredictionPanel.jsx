@@ -2,6 +2,24 @@ import { useState, useEffect } from "react"
 
 const DEVICE_KEY = "golazo_device_id"
 
+function useKickoffCountdown(kickoffAt) {
+  const [text, setText] = useState("")
+  useEffect(() => {
+    if (!kickoffAt) return
+    const update = () => {
+      const ms = Date.parse(kickoffAt) - Date.now()
+      if (ms <= 0 || ms > 24 * 3600000) { setText(""); return }
+      const h = Math.floor(ms / 3600000)
+      const m = Math.floor((ms % 3600000) / 60000)
+      setText(h > 0 ? `${h}h ${m}m` : `${m}m`)
+    }
+    update()
+    const iv = setInterval(update, 30000)
+    return () => clearInterval(iv)
+  }, [kickoffAt])
+  return text
+}
+
 function getDeviceId() {
   let id = localStorage.getItem(DEVICE_KEY)
   if (!id) {
@@ -13,7 +31,7 @@ function getDeviceId() {
 
 const POINTS_LABEL = { 3: "⭐ Exact!", 1: "✓ Correct", 0: "✗ Wrong" }
 
-export default function ScorePredictionPanel({ matchId, homeName, awayName, matchStatus, t }) {
+export default function ScorePredictionPanel({ matchId, homeName, awayName, matchStatus, kickoffAt, t }) {
   const [myPred, setMyPred]     = useState(null)   // { home_guess, away_guess, points_earned }
   const [homeVal, setHomeVal]   = useState("")
   const [awayVal, setAwayVal]   = useState("")
@@ -25,6 +43,7 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
   const isFinished = matchStatus === "FT" || matchStatus === "AET" || matchStatus === "PEN"
   const isLive     = !["NS", "FT", "AET", "PEN", "CANC", "PST", "ABD"].includes(matchStatus)
   const canPredict = matchStatus === "NS"   // only before kickoff
+  const kickoffCountdown = useKickoffCountdown(canPredict ? kickoffAt : null)
 
   useEffect(() => {
     if (!matchId) return
@@ -81,6 +100,11 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
     <section className="match-section">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <h3 className="match-section__title" style={{ margin: 0 }}>{t("prediction.title")}</h3>
+        {kickoffCountdown && canPredict && !myPred && (
+          <span style={{ fontSize: "0.68rem", color: "#f59e0b", fontWeight: 600, background: "rgba(245,158,11,.1)", border: "1px solid rgba(245,158,11,.3)", borderRadius: 12, padding: "2px 8px" }}>
+            ⏱ {t("prediction.closesIn", { time: kickoffCountdown })}
+          </span>
+        )}
         {myPred?.points_earned != null && (
           <span style={{
             background: myPred.points_earned === 3 ? "rgba(16,185,129,.2)" : myPred.points_earned === 1 ? "rgba(245,158,11,.2)" : "rgba(239,68,68,.15)",
