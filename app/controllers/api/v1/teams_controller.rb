@@ -57,7 +57,7 @@ module Api
       # Fetches squad from API-Sports v3, cached for 24h
       def squad
         team = Team.find(params[:id])
-        api_key = ENV["FOOTBALL_API_KEY"].presence
+        api_key = ENV["APISPORTS_KEY"].presence
 
         unless api_key && team.external_id.present?
           return render json: { players: [], coach: nil }

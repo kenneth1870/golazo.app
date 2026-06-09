@@ -71,7 +71,7 @@ module Api
 
         Rails.logger.info("[MatchDetail] using API-Sports fallback for #{home} vs #{away}")
 
-        # Merge fallback — keep existing fixture (has correct FotMob IDs/venue) but
+        # Merge fallback — keep existing fixture (venue, IDs) but
         # fill in the missing events, stats, lineups, h2h from API-Sports.
         data.merge(
           events:  fallback[:events],

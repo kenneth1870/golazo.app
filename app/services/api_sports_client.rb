@@ -1,9 +1,9 @@
 class ApiSportsClient
   BASE_URL = "https://v3.football.api-sports.io/"
-  TOKEN    = (ENV["APISPORTS_KEY"] || ENV["API_SPORTS_KEY"] || ENV["FOOTBALL_API_KEY"]).presence
+  TOKEN = ENV["APISPORTS_KEY"].presence
 
   def initialize
-    raise "API_SPORTS_KEY / FOOTBALL_API_KEY env var not set" if TOKEN.blank?
+    raise "APISPORTS_KEY env var not set" if TOKEN.blank?
     @conn = Faraday.new(url: BASE_URL) do |f|
       f.headers["x-apisports-key"] = TOKEN
       f.options.timeout      = 10

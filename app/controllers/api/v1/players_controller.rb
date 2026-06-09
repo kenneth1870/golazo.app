@@ -16,7 +16,7 @@ module Api
 
       # GET /api/v1/players/:id?season=2026&league=4
       def show
-        api_key = (ENV["APISPORTS_KEY"] || ENV["FOOTBALL_API_KEY"] || ENV["API_SPORTS_KEY"]).presence
+        api_key = ENV["APISPORTS_KEY"].presence
         return render json: player_not_found unless api_key
 
         player_id = params[:id]

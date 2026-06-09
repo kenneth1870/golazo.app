@@ -3,7 +3,7 @@ require "set"
 # Primary live-scores client backed by API-Football v3 (api-sports.io).
 # Auth: x-apisports-key header. Base: https://v3.football.api-sports.io/
 #
-# Public interface (unchanged from old FotMob client so no controller changes needed):
+# Public interface:
 #   live_matches        → Array of normalized match hashes
 #   matches_for_date(d) → Array of normalized match hashes
 #   match_detail(id)    → { fixture:, events:, stats:, lineups:, h2h: } or nil
@@ -74,7 +74,7 @@ class LiveScoresClient
   ]).freeze
 
   def initialize
-    key = ENV["APISPORTS_KEY"].presence || ENV["FOOTBALL_API_KEY"].presence || ENV["API_SPORTS_KEY"]
+    key = ENV["APISPORTS_KEY"].presence
     raise "APISPORTS_KEY not configured" if key.blank?
 
     @conn = Faraday.new(url: BASE_URL) do |f|

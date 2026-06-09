@@ -1,19 +1,11 @@
 class WorldCupSync
-  # WC 2026 league/season IDs on free-api-live-football-data.p.rapidapi.com
-  # (FotMob-based). FotMob's FIFA World Cup league id is 4 — see
-  # FEATURED_DOMESTIC_LEAGUES in LiveScoresClient. Override via ENV if needed.
-  WC_LEAGUE_ID = (ENV["RAPIDAPI_WC_LEAGUE_ID"] || 4).to_i
-  WC_SEASON_ID = (ENV["RAPIDAPI_WC_SEASON_ID"] || 2026).to_i
+  # API-Football v3 league/season IDs (api-sports.io).
+  # FIFA World Cup league_id = 1 on API-Football v3.
+  WC_LEAGUE_ID = (ENV["WC_LEAGUE_ID"] || 1).to_i
+  WC_SEASON_ID = (ENV["WC_SEASON_ID"] || 2026).to_i
 
   # football-data.org uses "URY" for Uruguay; we store "URU"
   TLA_OVERRIDES = { "URY" => "URU" }.freeze
-
-  STATUS_MAP = {
-    1  => "scheduled",
-    2  => "live", 3 => "live", 4 => "live", 5 => "live",
-    6  => "finished", 7 => "finished", 8 => "finished",
-    11 => "live", 12 => "live"
-  }.freeze
 
   def initialize(competition_code: "WC")
     @api  = LiveScoresClient.new
@@ -201,15 +193,16 @@ class WorldCupSync
 
   private
 
-  # Updates a DB match from a live-endpoint raw match object
+  # Updates a DB match from a normalized match hash (from live_matches).
+  # Receives the same shape as sync_match_from_normalized.
   def sync_match_from_live(raw)
-    home_name  = raw.dig("home", "name") || raw.dig("home", "longName")
-    away_name  = raw.dig("away", "name") || raw.dig("away", "longName")
+    home_name  = raw.dig(:home, :name)
+    away_name  = raw.dig(:away, :name)
     return false unless home_name && away_name
 
-    home_score = raw.dig("home", "score")
-    away_score = raw.dig("away", "score")
-    minute     = raw.dig("status", "liveTime", "long")
+    home_score = raw.dig(:home, :score)
+    away_score = raw.dig(:away, :score)
+    minute     = raw[:minute]
 
     match = find_match_by_teams(home_name, away_name)
     return false unless match
@@ -225,8 +218,8 @@ class WorldCupSync
 
   # Updates a DB match from a normalized match hash (from matches_for_date)
   def sync_match_from_normalized(m)
-    home_name = m[:home]&.dig(:name) || m.dig(:home, "name")
-    away_name = m[:away]&.dig(:name) || m.dig(:away, "name")
+    home_name = m.dig(:home, :name)
+    away_name = m.dig(:away, :name)
     return false unless home_name && away_name
 
     status     = m[:status]
@@ -269,8 +262,9 @@ class WorldCupSync
   end
 
   def upsert_standing(entry, competition)
-    # Attempt to match by team name since external_ids may differ across APIs
-    team_name = entry.dig("team", "name") || entry["teamName"]
+    # API-Football v3 standing entry shape:
+    # { rank:, group:, points:, team: {name:}, all: {played:, win:, draw:, lose:, goals: {for:, against:}} }
+    team_name = entry.dig("team", "name")
     return unless team_name
 
     team = Team.where(competition_id: nil)
@@ -279,15 +273,18 @@ class WorldCupSync
     team ||= Team.where("LOWER(name) LIKE ?", "%#{team_name.downcase.split.first}%").first
     return unless team
 
+    all = entry["all"] || {}
+    goals = all["goals"] || {}
+
     Standing.find_or_initialize_by(team: team, competition: competition).tap do |s|
-      s.group_name    = entry["group"] || entry["groupName"]
-      s.rank          = entry["position"] || entry["rank"]
-      s.played        = entry["played"] || entry["playedGames"]
-      s.won           = entry["won"]
-      s.drawn         = entry["drawn"] || entry["draw"]
-      s.lost          = entry["lost"]
-      s.goals_for     = entry["goalsFor"] || entry["scored"]
-      s.goals_against = entry["goalsAgainst"] || entry["conceded"]
+      s.group_name    = entry["group"]
+      s.rank          = entry["rank"]
+      s.played        = all["played"]
+      s.won           = all["win"]
+      s.drawn         = all["draw"]
+      s.lost          = all["lose"]
+      s.goals_for     = goals["for"]
+      s.goals_against = goals["against"]
       s.points        = entry["points"]
       s.save!
     end
@@ -295,9 +292,8 @@ class WorldCupSync
     log("Standing upsert error for #{team_name}: #{e.message}")
   end
 
-  # FotMob / RapidAPI uses different spellings for some WC nations.
-  # Map API name → DB name so sync survives naming mismatches.
-  # Maps API/FotMob team name variants → DB canonical name
+  # API-Football v3 uses different spellings for some WC nations.
+  # Map API name → DB canonical name so sync survives naming mismatches.
   TEAM_ALIASES = {
     # South Korea
     "korea republic"               => "south korea",
