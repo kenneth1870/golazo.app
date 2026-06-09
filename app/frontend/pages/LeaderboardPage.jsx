@@ -2,15 +2,15 @@ import { useState, useEffect } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
+import { storageGet, storageSet } from "../utils/safeStorage"
 
 const DEVICE_KEY = "golazo_device_id"
 
 function getDeviceId() {
-  if (typeof localStorage === "undefined") return ""
-  let id = localStorage.getItem(DEVICE_KEY)
+  let id = storageGet(DEVICE_KEY)
   if (!id) {
-    id = crypto.randomUUID?.() || Math.random().toString(36).slice(2)
-    localStorage.setItem(DEVICE_KEY, id)
+    id = crypto.randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36)
+    storageSet(DEVICE_KEY, id)
   }
   return id
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { storageGet, storageSet } from "../../utils/safeStorage"
 
 // Fan-poll panel: shows tap-to-vote buttons, then a results bar chart once the
 // visitor has voted (vote persisted in localStorage so it survives reloads).
@@ -9,7 +10,7 @@ export default function PredictionPanel({ matchId, homeTeamName, awayTeamName, t
   const TOKEN_KEY = `golazo_vote_${matchId}`
 
   useEffect(() => {
-    const saved = localStorage.getItem(TOKEN_KEY)
+    const saved = storageGet(TOKEN_KEY)
     if (saved) {
       try { setMyVote(JSON.parse(saved).vote) } catch {}
     }
@@ -30,7 +31,7 @@ export default function PredictionPanel({ matchId, homeTeamName, awayTeamName, t
         if (!data.error) {
           setPred(data)
           setMyVote(choice)
-          localStorage.setItem(TOKEN_KEY, JSON.stringify({ vote: choice, token }))
+          storageSet(TOKEN_KEY, JSON.stringify({ vote: choice, token }))
         }
       })
       .catch(() => {})

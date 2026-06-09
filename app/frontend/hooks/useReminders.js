@@ -1,14 +1,15 @@
 import { useState, useEffect, useCallback } from "react"
+import { storageGet, storageSet } from "../utils/safeStorage"
 
 const KEY = "golazo_reminders"
 
 function load() {
-  try { return JSON.parse(localStorage.getItem(KEY) || "[]") }
+  try { return JSON.parse(storageGet(KEY) || "[]") }
   catch { return [] }
 }
 
 function persist(arr) {
-  localStorage.setItem(KEY, JSON.stringify(arr))
+  storageSet(KEY, JSON.stringify(arr))
 }
 
 export function useReminders() {

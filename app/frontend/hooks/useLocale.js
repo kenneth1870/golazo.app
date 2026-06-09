@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
+import { storageGet, storageSet } from "../utils/safeStorage"
 
 export function useLocale() {
   const { i18n } = useTranslation()
@@ -10,7 +11,7 @@ export function useLocale() {
 
   useEffect(() => {
     // If the user manually overrode the language, respect it — skip IP detection
-    if (localStorage.getItem("golazo_lang_manual")) return
+    if (storageGet("golazo_lang_manual")) return
 
     fetch("/api/v1/locale")
       .then(r => r.json())
@@ -19,7 +20,7 @@ export function useLocale() {
         if (data.timezone) setTimezone(data.timezone)
         if (data.language) {
           i18n.changeLanguage(data.language)
-          localStorage.setItem("golazo_lang", data.language)
+          storageSet("golazo_lang", data.language)
           applyLangToDocument(data.language)
         }
       })
@@ -32,8 +33,8 @@ export function useLocale() {
   }, [i18n.language])
 
   const changeLanguage = (lang) => {
-    localStorage.setItem("golazo_lang", lang)
-    localStorage.setItem("golazo_lang_manual", "1")
+    storageSet("golazo_lang", lang)
+    storageSet("golazo_lang_manual", "1")
     i18n.changeLanguage(lang)
   }
 

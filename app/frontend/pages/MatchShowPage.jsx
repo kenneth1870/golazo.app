@@ -11,6 +11,8 @@ import ScorePredictionPanel from "./match/ScorePredictionPanel"
 import { useReminders } from "../hooks/useReminders"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 import { getMatchColor } from "../utils/teamColors"
+import { sourceColor } from "../utils/sourceColors"
+import { storageGet, storageSet } from "../utils/safeStorage"
 
 // ─── Reminder button ──────────────────────────────────
 function ReminderButton({ match }) {
@@ -308,7 +310,7 @@ function FlagOrInitials({ name, src, size = 80 }) {
   const init = name?.slice(0, 3).toUpperCase() || "?"
   if (src && !err) {
     return (
-      <img src={src} alt={name} onError={() => setErr(true)}
+      <img src={src} alt={name}
         className="scoreboard__crest" style={{ width: size, height: size }}
         onError={() => setErr(true)}
       />
@@ -1094,19 +1096,11 @@ function MatchSkeleton() {
 }
 
 // ─── Related News ──────────────────────────────────────
-const SOURCE_COLORS = {
-  "BBC Sport":     "#b80000",
-  "ESPN FC":       "#cc0000",
-  "ESPN Deportes": "#cc0000",
-  "Goal.com":      "#ee1e46",
-  "Marca":         "#0f7bca",
-  "Radio Gol":     "#f97316",
-}
 
 function relativeTime(published_at) {
   if (!published_at) return ""
   const diff = Math.floor((Date.now() - new Date(published_at).getTime()) / 1000)
-  if (diff <= 0)    return "ahora"
+  if (diff <= 0)    return "< 1m"
   if (diff < 60)    return `${diff}s`
   if (diff < 3600)  return `${Math.floor(diff / 60)} min`
   if (diff < 86400) return `${Math.floor(diff / 3600)} h`
@@ -1154,7 +1148,7 @@ function RelatedNewsPanel({ homeName, awayName, leagueName, lang, t }) {
       </div>
       <div className="related-news__scroll">
         {articles.map(a => {
-          const color = SOURCE_COLORS[a.source] || "#ee1e46"
+          const color = sourceColor(a.source)
           return (
             <Link key={a.id} to={`/news/${a.id}`} className="rn-card">
               {a.image
@@ -1214,6 +1208,7 @@ export default function MatchShowPage() {
   const [aiSummary, setAiSummary]   = useState(null)
   const [aiLoading, setAiLoading]   = useState(false)
   const [aiError, setAiError]       = useState(false)
+  const toastQueue  = useRef([])   // queue so rapid goals don't cut each other short
   const toastTimer  = useRef(null)
   const swipeStartX = useRef(null)
 
@@ -1244,9 +1239,18 @@ export default function MatchShowPage() {
   const awayTeamId  = data?.fixture?.teams?.away?.id
 
   function showToast(msg) {
-    setToast(msg)
-    clearTimeout(toastTimer.current)
-    toastTimer.current = setTimeout(() => setToast(null), 4000)
+    toastQueue.current.push(msg)
+    if (toastTimer.current) return  // already processing; new item will be shown after current
+    function processNext() {
+      const next = toastQueue.current.shift()
+      if (!next) { setToast(null); return }
+      setToast(next)
+      toastTimer.current = setTimeout(() => {
+        toastTimer.current = null
+        processNext()
+      }, 4000)
+    }
+    processNext()
   }
 
   // Goal notification logic

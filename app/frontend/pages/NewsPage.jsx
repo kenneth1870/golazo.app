@@ -3,17 +3,12 @@ import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { fetchWithTimeout } from "../utils/fetchWithTimeout"
+import { sourceColor } from "../utils/sourceColors"
 
 const PAGE_SIZE = 12
 
-const SOURCE_COLORS = {
-  "BBC Sport": "#b80000",
-  "ESPN FC":   "#cc0000",
-  "Goal.com":  "#ee1e46",
-}
-
 function NewsCard({ article, featured }) {
-  const color = SOURCE_COLORS[article.source] || "#ee1e46"
+  const color = sourceColor(article.source)
 
   return (
     <Link

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
+import { storageGet, storageSet } from "../utils/safeStorage"
 
 const DISMISSED_KEY = "golazo_install_dismissed"
 
@@ -127,7 +128,7 @@ export default function InstallPrompt() {
   const [showIOS, setShowIOS]               = useState(false)
 
   useEffect(() => {
-    if (localStorage.getItem(DISMISSED_KEY)) return
+    if (storageGet(DISMISSED_KEY)) return
     if (isStandalone()) return
 
     // iOS Safari: show manual instructions
@@ -147,7 +148,7 @@ export default function InstallPrompt() {
   }, [])
 
   function dismiss() {
-    localStorage.setItem(DISMISSED_KEY, "1")
+    storageSet(DISMISSED_KEY, "1")
     setShowAndroid(false)
     setShowIOS(false)
   }
@@ -156,7 +157,7 @@ export default function InstallPrompt() {
     if (!deferredPrompt) return
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
-    if (outcome === "accepted") localStorage.setItem(DISMISSED_KEY, "1")
+    if (outcome === "accepted") storageSet(DISMISSED_KEY, "1")
     setDeferredPrompt(null)
     setShowAndroid(false)
   }

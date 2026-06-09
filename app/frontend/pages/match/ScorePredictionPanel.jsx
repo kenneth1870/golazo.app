@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { storageGet, storageSet } from "../../utils/safeStorage"
 
 const DEVICE_KEY = "golazo_device_id"
 
@@ -11,20 +12,24 @@ function useKickoffCountdown(kickoffAt) {
       if (ms <= 0 || ms > 24 * 3600000) { setText(""); return }
       const h = Math.floor(ms / 3600000)
       const m = Math.floor((ms % 3600000) / 60000)
-      setText(h > 0 ? `${h}h ${m}m` : `${m}m`)
+      const s = Math.floor((ms % 60000) / 1000)
+      // Under 5 minutes: show seconds so the form closes exactly at kickoff
+      setText(h > 0 ? `${h}h ${m}m` : m > 4 ? `${m}m` : `${m}:${String(s).padStart(2, "0")}`)
     }
     update()
-    const iv = setInterval(update, 30000)
+    // 1-second tick: ensures the panel closes exactly at kickoff, no window of
+    // post-kickoff submissions. Cost is negligible (one Date.parse() per second).
+    const iv = setInterval(update, 1000)
     return () => clearInterval(iv)
   }, [kickoffAt])
   return text
 }
 
 function getDeviceId() {
-  let id = localStorage.getItem(DEVICE_KEY)
+  let id = storageGet(DEVICE_KEY)
   if (!id) {
-    id = Math.random().toString(36).slice(2) + Date.now().toString(36)
-    localStorage.setItem(DEVICE_KEY, id)
+    id = (crypto.randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36))
+    storageSet(DEVICE_KEY, id)
   }
   return id
 }

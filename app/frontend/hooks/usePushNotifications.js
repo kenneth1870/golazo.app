@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from "react"
+import { storageGet, storageSet } from "../utils/safeStorage"
 
 const DEVICE_KEY = "golazo_device_id"
 
 function getDeviceId() {
-  let id = localStorage.getItem(DEVICE_KEY)
+  let id = storageGet(DEVICE_KEY)
   if (!id) {
-    id = Math.random().toString(36).slice(2) + Date.now().toString(36)
-    localStorage.setItem(DEVICE_KEY, id)
+    id = (crypto.randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36))
+    storageSet(DEVICE_KEY, id)
   }
   return id
 }

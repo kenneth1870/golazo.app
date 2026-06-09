@@ -1,5 +1,6 @@
 import i18n from "i18next"
 import { initReactI18next } from "react-i18next"
+import { storageGet } from "../utils/safeStorage"
 
 import en from "./locales/en.json"
 import es from "./locales/es.json"
@@ -12,7 +13,7 @@ export const SUPPORTED_LANGUAGES = [
 const SUPPORTED = ["en", "es"]
 
 // Priority: 1) user-saved preference  2) device/browser language  3) English
-const savedLang  = localStorage.getItem("golazo_lang")
+const savedLang  = storageGet("golazo_lang")
 const deviceLang = (navigator.language || navigator.userLanguage || "en").split("-")[0].toLowerCase()
 const initialLang = savedLang || (SUPPORTED.includes(deviceLang) ? deviceLang : "en")
 

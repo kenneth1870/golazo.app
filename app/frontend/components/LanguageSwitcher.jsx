@@ -1,6 +1,7 @@
 import { useState, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { SUPPORTED_LANGUAGES } from "../i18n"
+import { storageSet } from "../utils/safeStorage"
 
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation()
@@ -15,8 +16,8 @@ export default function LanguageSwitcher() {
 
   function handleSelect(code) {
     // Save as explicit manual override — prevents IP from overriding it next visit
-    localStorage.setItem("golazo_lang", code)
-    localStorage.setItem("golazo_lang_manual", "1")
+    storageSet("golazo_lang", code)
+    storageSet("golazo_lang_manual", "1")
     i18n.changeLanguage(code)
     document.documentElement.lang = code
     document.documentElement.dir = code === "ar" ? "rtl" : "ltr"

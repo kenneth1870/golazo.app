@@ -1,18 +1,19 @@
 import { useState, useCallback } from "react"
+import { storageGet, storageSet, storageRemove } from "../utils/safeStorage"
 
 const KEY = "golazo_favorites"
 
 function load() {
   try {
-    const raw = localStorage.getItem(KEY)
+    const raw = storageGet(KEY)
     if (!raw) {
       // Migrate from old single-team key
-      const old = localStorage.getItem("golazo_favorite_team")
+      const old = storageGet("golazo_favorite_team")
       if (old) {
         const team = JSON.parse(old)
         const migrated = [{ type: "team", id: team.id, name: team.name, flag_url: team.flag_url, group: team.group }]
-        localStorage.setItem(KEY, JSON.stringify(migrated))
-        localStorage.removeItem("golazo_favorite_team")
+        storageSet(KEY, JSON.stringify(migrated))
+        storageRemove("golazo_favorite_team")
         return migrated
       }
       return []
@@ -22,7 +23,7 @@ function load() {
 }
 
 function persist(arr) {
-  localStorage.setItem(KEY, JSON.stringify(arr))
+  storageSet(KEY, JSON.stringify(arr))
 }
 
 // Each favorite: { type: "team"|"competition", id, name, flag_url?, code? }
