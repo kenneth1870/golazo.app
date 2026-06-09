@@ -909,7 +909,7 @@ function FormRow({ label, matches, teamId }) {
   )
 }
 
-function H2HPanel({ h2h, homeTeamName, awayTeamName, t }) {
+function H2HPanel({ h2h, homeTeamName, awayTeamName, t, lang }) {
   if (!h2h?.matches?.length) return (
     <div className="empty-state">
       <div className="empty-state__icon">📈</div>
@@ -967,7 +967,7 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t }) {
               }}>
                 <div style={{ width: 80, flexShrink: 0 }}>
                   <div style={{ fontSize: ".65rem", color: "var(--muted)" }}>{date}</div>
-                  {m.competition?.name && <div style={{ fontSize: ".58rem", color: "#555", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80 }}>{translateLeague(m.competition.name, i18n.language)}</div>}
+                  {m.competition?.name && <div style={{ fontSize: ".58rem", color: "#555", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80 }}>{translateLeague(m.competition.name, lang)}</div>}
                 </div>
                 <span style={{ flex: 1, textAlign: "right", fontWeight: homeWon ? 800 : 500, color: homeWon ? "#fff" : "rgba(255,255,255,.5)", fontSize: ".8rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.home?.name}</span>
                 <span style={{ fontWeight: 900, color: "#fff", padding: "3px 12px", background: "var(--surface2)", borderRadius: 4, fontSize: ".9rem", flexShrink: 0, minWidth: 64, textAlign: "center" }}>{hs} – {as}</span>
@@ -1486,7 +1486,7 @@ export default function MatchShowPage() {
         {tab === "lineups" && <LineupsPanel lineups={data?.lineups} t={t} statusShort={statusShort} />}
 
         {tab === "h2h" && (
-          <H2HPanel h2h={data?.h2h} homeTeamName={homeName} awayTeamName={awayName} t={t} />
+          <H2HPanel h2h={data?.h2h} homeTeamName={homeName} awayTeamName={awayName} t={t} lang={i18n.language} />
         )}
         </div>
       </div>
