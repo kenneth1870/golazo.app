@@ -390,6 +390,7 @@ export default function TodayPage() {
         // into the previous/next day for users in non-UTC timezones.
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
         const filtered = raw.filter(m => {
+          if (m.upcoming_preview) return true   // preview matches bypass the date filter
           const ko = m.kickoff_at || m.kickoff
           if (!ko) return false
           const localDate = new Date(ko).toLocaleDateString("en-CA", { timeZone: tz })
