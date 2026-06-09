@@ -123,7 +123,7 @@ class LiveScoresClient
 
   # Full match detail: fixture + events + lineups + stats + h2h in parallel.
   def match_detail(fixture_id)
-    Rails.cache.fetch("live_scores_detail_v4_#{fixture_id}", expires_in: 30.seconds) do
+    Rails.cache.fetch("live_scores_detail_v5_#{fixture_id}", expires_in: 30.seconds) do
       results = {}
       threads = {
         fixture: Thread.new { get("fixtures",            id:      fixture_id) },

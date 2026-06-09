@@ -32,8 +32,11 @@ module Api
           end
         end
 
-        # Primary API returned no events/stats/lineups → try API-Sports fallback
-        data = api_sports_fallback(data) if detail_empty?(data)
+        # Try fallback whenever stats are missing — even if events/lineups exist.
+        # A match can have goal events + lineups but the stats endpoint returns
+        # nothing (common for friendlies). The fallback searches by team name
+        # and may resolve a different fixture_id that has stats.
+        data = api_sports_fallback(data) if data[:fixture].present? && data[:stats].to_a.empty?
 
         # Inject db_id so frontend can call AI summary endpoint
         local = Match.select(:id).find_by(external_id: external_id)
@@ -51,13 +54,6 @@ module Api
 
       private
 
-      def detail_empty?(data)
-        data[:fixture].present? &&
-          data[:events].to_a.empty? &&
-          data[:stats].to_a.empty? &&
-          data[:lineups].to_a.empty?
-      end
-
       def api_sports_fallback(data)
         home    = data.dig(:fixture, "teams", "home", "name")
         away    = data.dig(:fixture, "teams", "away", "name")
@@ -71,15 +67,14 @@ module Api
 
         Rails.logger.info("[MatchDetail] using API-Sports fallback for #{home} vs #{away}")
 
-        # Merge fallback — keep existing fixture (venue, IDs) but
-        # fill in the missing events, stats, lineups, h2h from API-Sports.
-        data.merge(
-          events:  fallback[:events],
-          stats:   fallback[:stats],
-          lineups: fallback[:lineups],
-          h2h:     fallback[:h2h],
-          source:  "api_sports_fallback"
-        )
+        # Only fill in missing pieces — never overwrite data we already have.
+        merged = data.dup
+        merged[:events]  = fallback[:events]  if data[:events].to_a.empty?  && fallback[:events].to_a.any?
+        merged[:stats]   = fallback[:stats]   if data[:stats].to_a.empty?   && fallback[:stats].to_a.any?
+        merged[:lineups] = fallback[:lineups] if data[:lineups].to_a.empty? && fallback[:lineups].to_a.any?
+        merged[:h2h]     = fallback[:h2h]     if fallback[:h2h].present?
+        merged[:source]  = "api_sports_fallback"
+        merged
       rescue => e
         Rails.logger.warn("[MatchDetail] api_sports_fallback failed: #{e.message}")
         data
