@@ -644,10 +644,11 @@ export default function TodayPage() {
           </div>
         ) : groups.length === 0 ? (
           <>
-            <EmptyState label={label} t={t} />
+            {/* When WC preview is available, skip the empty state and lead with it */}
+            {upcomingPreview.length === 0 && <EmptyState label={label} t={t} />}
             {/* Upcoming WC preview — returned inline by the API when today is empty */}
             {upcomingPreview.length > 0 && (
-              <div style={{ marginTop: 8 }}>
+              <div style={{ marginTop: 4 }}>
                 <div style={{
                   display: "flex", alignItems: "center", gap: 8,
                   padding: "0 4px 10px",
