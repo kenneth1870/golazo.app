@@ -4,6 +4,14 @@ module Api
       def index
         date = parse_date(params[:date]) || Date.today
         all  = merge_matches(date).sort_by { |m| m[:kickoff_at].to_s }
+
+        # When today has no matches, append next upcoming WC fixtures so the
+        # frontend can show a teaser without a second round-trip.
+        if all.empty? && date == Date.today
+          upcoming = fetch_upcoming_wc(6).map { |m| normalize_db(m).merge(upcoming_preview: true) }
+          all = upcoming
+        end
+
         render json: all
       end
 
@@ -49,6 +57,20 @@ module Api
       # Only pull WC matches from DB — club/Copa fixtures are real-API only.
       # Seeded club league and Copa América rows have wrong/fake dates and
       # must not contaminate the live Today feed.
+      def fetch_upcoming_wc(limit = 6)
+        Match
+          .joins(:competition)
+          .where(competitions: { code: "WC" })
+          .where("kickoff_at > ?", Time.current)
+          .where(status: "scheduled")
+          .includes(:home_team, :away_team, :competition)
+          .order(:kickoff_at)
+          .limit(limit)
+      rescue => e
+        Rails.logger.error("[TodayController] Upcoming WC failed: #{e.message}")
+        []
+      end
+
       def fetch_db_matches(date)
         Match
           .joins(:competition)
