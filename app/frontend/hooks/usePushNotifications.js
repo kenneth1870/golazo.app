@@ -82,7 +82,7 @@ export function usePushNotifications() {
       setSubscribed(true)
       return { ok: true }
     } catch (err) {
-      console.error("[Push] Subscribe error:", err)
+      // swallow — error returned to caller via { error: err.message }
       return { error: err.message }
     } finally {
       setLoading(false)
@@ -108,7 +108,7 @@ export function usePushNotifications() {
       }
       setSubscribed(false)
     } catch (err) {
-      console.error("[Push] Unsubscribe error:", err)
+      // swallow unsubscribe failure — subscription may already be expired
     } finally {
       setLoading(false)
     }
@@ -128,7 +128,7 @@ export function usePushNotifications() {
         body: JSON.stringify({ endpoint: pushSub.endpoint, team_ids: teamNames }),
       })
     } catch (err) {
-      console.error("[Push] updateTeams error:", err)
+      // swallow — non-critical background sync
     }
   }, [])
 

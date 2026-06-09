@@ -42,6 +42,30 @@ module Api
         render json: player_not_found, status: :service_unavailable
       end
 
+      # GET /api/v1/players/:id/transfers
+      def transfers
+        render json: LiveScoresClient.new.player_transfers(params[:id])
+      rescue => e
+        Rails.logger.error("[PlayersController#transfers] #{e.message}")
+        render json: []
+      end
+
+      # GET /api/v1/players/:id/trophies
+      def trophies
+        render json: LiveScoresClient.new.player_trophies(params[:id])
+      rescue => e
+        Rails.logger.error("[PlayersController#trophies] #{e.message}")
+        render json: []
+      end
+
+      # GET /api/v1/players/:id/sidelined
+      def sidelined
+        render json: LiveScoresClient.new.player_sidelined(params[:id])
+      rescue => e
+        Rails.logger.error("[PlayersController#sidelined] #{e.message}")
+        render json: []
+      end
+
       private
 
       def normalize_player(p)

@@ -34,8 +34,17 @@ Rails.application.routes.draw do
       resources :teams, only: [:index, :show] do
         get :squad, on: :member
       end
+      get "fixture_predictions/:fixture_id", to: "fixture_predictions#show"
+      get "fixture_odds/:fixture_id/live",  to: "fixture_odds#live"
+      get "fixture_odds/:fixture_id",       to: "fixture_odds#show"
+
       resources :players,  only: [:show] do
         collection { get :search }
+        member do
+          get :transfers
+          get :trophies
+          get :sidelined
+        end
       end
       resources :standings, only: [:index]
       resources :matches, only: [:index, :show, :update] do

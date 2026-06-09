@@ -146,7 +146,7 @@ export default function LeaderboardPage() {
               onMouseEnter={e => (e.target.style.borderColor = "rgba(255,255,255,.2)")}
               onMouseLeave={e => (e.target.style.borderColor = "var(--border)")}
             >
-              {t("leaderboard.loadMore", `Show more (${rows.length - visibleCount} remaining)`)}
+              {t("leaderboard.loadMore", { remaining: rows.length - visibleCount })}
             </button>
           )}
           </>

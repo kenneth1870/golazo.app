@@ -873,17 +873,272 @@ function PosLegend() {
   )
 }
 
-function LineupsPanel({ lineups, t, statusShort }) {
-  const isFT = ["FT", "AET", "PEN"].includes(statusShort)
+// ─── Match Preview Panel (predictions) ────────────────────────────────────────
+
+function ComparisonBar({ label, home, away }) {
+  const h = parseFloat(home) || 0
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", marginBottom: 4 }}>
+        <span style={{ color: "#ee1e46", fontWeight: 700 }}>{home}</span>
+        <span style={{ color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", fontSize: "0.62rem" }}>{label}</span>
+        <span style={{ color: "#3b82f6", fontWeight: 700 }}>{away}</span>
+      </div>
+      <div style={{ display: "flex", height: 5, borderRadius: 3, overflow: "hidden", background: "var(--border)" }}>
+        <div style={{ width: `${h}%`, background: "#ee1e46", transition: "width .5s" }} />
+        <div style={{ flex: 1, background: "#3b82f6" }} />
+      </div>
+    </div>
+  )
+}
+
+function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
+  const [pred, setPred]     = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch(`/api/v1/fixture_predictions/${fixtureId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => setPred(d?.percent ? d : null))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [fixtureId])
+
+  if (loading) return (
+    <div style={{ padding: "20px 0" }}>
+      {[1, 2, 3].map(i => (
+        <div key={i} className="loading-shimmer" style={{ height: 22, borderRadius: 6, marginBottom: 14 }} />
+      ))}
+    </div>
+  )
+
+  if (!pred) return (
+    <div className="empty-state" style={{ paddingTop: 40 }}>
+      <div className="empty-state__icon">🔮</div>
+      <h3>{t("match.noPrediction")}</h3>
+    </div>
+  )
+
+  const { winner, percent, goals, advice, under_over, comparison } = pred
+  const COMP_ROWS = [
+    { key: "form",  label: t("match.predForm") },
+    { key: "att",   label: t("match.predAttack") },
+    { key: "def",   label: t("match.predDefense") },
+    { key: "h2h",   label: "H2H" },
+    { key: "goals", label: t("match.predGoals") },
+    { key: "total", label: t("match.predTotal") },
+  ]
+
+  return (
+    <div style={{ paddingBottom: 8 }}>
+      {/* Winner chip */}
+      {winner?.name && (
+        <div style={{
+          background: "rgba(238,30,70,.08)", border: "1px solid rgba(238,30,70,.2)",
+          borderRadius: 12, padding: "14px 18px", marginBottom: 20,
+          display: "flex", alignItems: "center", gap: 14,
+        }}>
+          <span style={{ fontSize: "1.6rem" }}>🔮</span>
+          <div>
+            <div style={{ fontSize: "0.6rem", color: "var(--muted)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 3 }}>
+              {t("match.matchPrediction")}
+            </div>
+            <div style={{ fontWeight: 900, fontSize: "1.05rem", color: "#fff" }}>{winner.name}</div>
+            {advice && (
+              <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,.45)", marginTop: 4 }}>{advice}</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Win probability */}
+      <div className="match-section" style={{ marginBottom: 20 }}>
+        <div className="match-section__title">{t("match.winProbability")}</div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 12, marginTop: 10 }}>
+          {[
+            { label: homeName, pct: percent?.home, color: "#ee1e46" },
+            { label: t("match.draw"),  pct: percent?.draw, color: "#f59e0b" },
+            { label: awayName, pct: percent?.away, color: "#3b82f6" },
+          ].map(({ label, pct, color }) => (
+            <div key={label} style={{ flex: 1, textAlign: "center" }}>
+              <div style={{ fontSize: "1.4rem", fontWeight: 900, color }}>{pct ?? "—"}</div>
+              <div style={{ fontSize: "0.62rem", color: "var(--muted)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden" }}>
+          <div style={{ width: percent?.home, background: "#ee1e46" }} />
+          <div style={{ width: percent?.draw, background: "#f59e0b" }} />
+          <div style={{ flex: 1, background: "#3b82f6" }} />
+        </div>
+      </div>
+
+      {/* Comparison bars */}
+      {comparison && Object.values(comparison).some(Boolean) && (
+        <div className="match-section" style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", fontWeight: 700, marginBottom: 14 }}>
+            <span style={{ color: "#ee1e46" }}>{homeName}</span>
+            <span style={{ color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", fontSize: "0.6rem" }}>{t("match.comparison")}</span>
+            <span style={{ color: "#3b82f6" }}>{awayName}</span>
+          </div>
+          {COMP_ROWS.map(({ key, label }) => {
+            const val = comparison[key]
+            if (!val?.home) return null
+            return <ComparisonBar key={key} label={label} home={val.home} away={val.away} />
+          })}
+        </div>
+      )}
+
+      {/* Goals + Under/Over chips */}
+      {(goals?.home || under_over) && (
+        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+          {goals?.home && (
+            <div style={{ flex: 1, background: "var(--surface2)", borderRadius: 10, padding: "12px 10px", textAlign: "center" }}>
+              <div style={{ fontSize: "0.6rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 5 }}>{t("match.expectedGoals")}</div>
+              <div style={{ fontSize: "0.95rem", fontWeight: 800 }}>
+                <span style={{ color: "#ee1e46" }}>{goals.home}</span>
+                <span style={{ color: "var(--muted)", margin: "0 4px" }}>–</span>
+                <span style={{ color: "#3b82f6" }}>{goals.away}</span>
+              </div>
+            </div>
+          )}
+          {under_over && (
+            <div style={{ flex: 1, background: "var(--surface2)", borderRadius: 10, padding: "12px 10px", textAlign: "center" }}>
+              <div style={{ fontSize: "0.6rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 5 }}>{t("match.underOver")}</div>
+              <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#f59e0b" }}>{under_over}</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,.2)", textAlign: "center", paddingTop: 4 }}>
+        {t("match.predPoweredBy")}
+      </div>
+    </div>
+  )
+}
+
+// ─── Live Odds Pulse ───────────────────────────────────────────────────────────
+
+function LiveOddsPulse({ fixtureId, homeName, awayName, t }) {
+  const [odds, setOdds] = useState(null)
+
+  useEffect(() => {
+    if (!fixtureId) return
+    let mounted = true
+    const poll = () =>
+      fetch(`/api/v1/fixture_odds/${fixtureId}/live`)
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (mounted && d?.bets?.length) setOdds(d) })
+        .catch(() => {})
+    poll()
+    const iv = setInterval(poll, 30000)
+    return () => { mounted = false; clearInterval(iv) }
+  }, [fixtureId])
+
+  if (!odds?.bets?.length) return null
+
+  // Prefer Asian Handicap for live in-play context; fall back to first available
+  const handicap = odds.bets.find(b => b.name === "Asian Handicap")
+  const overUnder = odds.bets.find(b => b.name === "Over/Under Line" || b.name.startsWith("Over/Under") && !b.name.includes("Half"))
+  if (!handicap && !overUnder) return null
+
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", justifyContent: "center",
+      gap: 6, padding: "7px 16px", margin: "0 0 0",
+      background: "rgba(16,185,129,.06)", borderTop: "1px solid rgba(16,185,129,.12)",
+      borderBottom: "1px solid rgba(16,185,129,.12)",
+      fontSize: "0.7rem", overflowX: "auto", WebkitOverflowScrolling: "touch",
+      flexWrap: "wrap",
+    }}>
+      <span style={{ color: "#10b981", fontWeight: 700, letterSpacing: ".06em", fontSize: "0.62rem", flexShrink: 0 }}>
+        ⚡ {t("match.liveOdds")}
+      </span>
+      {handicap && handicap.values.map(v => (
+        <span key={v.value} style={{ background: "rgba(16,185,129,.1)", borderRadius: 6, padding: "3px 8px", color: "rgba(255,255,255,.75)", whiteSpace: "nowrap" }}>
+          {v.value === "Home" ? homeName : v.value === "Away" ? awayName : v.value} {v.odd}
+        </span>
+      ))}
+      {overUnder && overUnder.values.slice(0, 2).map(v => (
+        <span key={v.value} style={{ background: "rgba(245,158,11,.08)", borderRadius: 6, padding: "3px 8px", color: "rgba(255,255,255,.6)", whiteSpace: "nowrap" }}>
+          {v.value} {v.odd}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+// ─── First Goal Scorer Odds ───────────────────────────────────────────────────
+
+function FirstScorerOdds({ fixtureId, t }) {
+  const [scorers, setScorers] = useState(null)
+  const fetchedRef = useRef(false)
+
+  useEffect(() => {
+    if (fetchedRef.current || !fixtureId) return
+    fetchedRef.current = true
+    fetch(`/api/v1/fixture_odds/${fixtureId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d?.bets) return
+        const list =
+          d.bets["First Goal Scorer"] ||
+          d.bets["Anytime Goal Scorer"] ||
+          d.bets["Home First Goal Scorer"] || []
+        if (list.length > 0) {
+          setScorers([...list].sort((a, b) => parseFloat(a.odd) - parseFloat(b.odd)).slice(0, 8))
+        }
+      })
+      .catch(() => {})
+  }, [fixtureId])
+
+  if (!scorers?.length) return null
+
+  return (
+    <div className="match-section" style={{ marginTop: 20 }}>
+      <div className="match-section__title" style={{ marginBottom: 12 }}>⚽ {t("match.firstGoalScorer")}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {scorers.map((s, i) => (
+          <div key={s.value} style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "8px 12px",
+            background: i === 0 ? "rgba(238,30,70,.07)" : "var(--surface2)",
+            borderRadius: 8,
+            border: i === 0 ? "1px solid rgba(238,30,70,.18)" : "1px solid transparent",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: "0.7rem", color: "var(--muted)", width: 18, textAlign: "center" }}>{i + 1}</span>
+              <span style={{ fontWeight: i === 0 ? 700 : 500, fontSize: "0.85rem", color: "#fff" }}>{s.value}</span>
+            </div>
+            <span style={{
+              background: i === 0 ? "rgba(238,30,70,.15)" : "rgba(255,255,255,.07)",
+              color: i === 0 ? "#ee1e46" : "rgba(255,255,255,.6)",
+              borderRadius: 6, padding: "3px 10px", fontSize: "0.8rem", fontWeight: 700,
+            }}>{s.odd}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Lineups Panel ────────────────────────────────────────────────────────────
+
+function LineupsPanel({ lineups, fixtureId, t, statusShort }) {
+  // "Not started" statuses where lineups are simply not published yet
+  const isPreKickoff = ["NS", "TBD"].includes(statusShort)
   const noData = !lineups?.length
 
   if (noData || !lineups.some(l => l?.start_xi?.length > 0)) return (
     <div className="empty-state" style={{ paddingTop: 40 }}>
       <div className="empty-state__icon">👕</div>
-      <h3>{t("match.lineupsUnavailable")}</h3>
-      <p style={{ maxWidth: 280, textAlign: "center" }}>
-        {isFT ? t("match.lineupsNotProvided") : t("match.lineupsRelease")}
-      </p>
+      <h3>{isPreKickoff ? t("match.lineupsUnavailable") : t("match.lineupsNotProvided")}</h3>
+      {isPreKickoff && (
+        <p style={{ maxWidth: 280, textAlign: "center" }}>
+          {t("match.lineupsRelease")}
+        </p>
+      )}
     </div>
   )
   const [home, away] = lineups
@@ -894,6 +1149,8 @@ function LineupsPanel({ lineups, t, statusShort }) {
         <LineupTeam team={home} side="home" />
         <LineupTeam team={away} side="away" />
       </div>
+      {/* First goal scorer odds — shown for NS matches once lineups are available */}
+      {isPreKickoff && <FirstScorerOdds fixtureId={fixtureId} t={t} />}
     </div>
   )
 }
@@ -1118,9 +1375,12 @@ const NEWS_SEARCHABLE_LEAGUES = new Set([
 
 function RelatedNewsPanel({ homeName, awayName, leagueName, lang, t }) {
   const [articles, setArticles] = useState([])
+  const fetchedRef = useRef(false)   // only fetch once per mount — team names never change
 
   useEffect(() => {
-    if (!homeName && !awayName) return
+    if (fetchedRef.current) return         // already fetched or in-flight; skip re-poll triggers
+    if (!homeName && !awayName) return     // wait until names arrive from the first data load
+    fetchedRef.current = true
     fetch(`/api/v1/news?lang=${lang}&limit=60`)
       .then(r => r.ok ? r.json() : [])
       .then(items => {
@@ -1161,7 +1421,7 @@ function RelatedNewsPanel({ homeName, awayName, leagueName, lang, t }) {
     <section className="related-news">
       <div className="related-news__header">
         <h3 className="related-news__title">{t("match.relatedNews")}</h3>
-        <Link to="/news" className="related-news__more">{t("news.seeMore", "Ver más →")}</Link>
+        <Link to="/news" className="related-news__more">{t("news.seeMore")}</Link>
       </div>
       <div className="related-news__scroll">
         {articles.map(a => {
@@ -1190,7 +1450,7 @@ function RelatedNewsPanel({ homeName, awayName, leagueName, lang, t }) {
 }
 
 // ─── Main Page ─────────────────────────────────────────
-const TAB_KEYS = ["summary", "stats", "lineups", "h2h"]
+// TAB_KEYS is built dynamically in the component based on match status
 
 // Converts a list-match preview (from router state) into the fixture shape
 // MatchShowPage expects, so the scoreboard renders before the API responds.
@@ -1225,9 +1485,10 @@ export default function MatchShowPage() {
   const [aiSummary, setAiSummary]   = useState(null)
   const [aiLoading, setAiLoading]   = useState(false)
   const [aiError, setAiError]       = useState(false)
-  const toastQueue  = useRef([])   // queue so rapid goals don't cut each other short
-  const toastTimer  = useRef(null)
-  const swipeStartX = useRef(null)
+  const toastQueue    = useRef([])   // queue so rapid goals don't cut each other short
+  const toastTimer    = useRef(null)
+  const swipeStartX   = useRef(null)
+  const dataFetchedAt = useRef(0)    // timestamp of the most recent data update (poll or WS)
 
   // Detect if live
   const statusShort = data?.fixture?.fixture?.status?.short
@@ -1315,18 +1576,24 @@ export default function MatchShowPage() {
     prevGoalsRef.current = { h, a }
   }
 
-  // Poll for data
-  const load = useCallback(() =>
-    fetch(`/api/v1/match_detail/${id}`)
+  // Poll for data — guards against a stale response overwriting fresher WS data.
+  // We capture fetchStarted *before* the network round-trip; if a WS message
+  // arrived after this poll started (dataFetchedAt > fetchStarted), the poll
+  // result is by definition staler and gets discarded.
+  const load = useCallback(() => {
+    const fetchStarted = Date.now()
+    return fetch(`/api/v1/match_detail/${id}`)
       .then(r => r.json())
       .then(d => {
         setData(prev => {
+          if (fetchStarted < dataFetchedAt.current) return prev  // WS beat us — keep fresher data
+          dataFetchedAt.current = fetchStarted
           if (prev && isLive) checkGoals(d.fixture?.goals, d.events)
           return d
         })
       })
-      .catch(() => {}),
-  [id])
+      .catch(() => {})
+  }, [id])
 
   useEffect(() => {
     setLoading(true)
@@ -1337,9 +1604,11 @@ export default function MatchShowPage() {
     return () => clearInterval(iv)
   }, [id, isLive])
 
-  // ActionCable subscription — push updates when live
+  // ActionCable subscription — push updates when live.
+  // Stamps dataFetchedAt so concurrent polls know this data is the freshest.
   const handleCableMessage = useCallback((msg) => {
     if (msg.type === "match_update") {
+      dataFetchedAt.current = Date.now()
       setData(prev => {
         if (prev) checkGoals(msg.fixture?.goals, msg.events)
         return { fixture: msg.fixture, events: msg.events, stats: msg.stats, lineups: msg.lineups }
@@ -1381,6 +1650,13 @@ export default function MatchShowPage() {
       .finally(() => setAiLoading(false))
   }, [data?.fixture?.fixture?.status?.short, aiSummary, aiLoading, aiError]) // eslint-disable-line
 
+  // Auto-select "preview" tab for pre-kickoff matches on first load
+  useEffect(() => {
+    if (!loading && statusShort && ["NS", "TBD"].includes(statusShort) && tab === "summary") {
+      setTab("preview")
+    }
+  }, [loading, statusShort]) // eslint-disable-line
+
   // Back navigation
   function goBack() {
     if (window.history.length > 1) navigate(-1)
@@ -1401,6 +1677,9 @@ export default function MatchShowPage() {
   const hasH2H      = data?.h2h?.matches?.length > 0
   const hasEvents   = eventCount > 0
   const goalCount   = data?.events?.filter(e => e.type === "Goal").length ?? 0
+  const isNS        = statusShort === "NS" || statusShort === "TBD"
+  // Dynamic tab list — "preview" prepended for pre-kickoff matches
+  const TAB_KEYS    = isNS ? ["preview", "summary", "lineups", "h2h"] : ["summary", "stats", "lineups", "h2h"]
   const TABS        = TAB_KEYS.map(k => ({ key: k, label: t(`match.${k}`) }))
 
   // Swipe between tabs
@@ -1493,6 +1772,11 @@ export default function MatchShowPage() {
         )
       }
 
+      {/* Live Odds Pulse — compact strip shown during live matches */}
+      {isLive && hasFixture && (
+        <LiveOddsPulse fixtureId={id} homeName={homeName} awayName={awayName} t={t} />
+      )}
+
       {/* Tab bar — always visible */}
       <div className="tab-bar sticky-tabs">
         <div className="container" style={{ maxWidth: 740 }}>
@@ -1555,6 +1839,16 @@ export default function MatchShowPage() {
 
         {/* Tab content — swipeable on mobile */}
         <div onTouchStart={handleTabSwipeStart} onTouchEnd={handleTabSwipeEnd}>
+
+        {tab === "preview" && (
+          <MatchPreviewPanel
+            fixtureId={id}
+            homeName={homeName}
+            awayName={awayName}
+            t={t}
+          />
+        )}
+
         {tab === "summary" && (
           <>
             {hasFixture && <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} kickoffAt={kickoffAt} t={t} />}
@@ -1580,7 +1874,7 @@ export default function MatchShowPage() {
                     </p>
                     <div style={{ fontSize: "0.62rem", color: "var(--muted)", display: "flex", alignItems: "center", gap: 5 }}>
                       <span>✨</span>
-                      <span>Generated by Claude AI · {aiSummary.generated_at ? new Date(aiSummary.generated_at).toLocaleDateString() : ""}</span>
+                      <span>{t("match.aiGeneratedBy")} · {aiSummary.generated_at ? new Date(aiSummary.generated_at).toLocaleDateString() : ""}</span>
                     </div>
                   </div>
                 )}
@@ -1616,7 +1910,7 @@ export default function MatchShowPage() {
           <StatsPanel stats={data?.stats} home={data?.fixture?.teams?.home} away={data?.fixture?.teams?.away} t={t} statusShort={statusShort} />
         )}
 
-        {tab === "lineups" && <LineupsPanel lineups={data?.lineups} t={t} statusShort={statusShort} />}
+        {tab === "lineups" && <LineupsPanel lineups={data?.lineups} fixtureId={id} t={t} statusShort={statusShort} />}
 
         {tab === "h2h" && (
           <H2HPanel h2h={data?.h2h} homeTeamName={homeName} awayTeamName={awayName} t={t} lang={i18n.language} />

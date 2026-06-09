@@ -180,7 +180,24 @@
     "goalTimeline": "Goles",
     "prevMatch": "← Anterior",
     "nextMatch": "Siguiente →",
-    "relatedNews": "Noticias Relacionadas"
+    "relatedNews": "Noticias Relacionadas",
+    "aiGeneratedBy": "Generado por Claude AI",
+    "preview": "Vista Previa",
+    "matchPrediction": "Predicción",
+    "winProbability": "Probabilidad de Victoria",
+    "comparison": "Comparación",
+    "predForm": "Forma",
+    "predAttack": "Ataque",
+    "predDefense": "Defensa",
+    "predGoals": "Goles",
+    "predTotal": "Total",
+    "expectedGoals": "Goles Esperados",
+    "underOver": "Bajo / Alto",
+    "noPrediction": "Sin predicción disponible",
+    "predPoweredBy": "Predicción por API-Football",
+    "firstGoalScorer": "Primer Goleador",
+    "liveOdds": "Cuotas en Vivo",
+    "noOdds": "Cuotas no disponibles para este partido"
   },
   "error": {
     "dataUnavailable": "Datos temporalmente no disponibles",
@@ -216,7 +233,8 @@
     "backToNews": "← Volver a Noticias",
     "originalOn": "Artículo original en {{source}}",
     "readOn": "Leer en {{source}} ↗",
-    "allLoaded": "{{count}} artículos cargados"
+    "allLoaded": "{{count}} artículos cargados",
+    "seeMore": "Ver más →"
   },
   "footer": {
     "follow": "Síguenos",
@@ -237,7 +255,19 @@
     "red": "Rojas",
     "keyPasses": "Pases Clave",
     "detailedStatsUnavailable": "Estadísticas detalladas no disponibles para este jugador en esta competición",
-    "age": "Edad {{age}}"
+    "age": "Edad {{age}}",
+    "stats": "Estadísticas",
+    "trophies": "Trofeos",
+    "transfers": "Fichajes",
+    "injuries": "Lesiones",
+    "noTrophies": "Sin trofeos registrados",
+    "noTransfers": "Sin historial de fichajes",
+    "noInjuries": "Sin historial de lesiones",
+    "winner": "Ganador",
+    "runnerUp": "Subcampeón",
+    "injuryDays": "{{days}}d",
+    "free": "Gratis",
+    "loan": "Préstamo"
   },
   "team": {
     "overview": "Resumen",
@@ -277,7 +307,8 @@
     "myComparisons": "⚔️ Mis comparaciones",
     "linkCopied": "✓ ¡Enlace copiado!",
     "predictOnFixtures": "Predice marcadores antes del inicio en cualquier página de partido",
-    "you": "(tú)"
+    "you": "(tú)",
+    "loadMore": "Ver más ({{remaining}} restantes)"
   },
   "compare": {
     "title": "Predicciones vs Amigo",
@@ -301,7 +332,10 @@
     "invalidScore": "Introduce marcadores válidos (0–29)",
     "lockedStarted": "Predicciones cerradas — el partido ha comenzado",
     "lockedEnded": "Predicciones cerradas — el partido ha terminado",
-    "closesIn": "Cierra en {{time}}"
+    "closesIn": "Cierra en {{time}}",
+    "exact": "⭐ ¡Exacto!",
+    "correct": "✓ Correcto",
+    "wrong": "✗ Incorrecto"
   },
   "bracket": {
     "title": "Predictor de Cuadro",
@@ -315,7 +349,8 @@
     "knockoutStage": "Fase Eliminatoria",
     "notYetDetermined": "El cuadro eliminatorio aún no está determinado",
     "predictorLink": "Predictor de Cuadro",
-    "thirdPlace": "3er Puesto"
+    "thirdPlace": "3er Puesto",
+    "swipeHint": "← Desliza para ver todas las rondas →"
   },
   "push": {
     "getAlerts": "Alertas de goles",

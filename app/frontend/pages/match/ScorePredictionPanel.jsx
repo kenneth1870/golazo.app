@@ -34,7 +34,11 @@ function getDeviceId() {
   return id
 }
 
-const POINTS_LABEL = { 3: "⭐ Exact!", 1: "✓ Correct", 0: "✗ Wrong" }
+function pointsLabel(pts, t) {
+  if (pts === 3) return t("prediction.exact")
+  if (pts === 1) return t("prediction.correct")
+  return t("prediction.wrong")
+}
 
 export default function ScorePredictionPanel({ matchId, homeName, awayName, matchStatus, kickoffAt, t }) {
   const [myPred, setMyPred]     = useState(null)   // { home_guess, away_guess, points_earned }
@@ -117,7 +121,7 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
             border: `1px solid currentColor`, borderRadius: 20, padding: "3px 12px",
             fontSize: "0.75rem", fontWeight: 700,
           }}>
-            {POINTS_LABEL[myPred.points_earned]} +{myPred.points_earned}pts
+            {pointsLabel(myPred.points_earned, t)} +{myPred.points_earned}pts
           </span>
         )}
       </div>

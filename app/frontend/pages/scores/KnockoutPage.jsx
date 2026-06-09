@@ -11,8 +11,6 @@ const ROUNDS = [
   { key: "Semi Final",    label: "Semi Finals",    count: 2  },
   { key: "Final",         label: "Final",          count: 1  },
 ]
-const THIRD_PLACE = "3rd Place"
-
 // Humanizes a knockout slot code into a short label shown until a real team is
 // resolved: "1A" → "Winner A", "2C" → "Runner-up C", "T3" → "3rd #3",
 // "W29"/"L30" → "Winner"/"Loser".
@@ -148,7 +146,7 @@ function PlaceholderBracket() {
       </div>
 
       {/* Visual R32 bracket preview */}
-      <div className="bracket-scroll-hint">← Swipe to see all rounds →</div>
+      <div className="bracket-scroll-hint">{t("bracket.swipeHint")}</div>
       <div className="bracket-scroll-wrap">
         <div className="bracket">
           {/* R32 — show qualifier labels */}
@@ -238,7 +236,7 @@ export default function KnockoutPage() {
             fontSize: "0.78rem", fontWeight: 700, textDecoration: "none",
           }}>🏆 {t("bracket.predictorLink")}</Link>
         </div>
-        <div className="bracket-scroll-hint">← Swipe to see all rounds →</div>
+        <div className="bracket-scroll-hint">{t("bracket.swipeHint")}</div>
         <div className="bracket-scroll-wrap">
           <div className="bracket">
             {ROUNDS.map(r => (

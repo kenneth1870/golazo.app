@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react"
-import { useParams, useSearchParams, useNavigate, Link } from "react-router-dom"
+import { useState, useEffect, useRef } from "react"
+import { useParams, useSearchParams, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 
@@ -19,6 +19,282 @@ function StatBox({ label, value, highlight }) {
   )
 }
 
+// ─── Trophies Tab ─────────────────────────────────────────────────────────────
+
+function TrophiesTab({ playerId, t }) {
+  const [trophies, setTrophies] = useState(null)
+  const fetchedRef = useRef(false)
+
+  useEffect(() => {
+    if (fetchedRef.current) return
+    fetchedRef.current = true
+    fetch(`/api/v1/players/${playerId}/trophies`)
+      .then(r => r.json())
+      .then(setTrophies)
+      .catch(() => setTrophies([]))
+  }, [playerId])
+
+  if (!trophies) return <div className="loading-shimmer" style={{ height: 200, borderRadius: 12, margin: "20px 0" }} />
+
+  if (!trophies.length) return (
+    <div className="empty-state" style={{ paddingTop: 40 }}>
+      <div className="empty-state__icon">🏆</div>
+      <h3>{t("player.noTrophies")}</h3>
+    </div>
+  )
+
+  const winners  = trophies.filter(t => t.place === "Winner")
+  const runnerUp = trophies.filter(t => t.place === "Runner-up")
+
+  return (
+    <div style={{ paddingTop: 8 }}>
+      {/* Summary row */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+        {[
+          { label: t("player.winner"), count: winners.length, color: "#f59e0b", icon: "🥇" },
+          { label: t("player.runnerUp"), count: runnerUp.length, color: "#94a3b8", icon: "🥈" },
+        ].map(({ label, count, color, icon }) => (
+          <div key={label} style={{
+            flex: 1, background: "var(--surface2)", borderRadius: 12, padding: "16px 12px", textAlign: "center",
+          }}>
+            <div style={{ fontSize: "1.6rem", marginBottom: 6 }}>{icon}</div>
+            <div style={{ fontWeight: 900, fontSize: "1.4rem", color }}>{count}</div>
+            <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: .5, marginTop: 2 }}>{label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Trophy list */}
+      <div className="widget-next-match">
+        <div className="widget-body p-0">
+          {trophies.slice(0, 40).map((trophy, i) => (
+            <div key={i} style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "10px 16px", borderBottom: "1px solid var(--border)",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                <span style={{ fontSize: "1rem", flexShrink: 0 }}>
+                  {trophy.place === "Winner" ? "🏆" : trophy.place === "Runner-up" ? "🥈" : "🎖️"}
+                </span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {trophy.league}
+                  </div>
+                  {trophy.country && (
+                    <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{trophy.country}</div>
+                  )}
+                </div>
+              </div>
+              <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 8 }}>
+                <div style={{
+                  fontSize: "0.7rem", fontWeight: 700, padding: "2px 8px", borderRadius: 6,
+                  background: trophy.place === "Winner" ? "rgba(245,158,11,.15)" : "rgba(148,163,184,.1)",
+                  color: trophy.place === "Winner" ? "#f59e0b" : "#94a3b8",
+                }}>
+                  {trophy.place === "Winner" ? t("player.winner") : trophy.place === "Runner-up" ? t("player.runnerUp") : trophy.place}
+                </div>
+                <div style={{ fontSize: "0.65rem", color: "var(--muted)", marginTop: 2 }}>{trophy.season}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Transfers Tab ────────────────────────────────────────────────────────────
+
+function TransfersTab({ playerId, t }) {
+  const [transfers, setTransfers] = useState(null)
+  const fetchedRef = useRef(false)
+
+  useEffect(() => {
+    if (fetchedRef.current) return
+    fetchedRef.current = true
+    fetch(`/api/v1/players/${playerId}/transfers`)
+      .then(r => r.json())
+      .then(setTransfers)
+      .catch(() => setTransfers([]))
+  }, [playerId])
+
+  if (!transfers) return <div className="loading-shimmer" style={{ height: 200, borderRadius: 12, margin: "20px 0" }} />
+
+  if (!transfers.length) return (
+    <div className="empty-state" style={{ paddingTop: 40 }}>
+      <div className="empty-state__icon">💰</div>
+      <h3>{t("player.noTransfers")}</h3>
+    </div>
+  )
+
+  function feeColor(fee) {
+    if (!fee || fee === "Free") return "#10b981"
+    if (fee.toLowerCase().includes("loan")) return "#f59e0b"
+    return "#ee1e46"
+  }
+
+  function feeLabel(fee) {
+    if (!fee) return "—"
+    if (fee === "Free") return t("player.free")
+    if (fee.toLowerCase().includes("loan")) return t("player.loan")
+    return fee
+  }
+
+  return (
+    <div style={{ paddingTop: 8 }}>
+      <div style={{ position: "relative" }}>
+        {/* Timeline line */}
+        <div style={{
+          position: "absolute", left: 28, top: 0, bottom: 0,
+          width: 2, background: "var(--border)", zIndex: 0,
+        }} />
+
+        {transfers.map((tr, i) => (
+          <div key={i} style={{ display: "flex", gap: 16, marginBottom: 16, position: "relative", zIndex: 1 }}>
+            {/* Year bubble */}
+            <div style={{
+              width: 58, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+            }}>
+              <div style={{
+                width: 14, height: 14, borderRadius: "50%",
+                background: i === transfers.length - 1 ? "#10b981" : "var(--accent)",
+                border: "2px solid var(--bg)",
+                marginTop: 4,
+              }} />
+              <span style={{ fontSize: "0.62rem", color: "var(--muted)", textAlign: "center" }}>
+                {tr.date ? tr.date.slice(0, 4) : "—"}
+              </span>
+            </div>
+
+            {/* Card */}
+            <div style={{
+              flex: 1, background: "var(--surface2)", borderRadius: 10, padding: "12px 14px",
+              border: "1px solid var(--border)",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                {/* From */}
+                <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flex: 1 }}>
+                  {tr.from?.logo && (
+                    <img src={tr.from.logo} alt="" style={{ width: 18, height: 18, objectFit: "contain", flexShrink: 0 }}
+                      onError={e => (e.target.style.display = "none")} />
+                  )}
+                  <span style={{ fontSize: "0.78rem", color: "rgba(255,255,255,.65)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {tr.from?.name || "—"}
+                  </span>
+                </div>
+                <span style={{ color: "var(--muted)", fontSize: "0.8rem", flexShrink: 0 }}>→</span>
+                {/* To */}
+                <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flex: 1, justifyContent: "flex-end" }}>
+                  <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>
+                    {tr.to?.name || "—"}
+                  </span>
+                  {tr.to?.logo && (
+                    <img src={tr.to.logo} alt="" style={{ width: 18, height: 18, objectFit: "contain", flexShrink: 0 }}
+                      onError={e => (e.target.style.display = "none")} />
+                  )}
+                </div>
+              </div>
+              {tr.type && (
+                <div style={{ textAlign: "right" }}>
+                  <span style={{
+                    fontSize: "0.7rem", fontWeight: 700, padding: "2px 8px", borderRadius: 6,
+                    background: `${feeColor(tr.type)}18`,
+                    color: feeColor(tr.type),
+                  }}>
+                    {feeLabel(tr.type)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Injuries Tab ─────────────────────────────────────────────────────────────
+
+function InjuriesTab({ playerId, t }) {
+  const [injuries, setInjuries] = useState(null)
+  const fetchedRef = useRef(false)
+
+  useEffect(() => {
+    if (fetchedRef.current) return
+    fetchedRef.current = true
+    fetch(`/api/v1/players/${playerId}/sidelined`)
+      .then(r => r.json())
+      .then(setInjuries)
+      .catch(() => setInjuries([]))
+  }, [playerId])
+
+  if (!injuries) return <div className="loading-shimmer" style={{ height: 200, borderRadius: 12, margin: "20px 0" }} />
+
+  if (!injuries.length) return (
+    <div className="empty-state" style={{ paddingTop: 40 }}>
+      <div className="empty-state__icon">🏥</div>
+      <h3>{t("player.noInjuries")}</h3>
+    </div>
+  )
+
+  function daysBetween(start, end) {
+    if (!start || !end) return null
+    const d = Math.round((new Date(end) - new Date(start)) / 86400000)
+    return d > 0 ? d : null
+  }
+
+  function injuryColor(type) {
+    if (!type) return "#94a3b8"
+    const lower = type.toLowerCase()
+    if (lower.includes("muscle") || lower.includes("hamstring") || lower.includes("thigh")) return "#ef4444"
+    if (lower.includes("ankle") || lower.includes("knee") || lower.includes("foot")) return "#f97316"
+    if (lower.includes("calf") || lower.includes("groin")) return "#f59e0b"
+    return "#94a3b8"
+  }
+
+  return (
+    <div style={{ paddingTop: 8 }}>
+      <div className="widget-next-match">
+        <div className="widget-body p-0">
+          {injuries.slice(0, 30).map((inj, i) => {
+            const days = daysBetween(inj.start, inj.end_date)
+            const color = injuryColor(inj.type)
+            return (
+              <div key={i} style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "10px 16px", borderBottom: "1px solid var(--border)",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "#fff" }}>{inj.type || "—"}</div>
+                    <div style={{ fontSize: "0.68rem", color: "var(--muted)", marginTop: 1 }}>
+                      {inj.start}
+                      {inj.end_date && ` → ${inj.end_date}`}
+                    </div>
+                  </div>
+                </div>
+                {days && (
+                  <span style={{
+                    background: "rgba(255,255,255,.07)", color: "var(--muted)",
+                    borderRadius: 6, padding: "2px 8px", fontSize: "0.7rem", fontWeight: 600, flexShrink: 0,
+                  }}>
+                    {t("player.injuryDays", { days })}
+                  </span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+const PLAYER_TABS = ["stats", "trophies", "transfers", "injuries"]
+
 export default function PlayerPage() {
   const { t }         = useTranslation()
   const { id }        = useParams()
@@ -26,6 +302,7 @@ export default function PlayerPage() {
   const navigate      = useNavigate()
   const league        = searchParams.get("league") || "4"
   const season        = searchParams.get("season") || "2026"
+  const [playerTab, setPlayerTab] = useState("stats")
 
   const [player, setPlayer] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -86,7 +363,7 @@ export default function PlayerPage() {
         <div style={{
           background: "linear-gradient(135deg, #0d1117 0%, #161b22 100%)",
           borderBottom: "1px solid var(--border)", padding: "28px 0 24px",
-          marginBottom: 20,
+          marginBottom: 0,
         }}>
           <div className="container" style={{ maxWidth: 600 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
@@ -123,30 +400,53 @@ export default function PlayerPage() {
           </div>
         </div>
 
-        {/* Stats grid */}
-        {stats && (
-          <div className="widget-next-match" style={{ marginBottom: 20 }}>
-            <div className="widget-title"><h3>{t("player.wcStats")}</h3></div>
-            <div className="widget-body">
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-                <StatBox label={t("player.goals")}     value={stats.goals}       highlight />
-                <StatBox label={t("player.assists")}   value={stats.assists} />
-                <StatBox label={t("player.apps")}      value={stats.appearances} />
-                <StatBox label={t("player.minutes")}   value={stats.minutes} />
-                <StatBox label={t("player.rating")}    value={stats.rating ? Number(stats.rating).toFixed(1) : null} />
-                <StatBox label={t("player.yellow")}    value={stats.yellow_cards} />
-                <StatBox label={t("player.red")}       value={stats.red_cards} />
-                <StatBox label={t("player.keyPasses")} value={stats.key_passes} />
-              </div>
-            </div>
+        {/* Tab bar */}
+        <div className="tab-bar" style={{ marginBottom: 0 }}>
+          <div className="tab-bar__inner">
+            {PLAYER_TABS.map(k => (
+              <button
+                key={k}
+                className={`tab-link${playerTab === k ? " tab-link--active" : ""}`}
+                onClick={() => setPlayerTab(k)}
+              >
+                {t(`player.${k}`)}
+              </button>
+            ))}
           </div>
-        )}
+        </div>
 
-        {!stats?.goals && !stats?.appearances && (
-          <div style={{ textAlign: "center", color: "var(--muted)", padding: "24px 0", fontSize: "0.85rem" }}>
-            {t("player.detailedStatsUnavailable")}
-          </div>
-        )}
+        <div style={{ padding: "20px 0 40px" }}>
+          {playerTab === "stats" && (
+            <>
+              {stats && (
+                <div className="widget-next-match" style={{ marginBottom: 20 }}>
+                  <div className="widget-title"><h3>{t("player.wcStats")}</h3></div>
+                  <div className="widget-body">
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                      <StatBox label={t("player.goals")}     value={stats.goals}       highlight />
+                      <StatBox label={t("player.assists")}   value={stats.assists} />
+                      <StatBox label={t("player.apps")}      value={stats.appearances} />
+                      <StatBox label={t("player.minutes")}   value={stats.minutes} />
+                      <StatBox label={t("player.rating")}    value={stats.rating ? Number(stats.rating).toFixed(1) : null} />
+                      <StatBox label={t("player.yellow")}    value={stats.yellow_cards} />
+                      <StatBox label={t("player.red")}       value={stats.red_cards} />
+                      <StatBox label={t("player.keyPasses")} value={stats.key_passes} />
+                    </div>
+                  </div>
+                </div>
+              )}
+              {!stats?.goals && !stats?.appearances && (
+                <div style={{ textAlign: "center", color: "var(--muted)", padding: "24px 0", fontSize: "0.85rem" }}>
+                  {t("player.detailedStatsUnavailable")}
+                </div>
+              )}
+            </>
+          )}
+
+          {playerTab === "trophies" && <TrophiesTab playerId={id} t={t} />}
+          {playerTab === "transfers" && <TransfersTab playerId={id} t={t} />}
+          {playerTab === "injuries" && <InjuriesTab playerId={id} t={t} />}
+        </div>
       </div>
     </div>
   )

@@ -221,6 +221,142 @@ class LiveScoresClient
     []
   end
 
+  # ── Predictions ───────────────────────────────────────────────────────────────
+
+  def fixture_predictions(fixture_id)
+    Rails.cache.fetch("fixture_preds_v1_#{fixture_id}", expires_in: 2.hours) do
+      raw = get("predictions", fixture: fixture_id)
+      r   = raw.dig("response", 0)
+      next nil unless r
+
+      predictions = r["predictions"] || {}
+      comparison  = r["comparison"]  || {}
+      teams       = r["teams"]       || {}
+
+      {
+        winner: {
+          id:      predictions.dig("winner", "id"),
+          name:    predictions.dig("winner", "name"),
+        },
+        percent: {
+          home: predictions.dig("percent", "home"),
+          draw: predictions.dig("percent", "draw"),
+          away: predictions.dig("percent", "away"),
+        },
+        goals: {
+          home: predictions.dig("goals", "home"),
+          away: predictions.dig("goals", "away"),
+        },
+        advice:     predictions["advice"],
+        under_over: predictions["under_over"],
+        comparison: {
+          form:  comparison["form"],
+          att:   comparison["att"],
+          def:   comparison["def"],
+          h2h:   comparison["h2h"],
+          goals: comparison["goals"],
+          total: comparison["total"],
+        },
+        home_form: teams.dig("home", "last_5", "form"),
+        away_form: teams.dig("away", "last_5", "form"),
+      }
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] fixture_predictions(#{fixture_id}): #{e.message}")
+    nil
+  end
+
+  # ── Odds ────────────────────────────────────────────────────────────────────
+
+  def fixture_odds(fixture_id)
+    Rails.cache.fetch("fixture_odds_v1_#{fixture_id}", expires_in: 30.minutes) do
+      raw        = get("odds", fixture: fixture_id)
+      r          = raw.dig("response", 0)
+      next({}) unless r
+
+      bookmakers = Array(r["bookmakers"])
+      next({}) if bookmakers.empty?
+
+      bk = bookmakers.find { |b| ["Bet365", "Bwin", "10Bet"].include?(b["name"]) } || bookmakers.first
+      next({}) unless bk
+
+      result = { bookmaker: bk["name"], bets: {} }
+      Array(bk["bets"]).each do |bet|
+        result[:bets][bet["name"]] = Array(bet["values"]).map { |v| { value: v["value"], odd: v["odd"] } }
+      end
+      result
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] fixture_odds(#{fixture_id}): #{e.message}")
+    {}
+  end
+
+  def fixture_odds_live(fixture_id)
+    Rails.cache.fetch("fixture_odds_live_v1_#{fixture_id}", expires_in: 30.seconds) do
+      raw = get("odds/live", fixture: fixture_id)
+      r   = raw.dig("response", 0)
+      next nil unless r
+
+      {
+        elapsed: r.dig("fixture", "status", "elapsed"),
+        goals:   { home: r.dig("teams", "home", "goals"), away: r.dig("teams", "away", "goals") },
+        updated: r["update"],
+        bets:    Array(r["odds"]).map { |o|
+          { name: o["name"], values: Array(o["values"]).map { |v| { value: v["value"], odd: v["odd"] } } }
+        },
+      }
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] fixture_odds_live(#{fixture_id}): #{e.message}")
+    nil
+  end
+
+  # ── Player extras ────────────────────────────────────────────────────────────
+
+  def player_transfers(player_id)
+    Rails.cache.fetch("player_transfers_v1_#{player_id}", expires_in: 12.hours) do
+      raw = get("transfers", player: player_id)
+      r   = raw.dig("response", 0)
+      next [] unless r
+
+      Array(r["transfers"]).map do |t|
+        {
+          date: t["date"],
+          type: t["type"],
+          from: { id: t.dig("teams", "out", "id"), name: t.dig("teams", "out", "name"), logo: t.dig("teams", "out", "logo") },
+          to:   { id: t.dig("teams", "in",  "id"), name: t.dig("teams", "in",  "name"), logo: t.dig("teams", "in",  "logo") },
+        }
+      end.reverse
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] player_transfers(#{player_id}): #{e.message}")
+    []
+  end
+
+  def player_trophies(player_id)
+    Rails.cache.fetch("player_trophies_v1_#{player_id}", expires_in: 12.hours) do
+      raw = get("trophies", player: player_id)
+      Array(raw.dig("response")).map do |t|
+        { league: t["league"], place: t["place"], season: t["season"], country: t["country"] }
+      end.sort_by { |t| -(t[:season]&.slice(0, 4)&.to_i || 0) }
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] player_trophies(#{player_id}): #{e.message}")
+    []
+  end
+
+  def player_sidelined(player_id)
+    Rails.cache.fetch("player_sidelined_v1_#{player_id}", expires_in: 6.hours) do
+      raw = get("sidelined", player: player_id)
+      Array(raw.dig("response")).map do |s|
+        { type: s["type"], start: s["start"], end_date: s["end"] }
+      end
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] player_sidelined(#{player_id}): #{e.message}")
+    []
+  end
+
   # ── Private ───────────────────────────────────────────────────────────────
 
   private
@@ -425,4 +561,5 @@ class LiveScoresClient
     Rails.logger.error("[LiveScoresClient] GET #{path} #{params}: #{e.message}")
     {}
   end
+
 end

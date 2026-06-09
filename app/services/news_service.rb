@@ -40,7 +40,7 @@ class NewsService
 
   def latest(limit: 20, lang: "en")
     feeds = FEEDS[lang] || FEEDS["en"]
-    Rails.cache.fetch("news_feed_v3_#{lang}", expires_in: 15.minutes) do
+    Rails.cache.fetch("news_feed_v3_#{lang}", expires_in: 30.minutes) do
       threads = feeds.map { |feed| Thread.new { fetch_feed(feed[:url], feed[:source]) } }
       items   = threads.flat_map { |t| t.join(8)&.value || [] }
       items.uniq { |a| a[:link] }
