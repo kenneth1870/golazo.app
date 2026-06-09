@@ -1093,6 +1093,87 @@ function MatchSkeleton() {
   )
 }
 
+// ─── Related News ──────────────────────────────────────
+const SOURCE_COLORS = {
+  "BBC Sport":     "#b80000",
+  "ESPN FC":       "#cc0000",
+  "ESPN Deportes": "#cc0000",
+  "Goal.com":      "#ee1e46",
+  "Marca":         "#0f7bca",
+  "Radio Gol":     "#f97316",
+}
+
+function relativeTime(published_at) {
+  if (!published_at) return ""
+  const diff = Math.floor((Date.now() - new Date(published_at).getTime()) / 1000)
+  if (diff < 60)  return `${diff}s`
+  if (diff < 3600) return `${Math.floor(diff / 60)} min`
+  if (diff < 86400) return `${Math.floor(diff / 3600)} h`
+  return `${Math.floor(diff / 86400)} d`
+}
+
+function RelatedNewsPanel({ homeName, awayName, lang, t }) {
+  const [articles, setArticles] = useState([])
+
+  useEffect(() => {
+    if (!homeName && !awayName) return
+    fetch(`/api/v1/news?lang=${lang}&limit=40`)
+      .then(r => r.ok ? r.json() : [])
+      .then(items => {
+        if (!Array.isArray(items) || items.length === 0) return
+        const keywords = [homeName, awayName]
+          .filter(Boolean)
+          .map(n => n.toLowerCase().split(" ")[0]) // first word is enough
+          .filter(k => k.length > 3)
+
+        let filtered = keywords.length
+          ? items.filter(a => {
+              const text = `${a.title} ${a.summary || ""}`.toLowerCase()
+              return keywords.some(k => text.includes(k))
+            })
+          : []
+
+        // Fallback to latest if not enough
+        if (filtered.length < 2) filtered = items.slice(0, 4)
+        setArticles(filtered.slice(0, 4))
+      })
+      .catch(() => {})
+  }, [homeName, awayName, lang])
+
+  if (articles.length === 0) return null
+
+  return (
+    <section className="related-news">
+      <div className="related-news__header">
+        <h3 className="related-news__title">{t("match.relatedNews")}</h3>
+        <Link to="/news" className="related-news__more">Ver más →</Link>
+      </div>
+      <div className="related-news__scroll">
+        {articles.map(a => {
+          const color = SOURCE_COLORS[a.source] || "#ee1e46"
+          return (
+            <Link key={a.id} to={`/news/${a.id}`} className="rn-card">
+              {a.image
+                ? <div className="rn-card__img" style={{ backgroundImage: `url(${a.image})` }} />
+                : <div className="rn-card__img rn-card__img--placeholder" />
+              }
+              <div className="rn-card__body">
+                <span className="rn-card__tag" style={{ background: color }}>{a.source}</span>
+                <p className="rn-card__title">{a.title}</p>
+                <div className="rn-card__footer">
+                  <div className="rn-card__source-dot" style={{ background: color }} />
+                  <span className="rn-card__time">{relativeTime(a.published_at)}</span>
+                  <span className="rn-card__bookmark">🔖</span>
+                </div>
+              </div>
+            </Link>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 // ─── Main Page ─────────────────────────────────────────
 const TAB_KEYS = ["summary", "stats", "lineups", "h2h"]
 
@@ -1490,6 +1571,16 @@ export default function MatchShowPage() {
 
         {tab === "h2h" && (
           <H2HPanel h2h={data?.h2h} homeTeamName={homeName} awayTeamName={awayName} t={t} lang={i18n.language} />
+        )}
+
+        {/* Related News — shown on every tab when fixture is loaded */}
+        {hasFixture && (
+          <RelatedNewsPanel
+            homeName={homeName}
+            awayName={awayName}
+            lang={i18n.language?.slice(0, 2) || "en"}
+            t={t}
+          />
         )}
         </div>
       </div>

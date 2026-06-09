@@ -179,7 +179,8 @@
     "votes": "{{count}} votos",
     "goalTimeline": "Goles",
     "prevMatch": "← Anterior",
-    "nextMatch": "Siguiente →"
+    "nextMatch": "Siguiente →",
+    "relatedNews": "Noticias Relacionadas"
   },
   "error": {
     "dataUnavailable": "Datos temporalmente no disponibles",
