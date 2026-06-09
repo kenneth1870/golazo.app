@@ -1106,39 +1106,43 @@ const SOURCE_COLORS = {
 function relativeTime(published_at) {
   if (!published_at) return ""
   const diff = Math.floor((Date.now() - new Date(published_at).getTime()) / 1000)
-  if (diff < 60)  return `${diff}s`
-  if (diff < 3600) return `${Math.floor(diff / 60)} min`
+  if (diff <= 0)    return "ahora"
+  if (diff < 60)    return `${diff}s`
+  if (diff < 3600)  return `${Math.floor(diff / 60)} min`
   if (diff < 86400) return `${Math.floor(diff / 3600)} h`
   return `${Math.floor(diff / 86400)} d`
 }
 
-function RelatedNewsPanel({ homeName, awayName, lang, t }) {
+function RelatedNewsPanel({ homeName, awayName, leagueName, lang, t }) {
   const [articles, setArticles] = useState([])
 
   useEffect(() => {
     if (!homeName && !awayName) return
-    fetch(`/api/v1/news?lang=${lang}&limit=40`)
+    fetch(`/api/v1/news?lang=${lang}&limit=60`)
       .then(r => r.ok ? r.json() : [])
       .then(items => {
         if (!Array.isArray(items) || items.length === 0) return
-        const keywords = [homeName, awayName]
+
+        // Build keyword set: all meaningful words from team + league names
+        const words = [homeName, awayName, leagueName]
           .filter(Boolean)
-          .map(n => n.toLowerCase().split(" ")[0]) // first word is enough
+          .flatMap(n => n.toLowerCase().split(/[\s\-\/]+/))
           .filter(k => k.length > 3)
+          // Remove overly generic words that appear in every article
+          .filter(k => !["copa", "world", "club", "real", "city", "mundial", "cup", "2026"].includes(k))
 
-        let filtered = keywords.length
-          ? items.filter(a => {
-              const text = `${a.title} ${a.summary || ""}`.toLowerCase()
-              return keywords.some(k => text.includes(k))
-            })
-          : []
+        if (words.length === 0) return
 
-        // Fallback to latest if not enough
-        if (filtered.length < 2) filtered = items.slice(0, 4)
-        setArticles(filtered.slice(0, 4))
+        const filtered = items.filter(a => {
+          const text = `${a.title} ${a.summary || ""}`.toLowerCase()
+          return words.some(k => text.includes(k))
+        })
+
+        // Only show if we found genuinely relevant articles — never fall back to unrelated news
+        if (filtered.length > 0) setArticles(filtered.slice(0, 4))
       })
       .catch(() => {})
-  }, [homeName, awayName, lang])
+  }, [homeName, awayName, leagueName, lang])
 
   if (articles.length === 0) return null
 
@@ -1146,7 +1150,7 @@ function RelatedNewsPanel({ homeName, awayName, lang, t }) {
     <section className="related-news">
       <div className="related-news__header">
         <h3 className="related-news__title">{t("match.relatedNews")}</h3>
-        <Link to="/news" className="related-news__more">Ver más →</Link>
+        <Link to="/news" className="related-news__more">{t("news.seeMore", "Ver más →")}</Link>
       </div>
       <div className="related-news__scroll">
         {articles.map(a => {
@@ -1578,6 +1582,7 @@ export default function MatchShowPage() {
           <RelatedNewsPanel
             homeName={homeName}
             awayName={awayName}
+            leagueName={data?.fixture?.league?.name}
             lang={i18n.language?.slice(0, 2) || "en"}
             t={t}
           />
