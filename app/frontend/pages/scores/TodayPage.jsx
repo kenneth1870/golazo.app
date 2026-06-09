@@ -322,14 +322,93 @@ function PullIndicator({ distance, refreshing }) {
   )
 }
 
-// ─── Empty state ──────────────────────────────────────
-function EmptyState({ label, t }) {
+// ─── Empty state with upcoming WC teaser ──────────────
+function EmptyState({ label, t, isToday, onMatchClick, navigate }) {
+  const [upcoming, setUpcoming] = useState([])
+
+  useEffect(() => {
+    if (!isToday) return
+    fetch("/api/v1/matches?competition=WC&filter=upcoming&limit=6")
+      .then(r => r.json())
+      .then(data => setUpcoming(Array.isArray(data) ? data.slice(0, 6) : []))
+      .catch(() => {})
+  }, [isToday])
+
+  const handleClick = (m) => {
+    if (m.external_id && onMatchClick) onMatchClick(m.external_id, m)
+  }
+
   return (
-    <div className="empty-state">
-      <div className="empty-state__pitch" />
-      <div className="empty-state__icon">📅</div>
-      <h3>{t("time.noMatches", { date: label })}</h3>
-      <p>{t("time.tryDifferent")}</p>
+    <div>
+      <div className="empty-state">
+        <div className="empty-state__pitch" />
+        <div className="empty-state__icon">📅</div>
+        <h3>{t("time.noMatches", { date: label })}</h3>
+        <p>{t("time.tryDifferent")}</p>
+      </div>
+
+      {/* Show upcoming WC fixtures when today is empty */}
+      {isToday && upcoming.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8, marginBottom: 12,
+            fontSize: "0.75rem", fontWeight: 800, color: "#ee1e46",
+            textTransform: "uppercase", letterSpacing: 1,
+          }}>
+            <img src="https://crests.football-data.org/WC.png" alt="" style={{ width: 18, height: 18, objectFit: "contain" }} onError={e => (e.target.style.display = "none")} />
+            FIFA World Cup 2026 — {t("home.upcomingMatches")}
+          </div>
+          <div className="widget-next-match">
+            <div className="widget-body p-0">
+              {upcoming.map(m => {
+                const kickoffTime = m.kickoff_at
+                  ? new Date(m.kickoff_at).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+                  : ""
+                return (
+                  <div
+                    key={m.id}
+                    className={`match-row${m.external_id ? " match-row--clickable" : ""}`}
+                    onClick={() => handleClick(m)}
+                  >
+                    <div className="match-row__status">
+                      <span className="match-status-time" style={{ fontSize: "0.6rem", lineHeight: 1.3 }}>
+                        {kickoffTime.split(",").slice(0, 2).join(",")}
+                      </span>
+                    </div>
+                    <div className="match-row__teams">
+                      <div className="match-row__team match-row__team--home">
+                        {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt="" className="flag-xs" onError={e => (e.target.style.display = "none")} />}
+                        <span className="team-name">{m.home_team?.name}</span>
+                      </div>
+                      <div className="match-row__score">
+                        <span className="score-pill score-pill--vs">vs</span>
+                      </div>
+                      <div className="match-row__team match-row__team--away">
+                        <span className="team-name">{m.away_team?.name}</span>
+                        {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt="" className="flag-xs" onError={e => (e.target.style.display = "none")} />}
+                      </div>
+                    </div>
+                    <div className="match-row__meta">
+                      {m.group_stage && <span style={{ fontSize: "0.6rem", color: "var(--muted)" }}>Grp {m.group_stage}</span>}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+          <div style={{ textAlign: "center", marginTop: 12 }}>
+            <button
+              onClick={() => navigate("/scores/fixtures")}
+              style={{
+                background: "none", border: "1px solid var(--border)", borderRadius: 20,
+                color: "var(--muted)", fontSize: "0.75rem", padding: "6px 18px", cursor: "pointer",
+              }}
+            >
+              {t("home.fullSchedule")}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -638,7 +717,7 @@ export default function TodayPage() {
             </button>
           </div>
         ) : groups.length === 0 ? (
-          <EmptyState label={label} t={t} />
+          <EmptyState label={label} t={t} isToday={toISO(selected) === toISO(new Date())} onMatchClick={onMatchClick} navigate={navigate} />
         ) : (
           groups.map((g, i) => (
             <CompetitionBlock
