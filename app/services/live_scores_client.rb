@@ -1,6 +1,8 @@
 require "set"
 
 class LiveScoresClient
+  # Raised when the API returns HTTP 429 so callers can apply a long back-off.
+  class RateLimitedError < StandardError; end
   BASE_URL = "https://free-api-live-football-data.p.rapidapi.com/"
   HOST     = "free-api-live-football-data.p.rapidapi.com"
 
@@ -53,17 +55,38 @@ class LiveScoresClient
 
   # Currently live matches across all leagues
   def live_matches
-    data = get("football-current-live")
-    data.dig("response", "live") || data.dig("response", "liveMatches") || []
+    Rails.cache.fetch("live_scores_live_v2", expires_in: 5.minutes) do
+      data = get("football-current-live")
+      data.dig("response", "live") || data.dig("response", "liveMatches") || []
+    end
+  rescue RateLimitedError
+    # Rate limited — cache empty result for 2 h so we stop hammering the quota
+    Rails.cache.write("live_scores_live_v2", [], expires_in: 2.hours)
+    []
   end
 
   # All matches for a given date, normalized to a common shape.
   # FotMob buckets matches by a European-offset date, so evening matches
   # (after ~18:00 UTC) appear in the *next* UTC day. We fetch both days
   # and merge; the frontend then filters by the user's local date.
+  # Sentinel stored in cache when the API is rate-limited, so we don't
+  # hammer the quota again for a long back-off window.
+  RATE_LIMITED_SENTINEL = "__rate_limited__".freeze
+
   def matches_for_date(date)
-    Rails.cache.fetch("live_scores_date_v8_#{date.to_date.iso8601}", expires_in: 5.minutes) do
-      raw = fetch_raw_matches(date.to_date) + fetch_raw_matches(date.to_date + 1)
+    key = "live_scores_date_v9_#{date.to_date.iso8601}"
+
+    # Check for active rate-limit back-off
+    cached = Rails.cache.read(key)
+    return [] if cached == RATE_LIMITED_SENTINEL
+
+    Rails.cache.fetch(key, expires_in: 30.minutes) do
+      begin
+        raw = fetch_raw_matches(date.to_date) + fetch_raw_matches(date.to_date + 1)
+      rescue RateLimitedError
+        Rails.cache.write(key, RATE_LIMITED_SENTINEL, expires_in: 2.hours)
+        return []
+      end
       raw.uniq! { |m| m["id"] || m["matchId"] }
 
       # Guard against date+1 scheduled matches leaking into today's view.
@@ -415,6 +438,8 @@ class LiveScoresClient
     data.dig("response", "matches") ||
       data.dig("response", "fixtures") ||
       data.dig("response", "live") || []
+  rescue RateLimitedError
+    raise  # propagate so matches_for_date can apply the 2-hour back-off
   rescue => e
     Rails.logger.warn("[LiveScoresClient] fetch_raw_matches #{date} failed: #{e.message}")
     []
@@ -653,6 +678,16 @@ class LiveScoresClient
   def get(path, params = {})
     resp = @conn.get(path, params)
     JSON.parse(resp.body)
+  rescue Faraday::TooManyRequestsError, Faraday::ClientError => e
+    # Detect 429 rate-limit by status code embedded in Faraday error
+    status = e.respond_to?(:response) && e.response ? e.response[:status].to_i : 0
+    if status == 429 || e.is_a?(Faraday::TooManyRequestsError)
+      Rails.logger.warn("[LiveScoresClient] #{path}: rate limited (429)")
+      raise RateLimitedError, "429 from #{path}"
+    end
+    Rails.logger.error("[LiveScoresClient] #{path}: #{e.message}")
+    Sentry.capture_exception(e, extra: { path: path }) if defined?(Sentry) && Sentry.initialized?
+    {}
   rescue Faraday::Error, JSON::ParserError => e
     Rails.logger.error("[LiveScoresClient] #{path}: #{e.message}")
     Sentry.capture_exception(e, extra: { path: path }) if defined?(Sentry) && Sentry.initialized?
