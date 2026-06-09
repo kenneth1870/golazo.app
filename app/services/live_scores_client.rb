@@ -39,7 +39,7 @@ class LiveScoresClient
     "ABD"  => "postponed",
   }.freeze
 
-  # API-Football v3 league IDs we care about
+  # API-Football v3 league IDs we care about (men's senior only)
   FEATURED_LEAGUES = Set.new([
     1,    # FIFA World Cup
     2,    # UEFA Champions League
@@ -60,7 +60,6 @@ class LiveScoresClient
     179,  # Scottish Premiership
     203,  # Süper Lig
     41,   # Championship (England)
-    9,    # FIFA Women's World Cup
     13,   # Copa Libertadores
     11,   # Copa Sudamericana
     6,    # Copa América
@@ -72,6 +71,15 @@ class LiveScoresClient
     29,   # AFC Asian Cup
     4,    # Euro Championship
   ]).freeze
+
+  # Regex that matches youth (U17/U20/U21/U23) and women's competitions by name.
+  EXCLUDED_LEAGUE_PATTERN = /
+    \b(u\s?1[5-9]|u\s?2[0-3])\b   # U15–U23 age brackets
+    | \bwomen\b | \bwomens\b
+    | \bfemale\b | \bgirls\b
+    | \bwsl\b | \bnwsl\b           # Women's Super League, NWSL
+    | \bw\s+league\b               # generic "W League"
+  /xi.freeze
 
   def initialize
     key = ENV["APISPORTS_KEY"].presence
@@ -87,11 +95,13 @@ class LiveScoresClient
 
   # ── Public interface ──────────────────────────────────────────────────────
 
-  # Currently live matches across all leagues
+  # Currently live matches across all leagues (senior men's only)
   def live_matches
-    Rails.cache.fetch("live_scores_live_v3", expires_in: 1.minute) do
+    Rails.cache.fetch("live_scores_live_v4", expires_in: 1.minute) do
       data = get("fixtures", live: "all")
-      (data.dig("response") || []).filter_map { |f| normalize_fixture(f) }
+      (data.dig("response") || [])
+        .filter_map { |f| normalize_fixture(f) }
+        .select     { |m| featured_league?(m) }
     end
   rescue => e
     Rails.logger.error("[LiveScoresClient] live_matches: #{e.message}")
@@ -100,7 +110,7 @@ class LiveScoresClient
 
   # All featured matches for a given date (UTC).
   def matches_for_date(date)
-    Rails.cache.fetch("live_scores_date_v10_#{date.to_date.iso8601}", expires_in: 10.minutes) do
+    Rails.cache.fetch("live_scores_date_v11_#{date.to_date.iso8601}", expires_in: 10.minutes) do
       data = get("fixtures", date: date.to_date.iso8601, timezone: "UTC")
       (data.dig("response") || [])
         .filter_map { |f| normalize_fixture(f) }
@@ -218,12 +228,12 @@ class LiveScoresClient
   def featured_league?(match)
     lid     = match[:league_id].to_i
     country = match[:league_country].to_s
-    name    = match[:league_name].to_s.downcase
+    name    = match[:league_name].to_s
 
-    # Filter out women's competitions
-    return false if name.match?(/\bwomen\b|\bfemale\b|\bwsl\b|\bnwsl\b/)
+    # Always exclude youth and women's competitions regardless of league ID
+    return false if name.match?(EXCLUDED_LEAGUE_PATTERN)
 
-    # All international/world competitions are included
+    # All senior men's international/world competitions are included
     return true if country == "World"
 
     # Featured domestic leagues by ID
