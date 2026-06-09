@@ -48,7 +48,21 @@ module Api
       end
 
       def fetch_api_matches(date)
-        LiveScoresClient.new.matches_for_date(date).map { |m| normalize_api(m) }
+        client = LiveScoresClient.new
+        matches = client.matches_for_date(date)
+
+        # Also pull the next UTC day so that evening matches in western timezones
+        # (Americas, UTC-8 to UTC-3) are included. A match at 01:00 UTC on June 10
+        # is 17:00–22:00 local on June 9 — the user's "today". Only include
+        # tomorrow-UTC matches that start before 07:00 UTC (≤ midnight UTC-7).
+        next_day = client.matches_for_date(date + 1).select do |m|
+          t = Time.parse(m[:kickoff_at].to_s) rescue nil
+          t && t.utc.hour < 7
+        end
+
+        seen = Set.new(matches.map { |m| m[:external_id] })
+        combined = matches + next_day.reject { |m| seen.include?(m[:external_id]) }
+        combined.map { |m| normalize_api(m) }
       rescue => e
         Rails.logger.error("[TodayController] API matches failed: #{e.message}")
         []
