@@ -57,6 +57,8 @@ Rails.application.routes.draw do
     end
   end
 
+  mount MissionControl::Jobs::Engine, at: "/jobs"
+
   mount ActionCable.server => "/cable"
 
   # Sitemap
