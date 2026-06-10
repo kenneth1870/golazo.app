@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import MatchRow from "../components/MatchRow"
 import { useFavorites } from "../hooks/useFavorites"
@@ -81,6 +81,7 @@ function StandingsTable({ standings, t }) {
 export default function LeagueDetailPage() {
   const { t } = useTranslation()
   const { code } = useParams()
+  const navigate = useNavigate()
   const { isFavorite, toggleFavorite } = useFavorites()
   const [competition, setCompetition] = useState(null)
   const [matches, setMatches]         = useState([])
@@ -228,7 +229,12 @@ export default function LeagueDetailPage() {
           ) : (
             <div className="match-list">
               {displayedMatches.map(m => (
-                <MatchRow key={m.id} match={m} showDate={tab !== "today"} />
+                <MatchRow
+                  key={m.id}
+                  match={m}
+                  showDate={tab !== "today"}
+                  onClick={m.external_id ? () => navigate(`/matches/${m.external_id}`) : undefined}
+                />
               ))}
             </div>
           )}

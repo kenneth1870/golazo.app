@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
@@ -89,22 +89,25 @@ export default function Hero({ nextMatch, liveCount = 0 }) {
   const [idxA, setIdxA]      = useState(0)
   const [idxB, setIdxB]      = useState(1)
   const [activeLayer, setActiveLayer] = useState("a")   // "a" | "b"
-  const currentIdxRef = useRef(0)
+  const currentIdxRef   = useRef(0)
+  const activeLayerRef  = useRef("a")   // mirror of activeLayer for stable interval closure
 
   useEffect(() => {
     const iv = setInterval(() => {
       const newIdx = nextBgIdx(currentIdxRef.current)
       currentIdxRef.current = newIdx
-      if (activeLayer === "a") {
+      if (activeLayerRef.current === "a") {
         setIdxB(newIdx)
+        activeLayerRef.current = "b"
         setActiveLayer("b")
       } else {
         setIdxA(newIdx)
+        activeLayerRef.current = "a"
         setActiveLayer("a")
       }
     }, 7000)
     return () => clearInterval(iv)
-  }, [activeLayer])
+  }, [])  // runs once — refs keep the closure fresh
 
   const isOpening  = !nextMatch?.kickoff_at
   const countdownLabel = isOpening

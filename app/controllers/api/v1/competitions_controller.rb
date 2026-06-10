@@ -14,7 +14,7 @@ module Api
           only: %i[id name code logo country competition_type],
           include: {
             matches: {
-              only: %i[id status kickoff_at home_score away_score round group_stage],
+              only: %i[id external_id status kickoff_at home_score away_score round group_stage],
               include: {
                 home_team: { only: %i[id name code flag_url] },
                 away_team: { only: %i[id name code flag_url] }

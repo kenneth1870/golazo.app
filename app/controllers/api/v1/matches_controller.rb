@@ -24,7 +24,7 @@ module Api
 
         render json: scope.map { |m|
           m.as_json(
-            only:    %i[id status kickoff_at home_score away_score home_slot away_slot bracket_pos group_stage],
+            only:    %i[id external_id status kickoff_at home_score away_score home_slot away_slot bracket_pos group_stage],
             include: {
               home_team:   { only: %i[id name code flag_url] },
               away_team:   { only: %i[id name code flag_url] },
