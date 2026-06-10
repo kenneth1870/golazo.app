@@ -600,7 +600,7 @@ export default function TodayPage() {
             <div className="widget-next-match">
               <div className="widget-body p-0">
                 {yourMatches.map(m => (
-                  <MatchRow key={m.id} match={m} onClick={() => onMatchClick(m)} />
+                  <MatchRow key={m.id} match={m} onClick={() => onMatchClick(m.external_id, m)} />
                 ))}
               </div>
             </div>

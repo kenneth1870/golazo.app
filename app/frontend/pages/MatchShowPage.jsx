@@ -1729,7 +1729,7 @@ export default function MatchShowPage() {
             <div style={{ display: "flex", gap: 4, flex: 1, justifyContent: "center" }}>
               {prevMatchNav && (
                 <button
-                  onClick={() => navigate(`/matches/${prevMatchNav.external_id}`, { state: { matchList, matchIdx: matchIdx - 1 } })}
+                  onClick={() => navigate(`/matches/${String(prevMatchNav.external_id)}`, { state: { matchList, matchIdx: matchIdx - 1 } })}
                   style={{
                     background: "var(--surface2)", border: "1px solid var(--border)",
                     borderRadius: 6, padding: "4px 10px", fontSize: "0.68rem",
@@ -1742,7 +1742,7 @@ export default function MatchShowPage() {
               )}
               {nextMatchNav && (
                 <button
-                  onClick={() => navigate(`/matches/${nextMatchNav.external_id}`, { state: { matchList, matchIdx: matchIdx + 1 } })}
+                  onClick={() => navigate(`/matches/${String(nextMatchNav.external_id)}`, { state: { matchList, matchIdx: matchIdx + 1 } })}
                   style={{
                     background: "var(--surface2)", border: "1px solid var(--border)",
                     borderRadius: 6, padding: "4px 10px", fontSize: "0.68rem",
