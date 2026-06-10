@@ -342,12 +342,14 @@ class WorldCupSync
   # old "raw downcased" fallback (which could only ever match alias-less names
   # the normalized query already covered).
   def find_match_by_teams(home_name, away_name)
-    Match.joins(:home_team, :away_team)
-         .where(status: %w[scheduled live])
-         .find_by(
-           "LOWER(home_teams_matches.name) = ? AND LOWER(away_teams_matches.name) = ?",
-           normalize_team_name(home_name), normalize_team_name(away_name)
-         )
+    Match
+      .joins("INNER JOIN teams home_teams ON home_teams.id = matches.home_team_id")
+      .joins("INNER JOIN teams away_teams ON away_teams.id = matches.away_team_id")
+      .where(status: %w[scheduled live])
+      .find_by(
+        "LOWER(home_teams.name) = ? AND LOWER(away_teams.name) = ?",
+        normalize_team_name(home_name), normalize_team_name(away_name),
+      )
   rescue => e
     log("Match lookup error: #{e.message}")
     nil
