@@ -137,7 +137,7 @@ export default function TransferCenterPage() {
 
   return (
     <>
-      <div className="page-hero" style={{ backgroundImage: "url('/images/bg_1.jpg')" }}>
+      <div className="page-hero" style={{ backgroundImage: "url('/images/hero_2.jpg')" }}>
         <div className="container">
           <h1 className="page-hero__title">
             🔄 {t("transfers.title", "Transfer Center")}

@@ -45,17 +45,19 @@ export default function AllLeaguesPage() {
   const loadLive = () =>
     fetch("/api/v1/live_scores")
       .then(r => r.json())
-      .then(setLiveMatches)
+      .then(data => { if (Array.isArray(data)) setLiveMatches(data) })
       .catch(() => {})
 
   const load = () => {
     setLoading(true)
     setError(false)
+    // Fetch competitions and live scores independently so a live-scores
+    // failure doesn't block the competitions list from rendering.
     Promise.all([
       fetch("/api/v1/competitions").then(r => r.json()),
-      loadLive(),
+      loadLive(),                      // runs concurrently, handles own errors
     ])
-      .then(([comps]) => setCompetitions(comps))
+      .then(([comps]) => { if (Array.isArray(comps)) setCompetitions(comps) })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }
@@ -117,7 +119,7 @@ export default function AllLeaguesPage() {
 
   return (
     <>
-      <div className="page-hero" style={{ backgroundImage: "url('/images/bg_2.jpg')" }}>
+      <div className="page-hero" style={{ backgroundImage: "url('/images/hero_3.jpg')" }}>
         <div className="container">
           <h1 className="page-hero__title">{t("leagues.title")}</h1>
           <p className="page-hero__sub">

@@ -45,7 +45,7 @@ export default function MatchDetail({ matchId, onBack }) {
   return (
     <>
       {/* Hero-style scoreboard */}
-      <div className="hero overlay" style={{ backgroundImage: "url('/images/bg_1.jpg')", minHeight: 320 }}>
+      <div className="hero overlay" style={{ backgroundImage: "url('/images/hero_4.jpg')", minHeight: 320 }}>
         <div className="container h-100 d-flex align-items-center">
           <div className="w-100">
             <button className="btn-back" onClick={onBack}>

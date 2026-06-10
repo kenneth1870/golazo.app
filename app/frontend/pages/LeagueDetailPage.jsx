@@ -97,8 +97,17 @@ export default function LeagueDetailPage() {
       fetch(`/api/v1/standings?competition=${code}`).then(r => r.json()).catch(() => []),
     ]).then(([comp, matchData, standData]) => {
       setCompetition(comp)
-      setMatches(Array.isArray(matchData) ? matchData : [])
+        const ms = Array.isArray(matchData) ? matchData : []
+      setMatches(ms)
       setStandings(Array.isArray(standData) ? standData : [])
+      // Auto-select the most relevant tab after data loads
+      const now = new Date(); now.setHours(0,0,0,0)
+      const tmrw = new Date(now); tmrw.setDate(tmrw.getDate() + 1)
+      const hasLiveOrToday = ms.some(m => m.status === "live" || (new Date(m.kickoff_at) >= now && new Date(m.kickoff_at) < tmrw))
+      const hasUpcoming    = ms.some(m => m.status === "scheduled" && new Date(m.kickoff_at) >= tmrw)
+      const hasResults     = ms.some(m => m.status === "finished")
+      if (!hasLiveOrToday && hasUpcoming) setTab("fixtures")
+      else if (!hasLiveOrToday && !hasUpcoming && hasResults) setTab("results")
     }).finally(() => setLoading(false))
   }, [code])
 
@@ -126,9 +135,10 @@ export default function LeagueDetailPage() {
 
   // Tab definitions (keyed strings for comparison)
   const TABS = [
-    { key: "today",     label: t("time.today") },
-    { key: "fixtures",  label: t("nav.fixtures") },
-    { key: "results",   label: t("nav.results") },
+    { key: "today",      label: t("time.today") },
+    { key: "fixtures",   label: t("nav.fixtures") },
+    { key: "results",    label: t("nav.results") },
+    ...(standings.length > 0 ? [{ key: "standings", label: t("nav.standings", "Standings") }] : []),
   ]
 
   const displayedMatches =
@@ -139,7 +149,7 @@ export default function LeagueDetailPage() {
   if (loading) {
     return (
       <div>
-        <div className="page-hero" style={{ backgroundImage: "url('/images/bg_2.jpg')" }}>
+        <div className="page-hero" style={{ backgroundImage: "url('/images/hero_3.jpg')" }}>
           <div className="container"><h1 className="page-hero__title">{t("loading")}</h1></div>
         </div>
         <div className="site-section container">
@@ -151,7 +161,7 @@ export default function LeagueDetailPage() {
 
   return (
     <div>
-      <div className="page-hero" style={{ backgroundImage: "url('/images/bg_2.jpg')" }}>
+      <div className="page-hero" style={{ backgroundImage: "url('/images/hero_3.jpg')" }}>
         <div className="container">
           <div className="d-flex align-items-center" style={{ gap: 16 }}>
             {competition?.logo && (

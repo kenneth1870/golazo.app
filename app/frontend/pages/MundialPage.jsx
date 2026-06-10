@@ -1,8 +1,13 @@
 import { NavLink, Outlet } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { usePageMeta } from "../hooks/usePageMeta"
 
 export default function MundialPage() {
   const { t } = useTranslation()
+  usePageMeta(
+    "FIFA World Cup 2026 — Teams, Schedule & Results",
+    "Complete FIFA World Cup 2026 coverage — teams, schedule, venues, top scorers and live scores from USA, Canada & Mexico."
+  )
 
   const TABS = [
     { path: "/mundial/teams",   label: t("nav.teams") },
@@ -13,7 +18,7 @@ export default function MundialPage() {
 
   return (
     <div>
-      <div className="page-hero page-hero--mundial" style={{ backgroundImage: "url('/images/bg_1.jpg')" }}>
+      <div className="page-hero page-hero--mundial" style={{ backgroundImage: "url('/images/hero_5.jpg')" }}>
         <div className="container">
           <div className="mundial-hero-content">
             <img src="/images/SOCCER.png" alt="WC 2026" style={{ height: 60, marginBottom: 16 }} onError={e => e.target.style.display='none'} />

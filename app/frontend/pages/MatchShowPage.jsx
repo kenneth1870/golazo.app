@@ -1602,6 +1602,10 @@ export default function MatchShowPage() {
   // arrived after this poll started (dataFetchedAt > fetchStarted), the poll
   // result is by definition staler and gets discarded.
   const load = useCallback(() => {
+    // Guard: don't fetch if id looks invalid (undefined, null, object-stringified)
+    if (!id || id === "undefined" || id === "null" || id.includes("object")) {
+      return Promise.resolve()
+    }
     const fetchStarted = Date.now()
     return fetch(`/api/v1/match_detail/${id}`)
       .then(r => r.json())

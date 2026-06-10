@@ -1,10 +1,15 @@
 import { NavLink, Outlet } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useLiveCount } from "../contexts/LiveContext"
+import { usePageMeta } from "../hooks/usePageMeta"
 
 export default function ScoresPage() {
   const { t } = useTranslation()
   const liveCount = useLiveCount()
+  usePageMeta(
+    liveCount > 0 ? `Live Scores — ${liveCount} matches live` : "Scores — World Cup 2026 & All Competitions",
+    "Live scores, results and fixtures for FIFA World Cup 2026 and all football competitions worldwide."
+  )
 
   const TABS = [
     { path: "/scores/today",    label: t("time.today"), live: liveCount > 0 },
@@ -16,7 +21,7 @@ export default function ScoresPage() {
 
   return (
     <div>
-      <div className="page-hero" style={{ backgroundImage: "url('/images/bg_3.jpg')" }}>
+      <div className="page-hero" style={{ backgroundImage: "url('/images/hero_1.jpg')" }}>
         <div className="container">
           <h1 className="page-hero__title">{t("nav.scores")}</h1>
           <p className="page-hero__sub">{t("scores.wcSubtitle")}</p>
