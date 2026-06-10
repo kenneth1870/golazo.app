@@ -27,7 +27,7 @@ class PredictionTest < ActiveSupport::TestCase
     @pred.vote!("home", "t2")
     @pred.vote!("away", "t3")
     @pred.vote!("draw", "t4")
-    r = @pred.as_json_result
+    r = @pred.reload.as_json_result
     assert_equal 4, r[:total]
     assert_equal 50, r[:home_pct]
     assert_equal 25, r[:away_pct]

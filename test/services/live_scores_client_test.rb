@@ -2,55 +2,117 @@ require "test_helper"
 
 class LiveScoresClientTest < ActiveSupport::TestCase
   setup do
-    @prev_key = ENV["RAPIDAPI_KEY"]
-    ENV["RAPIDAPI_KEY"] = "test-key" # constructor requires a key; no network is hit below
+    # Constructor only reads the key — no network call happens here.
+    ENV["APISPORTS_KEY"] = "test-key"
     @client = LiveScoresClient.new
   end
 
-  teardown { ENV["RAPIDAPI_KEY"] = @prev_key }
+  teardown { ENV.delete("APISPORTS_KEY") }
 
-  test "status codes map to coarse statuses" do
-    assert_equal "finished", LiveScoresClient::STATUS_MAP[6]
-    assert_equal "live",     LiveScoresClient::STATUS_MAP[2]
-    assert_equal "scheduled", LiveScoresClient::STATUS_MAP[1]
-    assert_equal "postponed", LiveScoresClient::STATUS_MAP[9]
+  # ── STATUS_MAP ────────────────────────────────────────────────────────────
+
+  test "STATUS_MAP maps finished codes" do
+    assert_equal "finished", LiveScoresClient::STATUS_MAP["FT"]
+    assert_equal "finished", LiveScoresClient::STATUS_MAP["AET"]
+    assert_equal "finished", LiveScoresClient::STATUS_MAP["PEN"]
   end
 
-  test "normalize_match builds the common shape with team-logo URLs" do
+  test "STATUS_MAP maps live codes" do
+    assert_equal "live", LiveScoresClient::STATUS_MAP["1H"]
+    assert_equal "live", LiveScoresClient::STATUS_MAP["HT"]
+    assert_equal "live", LiveScoresClient::STATUS_MAP["2H"]
+  end
+
+  test "STATUS_MAP maps scheduled codes" do
+    assert_equal "scheduled", LiveScoresClient::STATUS_MAP["NS"]
+    assert_equal "scheduled", LiveScoresClient::STATUS_MAP["TBD"]
+  end
+
+  test "STATUS_MAP maps postponed codes" do
+    assert_equal "postponed", LiveScoresClient::STATUS_MAP["PST"]
+    assert_equal "postponed", LiveScoresClient::STATUS_MAP["CANC"]
+  end
+
+  test "STATUS_MAP returns nil for unknown codes" do
+    assert_nil LiveScoresClient::STATUS_MAP["UNKNOWN"]
+  end
+
+  # ── featured_league? ──────────────────────────────────────────────────────
+
+  test "featured_league? keeps FIFA World Cup" do
+    match = { league_id: 1, league_name: "FIFA World Cup", league_country: "World" }
+    assert @client.send(:featured_league?, match)
+  end
+
+  test "featured_league? keeps Premier League" do
+    match = { league_id: 39, league_name: "Premier League", league_country: "England" }
+    assert @client.send(:featured_league?, match)
+  end
+
+  test "featured_league? drops unknown league IDs" do
+    match = { league_id: 99_999, league_name: "Obscure League", league_country: "XY" }
+    refute @client.send(:featured_league?, match)
+  end
+
+  test "featured_league? drops women's competitions by name" do
+    match = { league_id: 1, league_name: "Women's World Cup", league_country: "World" }
+    refute @client.send(:featured_league?, match)
+  end
+
+  test "featured_league? drops youth competitions by name" do
+    match = { league_id: 39, league_name: "Premier League U21", league_country: "England" }
+    refute @client.send(:featured_league?, match)
+  end
+
+  # ── normalize_fixture ─────────────────────────────────────────────────────
+
+  test "normalize_fixture builds expected shape for a finished match" do
     raw = {
-      "id" => 123, "leagueId" => 4,
-      "status" => { "code" => 6 },
-      "startTimestamp" => 1_781_000_000,
-      "home" => { "id" => 10, "name" => "Brazil", "score" => 2 },
-      "away" => { "id" => 20, "name" => "Spain",  "score" => 1 }
+      "fixture" => {
+        "id"     => 999,
+        "date"   => "2026-06-15T15:00:00+00:00",
+        "status" => { "short" => "FT", "elapsed" => 90 },
+        "venue"  => { "name" => "Lusail", "city" => "Lusail" }
+      },
+      "league"  => {
+        "id" => 1, "name" => "FIFA World Cup",
+        "country" => "World", "round" => "Group Stage - 1",
+        "logo" => "https://example.com/logo.png",
+        "flag" => nil
+      },
+      "teams"   => {
+        "home" => { "id" => 10, "name" => "Brazil", "logo" => "https://example.com/bra.png", "winner" => true },
+        "away" => { "id" => 20, "name" => "Germany", "logo" => "https://example.com/ger.png", "winner" => false }
+      },
+      "goals"   => { "home" => 2, "away" => 1 },
+      "score"   => {}
     }
 
-    m = @client.send(:normalize_match, raw, {})
+    m = @client.send(:normalize_fixture, raw)
 
-    assert_equal 123, m[:external_id]
+    assert_equal 999, m[:external_id]
     assert_equal "finished", m[:status]
     assert_equal "FT", m[:status_short]
-    assert_equal "Brazil", m.dig(:home, :name)
-    assert_includes m.dig(:home, :logo), "10_large.png"
-    assert_equal 2, m.dig(:home, :score)
+    assert_equal 90, m[:minute]
+    assert_equal 1,  m[:league_id]
+    assert_equal "FIFA World Cup", m[:league_name]
+    assert_equal "Brazil",  m.dig(:home, :name)
+    assert_equal 2,         m.dig(:home, :score)
+    assert_equal "Germany", m.dig(:away, :name)
+    assert_equal 1,         m.dig(:away, :score)
   end
 
-  test "normalize_match drops matches with an unknown status code" do
-    raw = { "id" => 1, "status" => { "code" => 999 }, "home" => {}, "away" => {} }
-    assert_nil @client.send(:normalize_match, raw, {})
-  end
-
-  test "featured_league? keeps internationals and drops women's / excluded leagues" do
-    intl = { league_id: 4, league_country: "INT", league_name: "FIFA World Cup", home: { name: "Brazil" }, away: { name: "Spain" } }
-    assert @client.send(:featured_league?, intl, {})
-
-    womens = intl.merge(league_name: "Women's World Cup")
-    refute @client.send(:featured_league?, womens, {})
-
-    excluded = { league_id: 925953, league_country: "INT", league_name: "Women's Friendlies", home: {}, away: {} }
-    refute @client.send(:featured_league?, excluded, {})
-
-    obscure = { league_id: 99999, league_country: "FOO", league_name: "Third Division", home: {}, away: {} }
-    refute @client.send(:featured_league?, obscure, {})
+  test "normalize_fixture returns nil for unknown status" do
+    raw = {
+      "fixture" => { "id" => 1, "date" => "2026-01-01", "status" => { "short" => "UNKNOWN", "elapsed" => nil }, "venue" => {} },
+      "league"  => { "id" => 1, "name" => "Test", "country" => "X", "round" => nil, "logo" => nil, "flag" => nil },
+      "teams"   => {
+        "home" => { "id" => 1, "name" => "A", "logo" => nil, "winner" => nil },
+        "away" => { "id" => 2, "name" => "B", "logo" => nil, "winner" => nil }
+      },
+      "goals"   => { "home" => nil, "away" => nil },
+      "score"   => {}
+    }
+    assert_nil @client.send(:normalize_fixture, raw)
   end
 end

@@ -17,7 +17,12 @@ class PageMetaTest < ActiveSupport::TestCase
   end
 
   test "match and news detail pages are article type" do
-    assert_equal "article", PageMeta.for("/matches/123").type
+    wc    = wc_competition
+    match = Match.create!(
+      home_team: team("PMA"), away_team: team("PMB"),
+      competition: wc, status: "scheduled", kickoff_at: Time.current
+    )
+    assert_equal "article", PageMeta.for("/matches/#{match.id}").type
     assert_equal "article", PageMeta.for("/news/abc").type
   end
 
