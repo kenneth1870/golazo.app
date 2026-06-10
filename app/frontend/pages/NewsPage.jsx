@@ -8,27 +8,64 @@ import { useFavorites } from "../hooks/useFavorites"
 
 const PAGE_SIZE = 12
 
-function NewsCard({ article, featured }) {
+// ── Featured card: full-bleed image with gradient overlay ─────────────────
+function FeaturedCard({ article }) {
   const color = sourceColor(article.source)
-
+  const bg = article.image
+    ? `url(${article.image})`
+    : "linear-gradient(135deg,#1a1a2e,#16213e)"
   return (
-    <Link
-      to={`/news/${article.id}`}
-      className={`news-card${featured ? " news-card--featured" : ""}`}
-      style={{ textDecoration: "none" }}
-    >
-      {article.image
-        ? <div className="news-card__img" style={{ backgroundImage: `url(${article.image})` }} />
-        : <div className="news-card__img" style={{ background: "linear-gradient(135deg,#1a1a2e,#16213e)" }} />
-      }
-      <div className="news-card__body">
-        <div className="news-card__tag" style={{ background: color }}>{article.source}</div>
-        <h3 className="news-card__title">{article.title}</h3>
-        {article.summary && <p className="news-card__summary">{article.summary}</p>}
-        <div className="news-card__footer">
-          <span className="news-card__source">{article.source}</span>
-          <span className="news-card__date">{article.date_label}</span>
+    <Link to={`/news/${article.id}`} className="nc-featured" style={{ textDecoration: "none" }}>
+      <div className="nc-featured__img" style={{ backgroundImage: bg }} />
+      <div className="nc-featured__overlay">
+        <div className="nc-featured__meta">
+          <span className="nc-badge" style={{ background: color }}>{article.source}</span>
+          <span className="nc-featured__date">{article.date_label}</span>
         </div>
+        <h2 className="nc-featured__title">{article.title}</h2>
+        {article.summary && <p className="nc-featured__summary">{article.summary}</p>}
+      </div>
+    </Link>
+  )
+}
+
+// ── Medium card (2-col): overlay style ───────────────────────────────────
+function MediumCard({ article }) {
+  const color = sourceColor(article.source)
+  const bg = article.image
+    ? `url(${article.image})`
+    : "linear-gradient(135deg,#1a1a2e,#16213e)"
+  return (
+    <Link to={`/news/${article.id}`} className="nc-medium" style={{ textDecoration: "none" }}>
+      <div className="nc-medium__img" style={{ backgroundImage: bg }} />
+      <div className="nc-medium__overlay">
+        <span className="nc-badge" style={{ background: color }}>{article.source}</span>
+        <h3 className="nc-medium__title">{article.title}</h3>
+        <span className="nc-medium__date">{article.date_label}</span>
+      </div>
+    </Link>
+  )
+}
+
+// ── Compact card (3-col+): horizontal thumbnail + text ────────────────────
+function CompactCard({ article }) {
+  const color = sourceColor(article.source)
+  return (
+    <Link to={`/news/${article.id}`} className="nc-compact" style={{ textDecoration: "none" }}>
+      <div
+        className="nc-compact__thumb"
+        style={{
+          backgroundImage: article.image ? `url(${article.image})` : undefined,
+          background: article.image ? undefined : "linear-gradient(135deg,#1a1a2e,#16213e)",
+        }}
+      />
+      <div className="nc-compact__body">
+        <div className="nc-compact__meta">
+          <span className="nc-badge" style={{ background: color }}>{article.source}</span>
+          <span className="nc-compact__date">{article.date_label}</span>
+        </div>
+        <h4 className="nc-compact__title">{article.title}</h4>
+        {article.summary && <p className="nc-compact__summary">{article.summary}</p>}
       </div>
     </Link>
   )
@@ -186,12 +223,17 @@ export default function NewsPage() {
       <div className="site-section">
         <div className="container">
           {loading ? (
-            <div className="row">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="col-lg-6 mb-4">
-                  <div className="loading-shimmer" style={{ height: 220, borderRadius: 12 }} />
-                </div>
-              ))}
+            <div className="news-editorial-grid">
+              <div className="loading-shimmer" style={{ borderRadius: 14, aspectRatio: "16/7" }} />
+              <div className="nc-medium-row">
+                <div className="loading-shimmer" style={{ borderRadius: 12, aspectRatio: "4/3" }} />
+                <div className="loading-shimmer" style={{ borderRadius: 12, aspectRatio: "4/3" }} />
+              </div>
+              <div className="nc-compact-grid">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="loading-shimmer" style={{ borderRadius: 12, height: 200 }} />
+                ))}
+              </div>
             </div>
           ) : error ? (
             <div style={{ textAlign: "center", paddingTop: 60 }}>
@@ -221,13 +263,38 @@ export default function NewsPage() {
                 </div>
               )}
 
-              <div className="row">
-                {visible.map((article, i) => (
-                  <div key={article.id ?? i} className={`col-lg-${i === 0 && tab === "all" && active === allLabel ? "12" : "6"} mb-4`}>
-                    <NewsCard article={article} featured={i === 0 && tab === "all" && active === allLabel} />
+              {(() => {
+                const isEditorial = tab === "all" && active === allLabel
+                if (!isEditorial) {
+                  // Filtered view: compact grid only
+                  return (
+                    <div className="nc-compact-grid">
+                      {visible.map((article, i) => (
+                        <CompactCard key={article.id ?? i} article={article} />
+                      ))}
+                    </div>
+                  )
+                }
+                // Editorial layout: featured → medium row → compact grid
+                const [featured, ...rest] = visible
+                const mediumPair = rest.slice(0, 2)
+                const compacts   = rest.slice(2)
+                return (
+                  <div className="news-editorial-grid">
+                    {featured && <FeaturedCard article={featured} />}
+                    {mediumPair.length > 0 && (
+                      <div className="nc-medium-row">
+                        {mediumPair.map((a, i) => <MediumCard key={a.id ?? i} article={a} />)}
+                      </div>
+                    )}
+                    {compacts.length > 0 && (
+                      <div className="nc-compact-grid">
+                        {compacts.map((a, i) => <CompactCard key={a.id ?? i} article={a} />)}
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
+                )
+              })()}
 
               {hasMore && (
                 <div ref={sentinelRef} style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>

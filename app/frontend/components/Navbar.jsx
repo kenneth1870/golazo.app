@@ -212,50 +212,65 @@ export default function Navbar() {
         </div>
 
         {/* Drawer nav */}
-        <nav style={{ flex: 1, overflowY: "auto", paddingBottom: 16 }}>
-          {/* Home */}
-          <div className="mobile-nav-item">
-            <NavLink to="/" end className={({ isActive }) => `mobile-nav-parent${isActive ? " active" : ""}`} style={{ textDecoration: "none" }}>
-              {t("nav.home")}
-            </NavLink>
-          </div>
+        <nav className="mobile-drawer-nav">
 
-          {/* Live Matches */}
-          <div className="mobile-nav-item">
-            <NavLink to="/scores/today" className={({ isActive }) => `mobile-nav-parent${isActive ? " active" : ""}`} style={{ textDecoration: "none" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                {t("nav.liveMatches")}
-                {liveCount > 0 && <span className="live-dot" />}
+          {/* Quick-access grid */}
+          <div className="mobile-quick-grid">
+            <NavLink to="/" end className={({ isActive }) => `mobile-quick-item${isActive ? " active" : ""}`}>
+              <span className="mobile-quick-icon">🏠</span>
+              <span>{t("nav.home", "Inicio")}</span>
+            </NavLink>
+            <NavLink to="/scores/today" className={({ isActive }) => `mobile-quick-item${isActive ? " active" : ""}`}>
+              <span className="mobile-quick-icon" style={{ position: "relative", display: "inline-block" }}>
+                ⏱️{liveCount > 0 && <span className="live-dot" style={{ position: "absolute", top: -2, right: -4 }} />}
               </span>
+              <span>{t("time.today", "Hoy")}</span>
+            </NavLink>
+            <NavLink to="/news" className={({ isActive }) => `mobile-quick-item${isActive ? " active" : ""}`}>
+              <span className="mobile-quick-icon">📰</span>
+              <span>{t("nav.news", "Noticias")}</span>
+            </NavLink>
+            <NavLink to="/transfers" className={({ isActive }) => `mobile-quick-item${isActive ? " active" : ""}`}>
+              <span className="mobile-quick-icon">🔄</span>
+              <span>{t("nav.transfers", "Transfers")}</span>
             </NavLink>
           </div>
 
-          {/* Mundial */}
-          <MobileSection label={t("nav.mundial")} sectionKey="mundial">
+          <div className="mobile-drawer-divider">{t("nav.mundial", "Mundial 2026")}</div>
+
+          {/* Mundial section */}
+          <div className="mobile-link-group">
             {MOBILE_MUNDIAL.map(item => (
-              <NavLink key={item.path} to={item.path} className={({ isActive }) => `mobile-nav-child${isActive ? " active" : ""}`}>
+              <NavLink key={item.path} to={item.path} className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
                 {item.label}
               </NavLink>
             ))}
-            <MobileGroupGrid />
-          </MobileSection>
-
-          {/* News */}
-          <div className="mobile-nav-item">
-            <NavLink to="/news" className={({ isActive }) => `mobile-nav-parent${isActive ? " active" : ""}`} style={{ textDecoration: "none" }}>
-              {t("nav.news")}
+            <NavLink to="/scores/groups" className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
+              {t("nav.groupStage", "Fase de Grupos")}
+            </NavLink>
+            <NavLink to="/scores/knockout" className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
+              {t("nav.knockout", "Eliminatorias")}
             </NavLink>
           </div>
 
-          {/* Transfers */}
-          <div className="mobile-nav-item">
-            <NavLink to="/transfers" className={({ isActive }) => `mobile-nav-parent${isActive ? " active" : ""}`} style={{ textDecoration: "none" }}>
-              🔄 {t("nav.transfers", "Transfers")}
-            </NavLink>
+          <div className="mobile-drawer-divider">{t("nav.leagues", "Ligas")}</div>
+
+          {/* Leagues section */}
+          <div className="mobile-link-group">
+            {MOBILE_LEAGUES.slice(1).map(item => (
+              <NavLink key={item.path} to={item.path} className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
+                {item.label}
+              </NavLink>
+            ))}
           </div>
+
+          <div className="mobile-drawer-divider">{t("nav.groups", "Grupos")}</div>
+          <MobileGroupGrid />
+
+          <div style={{ height: 80 }} />
         </nav>
 
-        <div style={{ padding: "14px 20px", borderTop: "1px solid var(--border)" }}>
+        <div className="mobile-drawer-footer">
           <LanguageSwitcher />
         </div>
       </div>
