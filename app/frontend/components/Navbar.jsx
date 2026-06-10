@@ -246,6 +246,13 @@ export default function Navbar() {
               {t("nav.news")}
             </NavLink>
           </div>
+
+          {/* Transfers */}
+          <div className="mobile-nav-item">
+            <NavLink to="/transfers" className={({ isActive }) => `mobile-nav-parent${isActive ? " active" : ""}`} style={{ textDecoration: "none" }}>
+              🔄 {t("nav.transfers", "Transfers")}
+            </NavLink>
+          </div>
         </nav>
 
         <div style={{ padding: "14px 20px", borderTop: "1px solid var(--border)" }}>
@@ -291,6 +298,10 @@ export default function Navbar() {
 
               <NavLink to="/news" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
                 {t("nav.news")}
+              </NavLink>
+
+              <NavLink to="/transfers" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
+                🔄 {t("nav.transfers", "Transfers")}
               </NavLink>
 
               {/* Search */}

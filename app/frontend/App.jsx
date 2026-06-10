@@ -7,6 +7,7 @@ import BottomNav from "./components/BottomNav"
 import InstallPrompt from "./components/InstallPrompt"
 import ScrollToTop from "./components/ScrollToTop"
 import ErrorBoundary from "./components/ErrorBoundary"
+import OnboardingModal, { useOnboarding } from "./components/OnboardingModal"
 
 // Critical path — loaded eagerly (always needed on first paint)
 import HomePage   from "./pages/HomePage"
@@ -36,6 +37,7 @@ const BracketPredictorPage  = lazy(() => import("./pages/BracketPredictorPage"))
 const LeaderboardPage       = lazy(() => import("./pages/LeaderboardPage"))
 const PlayerPage            = lazy(() => import("./pages/PlayerPage"))
 const ComparePage           = lazy(() => import("./pages/ComparePage"))
+const TransferCenterPage    = lazy(() => import("./pages/TransferCenterPage"))
 
 function PageLoader() {
   return (
@@ -48,10 +50,12 @@ function PageLoader() {
 export default function App() {
   const location = useLocation()
   useLocale() // auto-detect language from IP / device on every session
+  const { show: showOnboarding, dismiss: dismissOnboarding } = useOnboarding()
   return (
     <div className="site-wrap">
       <ScrollToTop />
       <Navbar />
+      {showOnboarding && <OnboardingModal onDismiss={dismissOnboarding} />}
 
       <main key={location.pathname} className="main-content page-transition">
         <ErrorBoundary>
@@ -89,6 +93,7 @@ export default function App() {
               <Route path="/predictor"     element={<BracketPredictorPage />} />
               <Route path="/leaderboard"   element={<LeaderboardPage />} />
               <Route path="/compare"       element={<ComparePage />} />
+              <Route path="/transfers"     element={<TransferCenterPage />} />
               <Route path="/players/:id"   element={<PlayerPage />} />
               <Route path="/news"          element={<NewsPage />} />
               <Route path="/news/:id"      element={<NewsShowPage />} />

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_08_173101) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_10_054027) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -35,6 +35,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_173101) do
     t.datetime "updated_at", null: false
     t.index ["match_id"], name: "index_goals_on_match_id"
     t.index ["team_id"], name: "index_goals_on_team_id"
+  end
+
+  create_table "match_reactions", force: :cascade do |t|
+    t.integer "count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.string "emoji", null: false
+    t.string "match_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["match_id", "emoji"], name: "index_match_reactions_on_match_id_and_emoji", unique: true
+    t.index ["match_id"], name: "index_match_reactions_on_match_id"
   end
 
   create_table "match_stats", force: :cascade do |t|

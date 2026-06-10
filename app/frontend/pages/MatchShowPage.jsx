@@ -9,6 +9,7 @@ import { useStructuredData } from "../hooks/useStructuredData"
 import { useLiveMinute, useGoalNotifications } from "./match/useMatchLive"
 import PredictionPanel from "./match/PredictionPanel"
 import ScorePredictionPanel from "./match/ScorePredictionPanel"
+import MatchReactions from "../components/MatchReactions"
 import { useReminders } from "../hooks/useReminders"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 import { getMatchColor } from "../utils/teamColors"
@@ -1871,6 +1872,11 @@ export default function MatchShowPage() {
 
         {tab === "summary" && (
           <>
+            {/* Reactions — always shown; compact for live matches */}
+            <div className="match-section" style={{ marginBottom: 12 }}>
+              <MatchReactions matchId={id} compact={["1H","HT","2H","ET","BT","P"].includes(statusShort)} />
+            </div>
+
             {hasFixture && <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} kickoffAt={kickoffAt} t={t} />}
             {hasFixture && <PredictionPanel matchId={id} homeTeamName={homeName} awayTeamName={awayName} t={t} />}
 
