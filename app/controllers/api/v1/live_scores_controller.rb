@@ -10,13 +10,14 @@ module Api
       end
 
       # Lightweight endpoint — just the live count for the nav badge.
+      # Read from the same cache key as #index so the count and the list are
+      # always derived from identical data and we never hit the API twice.
       def count
-        count = Rails.cache.fetch("live_match_count", expires_in: 1.minute) do
-          LiveScoresClient.new.live_matches.length
-        rescue
-          0
-        end
-        render json: { count: count }
+        matches = Rails.cache.read("live_scores_live_v6") || LiveScoresClient.new.live_matches
+        render json: { count: matches.length }
+      rescue => e
+        Rails.logger.error("[LiveScoresController#count] #{e.message}")
+        render json: { count: 0 }
       end
     end
   end

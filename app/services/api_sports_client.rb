@@ -10,6 +10,11 @@ class ApiSportsClient
       f.headers["x-apisports-key"] = token
       f.options.timeout      = 10
       f.options.open_timeout = 6
+      # Retry transient failures so a single network blip doesn't poison the
+      # 30-minute cache with an empty response.
+      f.request :retry, max: 2, interval: 0.5, exceptions: [
+        Faraday::TimeoutError, Faraday::ConnectionFailed, Faraday::ServerError
+      ]
     end
   end
 

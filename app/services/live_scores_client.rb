@@ -112,7 +112,9 @@ class LiveScoresClient
 
   # Currently live matches across all leagues (senior men's only)
   def live_matches
-    Rails.cache.fetch("live_scores_live_v6", expires_in: 1.minute) do
+    # race_condition_ttl lets racing requests on cache expiry reuse the stale
+    # value for up to 10 s while one writer refreshes — prevents stampede.
+    Rails.cache.fetch("live_scores_live_v6", expires_in: 1.minute, race_condition_ttl: 10.seconds) do
       data = get("fixtures", live: "all")
       (data.dig("response") || [])
         .filter_map { |f| normalize_fixture(f) }
@@ -128,8 +130,12 @@ class LiveScoresClient
   # Copa América, AFCON, Asian/regional friendlies, WC qualifiers, etc. —
   # plus any FEATURED_LEAGUES club competition. Women's and youth excluded.
   def matches_for_date(date)
-    Rails.cache.fetch("live_scores_date_v14_#{date.to_date.iso8601}", expires_in: 10.minutes) do
-      data = get("fixtures", date: date.to_date.iso8601, timezone: "UTC")
+    date = date.to_date
+    # Past dates are immutable — cache for 24 h.  Today / future stay at 10 min
+    # so newly-added fixtures and status changes appear promptly.
+    ttl = date < Date.today ? 24.hours : 10.minutes
+    Rails.cache.fetch("live_scores_date_v14_#{date.iso8601}", expires_in: ttl, race_condition_ttl: 30.seconds) do
+      data = get("fixtures", date: date.iso8601, timezone: "UTC")
       (data.dig("response") || [])
         .filter_map { |f| normalize_fixture(f) }
         .select     { |m| featured_league?(m) }
@@ -140,8 +146,17 @@ class LiveScoresClient
   end
 
   # Full match detail: fixture + events + lineups + stats + h2h in parallel.
+  #
+  # TTL strategy:
+  #   Live / pre-match  → 60 s  (doubled from 30 s — halves quota at negligible UX cost)
+  #   Finished (FT/AET/PEN) → 24 h  (data never changes after full-time)
+  # race_condition_ttl prevents multiple concurrent cache misses each spawning 5
+  # upstream threads (thundering herd) — stale value is served for up to 10 s
+  # while one writer refreshes.
   def match_detail(fixture_id)
-    Rails.cache.fetch("live_scores_detail_v5_#{fixture_id}", expires_in: 30.seconds) do
+    cache_key = "live_scores_detail_v5_#{fixture_id}"
+
+    result = Rails.cache.fetch(cache_key, expires_in: 60.seconds, race_condition_ttl: 10.seconds) do
       results = {}
       threads = {
         fixture: Thread.new { get("fixtures",            id:      fixture_id) },
@@ -157,7 +172,7 @@ class LiveScoresClient
       end
 
       fx = results[:fixture].dig("response", 0)
-      return nil unless fx
+      next nil unless fx
 
       home_id = fx.dig("teams", "home", "id")
       away_id = fx.dig("teams", "away", "id")
@@ -176,6 +191,14 @@ class LiveScoresClient
         h2h:      normalize_h2h(h2h_raw)
       }
     end
+
+    # Promote finished matches to a 24-hour TTL so we never hit the API again.
+    if result
+      status = result.dig(:fixture, "fixture", "status", "short")
+      Rails.cache.write(cache_key, result, expires_in: 24.hours) if %w[FT AET PEN].include?(status)
+    end
+
+    result
   rescue => e
     Rails.logger.error("[LiveScoresClient] match_detail(#{fixture_id}): #{e.message}")
     nil
@@ -197,7 +220,8 @@ class LiveScoresClient
   # Standings for a league/season. Returns flat array of standing rows
   # (groups already flattened so callers can re-group by group_name if needed).
   def league_standings(league_id, season_id)
-    Rails.cache.fetch("live_scores_standings_v2_#{league_id}_#{season_id}", expires_in: 10.minutes) do
+    # Standings change only when a match finishes; 30 min matches the sync job cadence.
+    Rails.cache.fetch("live_scores_standings_v2_#{league_id}_#{season_id}", expires_in: 30.minutes) do
       data = get("standings", league: league_id, season: season_id)
       groups = data.dig("response", 0, "league", "standings") || []
       groups.flatten
@@ -232,8 +256,11 @@ class LiveScoresClient
   # Player search by name.
   def search_players(query)
     season = Date.today.year
-    data = get("players", search: query, season: season)
-    data.dig("response") || []
+    # Cache per normalized query — identical searches within 5 min share one upstream call.
+    Rails.cache.fetch("live_scores_player_search_v1_#{season}_#{query.to_s.downcase.strip}", expires_in: 5.minutes) do
+      data = get("players", search: query, season: season)
+      data.dig("response") || []
+    end
   rescue => e
     Rails.logger.warn("[LiveScoresClient] search_players: #{e.message}")
     []
@@ -242,7 +269,8 @@ class LiveScoresClient
   # ── Predictions ───────────────────────────────────────────────────────────────
 
   def fixture_predictions(fixture_id)
-    Rails.cache.fetch("fixture_preds_v1_#{fixture_id}", expires_in: 2.hours) do
+    # Pre-match AI predictions are published once and never change — cache for 24 h.
+    Rails.cache.fetch("fixture_preds_v1_#{fixture_id}", expires_in: 24.hours) do
       raw = get("predictions", fixture: fixture_id)
       r   = raw.dig("response", 0)
       next nil unless r
@@ -310,7 +338,7 @@ class LiveScoresClient
   end
 
   def fixture_odds_live(fixture_id)
-    Rails.cache.fetch("fixture_odds_live_v1_#{fixture_id}", expires_in: 30.seconds) do
+    Rails.cache.fetch("fixture_odds_live_v1_#{fixture_id}", expires_in: 30.seconds, race_condition_ttl: 10.seconds) do
       raw = get("odds/live", fixture: fixture_id)
       r   = raw.dig("response", 0)
       next nil unless r
