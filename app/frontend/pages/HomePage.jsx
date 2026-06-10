@@ -30,8 +30,6 @@ function useLatestNews() {
 }
 
 function FavoriteTeamCard({ fav, todayMatches, upcomingMatches, navigate, t }) {
-  if (!fav) return null
-
   const favMatches = [...todayMatches, ...upcomingMatches].filter(m =>
     m.home_team?.name === fav.name || m.away_team?.name === fav.name
   )
@@ -41,7 +39,7 @@ function FavoriteTeamCard({ fav, todayMatches, upcomingMatches, navigate, t }) {
     <div style={{
       background: "linear-gradient(135deg, rgba(238,30,70,.12) 0%, rgba(238,30,70,.04) 100%)",
       border: "1px solid rgba(238,30,70,.25)", borderRadius: 12,
-      padding: "16px 20px", marginBottom: 20, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
+      padding: "16px 20px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {fav.flag_url && <img src={fav.flag_url} alt="" className="logo-sm" onError={e => (e.target.style.display="none")} />}
@@ -155,16 +153,23 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Favorite team card + picker */}
-      <div className="container" style={{ paddingTop: 20 }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: fav ? 0 : 8 }}>
-          <FavoriteTeamCard fav={fav} todayMatches={[]} upcomingMatches={upcomingMatches} navigate={navigate} t={t} />
+      {/* Favorite team section */}
+      <div className="container" style={{ paddingTop: 20, paddingBottom: 4 }}>
+        {/* Picker row — always visible */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <span style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)" }}>
+            {fav ? t("home.yourTeam", "Your Team") : t("home.followTeam", "Follow a team")}
+          </span>
           <FavoriteTeamPicker />
         </div>
+        {/* Card — only when a team is selected */}
+        {fav && (
+          <FavoriteTeamCard fav={fav} todayMatches={[]} upcomingMatches={upcomingMatches} navigate={navigate} t={t} />
+        )}
       </div>
 
       {/* Featured WC match */}
-      <div className="container">
+      <div className="container" style={{ paddingTop: fav ? 0 : 8 }}>
         <div className="row">
           <div className="col-lg-12">
             {liveWC.length > 0 ? (
