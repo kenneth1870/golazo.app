@@ -57,13 +57,14 @@ Rails.application.routes.draw do
     end
   end
 
-  mount MissionControl::Jobs::Engine, at: "/jobs"
-
   mount ActionCable.server => "/cable"
 
   # Sitemap
   get "sitemap.xml", to: "sitemap#index", defaults: { format: :xml }
 
+  # SPA catch-all — must come before engine mounts so the app root takes priority.
   get "*path", to: "application#spa", constraints: ->(req) { !req.xhr? && req.format.html? }
   root "application#spa"
+
+  mount MissionControl::Jobs::Engine, at: "/jobs"
 end
