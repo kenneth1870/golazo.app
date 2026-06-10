@@ -6,11 +6,11 @@ import { useFavoriteTeam } from "../hooks/useFavoriteTeam"
 import { useLiveCount } from "../contexts/LiveContext"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
+import { formatKickoff } from "../hooks/useLocalTime"
 import Hero from "../components/Hero"
 import MatchCard from "../components/MatchCard"
+import MatchRow from "../components/MatchRow"
 import FavoriteTeamPicker from "../components/FavoriteTeamPicker"
-
-const FALLBACK_IMGS = ["/images/img_1.jpg", "/images/img_3.jpg", "/images/img_2.jpg"]
 
 function useLatestNews() {
   const { i18n } = useTranslation()
@@ -29,8 +29,9 @@ function useLatestNews() {
   return { news, newsError: error, retryNews: load }
 }
 
-function FavoriteTeamCard({ fav, todayMatches, upcomingMatches, navigate, t }) {
-  const favMatches = [...todayMatches, ...upcomingMatches].filter(m =>
+// ─── Favorite team card ───────────────────────────────────────────────────────
+function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
+  const favMatches = upcomingMatches.filter(m =>
     m.home_team?.name === fav.name || m.away_team?.name === fav.name
   )
   const next = favMatches[0]
@@ -75,11 +76,112 @@ function FavoriteTeamCard({ fav, todayMatches, upcomingMatches, navigate, t }) {
   )
 }
 
+// ─── Today's matches strip ────────────────────────────────────────────────────
+function TodayMatchesSection({ liveMatches, upcomingMatches, navigate, t }) {
+  const all     = [...liveMatches, ...upcomingMatches]
+  const visible = all.slice(0, 6)
+  if (visible.length === 0) return null
+
+  return (
+    <div style={{ marginBottom: 8 }}>
+      {/* Section header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {liveMatches.length > 0
+            ? <><span className="live-dot" /><span style={{ fontWeight: 800, fontSize: ".78rem", color: "#fff" }}>LIVE</span></>
+            : <span style={{ fontWeight: 800, fontSize: ".78rem", color: "#fff", textTransform: "uppercase", letterSpacing: ".06em" }}>{t("time.today", "Today")}</span>
+          }
+          <span style={{ fontSize: ".7rem", color: "var(--muted)" }}>
+            · {t("scores.wcSubtitle", "FIFA World Cup 2026")}
+          </span>
+        </div>
+        <button
+          onClick={() => navigate("/scores/today")}
+          style={{ background: "none", border: "none", color: "var(--accent)", fontSize: ".72rem", fontWeight: 700, cursor: "pointer", padding: 0 }}
+        >
+          {t("home.viewAll")}
+        </button>
+      </div>
+
+      {/* Match rows */}
+      <div style={{ background: "var(--surface)", borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)" }}>
+        {visible.map((m, i) => (
+          <div key={m.id} style={{ borderBottom: i < visible.length - 1 ? "1px solid var(--border)" : "none" }}>
+            <MatchRow
+              match={m}
+              showDate={false}
+              onClick={() => m.external_id ? navigate(`/matches/${m.external_id}`) : navigate(`/matches/db-${m.id}`)}
+            />
+          </div>
+        ))}
+      </div>
+
+      {all.length > 6 && (
+        <button
+          onClick={() => navigate("/scores/today")}
+          style={{ width: "100%", marginTop: 8, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: 8, padding: "9px", fontSize: ".72rem", fontWeight: 700, cursor: "pointer" }}
+        >
+          +{all.length - 6} more matches →
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ─── News card (no fallback arcade images) ────────────────────────────────────
+function NewsCard({ post, index }) {
+  const placeholderColors = ["#1a1f2e", "#1a1420", "#0f1a1a"]
+  const placeholderEmojis = ["⚽", "🏆", "🗞️"]
+  const bg = placeholderColors[index % placeholderColors.length]
+
+  return (
+    <div className="col-md-4">
+      <Link to={post?.id ? `/news/${post.id}` : "/news"} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+        <div className="post-entry">
+          {post ? (
+            post.image ? (
+              <img src={post.image} alt={post.title || ""} className="img-fluid" onError={e => { e.target.style.display = "none"; e.target.nextSibling?.style && (e.target.nextSibling.style.display = "flex") }} />
+            ) : (
+              <div style={{ aspectRatio: "16/9", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.5rem", borderRadius: "8px 8px 0 0" }}>
+                {placeholderEmojis[index % placeholderEmojis.length]}
+              </div>
+            )
+          ) : (
+            <div className="loading-shimmer" style={{ aspectRatio: "16/9", borderRadius: "8px 8px 0 0" }} />
+          )}
+          <div className="caption">
+            <div className="caption-inner">
+              {post ? (
+                <>
+                  <h3 className="mb-3">{post.title}</h3>
+                  <div className="author d-flex align-items-center">
+                    <div className="text">
+                      <h4>{post.source}</h4>
+                      <span>{post.date_label}</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="loading-shimmer" style={{ height: 60, borderRadius: 8 }} />
+              )}
+            </div>
+          </div>
+        </div>
+      </Link>
+    </div>
+  )
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default function HomePage() {
-  const { t } = useTranslation()
+  const { t }      = useTranslation()
+  const navigate   = useNavigate()
+  const liveCount  = useLiveCount()
+  const [fav]      = useFavoriteTeam()
+
   usePageMeta(
-    "FIFA World Cup 2026 Live Scores",
-    "Live scores, real-time results, fixtures and group standings for FIFA World Cup 2026 — USA, Canada & Mexico. Follow every match free."
+    "Golazo — Live Football Scores, Stats & World Cup 2026",
+    "Real-time live scores, lineups, standings, and match insights for the FIFA World Cup 2026 and 100+ competitions worldwide. Free · No sign-up required."
   )
   useStructuredData({
     "@context": "https://schema.org",
@@ -89,111 +191,54 @@ export default function HomePage() {
     "description": "The 2026 FIFA World Cup hosted across the United States, Canada and Mexico. Live scores, fixtures, standings and stats.",
     "startDate": "2026-06-11",
     "endDate": "2026-07-19",
-    "location": {
-      "@type": "Place",
-      "name": "United States, Canada and Mexico"
-    },
-    "organizer": {
-      "@type": "Organization",
-      "name": "FIFA",
-      "url": "https://www.fifa.com"
-    },
+    "location": { "@type": "Place", "name": "United States, Canada and Mexico" },
+    "organizer": { "@type": "Organization", "name": "FIFA", "url": "https://www.fifa.com" },
     "url": "https://golazo.app/world-cup-2026"
   })
-  const navigate = useNavigate()
+
   const { matches: liveWC }         = useMatches("live",     { competition: "WC" })
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: "WC" })
   const { news: latestNews, newsError, retryNews } = useLatestNews()
-  const [fav]  = useFavoriteTeam()
-  const liveCount  = useLiveCount()
-  // Show the live WC match in Hero if one is active, otherwise next upcoming
-  const nextMatch  = liveWC[0] || upcomingMatches[0]
+
+  const nextMatch = liveWC[0] || upcomingMatches[0]
 
   return (
     <>
-      {/* Hero — exact template structure */}
-      <Hero nextMatch={nextMatch} />
+      {/* ── Hero ── */}
+      <Hero nextMatch={nextMatch} liveCount={liveCount} />
 
-      {/* Trust bar */}
-      <div style={{
-        background: "var(--surface2)", borderBottom: "1px solid var(--border)",
-        padding: "8px 0", overflow: "hidden"
-      }}>
-        <div className="container d-flex align-items-center justify-content-center" style={{ gap: "20px", flexWrap: "wrap" }}>
-          {[
-            { icon: "⚽", label: t("trust.worldCup2026", "World Cup 2026") },
-            { icon: "🔴", label: t("trust.liveScores",  "Live Scores")     },
-            { icon: "📊", label: t("trust.groupStandings", "Group Standings") },
-            { icon: "🏆", label: t("trust.knockoutBracket", "Knockout Bracket") },
-            { icon: "🆓", label: t("trust.free",          "Free · No sign-up") },
-          ].map(({ icon, label }) => (
-            <span key={label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "var(--muted)", whiteSpace: "nowrap" }}>
-              <span style={{ fontSize: "0.85rem" }}>{icon}</span>
-              {label}
-            </span>
-          ))}
-        </div>
+      {/* ── Today's matches / Live ── */}
+      <div className="container" style={{ paddingTop: 24, paddingBottom: 0 }}>
+        <TodayMatchesSection
+          liveMatches={liveWC}
+          upcomingMatches={upcomingMatches}
+          navigate={navigate}
+          t={t}
+        />
       </div>
 
-      {/* Live now bar */}
-      {liveCount > 0 && (
-        <div
-          style={{ background: "#ee1e46", padding: "10px 0", cursor: "pointer" }}
-          onClick={() => navigate("/scores/today")}
-        >
-          <div className="container d-flex align-items-center" style={{ gap: 10 }}>
-            <span className="live-dot" />
-            <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.85rem" }}>
-              {t("home.liveNow", { count: liveCount })}
-            </span>
-            <span style={{ color: "rgba(255,255,255,.7)", fontSize: "0.75rem", marginLeft: "auto" }}>
-              {t("home.viewAll")}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Favorite team section */}
-      <div className="container" style={{ paddingTop: 20, paddingBottom: 4 }}>
-        {/* Picker row — always visible */}
+      {/* ── Favorite team section ── */}
+      <div className="container" style={{ paddingTop: 16, paddingBottom: 4 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <span style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)" }}>
             {fav ? t("home.yourTeam", "Your Team") : t("home.followTeam", "Follow a team")}
           </span>
           <FavoriteTeamPicker />
         </div>
-        {/* Card — only when a team is selected */}
         {fav && (
-          <FavoriteTeamCard fav={fav} todayMatches={[]} upcomingMatches={upcomingMatches} navigate={navigate} t={t} />
+          <FavoriteTeamCard fav={fav} upcomingMatches={upcomingMatches} navigate={navigate} t={t} />
         )}
       </div>
 
-      {/* Featured WC match */}
-      <div className="container" style={{ paddingTop: fav ? 0 : 8 }}>
-        <div className="row">
-          <div className="col-lg-12">
-            {liveWC.length > 0 ? (
-              liveWC.slice(0, 1).map(m => (
-                <MatchCard key={m.id} match={m}
-                  onClick={() => m.external_id ? navigate(`/matches/${m.external_id}`) : navigate(`/matches/db-${m.id}`)} />
-              ))
-            ) : upcomingMatches.length > 0 ? (
-              <MatchCard match={upcomingMatches[0]}
-                onClick={() => {
-                  const m = upcomingMatches[0]
-                  m.external_id ? navigate(`/matches/${m.external_id}`) : navigate(`/matches/db-${m.id}`)
-                }} />
-            ) : null}
-          </div>
-        </div>
-      </div>
-
-      {/* Latest News — exact template .latest-news structure */}
+      {/* ── Latest News ── */}
       <div className="latest-news">
         <div className="container">
           <div className="row">
             <div className="col-12 title-section">
               <h2 className="heading">{t("home.latestNews")}</h2>
+              <Link to="/news" style={{ fontSize: ".78rem", color: "var(--accent)", textDecoration: "none", fontWeight: 700 }}>
+                {t("home.viewAll")}
+              </Link>
             </div>
           </div>
           {newsError && (
@@ -208,44 +253,89 @@ export default function HomePage() {
           )}
           <div className="row no-gutters">
             {(latestNews.length > 0 ? latestNews : newsError ? [] : [null, null, null]).map((post, i) => (
-              <div key={i} className="col-md-4">
-                <Link to={post?.id ? `/news/${post.id}` : "/news"} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
-                  <div className="post-entry">
-                    <img
-                      src={post?.image || FALLBACK_IMGS[i]}
-                      alt={post?.title || ""}
-                      className="img-fluid"
-                      onError={e => { e.target.src = FALLBACK_IMGS[i % FALLBACK_IMGS.length] }}
-                    />
-                    <div className="caption">
-                      <div className="caption-inner">
-                        {post ? (
-                          <>
-                            <h3 className="mb-3">{post.title}</h3>
-                            <div className="author d-flex align-items-center">
-                              <div className="img mb-2 mr-3">
-                                <img src="/images/person_1.jpg" alt="" />
-                              </div>
-                              <div className="text">
-                                <h4>{post.source}</h4>
-                                <span>{post.date_label}</span>
-                              </div>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="loading-shimmer" style={{ height: 60, borderRadius: 8 }} />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </div>
+              <NewsCard key={i} post={post} index={i} />
             ))}
           </div>
         </div>
       </div>
 
-      {/* Next Match + Standings — exact template .site-section.bg-dark */}
+      {/* ── Quick-links section: World Cup + Competitions ── */}
+      <div className="site-section" style={{ paddingTop: 32, paddingBottom: 40 }}>
+        <div className="container">
+          <div className="row" style={{ gap: "0 0" }}>
+
+            {/* World Cup 2026 hub */}
+            <div className="col-md-6" style={{ marginBottom: 20 }}>
+              <div style={{
+                background: "linear-gradient(135deg, rgba(238,30,70,.1) 0%, rgba(238,30,70,.03) 100%)",
+                border: "1px solid rgba(238,30,70,.2)", borderRadius: 14, padding: "20px 24px",
+              }}>
+                <div style={{ fontSize: ".62rem", fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 8 }}>
+                  FIFA World Cup 2026
+                </div>
+                <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "#fff", marginBottom: 12 }}>
+                  USA · Canada · Mexico
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {[
+                    { label: "📅 Schedule",  path: "/mundial/schedule" },
+                    { label: "📊 Groups",    path: "/scores/groups" },
+                    { label: "🏆 Knockout",  path: "/scores/knockout" },
+                    { label: "⭐ Scorers",   path: "/mundial/scorers" },
+                    { label: "🏟️ Venues",   path: "/mundial/venues" },
+                    { label: "👥 Teams",     path: "/mundial/teams" },
+                  ].map(({ label, path }) => (
+                    <Link key={path} to={path} style={{
+                      display: "inline-block",
+                      background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.12)",
+                      borderRadius: 8, padding: "6px 12px",
+                      fontSize: ".7rem", fontWeight: 700, color: "#fff", textDecoration: "none",
+                    }}>
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Club competitions */}
+            <div className="col-md-6" style={{ marginBottom: 20 }}>
+              <div style={{
+                background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "20px 24px",
+              }}>
+                <div style={{ fontSize: ".62rem", fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 8 }}>
+                  Club Competitions
+                </div>
+                <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "#fff", marginBottom: 12 }}>
+                  Live scores worldwide
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {[
+                    { label: "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League", path: "/leagues/PL" },
+                    { label: "🇪🇸 La Liga",         path: "/leagues/LAL" },
+                    { label: "🇩🇪 Bundesliga",      path: "/leagues/BL1" },
+                    { label: "🇮🇹 Serie A",          path: "/leagues/SA" },
+                    { label: "🇫🇷 Ligue 1",          path: "/leagues/L1" },
+                    { label: "⭐ Champions League", path: "/leagues/UCL" },
+                  ].map(({ label, path }) => (
+                    <Link key={path} to={path} style={{
+                      display: "inline-block",
+                      background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.12)",
+                      borderRadius: 8, padding: "6px 12px",
+                      fontSize: ".7rem", fontWeight: 700, color: "#fff", textDecoration: "none",
+                    }}>
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* ── Next match widget + upcoming ── */}
       <div className="site-section bg-dark">
         <div className="container">
           <div className="row">
@@ -267,9 +357,7 @@ export default function HomePage() {
                           }
                           <h3>{nextMatch.home_team?.name}</h3>
                         </div>
-                        <div>
-                          <span className="vs"><span>VS</span></span>
-                        </div>
+                        <div><span className="vs"><span>VS</span></span></div>
                         <div className="team-2 text-center">
                           {nextMatch.away_team?.flag_url
                             ? <img src={nextMatch.away_team.flag_url} alt="" className="logo-md" style={{ margin: "0 auto" }} />
@@ -307,7 +395,7 @@ export default function HomePage() {
                   <h3>{t("home.upcomingMatches")}</h3>
                 </div>
 
-                {/* Desktop: compact table */}
+                {/* Desktop table */}
                 <div className="d-none d-md-block">
                   <table className="table custom-table">
                     <thead>
@@ -345,7 +433,7 @@ export default function HomePage() {
                   </table>
                 </div>
 
-                {/* Mobile: match-row cards */}
+                {/* Mobile rows */}
                 <div className="d-md-none widget-body p-0">
                   {upcomingMatches.slice(0, 6).map(m => (
                     <div key={m.id} className="match-row match-row--clickable" onClick={() => navigate("/scores/fixtures")}>
@@ -372,6 +460,12 @@ export default function HomePage() {
                       </div>
                     </div>
                   ))}
+                </div>
+
+                <div className="text-center mt-3">
+                  <Link to="/scores/fixtures" style={{ fontSize: "0.82rem", color: "var(--accent)", fontWeight: 700, textDecoration: "none" }}>
+                    {t("home.fullSchedule")}
+                  </Link>
                 </div>
               </div>
             </div>

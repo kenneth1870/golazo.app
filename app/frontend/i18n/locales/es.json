@@ -23,12 +23,14 @@
     "mundialShort": "Mundial"
   },
   "hero": {
-    "title": "Mundial 2026",
-    "subtitle": "Marcadores en vivo, estadísticas en tiempo real y todos los goles del Mundial FIFA 2026 — EE.UU. · Canadá · México.",
+    "title": "Marcadores en Vivo, Estadísticas y Noticias",
+    "subtitle": "Marcadores en tiempo real, alineaciones, clasificaciones e información de partidos para el Mundial FIFA 2026 y más de 100 competiciones.",
     "liveBtn": "En Vivo",
+    "todayBtn": "Partidos de Hoy",
     "fixturesBtn": "Calendario",
     "nextMatch": "Próximo partido",
-    "opensIn": "⚽ El Mundial comienza en"
+    "opensIn": "⚽ El Mundial comienza en",
+    "badge": "Mundial FIFA 2026 · Cobertura en Vivo"
   },
   "home": {
     "latestNews": "Últimas Noticias",
