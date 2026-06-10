@@ -1,11 +1,13 @@
 class ApiSportsClient
   BASE_URL = "https://v3.football.api-sports.io/"
-  TOKEN = ENV["APISPORTS_KEY"].presence
 
   def initialize
-    raise "APISPORTS_KEY env var not set" if TOKEN.blank?
+    # Read the key at call-time so a missing var surfaces as a runtime error
+    # rather than being permanently nil from the moment the class was loaded.
+    token = ENV["APISPORTS_KEY"].presence
+    raise "APISPORTS_KEY env var not set" if token.blank?
     @conn = Faraday.new(url: BASE_URL) do |f|
-      f.headers["x-apisports-key"] = TOKEN
+      f.headers["x-apisports-key"] = token
       f.options.timeout      = 10
       f.options.open_timeout = 6
     end

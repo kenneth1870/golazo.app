@@ -28,6 +28,11 @@ module GolazoApp
       _im_stub = Object.new
       _im_stub.define_singleton_method(:method_missing) { |_m, *_a, &_b| self }
       _im_stub.define_singleton_method(:respond_to_missing?) { |*_| true }
+      # Return false so the engine's importmap initializer skips the
+      # `sweep_cache && reloading_enabled?` branch — which would otherwise
+      # inject a before_action into every ActionController::Base subclass and
+      # interfere with request processing (including /jobs routing).
+      _im_stub.define_singleton_method(:sweep_cache) { false }
       config.define_singleton_method(:importmap) { _im_stub }
     end
 

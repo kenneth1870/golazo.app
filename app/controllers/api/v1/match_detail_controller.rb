@@ -82,15 +82,16 @@ module Api
 
       def broadcast_if_changed(fixture_id, data)
         return unless data[:fixture]
-        status = data.dig(:fixture, :fixture, :status, :short)
+        # data[:fixture] is a string-keyed hash from LiveScoresClient/build_fixture
+        status = data.dig(:fixture, "fixture", "status", "short")
         return unless %w[1H 2H HT ET BT P].include?(status)
 
         cache_key = "ext_match_bcast_#{fixture_id}"
         prev = Rails.cache.read(cache_key)
 
         current = {
-          h:      data.dig(:fixture, :goals, :home),
-          a:      data.dig(:fixture, :goals, :away),
+          h:      data.dig(:fixture, "goals", "home"),
+          a:      data.dig(:fixture, "goals", "away"),
           s:      status,
           events: data[:events]&.length.to_i
         }
