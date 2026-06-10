@@ -23,9 +23,15 @@ module Api
           device_id: device_id
         )
 
-        # Don't allow changing prediction on finished matches
+        # Don't allow changing prediction on finished or already-graded matches
         if sp.persisted? && sp.points_earned.present?
           return render json: { error: "match_already_graded" }, status: :unprocessable_entity
+        end
+
+        # Block predictions once the match has kicked off (live or finished in DB)
+        locked_match = Match.find_by(external_id: params[:match_id])
+        if locked_match && %w[live finished].include?(locked_match.status)
+          return render json: { error: "match_already_started" }, status: :unprocessable_entity
         end
 
         sp.assign_attributes(

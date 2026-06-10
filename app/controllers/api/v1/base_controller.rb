@@ -15,6 +15,7 @@ module Api
       # Live and today endpoints get short TTLs; static reference data gets longer.
       def set_cache_headers
         return unless response.ok?
+        return unless request.get? || request.head?   # never cache POST/PUT/PATCH/DELETE
         return if request.path.include?("/search") || request.path.include?("/predictions") || request.path.include?("/locale")
         ttl = case request.path
         when %r{/today|/live_scores|/match_detail}  then 30.seconds

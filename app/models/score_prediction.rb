@@ -18,11 +18,13 @@ class ScorePrediction < ApplicationRecord
     end
   end
 
-  # Leaderboard: sum points per device, ordered desc
+  # Leaderboard: sum points per device, ordered desc.
+  # Group by device_id only; use MAX(display_name) so a device that changed its
+  # name doesn't appear as multiple entries with stale/split point totals.
   def self.leaderboard(limit: 50)
-    select("device_id, display_name, SUM(points_earned) AS total_points, COUNT(*) AS predictions_made")
+    select("device_id, MAX(display_name) AS display_name, SUM(points_earned) AS total_points, COUNT(*) AS predictions_made")
       .where.not(points_earned: nil)
-      .group(:device_id, :display_name)
+      .group(:device_id)
       .order("total_points DESC")
       .limit(limit)
   end

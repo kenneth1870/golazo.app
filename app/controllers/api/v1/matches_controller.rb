@@ -4,7 +4,10 @@ module Api
       before_action :require_admin!, only: :update
 
       def index
-        scope = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition)
+        # Exclude goals/match_stats from the index includes — they are only
+        # needed on the show action.  Loading them for 200 matches produces a
+        # massive JSON payload; callers that need detail should use #show.
+        scope = Match.includes(:home_team, :away_team, :competition)
 
         # Competition filter
         scope = scope.by_competition(params[:competition]) if params[:competition].present?
@@ -19,7 +22,16 @@ module Api
         else scope.order(kickoff_at: :asc).limit(200)
         end
 
-        render json: scope
+        render json: scope.map { |m|
+          m.as_json(
+            only:    %i[id status kickoff_at home_score away_score home_slot away_slot bracket_pos group_stage],
+            include: {
+              home_team:   { only: %i[id name code flag_url] },
+              away_team:   { only: %i[id name code flag_url] },
+              competition: { only: %i[id name code logo country] }
+            }
+          ).merge("home_slot" => m.home_slot, "away_slot" => m.away_slot, "bracket_pos" => m.bracket_pos)
+        }
       end
 
       def show

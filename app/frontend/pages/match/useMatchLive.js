@@ -19,7 +19,9 @@ export function useGoalNotifications(enabled) {
   const prevEventsRef = useRef([])
 
   function notifyGoal(events, homeName, awayName, homeGoals, awayGoals) {
-    if (!enabled || Notification.permission !== "granted") return
+    // Notification API is absent in some Android webviews and WKWebView without
+    // explicit permission — guard before accessing to avoid ReferenceError.
+    if (!enabled || typeof Notification === "undefined" || Notification.permission !== "granted") return
     const prev = prevEventsRef.current
     const newGoals = (events || []).filter(
       e => e.type === "Goal" && !prev.some(p => p.minute === e.minute && p.player === e.player)

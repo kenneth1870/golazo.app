@@ -11,7 +11,8 @@ module Api
 
       def show
         lang = normalize_lang(params[:lang])
-        article = NewsService.new.latest(limit: 30, lang: lang).find { |a| a[:id] == params[:id] }
+        # Use the same limit as index so articles 31-60 don't 404
+        article = NewsService.new.latest(limit: 60, lang: lang).find { |a| a[:id] == params[:id] }
         if article
           render json: article
         else
@@ -24,7 +25,7 @@ module Api
 
       def content
         lang    = normalize_lang(params[:lang])
-        article = NewsService.new.latest(limit: 30, lang: lang).find { |a| a[:id] == params[:id] }
+        article = NewsService.new.latest(limit: 60, lang: lang).find { |a| a[:id] == params[:id] }
         return render json: { error: "not found" }, status: :not_found unless article
 
         body = NewsService.new.fetch_content(article[:link])

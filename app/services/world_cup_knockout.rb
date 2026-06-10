@@ -28,6 +28,14 @@ class WorldCupKnockout
 
   # 16 R32 matches: [home_slot, away_slot]. Slots: "1X"/"2X" = winner/runner-up
   # of group X; "T1".."T8" = best third-placed teams (ranked).
+  #
+  # TODO (URGENT — tournament is now underway as of 2026-06-09):
+  # Verify these pairings against the official FIFA 2026 bracket once the group
+  # stage is complete and the actual R32 draw pairings are published.
+  # Third-placed team slots (T1-T8) are especially likely to differ from the
+  # placeholder ranking-order assignment used here — FIFA uses a fixed lookup
+  # table that maps the specific groups' third-placed teams to predetermined slots.
+  # See: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/
   R32_SLOTS = [
     %w[1A T1], %w[1C 2F], %w[1E 2D], %w[1G T2],
     %w[1I 2L], %w[1K T3], %w[1B 2I], %w[1D T4],

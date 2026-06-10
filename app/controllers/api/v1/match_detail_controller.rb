@@ -191,8 +191,10 @@ module Api
       public
 
       # GET /api/v1/match_detail/:id/ai_summary?lang=es
-      # Generates an AI post-match report for any finished external match.
-      # Works for matches that don't exist in our DB (friendlies, leagues, etc.).
+      # Generates an AI post-match report for external (API-only) matches.
+      # For DB-backed WC matches use GET /api/v1/matches/:id/ai_summary
+      # (AiSummariesController) — that path uses AiMatchSummaryService and its
+      # own cache key, so the two routes don't duplicate work.
       def ai_summary
         unless ENV["ANTHROPIC_API_KEY"].present?
           return render json: { error: "ai_unavailable" }, status: :service_unavailable
@@ -204,17 +206,7 @@ module Api
         client      = LiveScoresClient.new
 
         data = client.match_detail(external_id)
-
-        # Fallback: check DB for a synced WC match with this external_id
-        if data.nil? || data[:fixture].nil?
-          match = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition)
-                       .find_by(external_id: external_id)
-          if match
-            result = AiMatchSummaryService.new(match, lang: lang).call
-            return result ? render(json: result) : render(json: { error: "generation_failed" }, status: :service_unavailable)
-          end
-          return render json: { error: "not_found" }, status: :not_found
-        end
+        return render json: { error: "not_found" }, status: :not_found if data.nil? || data[:fixture].nil?
 
         # Must be finished
         status = data.dig(:fixture, "fixture", "status", "short")
