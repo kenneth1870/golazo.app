@@ -81,6 +81,20 @@ class LiveScoresClient
     | \bw\s+league\b               # generic "W League"
   /xi.freeze
 
+  # Countries that represent international/continental competitions rather than
+  # domestic club leagues. Used by matches_for_date(all_leagues: true) to keep
+  # national-team matches (Philippines vs Myanmar → "Asia") while dropping
+  # domestic club leagues (Premier League → "England", La Liga → "Spain", etc.).
+  INTERNATIONAL_REGIONS = [
+    "World",
+    "Asia",
+    "Africa",
+    "Europe",
+    "South America",
+    "North America",
+    "Oceania",
+  ].freeze
+
   def initialize
     key = ENV["APISPORTS_KEY"].presence
     raise "APISPORTS_KEY not configured" if key.blank?
@@ -109,12 +123,14 @@ class LiveScoresClient
   end
 
   # All featured matches for a given date (UTC).
-  # all_leagues: true  → used by TodayPage: returns ALL senior international
-  #   matches (only women's/youth excluded by name). No league-ID whitelist.
+  # all_leagues: true  → used by TodayPage: national/international competitions
+  #   only (country must be a continent/confederation, not a specific nation).
+  #   Drops domestic club leagues (Premier League, La Liga, …) while keeping
+  #   every senior men's national-team match regardless of region.
   # all_leagues: false → used by home/live feeds: only FEATURED_LEAGUES.
   def matches_for_date(date, all_leagues: false)
     key = all_leagues \
-      ? "live_scores_date_all_v1_#{date.to_date.iso8601}" \
+      ? "live_scores_date_intl_v1_#{date.to_date.iso8601}" \
       : "live_scores_date_v13_#{date.to_date.iso8601}"
 
     Rails.cache.fetch(key, expires_in: 10.minutes) do
@@ -122,10 +138,15 @@ class LiveScoresClient
       matches = (data.dig("response") || []).filter_map { |f| normalize_fixture(f) }
 
       if all_leagues
-        # Only filter out women's / youth by name; let every league through.
         matches.reject do |m|
-          check = "#{m[:league_name]} #{m.dig(:home, :name)} #{m.dig(:away, :name)}"
-          check.match?(EXCLUDED_LEAGUE_PATTERN)
+          country = m[:league_country].to_s
+          check   = "#{m[:league_name]} #{m.dig(:home, :name)} #{m.dig(:away, :name)}"
+
+          # Drop women's / youth by name
+          next true if check.match?(EXCLUDED_LEAGUE_PATTERN)
+
+          # Drop domestic club leagues — keep only international/continental competitions
+          INTERNATIONAL_REGIONS.none? { |r| country.casecmp?(r) }
         end
       else
         matches.select { |m| featured_league?(m) }
