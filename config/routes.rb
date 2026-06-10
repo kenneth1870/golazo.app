@@ -63,7 +63,10 @@ Rails.application.routes.draw do
   get "sitemap.xml", to: "sitemap#index", defaults: { format: :xml }
 
   # SPA catch-all — must come before engine mounts so the app root takes priority.
-  get "*path", to: "application#spa", constraints: ->(req) { !req.xhr? && req.format.html? }
+  # Exclude /jobs so Mission Control Jobs requests reach the engine below.
+  get "*path", to: "application#spa", constraints: ->(req) {
+    !req.xhr? && req.format.html? && !req.path.start_with?("/jobs")
+  }
   root "application#spa"
 
   mount MissionControl::Jobs::Engine, at: "/jobs"
