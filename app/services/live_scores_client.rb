@@ -81,10 +81,11 @@ class LiveScoresClient
     | \bw\s+league\b               # generic "W League"
   /xi.freeze
 
-  # Countries that represent international/continental competitions rather than
-  # domestic club leagues. Used by matches_for_date(all_leagues: true) to keep
-  # national-team matches (Philippines vs Myanmar → "Asia") while dropping
-  # domestic club leagues (Premier League → "England", La Liga → "Spain", etc.).
+  # league_country values that represent international/continental competitions.
+  # featured_league? returns true for any match whose country is in this list,
+  # keeping national-team matches from every confederation (Philippines vs Myanmar
+  # → "Asia", AFCON qualifiers → "Africa", etc.) while domestic club leagues
+  # (Premier League → "England", La Liga → "Spain") fall through to FEATURED_LEAGUES.
   INTERNATIONAL_REGIONS = [
     "World",
     "Asia",
@@ -122,35 +123,16 @@ class LiveScoresClient
     []
   end
 
-  # All featured matches for a given date (UTC).
-  # all_leagues: true  → used by TodayPage: national/international competitions
-  #   only (country must be a continent/confederation, not a specific nation).
-  #   Drops domestic club leagues (Premier League, La Liga, …) while keeping
-  #   every senior men's national-team match regardless of region.
-  # all_leagues: false → used by home/live feeds: only FEATURED_LEAGUES.
-  def matches_for_date(date, all_leagues: false)
-    key = all_leagues \
-      ? "live_scores_date_intl_v1_#{date.to_date.iso8601}" \
-      : "live_scores_date_v13_#{date.to_date.iso8601}"
-
-    Rails.cache.fetch(key, expires_in: 10.minutes) do
-      data    = get("fixtures", date: date.to_date.iso8601, timezone: "UTC")
-      matches = (data.dig("response") || []).filter_map { |f| normalize_fixture(f) }
-
-      if all_leagues
-        matches.reject do |m|
-          country = m[:league_country].to_s
-          check   = "#{m[:league_name]} #{m.dig(:home, :name)} #{m.dig(:away, :name)}"
-
-          # Drop women's / youth by name
-          next true if check.match?(EXCLUDED_LEAGUE_PATTERN)
-
-          # Drop domestic club leagues — keep only international/continental competitions
-          INTERNATIONAL_REGIONS.none? { |r| country.casecmp?(r) }
-        end
-      else
-        matches.select { |m| featured_league?(m) }
-      end
+  # All important matches for a given date (UTC).
+  # Returns every senior men's international/continental competition — World Cup,
+  # Copa América, AFCON, Asian/regional friendlies, WC qualifiers, etc. —
+  # plus any FEATURED_LEAGUES club competition. Women's and youth excluded.
+  def matches_for_date(date)
+    Rails.cache.fetch("live_scores_date_v14_#{date.to_date.iso8601}", expires_in: 10.minutes) do
+      data = get("fixtures", date: date.to_date.iso8601, timezone: "UTC")
+      (data.dig("response") || [])
+        .filter_map { |f| normalize_fixture(f) }
+        .select     { |m| featured_league?(m) }
     end
   rescue => e
     Rails.logger.error("[LiveScoresClient] matches_for_date(#{date}): #{e.message}")
@@ -404,18 +386,17 @@ class LiveScoresClient
     home_team = match.dig(:home, :name).to_s
     away_team = match.dig(:away, :name).to_s
 
-    # Exclude if league name OR either team name contains a youth/women pattern.
-    # Checked first so U21/U18 international friendlies are caught even when the
-    # league name is just "International Friendlies".
+    # Exclude youth/women by name first so U21/U18 international friendlies are
+    # caught even when the league name is just "International Friendlies".
     check = "#{league} #{home_team} #{away_team}"
     return false if check.match?(EXCLUDED_LEAGUE_PATTERN)
 
-    # Allow all senior international/world competitions (WC, Copa América,
-    # qualifiers, AND senior friendlies like Argentina vs Iceland).
-    # Youth/women are already excluded above by name.
-    return true if country == "World"
+    # Allow every senior international/continental competition: World Cup,
+    # Copa América, AFCON, AFC, regional friendlies (Philippines vs Myanmar → "Asia"),
+    # WC qualifiers, Nations Leagues, etc. Covers far more than country == "World" alone.
+    return true if INTERNATIONAL_REGIONS.any? { |r| country.casecmp?(r) }
 
-    # Featured domestic leagues by ID
+    # Allow featured club leagues by explicit ID (UCL, Premier League, etc.)
     FEATURED_LEAGUES.include?(lid)
   end
 
