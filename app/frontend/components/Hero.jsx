@@ -80,7 +80,7 @@ export default function Hero({ nextMatch, liveCount = 0 }) {
       {/* Dark overlay — keeps text readable over any photo */}
       <div aria-hidden="true" style={{
         position: "absolute", inset: 0, pointerEvents: "none",
-        background: "linear-gradient(160deg, rgba(6,8,16,.92) 0%, rgba(10,14,24,.85) 40%, rgba(8,12,20,.80) 70%, rgba(6,8,14,.88) 100%)",
+        background: "linear-gradient(160deg, rgba(6,8,16,.78) 0%, rgba(10,14,24,.65) 40%, rgba(8,12,20,.55) 70%, rgba(6,8,14,.72) 100%)",
       }} />
       {/* Accent glow + subtle grid */}
       <div aria-hidden="true" style={{
@@ -91,7 +91,7 @@ export default function Hero({ nextMatch, liveCount = 0 }) {
         `,
       }} />
 
-      <div className="container" style={{ position: "relative", padding: "48px 15px 40px" }}>
+      <div className="container" style={{ position: "relative", padding: "60px 15px 52px" }}>
         <div className="row align-items-center">
           <div className="col-12 col-lg-7">
 
