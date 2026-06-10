@@ -9,6 +9,19 @@ function getLeft(d) {
 
 const WC_OPENING = "2026-06-11T19:00:00Z"
 
+const BG_IMAGES = [
+  "/images/bg_1.jpg",
+  "/images/bg_2.jpg",
+  "/images/bg_3.jpg",
+  "/images/img_1.jpg",
+  "/images/img_2.jpg",
+  "/images/img_3.jpg",
+]
+
+function randomBg() {
+  return BG_IMAGES[Math.floor(Math.random() * BG_IMAGES.length)]
+}
+
 function Countdown({ targetDate, label }) {
   const [left, setLeft] = useState(getLeft(targetDate))
   useEffect(() => {
@@ -63,6 +76,19 @@ export default function Hero({ nextMatch, liveCount = 0 }) {
   const navigate   = useNavigate()
   const { t }      = useTranslation()
   const target     = nextMatch?.kickoff_at || WC_OPENING
+  const [bg, setBg] = useState(() => randomBg())
+  const [fade, setFade] = useState(true)
+
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setFade(false)
+      setTimeout(() => {
+        setBg(randomBg())
+        setFade(true)
+      }, 600)
+    }, 8000)
+    return () => clearInterval(iv)
+  }, [])
   const isOpening  = !nextMatch?.kickoff_at
   const countdownLabel = isOpening
     ? t("hero.opensIn")
@@ -71,11 +97,13 @@ export default function Hero({ nextMatch, liveCount = 0 }) {
   return (
     <div style={{
       position: "relative",
-      backgroundImage: "url('/images/bg_1.jpg')",
+      backgroundImage: `url('${bg}')`,
       backgroundSize: "cover",
       backgroundPosition: "center 30%",
       borderBottom: "1px solid rgba(255,255,255,.06)",
       overflow: "hidden",
+      transition: "opacity .6s ease",
+      opacity: fade ? 1 : 0,
     }}>
       {/* Dark overlay — keeps text readable over any photo */}
       <div aria-hidden="true" style={{
