@@ -15,7 +15,7 @@
 Rails.application.configure do
   config.content_security_policy do |policy|
     policy.default_src :self
-    policy.font_src    :self, :https, :data
+    policy.font_src    :self, :https, :data, "https://fonts.gstatic.com"
     policy.img_src     :self, :https, :data
     policy.object_src  :none
     policy.frame_ancestors :none
@@ -23,7 +23,8 @@ Rails.application.configure do
     # Inline styles are needed by React / emotion / Tailwind utilities injected
     # at runtime; tighten this to a nonce once the frontend is migrated away from
     # any dynamic style injection.
-    policy.style_src :self, :unsafe_inline
+    # Google Fonts stylesheets are loaded from fonts.googleapis.com.
+    policy.style_src :self, :unsafe_inline, "https://fonts.googleapis.com"
 
     if Rails.env.development?
       # Vite HMR requires eval for module hot-reloading
