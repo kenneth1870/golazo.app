@@ -3,7 +3,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      resources :competitions, only: [:index, :show], param: :code
+      resources :competitions, only: [ :index, :show ], param: :code
       get "search",       to: "search#index"
       get "locale",       to: "locale#index"
       get "live_scores",  to: "live_scores#index"
@@ -31,14 +31,14 @@ Rails.application.routes.draw do
       post "push_subscriptions",       to: "push_subscriptions#create"
       put  "push_subscriptions/teams", to: "push_subscriptions#update_teams"
       delete "push_subscriptions",     to: "push_subscriptions#destroy"
-      resources :teams, only: [:index, :show] do
+      resources :teams, only: [ :index, :show ] do
         get :squad, on: :member
       end
       get "fixture_predictions/:fixture_id", to: "fixture_predictions#show"
       get "fixture_odds/:fixture_id/live",  to: "fixture_odds#live"
       get "fixture_odds/:fixture_id",       to: "fixture_odds#show"
 
-      resources :players,  only: [:show] do
+      resources :players,  only: [ :show ] do
         collection { get :search }
         member do
           get :transfers
@@ -46,9 +46,9 @@ Rails.application.routes.draw do
           get :sidelined
         end
       end
-      resources :standings, only: [:index]
-      resources :matches, only: [:index, :show, :update] do
-        resources :goals, only: [:create]
+      resources :standings, only: [ :index ]
+      resources :matches, only: [ :index, :show, :update ] do
+        resources :goals, only: [ :create ]
         resource :stats, only: [] do
           post :upsert, on: :collection
         end

@@ -3,7 +3,7 @@ module Api
     class TeamsController < BaseController
       def index
         teams = Team.order(:group, :name)
-        teams = teams.where.not(group: [nil, ""]) if params[:competition] == "WC" || params[:wc] == "1"
+        teams = teams.where.not(group: [ nil, "" ]) if params[:competition] == "WC" || params[:wc] == "1"
         render json: teams
       end
 
@@ -13,8 +13,8 @@ module Api
 
         # Tournament goal scorers from our own DB (no external API needed)
         scorers = team.goals
-                      .where.not(player_name: [nil, ""])
-                      .where(goal_type: [nil, "regular", "penalty", "own_goal"])
+                      .where.not(player_name: [ nil, "" ])
+                      .where(goal_type: [ nil, "regular", "penalty", "own_goal" ])
                       .group(:player_name, :goal_type)
                       .count
                       .each_with_object({}) do |((name, type), count), h|
@@ -43,7 +43,7 @@ module Api
           goals_scored:  goals_scored,
           goals_conceded: goals_conceded,
           clean_sheets:  clean_sheets,
-          goal_diff:     goals_scored - goals_conceded,
+          goal_diff:     goals_scored - goals_conceded
         }
 
         render json: team.as_json.merge(
@@ -79,7 +79,7 @@ module Api
                 age:      p["age"],
                 number:   p["number"],
                 position: p["position"],
-                photo:    p["photo"],
+                photo:    p["photo"]
               }
             end
             { players: players, coach: nil }

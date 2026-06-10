@@ -20,14 +20,14 @@ module Api
         # Mexico (3 venues)
         { name: "Estadio Azteca",          city: "Mexico City",         country: "Mexico", capacity: 83_132, group: "Opening match" },
         { name: "Estadio BBVA",            city: "Monterrey",           country: "Mexico", capacity: 53_500, group: "Group stage"   },
-        { name: "Estadio Akron",           city: "Guadalajara",         country: "Mexico", capacity: 49_850, group: "Group stage"   },
+        { name: "Estadio Akron",           city: "Guadalajara",         country: "Mexico", capacity: 49_850, group: "Group stage"   }
       ].freeze
 
       def index
         wc = Competition.find_by(code: "WC")
         matches_by_venue = if wc
           Match.where(competition: wc)
-               .where.not(venue: [nil, ""])
+               .where.not(venue: [ nil, "" ])
                .includes(:home_team, :away_team)
                .order(:kickoff_at)
                .group_by(&:venue)
@@ -50,7 +50,7 @@ module Api
                 home_score:  m.home_score,
                 away_score:  m.away_score,
                 home_team: { name: m.home_team.name, flag_url: m.home_team.flag_url, code: m.home_team.code },
-                away_team: { name: m.away_team.name, flag_url: m.away_team.flag_url, code: m.away_team.code },
+                away_team: { name: m.away_team.name, flag_url: m.away_team.flag_url, code: m.away_team.code }
               }
             }
           )

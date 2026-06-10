@@ -53,7 +53,7 @@ class AiMatchSummaryExternalService
         model:      MODEL,
         max_tokens: MAX_TOKENS,
         system:     system_prompt,
-        messages:   [{ role: "user", content: prompt }],
+        messages:   [ { role: "user", content: prompt } ]
       }.to_json
     end
 
@@ -66,7 +66,7 @@ class AiMatchSummaryExternalService
     {
       summary:      text,
       generated_at: Time.current.iso8601,
-      model:        MODEL,
+      model:        MODEL
     }
   end
 
@@ -81,7 +81,7 @@ class AiMatchSummaryExternalService
 
     return nil if home_name.blank? || away_name.blank?
 
-    comp_label = [comp_name, round.presence].compact.join(" — ")
+    comp_label = [ comp_name, round.presence ].compact.join(" — ")
 
     # Goal events
     goal_lines = Array(@data[:events])
@@ -93,10 +93,10 @@ class AiMatchSummaryExternalService
         player = e["player"].to_s
         team   = e.dig("team", "name").to_s
         extra  = case detail
-                 when /own/i  then " (OG)"
-                 when /penalty/i then " (pen)"
-                 else ""
-                 end
+        when /own/i  then " (OG)"
+        when /penalty/i then " (pen)"
+        else ""
+        end
         "#{min}' #{player} (#{team})#{extra}"
       end
 
@@ -192,7 +192,7 @@ class AiMatchSummaryExternalService
       f.request  :json
       f.response :raise_error
       f.options.timeout = 25
-      f.adapter  Faraday.default_adapter
+      f.adapter Faraday.default_adapter
     end
   end
 end

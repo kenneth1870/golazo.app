@@ -73,7 +73,7 @@ module Api
           id:   p["id"] || p.dig("player", "id"),
           name: p["name"] || p.dig("player", "name"),
           team: p.dig("team", "name") || p["teamName"],
-          photo: p["photo"] || p.dig("player", "photo"),
+          photo: p["photo"] || p.dig("player", "photo")
         }
       end
 
@@ -98,7 +98,7 @@ module Api
           team: {
             id:   team["id"],
             name: team["name"],
-            logo: team["logo"],
+            logo: team["logo"]
           },
           stats: {
             appearances:  games["appearences"],
@@ -108,7 +108,7 @@ module Api
             assists:      goals["assists"],
             yellow_cards: cards["yellow"],
             red_cards:    cards["red"],
-            key_passes:   passes["key"],
+            key_passes:   passes["key"]
           }
         }
       end

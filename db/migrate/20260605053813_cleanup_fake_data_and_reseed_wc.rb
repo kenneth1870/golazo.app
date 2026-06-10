@@ -63,7 +63,7 @@ class CleanupFakeDataAndReseedWc < ActiveRecord::Migration[8.1]
     { name: "England",        code: "ENG", group: "L", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/gb-eng.png" },
     { name: "Croatia",        code: "CRO", group: "L", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/hr.png"     },
     { name: "Ghana",          code: "GHA", group: "L", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/gh.png"     },
-    { name: "Panama",         code: "PAN", group: "L", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/pa.png"     },
+    { name: "Panama",         code: "PAN", group: "L", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/pa.png"     }
   ].freeze
 
   WC_FIXTURES = [
@@ -138,7 +138,7 @@ class CleanupFakeDataAndReseedWc < ActiveRecord::Migration[8.1]
     { home: "ENG", away: "GHA", kickoff: "2026-06-21 19:00 UTC", venue: "Gillette Stadium, Boston",              group: "L" },
     { home: "PAN", away: "CRO", kickoff: "2026-06-21 22:00 UTC", venue: "Lincoln Financial Field, Philadelphia", group: "L" },
     { home: "ENG", away: "PAN", kickoff: "2026-06-25 19:00 UTC", venue: "Gillette Stadium, Boston",              group: "L" },
-    { home: "CRO", away: "GHA", kickoff: "2026-06-25 19:00 UTC", venue: "Lincoln Financial Field, Philadelphia", group: "L" },
+    { home: "CRO", away: "GHA", kickoff: "2026-06-25 19:00 UTC", venue: "Lincoln Financial Field, Philadelphia", group: "L" }
   ].freeze
 
   def up

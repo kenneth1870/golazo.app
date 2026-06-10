@@ -17,13 +17,13 @@ module Api
         return unless response.ok?
         return if request.path.include?("/search") || request.path.include?("/predictions") || request.path.include?("/locale")
         ttl = case request.path
-              when %r{/today|/live_scores|/match_detail}  then 30.seconds
-              when %r{/matches|/fixtures|/results}        then 2.minutes
-              when %r{/standings|/groups}                 then 5.minutes
-              when %r{/news}                              then 10.minutes
-              when %r{/venues|/top_scorers|/competitions} then 15.minutes
-              else                                             1.minute
-              end
+        when %r{/today|/live_scores|/match_detail}  then 30.seconds
+        when %r{/matches|/fixtures|/results}        then 2.minutes
+        when %r{/standings|/groups}                 then 5.minutes
+        when %r{/news}                              then 10.minutes
+        when %r{/venues|/top_scorers|/competitions} then 15.minutes
+        else                                             1.minute
+        end
         response.set_header("Cache-Control", "public, max-age=#{ttl.to_i}, stale-while-revalidate=#{(ttl * 2).to_i}")
       end
 

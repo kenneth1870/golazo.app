@@ -36,7 +36,7 @@ class ApiSportsClient
     Rails.cache.fetch(cache_key, expires_in: 7.days) do
       season = date.year
       # Try current year first, then previous (matches played late Dec / early Jan)
-      [season, season - 1].each do |s|
+      [ season, season - 1 ].each do |s|
         data = get("fixtures", date: date.iso8601, season: s, timezone: "UTC")
         fixtures = data.dig("response") || []
         found = fuzzy_match(fixtures, home_name, away_name)
@@ -72,7 +72,7 @@ class ApiSportsClient
       fixture: Thread.new { get("fixtures", id: fixture_id) },
       events:  Thread.new { get("fixtures/events",     fixture: fixture_id) },
       stats:   Thread.new { get("fixtures/statistics", fixture: fixture_id) },
-      lineups: Thread.new { get("fixtures/lineups",    fixture: fixture_id) },
+      lineups: Thread.new { get("fixtures/lineups",    fixture: fixture_id) }
     }
     threads.each do |k, t|
       results[k] = t.join(10)&.value || {}
@@ -100,7 +100,7 @@ class ApiSportsClient
       events:   normalize_events(results[:events].dig("response") || []),
       stats:    normalize_stats(results[:stats].dig("response") || []),
       lineups:  normalize_lineups(results[:lineups].dig("response") || []),
-      h2h:      normalize_h2h(h2h_raw, home_id, away_id),
+      h2h:      normalize_h2h(h2h_raw, home_id, away_id)
     }
   end
 
@@ -114,38 +114,38 @@ class ApiSportsClient
         "status" => {
           "short"   => fx.dig("fixture", "status", "short"),
           "long"    => fx.dig("fixture", "status", "long"),
-          "elapsed" => fx.dig("fixture", "status", "elapsed"),
+          "elapsed" => fx.dig("fixture", "status", "elapsed")
         },
         "venue"  => {
           "name" => fx.dig("fixture", "venue", "name"),
-          "city" => fx.dig("fixture", "venue", "city"),
-        },
+          "city" => fx.dig("fixture", "venue", "city")
+        }
       },
       "league" => {
         "id"      => fx.dig("league", "id"),
         "name"    => fx.dig("league", "name"),
         "logo"    => fx.dig("league", "logo"),
         "country" => fx.dig("league", "country"),
-        "round"   => fx.dig("league", "round"),
+        "round"   => fx.dig("league", "round")
       },
       "teams" => {
         "home" => {
           "id"     => fx.dig("teams", "home", "id"),
           "name"   => fx.dig("teams", "home", "name"),
           "logo"   => fx.dig("teams", "home", "logo"),
-          "winner" => fx.dig("teams", "home", "winner"),
+          "winner" => fx.dig("teams", "home", "winner")
         },
         "away" => {
           "id"     => fx.dig("teams", "away", "id"),
           "name"   => fx.dig("teams", "away", "name"),
           "logo"   => fx.dig("teams", "away", "logo"),
-          "winner" => fx.dig("teams", "away", "winner"),
-        },
+          "winner" => fx.dig("teams", "away", "winner")
+        }
       },
       "goals" => {
         "home" => fx.dig("goals", "home"),
-        "away" => fx.dig("goals", "away"),
-      },
+        "away" => fx.dig("goals", "away")
+      }
     }
   end
 
@@ -160,7 +160,7 @@ class ApiSportsClient
         assist:   e.dig("assist", "name"),
         type:     type,
         detail:   e["detail"] || type,
-        comments: e["comments"],
+        comments: e["comments"]
       }
     end
   end
@@ -169,7 +169,7 @@ class ApiSportsClient
     raw.map do |team_data|
       {
         team:  { name: team_data.dig("team", "name"), logo: team_data.dig("team", "logo") },
-        stats: (team_data["statistics"] || []).map { |s| { type: s["type"], value: s["value"] } },
+        stats: (team_data["statistics"] || []).map { |s| { type: s["type"], value: s["value"] } }
       }
     end
   end
@@ -187,7 +187,7 @@ class ApiSportsClient
           pl = p["player"] || {}
           { name: pl["name"], number: pl["number"], pos: pl["pos"] }
         },
-        coach:     t.dig("coach", "name"),
+        coach:     t.dig("coach", "name")
       }
     end
   end
@@ -202,7 +202,7 @@ class ApiSportsClient
         status:      fx.dig("fixture", "status", "long") || "Finished",
         home:        { name: fx.dig("teams", "home", "name"), logo: fx.dig("teams", "home", "logo"), score: home_goals },
         away:        { name: fx.dig("teams", "away", "name"), logo: fx.dig("teams", "away", "logo"), score: away_goals },
-        competition: { name: fx.dig("league", "name") },
+        competition: { name: fx.dig("league", "name") }
       }
     end
     { summary: nil, matches: matches }

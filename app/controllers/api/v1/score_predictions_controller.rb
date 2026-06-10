@@ -51,7 +51,7 @@ module Api
             device_id:        r.device_id,
             display_name:     r.display_name.presence || "Anonymous",
             total_points:     r.total_points.to_i,
-            predictions_made: r.predictions_made.to_i,
+            predictions_made: r.predictions_made.to_i
           }
         }
       end
@@ -82,7 +82,7 @@ module Api
               away_team_name:    p.away_team_name,
               home_guess:        p.home_guess,
               away_guess:        p.away_guess,
-              points_earned:     p.points_earned,
+              points_earned:     p.points_earned
             }
           }
         }

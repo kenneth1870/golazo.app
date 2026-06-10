@@ -28,12 +28,12 @@ class PushSubscription < ApplicationRecord
       vapid: {
         subject:     ENV["VAPID_SUBJECT"],
         public_key:  ENV["VAPID_PUBLIC_KEY"],
-        private_key: ENV["VAPID_PRIVATE_KEY"],
+        private_key: ENV["VAPID_PRIVATE_KEY"]
       },
       data: {
         url:  url,
         icon: icon,
-        badge: "/images/badge-72.png",
+        badge: "/images/badge-72.png"
       }
     }
   end

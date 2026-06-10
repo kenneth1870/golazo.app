@@ -21,7 +21,7 @@ class SendGoalAlertJob < ApplicationJob
         body:  body,
         url:   url,
         icon:  "/images/apple-touch-icon.png?v=2",
-        badge: "/images/badge-72.png",
+        badge: "/images/badge-72.png"
       }.to_json
 
       WebPush.payload_send(
@@ -32,7 +32,7 @@ class SendGoalAlertJob < ApplicationJob
         vapid: {
           subject:     ENV["VAPID_SUBJECT"],
           public_key:  ENV["VAPID_PUBLIC_KEY"],
-          private_key: ENV["VAPID_PRIVATE_KEY"],
+          private_key: ENV["VAPID_PRIVATE_KEY"]
         },
         ttl: 300  # deliver within 5 minutes or drop
       )

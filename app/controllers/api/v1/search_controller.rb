@@ -22,7 +22,7 @@ module Api
             Arel.sql(
               Match.sanitize_sql_array([
                 "CASE WHEN status IN ('scheduled','live') AND kickoff_at >= ? THEN 0 ELSE 1 END, ABS(EXTRACT(EPOCH FROM (kickoff_at - ?::timestamptz))) ASC",
-                now, now,
+                now, now
               ])
             )
           )
@@ -39,7 +39,7 @@ module Api
               home_score: m.home_score,
               away_score: m.away_score,
               status:     m.status,
-              kickoff_at: m.kickoff_at,
+              kickoff_at: m.kickoff_at
             }
           end
 

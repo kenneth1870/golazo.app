@@ -85,7 +85,7 @@ class FixWcFixturesWithOfficialData < ActiveRecord::Migration[8.1]
     { home: "ENG", away: "GHA", kickoff: "2026-06-23 20:00 UTC", venue: "Gillette Stadium, Foxborough",             group: "L", round: "Matchday 13" },
     { home: "PAN", away: "CRO", kickoff: "2026-06-23 23:00 UTC", venue: "BMO Field, Toronto",                       group: "L", round: "Matchday 13" },
     { home: "PAN", away: "ENG", kickoff: "2026-06-27 21:00 UTC", venue: "MetLife Stadium, East Rutherford",         group: "L", round: "Matchday 17" },
-    { home: "CRO", away: "GHA", kickoff: "2026-06-27 21:00 UTC", venue: "Lincoln Financial Field, Philadelphia",    group: "L", round: "Matchday 17" },
+    { home: "CRO", away: "GHA", kickoff: "2026-06-27 21:00 UTC", venue: "Lincoln Financial Field, Philadelphia",    group: "L", round: "Matchday 17" }
   ].freeze
 
   def up

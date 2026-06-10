@@ -45,7 +45,7 @@ class AiMatchSummaryService
         model:      MODEL,
         max_tokens: MAX_TOKENS,
         system:     system_prompt,
-        messages:   [{ role: "user", content: prompt }],
+        messages:   [ { role: "user", content: prompt } ]
       }.to_json
     end
 
@@ -58,7 +58,7 @@ class AiMatchSummaryService
     {
       summary:      text,
       generated_at: Time.current.iso8601,
-      model:        MODEL,
+      model:        MODEL
     }
   end
 
@@ -69,16 +69,16 @@ class AiMatchSummaryService
     as_  = @match.away_score.to_i
     comp = @match.competition&.name || "FIFA World Cup 2026"
 
-    round_label = [@match.group_stage.presence && "Group Stage", @match.round.presence].compact.join(" — ")
-    comp_label  = [comp, round_label.presence].compact.join(" — ")
+    round_label = [ @match.group_stage.presence && "Group Stage", @match.round.presence ].compact.join(" — ")
+    comp_label  = [ comp, round_label.presence ].compact.join(" — ")
 
     # Goal events
     goal_lines = @match.goals.order(:minute).map do |g|
       suffix = case g.goal_type.to_s
-               when "own_goal" then " (OG)"
-               when "penalty"  then " (pen)"
-               else ""
-               end
+      when "own_goal" then " (OG)"
+      when "penalty"  then " (pen)"
+      else ""
+      end
       "#{g.minute}' #{g.player_name} (#{g.team&.name})#{suffix}"
     end
 
@@ -135,7 +135,7 @@ class AiMatchSummaryService
       f.request  :json
       f.response :raise_error
       f.options.timeout = 25
-      f.adapter  Faraday.default_adapter
+      f.adapter Faraday.default_adapter
     end
   end
 end

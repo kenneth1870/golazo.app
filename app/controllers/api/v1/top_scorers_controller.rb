@@ -9,7 +9,7 @@ module Api
         "BL1" => { league_id: 78,  season_id: 2024 },
         "SA"  => { league_id: 135, season_id: 2024 },
         "LAL" => { league_id: 140, season_id: 2024 },
-        "L1"  => { league_id: 61,  season_id: 2024 },
+        "L1"  => { league_id: 61,  season_id: 2024 }
       }.freeze
 
       def index
@@ -28,16 +28,16 @@ module Api
               id:          s.dig("player", "id"),
               name:        s.dig("player", "name"),
               nationality: s.dig("player", "nationality"),
-              photo:       s.dig("player", "photo"),
+              photo:       s.dig("player", "photo")
             },
             team: {
               name:  stats.dig("team", "name"),
               crest: stats.dig("team", "logo"),
-              tla:   nil,
+              tla:   nil
             },
             goals:   stats.dig("goals", "total"),
             assists: stats.dig("goals", "assists"),
-            played:  stats.dig("games", "appearences"),
+            played:  stats.dig("games", "appearences")
           }
         }
       rescue => e

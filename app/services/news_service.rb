@@ -4,36 +4,36 @@ class NewsService
     "en" => [
       { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       },
       { url: "https://www.espn.com/espn/rss/soccer/news",                      source: "ESPN FC"         },
-      { url: "https://www.goal.com/feeds/en/news",                             source: "Goal.com"        },
+      { url: "https://www.goal.com/feeds/en/news",                             source: "Goal.com"        }
     ],
     "es" => [
       { url: "https://espndeportes.espn.com/espn/rss/deportes/soccer/noticias", source: "ESPN Deportes"  },
-      { url: "https://e00-marca.uecdn.es/rss/futbol.xml",                       source: "Marca"          },
+      { url: "https://e00-marca.uecdn.es/rss/futbol.xml",                       source: "Marca"          }
     ],
     "pt" => [
       { url: "https://www.goal.com/feeds/pt/news",                             source: "Goal.com"        },
-      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       },
+      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       }
     ],
     "fr" => [
       { url: "https://www.goal.com/feeds/fr/news",                             source: "Goal.com"        },
-      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       },
+      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       }
     ],
     "de" => [
       { url: "https://www.goal.com/feeds/de/news",                             source: "Goal.com"        },
-      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       },
+      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       }
     ],
     "ar" => [
       { url: "https://www.goal.com/feeds/ar/news",                             source: "Goal.com"        },
-      { url: "https://feeds.bbci.co.uk/arabic/sports/rss.xml",                source: "BBC Arabic"      },
+      { url: "https://feeds.bbci.co.uk/arabic/sports/rss.xml",                source: "BBC Arabic"      }
     ],
     "ja" => [
       { url: "https://www.goal.com/feeds/ja/news",                             source: "Goal.com"        },
-      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       },
+      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       }
     ],
     "ko" => [
       { url: "https://www.goal.com/feeds/ko/news",                             source: "Goal.com"        },
-      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       },
-    ],
+      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       }
+    ]
   }.freeze
 
   USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
@@ -103,7 +103,7 @@ class NewsService
       ".story-body p",
       ".entry-content p",
       "main article p",
-      "main p",
+      "main p"
     ]
 
     paras = nil
@@ -182,7 +182,7 @@ class NewsService
       source:       source,
       image:        image,
       published_at: published,
-      date_label:   published ? published.strftime("%-d %b %Y") : nil,
+      date_label:   published ? published.strftime("%-d %b %Y") : nil
     }
   rescue => e
     Rails.logger.warn("[NewsService] parse error: #{e.message}")

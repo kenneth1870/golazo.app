@@ -15,7 +15,7 @@ end
   { code: "SA",  name: "Serie A",               country: "Italy",      type: "league", logo: "https://crests.football-data.org/SA.png"  },
   { code: "L1",  name: "Ligue 1",               country: "France",     type: "league", logo: "https://crests.football-data.org/FL1.png" },
   { code: "UCL", name: "UEFA Champions League", country: "Europe",     type: "cup",    logo: "https://crests.football-data.org/CL.png"  },
-  { code: "MLS", name: "Major League Soccer",   country: "USA/Canada", type: "league", logo: "https://flagcdn.com/w80/us.png"           },
+  { code: "MLS", name: "Major League Soccer",   country: "USA/Canada", type: "league", logo: "https://flagcdn.com/w80/us.png"           }
 ].each do |l|
   Competition.find_or_create_by!(code: l[:code]) do |c|
     c.name             = l[:name]
@@ -42,7 +42,7 @@ WC_TEAMS = [
   { name: "Czechia",       code: "CZE", group: "A", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/cz.png"     },
   # Group B — Toronto / Vancouver (host: Canada)
   { name: "Canada",        code: "CAN", group: "B", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/ca.png"     },
-  { name: "Bosnia & Herz.",code: "BIH", group: "B", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/ba.png"     },
+  { name: "Bosnia & Herz.", code: "BIH", group: "B", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/ba.png"     },
   { name: "Qatar",         code: "QAT", group: "B", confederation: "AFC",      flag_url: "https://flagcdn.com/w80/qa.png"     },
   { name: "Switzerland",   code: "SUI", group: "B", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/ch.png"     },
   # Group C — Los Angeles / San Francisco
@@ -94,7 +94,7 @@ WC_TEAMS = [
   { name: "England",       code: "ENG", group: "L", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/gb-eng.png" },
   { name: "Croatia",       code: "CRO", group: "L", confederation: "UEFA",     flag_url: "https://flagcdn.com/w80/hr.png"     },
   { name: "Ghana",         code: "GHA", group: "L", confederation: "CAF",      flag_url: "https://flagcdn.com/w80/gh.png"     },
-  { name: "Panama",        code: "PAN", group: "L", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/pa.png"     },
+  { name: "Panama",        code: "PAN", group: "L", confederation: "CONCACAF", flag_url: "https://flagcdn.com/w80/pa.png"     }
 ].uniq { |t| t[:code] }
 
 WC_TEAMS.each do |attrs|
@@ -108,7 +108,7 @@ end
 
 # Clear group assignment from any old placeholder teams not in the real WC draw
 WC_CODES = WC_TEAMS.map { |t| t[:code] }
-Team.where.not(code: WC_CODES).where.not(group: [nil, ""]).update_all(group: nil)
+Team.where.not(code: WC_CODES).where.not(group: [ nil, "" ]).update_all(group: nil)
 
 puts "#{Team.where.not(group: nil).count} WC teams seeded"
 
@@ -165,7 +165,7 @@ puts "Seeding club teams..."
   { code: "TIM", name: "Portland Timbers",     flag_url: nil },
   { code: "SEA", name: "Seattle Sounders",     flag_url: nil },
   { code: "NYC", name: "NYCFC",                flag_url: nil },
-  { code: "ATU", name: "Atlanta United",       flag_url: nil },
+  { code: "ATU", name: "Atlanta United",       flag_url: nil }
 ].each do |attrs|
   Team.find_or_create_by!(code: attrs[:code]) do |t|
     t.name     = attrs[:name]
@@ -268,7 +268,7 @@ WC_FIXTURES = [
   { home: "ENG", away: "GHA", kickoff: "2026-06-23 20:00 UTC", venue: "Gillette Stadium, Foxborough",                    group: "L", round: "Matchday 13" },
   { home: "PAN", away: "CRO", kickoff: "2026-06-23 23:00 UTC", venue: "BMO Field, Toronto",                              group: "L", round: "Matchday 13" },
   { home: "PAN", away: "ENG", kickoff: "2026-06-27 21:00 UTC", venue: "MetLife Stadium, East Rutherford",                group: "L", round: "Matchday 17" },
-  { home: "CRO", away: "GHA", kickoff: "2026-06-27 21:00 UTC", venue: "Lincoln Financial Field, Philadelphia",           group: "L", round: "Matchday 17" },
+  { home: "CRO", away: "GHA", kickoff: "2026-06-27 21:00 UTC", venue: "Lincoln Financial Field, Philadelphia",           group: "L", round: "Matchday 17" }
 ].freeze
 
 WC_FIXTURES.each do |f|

@@ -8,7 +8,7 @@ module Api
         result = Rails.cache.fetch("standings_#{competition_code}", expires_in: ttl) do
           scope = Standing.includes(:team, :competition)
                           .for_competition(competition_code)
-                          .where.not(group_name: [nil, ""])
+                          .where.not(group_name: [ nil, "" ])
                           .order(:group_name, :rank)
 
           if scope.exists?
@@ -31,7 +31,7 @@ module Api
             flat.group_by { |s| s[:group_name] }
           else
             # Before tournament begins: build standings skeleton from seeded WC teams
-            wc_teams = Team.where.not(group: [nil, ""]).order(:group, :name)
+            wc_teams = Team.where.not(group: [ nil, "" ]).order(:group, :name)
             wc_teams.group_by(&:group).transform_values.with_index do |teams, _|
               teams.each_with_index.map do |t, i|
                 {

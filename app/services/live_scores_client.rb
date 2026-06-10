@@ -36,7 +36,7 @@ class LiveScoresClient
     "WO"   => "finished",
     "PST"  => "postponed",
     "CANC" => "postponed",
-    "ABD"  => "postponed",
+    "ABD"  => "postponed"
   }.freeze
 
   # API-Football v3 league IDs we care about (men's senior only)
@@ -69,7 +69,7 @@ class LiveScoresClient
     777,  # FIFA World Cup - Qualification CONCACAF
     780,  # FIFA World Cup - Qualification CONMEBOL
     29,   # AFC Asian Cup
-    4,    # Euro Championship
+    4    # Euro Championship
   ]).freeze
 
   # Regex that matches youth (U17/U20/U21/U23) and women's competitions by name.
@@ -129,7 +129,7 @@ class LiveScoresClient
         fixture: Thread.new { get("fixtures",            id:      fixture_id) },
         events:  Thread.new { get("fixtures/events",     fixture: fixture_id) },
         lineups: Thread.new { get("fixtures/lineups",    fixture: fixture_id) },
-        stats:   Thread.new { get("fixtures/statistics", fixture: fixture_id) },
+        stats:   Thread.new { get("fixtures/statistics", fixture: fixture_id) }
       }
       threads.each do |k, t|
         results[k] = t.join(10)&.value || {}
@@ -155,7 +155,7 @@ class LiveScoresClient
         events:   normalize_events(results[:events].dig("response")  || []),
         stats:    normalize_stats(results[:stats].dig("response")    || []),
         lineups:  normalize_lineups(results[:lineups].dig("response") || []),
-        h2h:      normalize_h2h(h2h_raw),
+        h2h:      normalize_h2h(h2h_raw)
       }
     end
   rescue => e
@@ -166,7 +166,7 @@ class LiveScoresClient
   # Tries today ±1 day date-list caches; builds a minimal fixture from list data.
   # Used as last-resort fallback when full detail API returns nothing.
   def match_from_list(match_id)
-    [Date.today - 1, Date.today, Date.today + 1].each do |d|
+    [ Date.today - 1, Date.today, Date.today + 1 ].each do |d|
       found = matches_for_date(d).find { |m| m[:external_id].to_s == match_id.to_s }
       return build_detail_from_list(found) if found
     end
@@ -236,16 +236,16 @@ class LiveScoresClient
       {
         winner: {
           id:      predictions.dig("winner", "id"),
-          name:    predictions.dig("winner", "name"),
+          name:    predictions.dig("winner", "name")
         },
         percent: {
           home: predictions.dig("percent", "home"),
           draw: predictions.dig("percent", "draw"),
-          away: predictions.dig("percent", "away"),
+          away: predictions.dig("percent", "away")
         },
         goals: {
           home: predictions.dig("goals", "home"),
-          away: predictions.dig("goals", "away"),
+          away: predictions.dig("goals", "away")
         },
         advice:     predictions["advice"],
         under_over: predictions["under_over"],
@@ -255,10 +255,10 @@ class LiveScoresClient
           def:   comparison["def"],
           h2h:   comparison["h2h"],
           goals: comparison["goals"],
-          total: comparison["total"],
+          total: comparison["total"]
         },
         home_form: teams.dig("home", "last_5", "form"),
-        away_form: teams.dig("away", "last_5", "form"),
+        away_form: teams.dig("away", "last_5", "form")
       }
     end
   rescue => e
@@ -277,7 +277,7 @@ class LiveScoresClient
       bookmakers = Array(r["bookmakers"])
       next({}) if bookmakers.empty?
 
-      bk = bookmakers.find { |b| ["Bet365", "Bwin", "10Bet"].include?(b["name"]) } || bookmakers.first
+      bk = bookmakers.find { |b| [ "Bet365", "Bwin", "10Bet" ].include?(b["name"]) } || bookmakers.first
       next({}) unless bk
 
       result = { bookmaker: bk["name"], bets: {} }
@@ -303,7 +303,7 @@ class LiveScoresClient
         updated: r["update"],
         bets:    Array(r["odds"]).map { |o|
           { name: o["name"], values: Array(o["values"]).map { |v| { value: v["value"], odd: v["odd"] } } }
-        },
+        }
       }
     end
   rescue => e
@@ -324,7 +324,7 @@ class LiveScoresClient
           date: t["date"],
           type: t["type"],
           from: { id: t.dig("teams", "out", "id"), name: t.dig("teams", "out", "name"), logo: t.dig("teams", "out", "logo") },
-          to:   { id: t.dig("teams", "in",  "id"), name: t.dig("teams", "in",  "name"), logo: t.dig("teams", "in",  "logo") },
+          to:   { id: t.dig("teams", "in",  "id"), name: t.dig("teams", "in",  "name"), logo: t.dig("teams", "in",  "logo") }
         }
       end.reverse
     end
@@ -405,14 +405,14 @@ class LiveScoresClient
         name:      f.dig("teams", "home", "name"),
         logo:      f.dig("teams", "home", "logo"),
         score:     f.dig("goals", "home"),
-        red_cards: nil,
+        red_cards: nil
       },
       away: {
         name:      f.dig("teams", "away", "name"),
         logo:      f.dig("teams", "away", "logo"),
         score:     f.dig("goals", "away"),
-        red_cards: nil,
-      },
+        red_cards: nil
+      }
     }
   end
 
@@ -425,38 +425,38 @@ class LiveScoresClient
         "status" => {
           "short"   => fx.dig("fixture", "status", "short"),
           "long"    => fx.dig("fixture", "status", "long"),
-          "elapsed" => fx.dig("fixture", "status", "elapsed"),
+          "elapsed" => fx.dig("fixture", "status", "elapsed")
         },
         "venue" => {
           "name" => fx.dig("fixture", "venue", "name"),
-          "city" => fx.dig("fixture", "venue", "city"),
-        },
+          "city" => fx.dig("fixture", "venue", "city")
+        }
       },
       "league" => {
         "id"      => fx.dig("league", "id"),
         "name"    => fx.dig("league", "name"),
         "logo"    => fx.dig("league", "logo"),
         "country" => fx.dig("league", "country"),
-        "round"   => fx.dig("league", "round"),
+        "round"   => fx.dig("league", "round")
       },
       "teams" => {
         "home" => {
           "id"     => fx.dig("teams", "home", "id"),
           "name"   => fx.dig("teams", "home", "name"),
           "logo"   => fx.dig("teams", "home", "logo"),
-          "winner" => fx.dig("teams", "home", "winner"),
+          "winner" => fx.dig("teams", "home", "winner")
         },
         "away" => {
           "id"     => fx.dig("teams", "away", "id"),
           "name"   => fx.dig("teams", "away", "name"),
           "logo"   => fx.dig("teams", "away", "logo"),
-          "winner" => fx.dig("teams", "away", "winner"),
-        },
+          "winner" => fx.dig("teams", "away", "winner")
+        }
       },
       "goals" => {
         "home" => fx.dig("goals", "home"),
-        "away" => fx.dig("goals", "away"),
-      },
+        "away" => fx.dig("goals", "away")
+      }
     }
   end
 
@@ -470,7 +470,7 @@ class LiveScoresClient
         assist:   e.dig("assist", "name"),
         type:     e["type"].to_s,
         detail:   e["detail"] || e["type"].to_s,
-        comments: e["comments"],
+        comments: e["comments"]
       }
     end
   end
@@ -479,7 +479,7 @@ class LiveScoresClient
     raw.map do |td|
       {
         team:  { name: td.dig("team", "name"), logo: td.dig("team", "logo") },
-        stats: (td["statistics"] || []).map { |s| { type: s["type"], value: s["value"] } },
+        stats: (td["statistics"] || []).map { |s| { type: s["type"], value: s["value"] } }
       }
     end
   end
@@ -497,7 +497,7 @@ class LiveScoresClient
           pl = p["player"] || {}
           { name: pl["name"], number: pl["number"], pos: pl["pos"] }
         },
-        coach:     t.dig("coach", "name"),
+        coach:     t.dig("coach", "name")
       }
     end
   end
@@ -510,14 +510,14 @@ class LiveScoresClient
         home: {
           name:  fx.dig("teams", "home", "name"),
           logo:  fx.dig("teams", "home", "logo"),
-          score: fx.dig("goals", "home") || fx.dig("score", "fulltime", "home"),
+          score: fx.dig("goals", "home") || fx.dig("score", "fulltime", "home")
         },
         away: {
           name:  fx.dig("teams", "away", "name"),
           logo:  fx.dig("teams", "away", "logo"),
-          score: fx.dig("goals", "away") || fx.dig("score", "fulltime", "away"),
+          score: fx.dig("goals", "away") || fx.dig("score", "fulltime", "away")
         },
-        competition: { name: fx.dig("league", "name") },
+        competition: { name: fx.dig("league", "name") }
       }
     end
     { summary: nil, matches: matches }
@@ -527,7 +527,7 @@ class LiveScoresClient
     status_long = {
       "NS" => "Not Started", "1H" => "First Half", "HT" => "Half Time",
       "2H" => "Second Half", "ET" => "Extra Time",  "P"  => "Penalties",
-      "FT" => "Full Time",  "AET" => "After Extra Time", "PEN" => "After Penalties",
+      "FT" => "Full Time",  "AET" => "After Extra Time", "PEN" => "After Penalties"
     }
     short = m[:status_short] || (m[:status] == "finished" ? "FT" : m[:status] == "live" ? "1H" : "NS")
 
@@ -536,20 +536,20 @@ class LiveScoresClient
         "id"     => m[:external_id],
         "date"   => m[:kickoff_at],
         "status" => { "short" => short, "long" => status_long[short] || short, "elapsed" => m[:minute] },
-        "venue"  => { "name" => m[:venue], "city" => nil },
+        "venue"  => { "name" => m[:venue], "city" => nil }
       },
       "league" => {
         "id"      => m[:league_id],
         "name"    => m[:league_name],
         "logo"    => m[:league_logo],
         "country" => m[:league_country],
-        "round"   => nil,
+        "round"   => nil
       },
       "teams" => {
         "home" => { "id" => nil, "name" => m.dig(:home, :name), "logo" => m.dig(:home, :logo), "winner" => nil },
-        "away" => { "id" => nil, "name" => m.dig(:away, :name), "logo" => m.dig(:away, :logo), "winner" => nil },
+        "away" => { "id" => nil, "name" => m.dig(:away, :name), "logo" => m.dig(:away, :logo), "winner" => nil }
       },
-      "goals" => { "home" => m.dig(:home, :score), "away" => m.dig(:away, :score) },
+      "goals" => { "home" => m.dig(:home, :score), "away" => m.dig(:away, :score) }
     }
     { fixture: fixture, events: [], stats: [], lineups: [] }
   end
@@ -561,5 +561,4 @@ class LiveScoresClient
     Rails.logger.error("[LiveScoresClient] GET #{path} #{params}: #{e.message}")
     {}
   end
-
 end

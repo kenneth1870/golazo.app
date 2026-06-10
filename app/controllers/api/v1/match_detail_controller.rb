@@ -92,7 +92,7 @@ module Api
           h:      data.dig(:fixture, :goals, :home),
           a:      data.dig(:fixture, :goals, :away),
           s:      status,
-          events: data[:events]&.length.to_i,
+          events: data[:events]&.length.to_i
         }
 
         if prev.nil? || prev[:h] != current[:h] || prev[:a] != current[:a] || prev[:events] != current[:events]
@@ -101,7 +101,7 @@ module Api
             fixture: data[:fixture],
             events:  data[:events],
             stats:   data[:stats],
-            lineups: data[:lineups],
+            lineups: data[:lineups]
           })
         end
 
@@ -117,7 +117,7 @@ module Api
         status_map = {
           "finished"  => { "short" => "FT",  "long" => "Match Finished",  "elapsed" => 90 },
           "live"      => { "short" => "1H",  "long" => "First Half",      "elapsed" => nil },
-          "scheduled" => { "short" => "NS",  "long" => "Not Started",     "elapsed" => nil },
+          "scheduled" => { "short" => "NS",  "long" => "Not Started",     "elapsed" => nil }
         }
         status = status_map.fetch(match.status, { "short" => "NS", "long" => match.status&.humanize, "elapsed" => nil })
 
@@ -125,8 +125,8 @@ module Api
         away_wins = match.status == "finished" && match.away_score.to_i > match.home_score.to_i
 
         comp = match.competition
-        round_label = [match.group_stage.presence && "Group Stage - Group #{match.group_stage}",
-                       match.round.presence].compact.first
+        round_label = [ match.group_stage.presence && "Group Stage - Group #{match.group_stage}",
+                       match.round.presence ].compact.first
 
         fixture = {
           "fixture" => {
@@ -134,20 +134,20 @@ module Api
             "db_id"  => match.id,
             "date"   => match.kickoff_at&.iso8601,
             "status" => status,
-            "venue"  => { "name" => match.venue, "city" => nil },
+            "venue"  => { "name" => match.venue, "city" => nil }
           },
           "league" => {
             "id"      => comp&.external_id,
             "name"    => comp&.name || "World Cup 2026",
             "logo"    => comp&.logo,
             "country" => comp&.country,
-            "round"   => round_label,
+            "round"   => round_label
           },
           "teams" => {
             "home" => { "id" => home.external_id || home.id, "name" => home.name, "logo" => home.flag_url, "winner" => home_wins },
-            "away" => { "id" => away.external_id || away.id, "name" => away.name, "logo" => away.flag_url, "winner" => away_wins },
+            "away" => { "id" => away.external_id || away.id, "name" => away.name, "logo" => away.flag_url, "winner" => away_wins }
           },
-          "goals" => { "home" => match.home_score, "away" => match.away_score },
+          "goals" => { "home" => match.home_score, "away" => match.away_score }
         }
 
         # Build events from goals
@@ -162,7 +162,7 @@ module Api
             "assist" => nil,
             "type"   => "Goal",
             "detail" => goal_type_map.fetch(g.goal_type.to_s, "Normal Goal"),
-            "comments" => nil,
+            "comments" => nil
           }
         end
 
@@ -179,8 +179,8 @@ module Api
               { "type" => "Fouls",             "value" => s.fouls },
               { "type" => "Yellow Cards",      "value" => s.yellow_cards },
               { "type" => "Red Cards",         "value" => s.red_cards },
-              { "type" => "Offsides",          "value" => s.offsides },
-            ].reject { |stat| stat["value"].nil? },
+              { "type" => "Offsides",          "value" => s.offsides }
+            ].reject { |stat| stat["value"].nil? }
           }
         end
 

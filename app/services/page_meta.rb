@@ -31,7 +31,7 @@ class PageMeta
     [ "/news",             "Football News",     "The latest FIFA World Cup 2026 and international football news." ],
     [ "/matches",          "Match Center",      "World Cup 2026 match center — lineups, live stats, events and head-to-head." ],
     [ "/teams",            "Team Profile",      "FIFA World Cup 2026 team profile — squad, fixtures and results." ],
-    [ "/players",          "Player Profile",    "FIFA World Cup 2026 player stats — goals, assists, minutes and more." ],
+    [ "/players",          "Player Profile",    "FIFA World Cup 2026 player stats — goals, assists, minutes and more." ]
   ].freeze
 
   def self.for(path)
@@ -102,7 +102,7 @@ class PageMeta
       "location"  => match.venue.present? ? { "@type" => "Place", "name" => match.venue } : nil,
       "homeTeam"  => { "@type" => "SportsTeam", "name" => home },
       "awayTeam"  => { "@type" => "SportsTeam", "name" => away },
-      "organizer" => { "@type" => "Organization", "name" => "FIFA", "url" => "https://www.fifa.com" },
+      "organizer" => { "@type" => "Organization", "name" => "FIFA", "url" => "https://www.fifa.com" }
     }.compact
     json_ld["location"] = nil if json_ld["location"].nil?
     json_ld.compact!
@@ -132,7 +132,7 @@ class PageMeta
       "name"     => team.name,
       "url"      => "#{BASE_URL}/teams/#{id}",
       "sport"    => "Football",
-      "logo"     => team.flag_url.presence,
+      "logo"     => team.flag_url.presence
     }.compact
 
     Meta.new(

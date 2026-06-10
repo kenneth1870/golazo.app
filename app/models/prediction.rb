@@ -22,7 +22,7 @@ class Prediction < ApplicationRecord
         raise ActiveRecord::Rollback
       end
       locked.increment!("#{choice}_votes")
-      locked.update_column(:voter_tokens, (locked.tokens + [token]).last(1_000).to_json) if token.present?
+      locked.update_column(:voter_tokens, (locked.tokens + [ token ]).last(1_000).to_json) if token.present?
       result = locked.as_json_result
     end
     result
@@ -38,7 +38,7 @@ class Prediction < ApplicationRecord
       total:       total,
       home_pct:    total > 0 ? (home_votes * 100.0 / total).round : 0,
       draw_pct:    total > 0 ? (draw_votes * 100.0 / total).round : 0,
-      away_pct:    total > 0 ? (away_votes * 100.0 / total).round : 0,
+      away_pct:    total > 0 ? (away_votes * 100.0 / total).round : 0
     }
   end
 end

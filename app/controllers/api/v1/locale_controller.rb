@@ -28,7 +28,7 @@ module Api
         # Dutch
         "NL" => "nl",
         # Italian
-        "IT" => "it",
+        "IT" => "it"
         # Default → English
       }.freeze
 

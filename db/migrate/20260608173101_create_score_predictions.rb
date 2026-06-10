@@ -12,7 +12,7 @@ class CreateScorePredictions < ActiveRecord::Migration[8.1]
 
       t.timestamps
     end
-    add_index :score_predictions, [:device_id, :match_external_id], unique: true
+    add_index :score_predictions, [ :device_id, :match_external_id ], unique: true
     add_index :score_predictions, :device_id
     add_index :score_predictions, :points_earned
   end
