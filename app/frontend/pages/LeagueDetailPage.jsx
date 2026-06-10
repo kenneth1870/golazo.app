@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import MatchRow from "../components/MatchRow"
 import { useFavorites } from "../hooks/useFavorites"
+import { usePageMeta } from "../hooks/usePageMeta"
 
 function StandingsTable({ standings, t }) {
   if (!standings || standings.length === 0) return null
@@ -99,6 +100,13 @@ export default function LeagueDetailPage() {
       setStandings(Array.isArray(standData) ? standData : [])
     }).finally(() => setLoading(false))
   }, [code])
+
+  usePageMeta(
+    competition ? `${competition.name} Scores & Standings` : null,
+    competition
+      ? `Live scores, results, fixtures and standings for ${competition.name}${competition.country ? ` — ${competition.country}` : ""}.`
+      : null
+  )
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)

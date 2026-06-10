@@ -9,6 +9,7 @@ class SitemapController < ApplicationController
     # Static pages
     @static_urls = %w[
       /
+      /world-cup-2026
       /scores/today
       /scores/live
       /scores/results
@@ -19,11 +20,15 @@ class SitemapController < ApplicationController
       /mundial/schedule
       /mundial/venues
       /mundial/scorers
+      /groups
       /leaderboard
       /predictor
       /news
       /leagues
     ]
+
+    # League detail pages — Competition model
+    @league_codes = Competition.where.not(code: [ nil, "" ]).pluck(:code)
 
     # Dynamic match pages — only finished or upcoming within 30 days
     @matches = Match.includes(:home_team, :away_team)
@@ -34,6 +39,12 @@ class SitemapController < ApplicationController
 
     # All teams
     @teams = Team.all.order(:name)
+
+    # Recent news articles — IDs are SHA1 digests of the article link,
+    # generated at parse time by NewsService. Re-use the feed cache.
+    @news_articles = Rails.cache.fetch("sitemap_news_v1", expires_in: 1.hour) do
+      NewsService.new.latest(limit: 200) rescue []
+    end
 
     respond_to do |format|
       format.xml { render layout: false }

@@ -331,7 +331,7 @@ const PULL_THRESHOLD = 64
 
 export default function TodayPage() {
   const { t } = useTranslation()
-  usePageMeta(t("time.today"), "Today's live football scores, results and fixtures — all competitions.")
+  usePageMeta(t("time.today"), "Today's live scores and fixtures for FIFA World Cup 2026 and all football competitions — real-time goals and updates.")
   const [selected, setSelected] = useState(startOfDay)
   const [matches, setMatches]   = useState([])
   const [loading, setLoading]   = useState(true)

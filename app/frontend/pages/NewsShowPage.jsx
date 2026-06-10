@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { usePageMeta } from "../hooks/usePageMeta"
+import { useStructuredData } from "../hooks/useStructuredData"
 
 const SOURCE_COLORS = {
   "BBC Sport": "#b80000",
@@ -53,6 +55,27 @@ export default function NewsShowPage() {
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
   }, [id])
+
+  // Hooks must be unconditional — pass null when article not loaded yet
+  const heroImageEarly = content?.hero_image || article?.image
+  usePageMeta(
+    article?.title || null,
+    article?.description || (article?.title ? `${article.title} — FIFA World Cup 2026 news on Golazo.` : null),
+    { type: "article", image: heroImageEarly || undefined }
+  )
+  useStructuredData(article ? {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "headline": article.title,
+    "description": article.description || article.title,
+    "image": heroImageEarly ? [heroImageEarly] : undefined,
+    "datePublished": article.published_at,
+    "publisher": {
+      "@type": "Organization",
+      "name": article.source || "Golazo",
+    },
+    "url": typeof window !== "undefined" ? window.location.href : undefined,
+  } : null)
 
   function share() {
     navigator.clipboard?.writeText(window.location.href).then(() => {

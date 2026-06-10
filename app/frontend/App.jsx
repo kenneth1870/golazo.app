@@ -93,6 +93,17 @@ export default function App() {
               <Route path="/news"          element={<NewsPage />} />
               <Route path="/news/:id"      element={<NewsShowPage />} />
 
+              {/* /world-cup-2026/* — SEO-friendly aliases → canonical /mundial/* routes */}
+              <Route path="/world-cup-2026"           element={<Navigate to="/mundial/teams"    replace />} />
+              <Route path="/world-cup-2026/teams"     element={<Navigate to="/mundial/teams"    replace />} />
+              <Route path="/world-cup-2026/schedule"  element={<Navigate to="/mundial/schedule" replace />} />
+              <Route path="/world-cup-2026/venues"    element={<Navigate to="/mundial/venues"   replace />} />
+              <Route path="/world-cup-2026/scorers"   element={<Navigate to="/mundial/scorers"  replace />} />
+              <Route path="/world-cup-2026/groups"    element={<Navigate to="/scores/groups"    replace />} />
+              <Route path="/world-cup-2026/bracket"   element={<Navigate to="/scores/knockout"  replace />} />
+              <Route path="/world-cup-2026/results"   element={<Navigate to="/scores/results"   replace />} />
+              <Route path="/world-cup-2026/fixtures"  element={<Navigate to="/scores/fixtures"  replace />} />
+
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>

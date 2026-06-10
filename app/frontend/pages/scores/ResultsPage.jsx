@@ -111,7 +111,7 @@ function useResultLabel(date, t) {
 
 export default function ResultsPage() {
   const { t }    = useTranslation()
-  usePageMeta(t("nav.results"), "Football match results — scores and goals for all completed matches.")
+  usePageMeta(t("nav.results"), "FIFA World Cup 2026 results and all football match scores — completed fixtures with goals and final scores.")
   const [date, setDate]       = useState(() => addDays(new Date(), -1))
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)

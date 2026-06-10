@@ -5,6 +5,7 @@ import { useMatches } from "../hooks/useMatches"
 import { useFavoriteTeam } from "../hooks/useFavoriteTeam"
 import { useLiveCount } from "../contexts/LiveContext"
 import { usePageMeta } from "../hooks/usePageMeta"
+import { useStructuredData } from "../hooks/useStructuredData"
 import Hero from "../components/Hero"
 import MatchCard from "../components/MatchCard"
 import FavoriteTeamPicker from "../components/FavoriteTeamPicker"
@@ -78,7 +79,29 @@ function FavoriteTeamCard({ fav, todayMatches, upcomingMatches, navigate, t }) {
 
 export default function HomePage() {
   const { t } = useTranslation()
-  usePageMeta("FIFA World Cup 2026", "Live scores, fixtures, standings and stats for FIFA World Cup 2026 — USA, Canada & Mexico.")
+  usePageMeta(
+    "FIFA World Cup 2026 Live Scores",
+    "Live scores, real-time results, fixtures and group standings for FIFA World Cup 2026 — USA, Canada & Mexico. Follow every match free."
+  )
+  useStructuredData({
+    "@context": "https://schema.org",
+    "@type": "SportsEvent",
+    "name": "FIFA World Cup 2026",
+    "alternateName": "Mundial 2026",
+    "description": "The 2026 FIFA World Cup hosted across the United States, Canada and Mexico. Live scores, fixtures, standings and stats.",
+    "startDate": "2026-06-11",
+    "endDate": "2026-07-19",
+    "location": {
+      "@type": "Place",
+      "name": "United States, Canada and Mexico"
+    },
+    "organizer": {
+      "@type": "Organization",
+      "name": "FIFA",
+      "url": "https://www.fifa.com"
+    },
+    "url": "https://golazo.app/world-cup-2026"
+  })
   const navigate = useNavigate()
   const { matches: liveWC }         = useMatches("live",     { competition: "WC" })
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: "WC" })
@@ -92,6 +115,27 @@ export default function HomePage() {
     <>
       {/* Hero — exact template structure */}
       <Hero nextMatch={nextMatch} />
+
+      {/* Trust bar */}
+      <div style={{
+        background: "var(--surface2)", borderBottom: "1px solid var(--border)",
+        padding: "8px 0", overflow: "hidden"
+      }}>
+        <div className="container d-flex align-items-center justify-content-center" style={{ gap: "20px", flexWrap: "wrap" }}>
+          {[
+            { icon: "⚽", label: t("trust.worldCup2026", "World Cup 2026") },
+            { icon: "🔴", label: t("trust.liveScores",  "Live Scores")     },
+            { icon: "📊", label: t("trust.groupStandings", "Group Standings") },
+            { icon: "🏆", label: t("trust.knockoutBracket", "Knockout Bracket") },
+            { icon: "🆓", label: t("trust.free",          "Free · No sign-up") },
+          ].map(({ icon, label }) => (
+            <span key={label} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "var(--muted)", whiteSpace: "nowrap" }}>
+              <span style={{ fontSize: "0.85rem" }}>{icon}</span>
+              {label}
+            </span>
+          ))}
+        </div>
+      </div>
 
       {/* Live now bar */}
       {liveCount > 0 && (

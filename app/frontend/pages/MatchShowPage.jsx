@@ -5,6 +5,7 @@ import { translateLeague } from "../i18n/leagueNames"
 import { translateTeam } from "../i18n/teamNames"
 import { useExternalMatchChannel } from "../hooks/useExternalMatchChannel"
 import { usePageMeta } from "../hooks/usePageMeta"
+import { useStructuredData } from "../hooks/useStructuredData"
 import { useLiveMinute, useGoalNotifications } from "./match/useMatchLive"
 import PredictionPanel from "./match/PredictionPanel"
 import ScorePredictionPanel from "./match/ScorePredictionPanel"
@@ -1534,9 +1535,28 @@ export default function MatchShowPage() {
   const nextMatchNav = matchIdx < matchList.length - 1 ? matchList[matchIdx + 1] : null
   usePageMeta(
     homeName && awayName ? `${homeName} vs ${awayName}` : "Match",
-    homeName && awayName ? `Live score and stats: ${homeName} vs ${awayName} — FIFA World Cup 2026` : undefined,
+    homeName && awayName
+      ? `${homeName} vs ${awayName} live score, match stats, lineups and events — FIFA World Cup 2026.`
+      : undefined,
     { type: "article", image: homeLogo || undefined }
   )
+  const homeScore = data?.fixture?.goals?.home
+  const awayScore = data?.fixture?.goals?.away
+  useStructuredData(homeName && awayName ? {
+    "@context": "https://schema.org",
+    "@type": "SportsEvent",
+    "name": `${homeName} vs ${awayName}`,
+    "description": `FIFA World Cup 2026 match: ${homeName} vs ${awayName}`,
+    "startDate": kickoffAt,
+    "sport": "Soccer",
+    "homeTeam": { "@type": "SportsTeam", "name": homeName },
+    "awayTeam": { "@type": "SportsTeam", "name": awayName },
+    ...(homeScore != null && awayScore != null ? {
+      "homeScore": homeScore,
+      "awayScore": awayScore,
+    } : {}),
+    "url": typeof window !== "undefined" ? window.location.href : undefined,
+  } : null)
   const homeTeamId  = data?.fixture?.teams?.home?.id
   const awayTeamId  = data?.fixture?.teams?.away?.id
 

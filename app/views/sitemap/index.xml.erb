@@ -31,4 +31,33 @@
   </url>
   <% end %>
 
+  <%# League detail pages %>
+  <% @league_codes.each do |code| %>
+  <url>
+    <loc><%= @base %>/leagues/<%= CGI.escape(code) %></loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <% end %>
+
+  <%# News article pages %>
+  <% @news_articles.each do |article| %>
+  <url>
+    <loc><%= @base %>/news/<%= article[:id] %></loc>
+    <lastmod><%= article[:published_at]&.strftime("%Y-%m-%d") %></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <% if article[:title].present? %>
+    <news:news>
+      <news:publication>
+        <news:name>Golazo</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date><%= article[:published_at]&.iso8601 %></news:publication_date>
+      <news:title><%= CGI.escapeHTML(article[:title].to_s) %></news:title>
+    </news:news>
+    <% end %>
+  </url>
+  <% end %>
+
 </urlset>

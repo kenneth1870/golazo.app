@@ -134,7 +134,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick }) {
 
 export default function FixturesPage() {
   const { t }    = useTranslation()
-  usePageMeta(t("nav.fixtures"), "Upcoming football fixtures — kickoff times and schedules for all competitions.")
+  usePageMeta(t("nav.fixtures"), "Upcoming FIFA World Cup 2026 fixtures and all football match schedules — kickoff times, venues and dates.")
   const [selected, setSelected] = useState(() => addDays(new Date(), 1))
   const [matches, setMatches]   = useState([])
   const [loading, setLoading]   = useState(true)
