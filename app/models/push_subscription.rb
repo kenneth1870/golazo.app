@@ -15,8 +15,10 @@ class PushSubscription < ApplicationRecord
 
   def self.for_teams(names)
     return none if names.blank?
-    # Match subscriptions that follow at least one of the given team names
-    all.select { |s| (s.team_names & names.map(&:to_s)).any? }
+    # Use PostgreSQL's jsonb ?| operator to filter in-database — avoids loading
+    # every row into Ruby memory.  ??| is the Rails-escaped form of ?| so the
+    # ?  character is not mistaken for a bind-parameter placeholder.
+    where("team_ids::jsonb ??| array[:names]", names: names.map(&:to_s))
   end
 
   def web_push_message(title:, body:, url: "/", icon: "/images/apple-touch-icon.png?v=2")

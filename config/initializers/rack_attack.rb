@@ -54,6 +54,14 @@ class Rack::Attack
     req.ip if api_request?(req) && !req.get? && !req.head?
   end
 
+  # AI summary endpoint — each cache miss triggers an Anthropic API call.
+  # The ?lang= parameter creates separate cache keys, so an attacker can bypass
+  # the general expensive-endpoint limit by cycling through languages.
+  # 10 requests/hour per IP = 1 full set of 8 languages + 2 spare, per hour.
+  throttle("api/ai_summary/ip", limit: 10, period: 1.hour) do |req|
+    req.ip if req.path.include?("/ai_summary")
+  end
+
   ### Safelist ###
   # Never throttle local development traffic.
   safelist("allow/localhost") do |req|

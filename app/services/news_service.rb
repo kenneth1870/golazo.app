@@ -38,6 +38,24 @@ class NewsService
 
   USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
 
+  # Only fetch article content from known publisher domains.
+  # Prevents a compromised RSS feed from making the server issue requests to
+  # internal metadata endpoints or arbitrary hosts.
+  ALLOWED_CONTENT_DOMAINS = %w[
+    www.bbc.com
+    www.bbc.co.uk
+    feeds.bbci.co.uk
+    www.espn.com
+    espndeportes.espn.com
+    www.goal.com
+    e00-marca.uecdn.es
+    www.marca.com
+    www.theguardian.com
+    www.skysports.com
+    www.uefa.com
+    www.fifa.com
+  ].freeze
+
   def latest(limit: 20, lang: "en")
     feeds = FEEDS[lang] || FEEDS["en"]
     Rails.cache.fetch("news_feed_v3_#{lang}", expires_in: 30.minutes) do
@@ -53,6 +71,21 @@ class NewsService
   # Returns { paragraphs: [...], hero_image: url, hero_alt: str }
   def fetch_content(url)
     return nil if url.blank?
+
+    begin
+      host = URI.parse(url).host.to_s.downcase.sub(/\Awww\./, "")
+      # Normalise: compare bare domain and www. variant against the allowlist
+      allowed = ALLOWED_CONTENT_DOMAINS.any? do |d|
+        bare = d.sub(/\Awww\./, "")
+        host == bare || host == "www.#{bare}"
+      end
+      unless allowed
+        Rails.logger.warn("[NewsService] Blocked fetch to disallowed host: #{host} (#{url})")
+        return nil
+      end
+    rescue URI::InvalidURIError
+      return nil
+    end
 
     Rails.cache.fetch("news_content_#{Digest::SHA1.hexdigest(url)}", expires_in: 60.minutes) do
       response = Faraday.get(url) do |req|

@@ -6,7 +6,8 @@ class Match < ApplicationRecord
   has_many :goals, dependent: :destroy
   has_many :match_stats, dependent: :destroy
 
-  validates :status, inclusion: { in: %w[scheduled live finished] }
+  # "postponed" covers PST / CANC / ABD codes from the API (see LiveScoresClient::STATUS_MAP).
+  validates :status, inclusion: { in: %w[scheduled live finished postponed] }
   validates :home_score, :away_score, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
 
   scope :live,     -> { where(status: "live") }

@@ -13,7 +13,14 @@ module Api
           return render json: { error: "already_voted" }, status: :unprocessable_entity
         end
 
-        pred   = Prediction.find_or_create_by!(match_external_id: params[:match_id])
+        # find_or_create_by! is not atomic — two concurrent first-votes on the
+        # same match both see no row, both INSERT, one gets RecordNotUnique.
+        # Rescue and fall back to a plain find so the vote still goes through.
+        pred = begin
+          Prediction.find_or_create_by!(match_external_id: params[:match_id])
+        rescue ActiveRecord::RecordNotUnique
+          Prediction.find_by!(match_external_id: params[:match_id])
+        end
         token  = params[:token].to_s.first(64)
         result = pred.vote!(params[:choice], token)
 
