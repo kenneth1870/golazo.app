@@ -10,12 +10,12 @@ function getLeft(d) {
 const WC_OPENING = "2026-06-11T19:00:00Z"
 
 const BG_IMAGES = [
-  "/images/bg_1.jpg",
-  "/images/bg_2.jpg",
-  "/images/bg_3.jpg",
-  "/images/img_1.jpg",
-  "/images/img_2.jpg",
-  "/images/img_3.jpg",
+  "/images/hero_1.jpg",   // stadium aerial at night
+  "/images/hero_2.jpg",   // players on pitch wide angle
+  "/images/hero_3.jpg",   // packed stadium crowd
+  "/images/hero_4.jpg",   // football on green grass
+  "/images/hero_5.jpg",   // stadium floodlights at dusk
+  "/images/hero_6.jpg",   // goalkeeper action shot
 ]
 
 function randomBg() {
