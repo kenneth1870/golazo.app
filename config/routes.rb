@@ -50,7 +50,11 @@ Rails.application.routes.draw do
       resources :standings, only: [ :index ]
       resources :matches, only: [ :index, :show, :update ] do
         resources :goals,     only: [ :create ]
-        resources :reactions, only: [ :show, :create ], controller: "match_reactions"
+        # singular resource: GET /matches/:match_id/reactions (no :id needed)
+        resource :reactions, only: [], controller: "match_reactions" do
+          get  "/",  to: "match_reactions#show",  on: :collection
+          post "/",  to: "match_reactions#create", on: :collection
+        end
         resource :stats, only: [] do
           post :upsert, on: :collection
         end

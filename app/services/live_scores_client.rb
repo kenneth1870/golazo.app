@@ -360,20 +360,25 @@ class LiveScoresClient
   # ── Player extras ────────────────────────────────────────────────────────────
 
   def player_transfers(player_id)
-    Rails.cache.fetch("player_transfers_v1_#{player_id}", expires_in: 12.hours) do
-      raw = get("transfers", player: player_id)
-      r   = raw.dig("response", 0)
-      next [] unless r
+    cached = Rails.cache.read("player_transfers_v1_#{player_id}")
+    return cached if cached&.any?
 
-      Array(r["transfers"]).map do |t|
-        {
-          date: t["date"],
-          type: t["type"],
-          from: { id: t.dig("teams", "out", "id"), name: t.dig("teams", "out", "name"), logo: t.dig("teams", "out", "logo") },
-          to:   { id: t.dig("teams", "in",  "id"), name: t.dig("teams", "in",  "name"), logo: t.dig("teams", "in",  "logo") }
-        }
-      end.reverse
-    end
+    raw = get("transfers", player: player_id)
+    r   = raw.dig("response", 0)
+    return [] unless r
+
+    result = Array(r["transfers"]).map do |t|
+      {
+        date: t["date"],
+        type: t["type"],
+        from: { id: t.dig("teams", "out", "id"), name: t.dig("teams", "out", "name"), logo: t.dig("teams", "out", "logo") },
+        to:   { id: t.dig("teams", "in",  "id"), name: t.dig("teams", "in",  "name"), logo: t.dig("teams", "in",  "logo") }
+      }
+    end.reverse
+
+    # Only cache non-empty results — empty could mean rate-limit, not truly no transfers
+    Rails.cache.write("player_transfers_v1_#{player_id}", result, expires_in: 12.hours) if result.any?
+    result
   rescue => e
     Rails.logger.error("[LiveScoresClient] player_transfers(#{player_id}): #{e.message}")
     []
