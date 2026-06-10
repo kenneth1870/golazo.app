@@ -72,44 +72,75 @@ const FEATURES = [
   { icon: "🗞️", label: "News" },
 ]
 
+// Pick a random index that differs from the current one
+function nextBgIdx(current) {
+  if (BG_IMAGES.length <= 1) return 0
+  let idx
+  do { idx = Math.floor(Math.random() * BG_IMAGES.length) } while (idx === current)
+  return idx
+}
+
 export default function Hero({ nextMatch, liveCount = 0 }) {
   const navigate   = useNavigate()
   const { t }      = useTranslation()
   const target     = nextMatch?.kickoff_at || WC_OPENING
-  const [bg, setBg] = useState(() => randomBg())
-  const [fade, setFade] = useState(true)
+
+  // Two layers: "current" visible, "next" hidden. We cross-fade by toggling activeLayer.
+  const [idxA, setIdxA]      = useState(0)
+  const [idxB, setIdxB]      = useState(1)
+  const [activeLayer, setActiveLayer] = useState("a")   // "a" | "b"
+  const currentIdxRef = useRef(0)
 
   useEffect(() => {
     const iv = setInterval(() => {
-      setFade(false)
-      setTimeout(() => {
-        setBg(randomBg())
-        setFade(true)
-      }, 600)
-    }, 8000)
+      const newIdx = nextBgIdx(currentIdxRef.current)
+      currentIdxRef.current = newIdx
+      if (activeLayer === "a") {
+        setIdxB(newIdx)
+        setActiveLayer("b")
+      } else {
+        setIdxA(newIdx)
+        setActiveLayer("a")
+      }
+    }, 7000)
     return () => clearInterval(iv)
-  }, [])
+  }, [activeLayer])
+
   const isOpening  = !nextMatch?.kickoff_at
   const countdownLabel = isOpening
     ? t("hero.opensIn")
     : `${t("hero.nextMatch")}: ${nextMatch.home_team?.name ?? ""} vs ${nextMatch.away_team?.name ?? ""}`
 
+  const bgStyle = {
+    position: "absolute", inset: 0,
+    backgroundSize: "cover", backgroundPosition: "center 30%",
+    transition: "opacity 1.2s ease",
+  }
+  const overlayStyle = {
+    position: "absolute", inset: 0, pointerEvents: "none",
+    background: "linear-gradient(160deg, rgba(6,8,16,.78) 0%, rgba(10,14,24,.65) 40%, rgba(8,12,20,.55) 70%, rgba(6,8,14,.72) 100%)",
+  }
+
   return (
     <div style={{
       position: "relative",
-      backgroundImage: `url('${bg}')`,
-      backgroundSize: "cover",
-      backgroundPosition: "center 30%",
       borderBottom: "1px solid rgba(255,255,255,.06)",
       overflow: "hidden",
-      transition: "opacity .6s ease",
-      opacity: fade ? 1 : 0,
     }}>
-      {/* Dark overlay — keeps text readable over any photo */}
+      {/* Background layer A */}
       <div aria-hidden="true" style={{
-        position: "absolute", inset: 0, pointerEvents: "none",
-        background: "linear-gradient(160deg, rgba(6,8,16,.78) 0%, rgba(10,14,24,.65) 40%, rgba(8,12,20,.55) 70%, rgba(6,8,14,.72) 100%)",
+        ...bgStyle,
+        backgroundImage: `url('${BG_IMAGES[idxA]}')`,
+        opacity: activeLayer === "a" ? 1 : 0,
       }} />
+      {/* Background layer B */}
+      <div aria-hidden="true" style={{
+        ...bgStyle,
+        backgroundImage: `url('${BG_IMAGES[idxB]}')`,
+        opacity: activeLayer === "b" ? 1 : 0,
+      }} />
+      {/* Dark overlay — keeps text readable over any photo */}
+      <div aria-hidden="true" style={overlayStyle} />
       {/* Accent glow + subtle grid */}
       <div aria-hidden="true" style={{
         position: "absolute", inset: 0, pointerEvents: "none",
