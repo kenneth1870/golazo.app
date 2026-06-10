@@ -28,8 +28,14 @@ module Api
         article = NewsService.new.latest(limit: 60, lang: lang).find { |a| a[:id] == params[:id] }
         return render json: { error: "not found" }, status: :not_found unless article
 
-        body = NewsService.new.fetch_content(article[:link])
-        render json: body || { paragraphs: [], hero_image: nil }
+        body = NewsService.new.fetch_content(article[:link]) || {}
+
+        # Merge feed-level data as fallbacks so ESPN articles always have
+        # something to show even when the content API returns no paragraphs.
+        hero_image = body[:hero_image].presence || article[:image]
+        paragraphs = body[:paragraphs].presence || (article[:summary].present? ? [ article[:summary] ] : [])
+
+        render json: { hero_image: hero_image, paragraphs: paragraphs }
       rescue => e
         Rails.logger.error("[NewsController] content: #{e.message}")
         render json: { paragraphs: [], hero_image: nil }

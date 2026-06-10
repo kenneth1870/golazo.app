@@ -1,14 +1,28 @@
 class NewsService
+  # ESPN's public JSON API endpoints (no auth required, full images returned).
+  # Used instead of their RSS feeds because the RSS items carry no images and
+  # their article pages block server-side scraping via AWS WAF.
+  ESPN_API_ENDPOINTS = {
+    "es" => [
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=25&lang=es",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/all/news?limit=25&lang=es",
+    ],
+    "en" => [
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=25",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/all/news?limit=25",
+    ],
+  }.freeze
+
   # Primary feeds per locale. Falls back to English when a locale has no feeds.
+  # ESPN sources are now fetched via the JSON API (see ESPN_API_ENDPOINTS) so
+  # they are intentionally absent from this RSS feed list.
   FEEDS = {
     "en" => [
-      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"       },
-      { url: "https://www.espn.com/espn/rss/soccer/news",                      source: "ESPN FC"         },
-      { url: "https://www.goal.com/feeds/en/news",                             source: "Goal.com"        }
+      { url: "https://feeds.bbci.co.uk/sport/football/rss.xml",               source: "BBC Sport"  },
+      { url: "https://www.goal.com/feeds/en/news",                             source: "Goal.com"   }
     ],
     "es" => [
-      { url: "https://espndeportes.espn.com/espn/rss/deportes/soccer/noticias", source: "ESPN Deportes"  },
-      { url: "https://e00-marca.uecdn.es/rss/futbol.xml",                       source: "Marca"          }
+      { url: "https://e00-marca.uecdn.es/rss/futbol.xml",                      source: "Marca"      }
     ],
     "pt" => [
       { url: "https://www.goal.com/feeds/pt/news",                             source: "Goal.com"        },
@@ -58,9 +72,14 @@ class NewsService
 
   def latest(limit: 20, lang: "en")
     feeds = FEEDS[lang] || FEEDS["en"]
-    Rails.cache.fetch("news_feed_v3_#{lang}", expires_in: 30.minutes) do
-      threads = feeds.map { |feed| Thread.new { fetch_feed(feed[:url], feed[:source]) } }
-      items   = threads.flat_map { |t| t.join(8)&.value || [] }
+    Rails.cache.fetch("news_feed_v4_#{lang}", expires_in: 30.minutes) do
+      # RSS feeds (BBC, Marca, Goal.com, etc.)
+      rss_threads  = feeds.map { |feed| Thread.new { fetch_feed(feed[:url], feed[:source]) } }
+      # ESPN JSON API feeds (images + descriptions, no WAF issues)
+      espn_lang    = %w[en es].include?(lang) ? lang : "en"
+      espn_threads = (ESPN_API_ENDPOINTS[espn_lang] || []).map { |url| Thread.new { fetch_espn_api(url, lang: espn_lang) } }
+
+      items = (rss_threads + espn_threads).flat_map { |t| t.join(8)&.value || [] }
       items.uniq { |a| a[:link] }
            .sort_by { |a| a[:published_at] || Time.at(0) }.reverse
            .first(limit)
@@ -68,7 +87,11 @@ class NewsService
   end
 
   # Fetches and parses the full article body from the original URL.
-  # Returns { paragraphs: [...], hero_image: url, hero_alt: str }
+  # Returns { paragraphs: [...], hero_image: url }
+  #
+  # ESPN article pages are protected by AWS WAF and cannot be scraped
+  # server-side. For those URLs we fall back to the ESPN JSON API which
+  # returns description text + a proper CDN image without any auth requirement.
   def fetch_content(url)
     return nil if url.blank?
 
@@ -85,6 +108,11 @@ class NewsService
       end
     rescue URI::InvalidURIError
       return nil
+    end
+
+    # ESPN articles: use the public JSON API instead of scraping (WAF blocks curl)
+    if url =~ %r{espn(?:deportes)?\.espn\.com/.*/nota/_/id/(\d+)/}
+      return fetch_espn_article_content($1, url)
     end
 
     Rails.cache.fetch("news_content_#{Digest::SHA1.hexdigest(url)}", expires_in: 60.minutes) do
@@ -111,6 +139,112 @@ class NewsService
   end
 
   private
+
+  # ── ESPN JSON API helpers ────────────────────────────────────────────────────
+
+  # Fetches articles from one of ESPN's public site API endpoints.
+  # Normalises each article into the same shape used by the RSS parser so both
+  # sources can be merged transparently in #latest.
+  # Also side-caches each article at "espn_article_<id>" so fetch_content can
+  # retrieve image + description without making a second network call.
+  def fetch_espn_api(url, lang: "en")
+    response = Faraday.get(url) do |req|
+      req.options.timeout      = 6
+      req.options.open_timeout = 4
+      req.headers["User-Agent"] = "GolazoApp/1.0"
+      req.headers["Accept"]     = "application/json"
+    end
+
+    data     = JSON.parse(response.body)
+    articles = data["articles"] || []
+    source   = lang == "es" ? "ESPN Deportes" : "ESPN FC"
+
+    articles.filter_map do |a|
+      link = a.dig("links", "web", "href").to_s
+      # Skip video clips; only keep article URLs (/nota/)
+      next unless link.include?("/nota/")
+
+      img = a.dig("images", 0, "url")
+      # Prefer the full-size header image (1296×729 pattern) over thumbnails
+      header_img = a["images"]&.find { |i| i["type"] == "header" }&.dig("url")
+      img = header_img || img
+
+      pub_str   = a["published"]
+      published = pub_str ? Time.parse(pub_str) : nil
+      espn_id   = link.match(%r{/_/id/(\d+)/})&.[](1)
+      id        = Digest::SHA1.hexdigest(link)[0, 12]
+
+      item = {
+        id:           id,
+        title:        a["headline"].to_s.strip,
+        link:         link,
+        summary:      a["description"].to_s.strip,
+        source:       source,
+        image:        img,
+        published_at: published,
+        date_label:   published ? published.strftime("%-d %b %Y") : nil,
+      }
+
+      # Side-cache so fetch_espn_article_content can look up by ESPN numeric ID
+      if espn_id
+        Rails.cache.write("espn_article_#{espn_id}", item, expires_in: 60.minutes)
+      end
+
+      item
+    rescue => e
+      Rails.logger.warn("[NewsService] ESPN API parse error: #{e.message}")
+      nil
+    end
+  rescue => e
+    Rails.logger.warn("[NewsService] ESPN API #{url} failed: #{e.message}")
+    []
+  end
+
+  # Returns { paragraphs: [...], hero_image: url } for an ESPN article using
+  # its numeric ID. Tries the side-cache populated by fetch_espn_api first,
+  # then falls back to a direct API lookup on the FIFA World Cup endpoint.
+  def fetch_espn_article_content(espn_id, original_url = nil)
+    Rails.cache.fetch("espn_content_#{espn_id}", expires_in: 60.minutes) do
+      # 1. Try the side-cache written during feed fetch
+      cached = Rails.cache.read("espn_article_#{espn_id}")
+      if cached
+        next { hero_image: cached[:image], paragraphs: [ cached[:summary] ].reject(&:blank?) }
+      end
+
+      # 2. Fall back to a direct API call for both locales
+      found = nil
+      [ "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=50&lang=es",
+        "https://site.api.espn.com/apis/site/v2/sports/soccer/all/news?limit=50&lang=es",
+        "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=50",
+      ].each do |api_url|
+        response = Faraday.get(api_url) do |req|
+          req.options.timeout = 6
+          req.headers["User-Agent"] = "GolazoApp/1.0"
+        end
+        articles = JSON.parse(response.body)["articles"] || []
+        found = articles.find { |a| a.dig("links", "web", "href").to_s.include?("/_/id/#{espn_id}/") }
+        break if found
+      rescue
+        next
+      end
+
+      if found
+        img  = found["images"]&.find { |i| i["type"] == "header" }&.dig("url") ||
+               found.dig("images", 0, "url")
+        desc = found["description"].to_s.strip
+        { hero_image: img, paragraphs: [ desc ].reject(&:blank?) }
+      else
+        # Nothing found — return empty so UI can show the summary text
+        Rails.logger.warn("[NewsService] ESPN article #{espn_id} not found via API")
+        { hero_image: nil, paragraphs: [] }
+      end
+    end
+  rescue => e
+    Rails.logger.warn("[NewsService] fetch_espn_article_content #{espn_id}: #{e.message}")
+    nil
+  end
+
+  # ── Generic RSS helpers ──────────────────────────────────────────────────────
 
   def extract_hero_image(doc)
     # BBC CDN full-res image
