@@ -71,16 +71,23 @@ export default function Hero({ nextMatch, liveCount = 0 }) {
   return (
     <div style={{
       position: "relative",
-      background: "linear-gradient(160deg, #08090f 0%, #0e1220 45%, #0a1018 75%, #060810 100%)",
+      backgroundImage: "url('/images/bg_1.jpg')",
+      backgroundSize: "cover",
+      backgroundPosition: "center 30%",
       borderBottom: "1px solid rgba(255,255,255,.06)",
       overflow: "hidden",
     }}>
-      {/* Pitch-line decoration */}
+      {/* Dark overlay — keeps text readable over any photo */}
+      <div aria-hidden="true" style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        background: "linear-gradient(160deg, rgba(6,8,16,.92) 0%, rgba(10,14,24,.85) 40%, rgba(8,12,20,.80) 70%, rgba(6,8,14,.88) 100%)",
+      }} />
+      {/* Accent glow + subtle grid */}
       <div aria-hidden="true" style={{
         position: "absolute", inset: 0, pointerEvents: "none",
         backgroundImage: `
-          radial-gradient(ellipse 70% 60% at 80% 50%, rgba(238,30,70,.06) 0%, transparent 70%),
-          repeating-linear-gradient(90deg, transparent, transparent 99px, rgba(255,255,255,.025) 100px)
+          radial-gradient(ellipse 60% 55% at 85% 50%, rgba(238,30,70,.08) 0%, transparent 65%),
+          repeating-linear-gradient(90deg, transparent, transparent 99px, rgba(255,255,255,.018) 100px)
         `,
       }} />
 
