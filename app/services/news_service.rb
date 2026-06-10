@@ -82,7 +82,7 @@ class NewsService
     # Store the FULL merged pool in cache — don't truncate inside the block.
     # Different callers (index: 60, show/content: 60, sitemap: 200) all read
     # from the same pool and slice with .first(limit) after the cache hit.
-    all_items = Rails.cache.fetch("news_feed_v5_#{lang}", expires_in: 30.minutes) do
+    all_items = Rails.cache.fetch("news_feed_v7_#{lang}", expires_in: 30.minutes) do
       # ESPN JSON API first — items with images win deduplication by link.
       espn_threads = (ESPN_API_ENDPOINTS[espn_lang] || [])
                        .map { |url| Thread.new { fetch_espn_api(url, lang: espn_lang) } }
@@ -93,10 +93,24 @@ class NewsService
       espn_items = espn_threads.flat_map { |t| t.join(8)&.value || [] }
       rss_items  = rss_threads.flat_map  { |t| t.join(8)&.value || [] }
 
-      # Merge: API items first so their image-bearing version survives uniq.
-      (espn_items + rss_items)
+      merged = (espn_items + rss_items)
         .uniq { |a| a[:link] }
         .sort_by { |a| a[:published_at] || Time.at(0) }.reverse
+
+      # Backfill images for ESPN articles still missing one (came from RSS supplement).
+      # Fire parallel mobile-UA requests — same technique that bypasses the WAF.
+      imageless = merged.select { |a| a[:image].blank? && a[:source]&.include?("ESPN") }
+      if imageless.any?
+        backfill_threads = imageless.map do |article|
+          Thread.new do
+            img = fetch_espn_og_image(article[:link])
+            article[:image] = img if img.present?
+          end
+        end
+        backfill_threads.each { |t| t.join(5) }
+      end
+
+      merged
     end
 
     all_items.first(limit)
@@ -177,8 +191,9 @@ class NewsService
 
     articles.filter_map do |a|
       link = a.dig("links", "web", "href").to_s
-      # Skip video clips; only keep article URLs (/nota/)
+      # Skip video clips and non-football content (MMA, basketball, etc.)
       next unless link.include?("/nota/")
+      next unless espn_football_link?(link)
 
       img = a.dig("images", 0, "url")
       # Prefer the full-size header image (1296×729 pattern) over thumbnails
@@ -352,11 +367,63 @@ class NewsService
       req.headers["User-Agent"] = "GolazoApp/1.0"
     end
 
-    doc = Nokogiri::XML(response.body)
-    doc.css("item").map { |item| parse_item(item, source) }.compact
+    doc   = Nokogiri::XML(response.body)
+    items = doc.css("item").map { |item| parse_item(item, source) }.compact
+
+    # ESPN Deportes RSS includes all sports despite the /soccer/ URL.
+    # Keep only football-related articles so basketball/baseball/UFC don't pollute the feed.
+    if source == "ESPN Deportes"
+      items = items.select { |a| espn_football_link?(a[:link]) }
+    end
+
+    items
   rescue => e
     Rails.logger.warn("[NewsService] #{source} failed: #{e.message}")
     []
+  end
+
+  # Returns true for ESPN URLs that are football/soccer content.
+  # Must contain /futbol/ or /mundial/ or /soccer/ — /nota/ alone is not enough
+  # because ESPN uses /nota/ for all sports (MMA, basketball, etc.).
+  def espn_football_link?(link)
+    return false if link.blank?
+    link =~ %r{/(futbol|mundial|soccer)/}i
+  end
+
+  # Fetches the og:image from an ESPN article page using the mobile iOS Safari UA
+  # that bypasses the AWS WAF (which blocks desktop Chrome with HTTP 202).
+  # Returns the image URL string or nil.
+  def fetch_espn_og_image(url)
+    return nil if url.blank?
+    # Check side-cache first (populated by fetch_espn_api)
+    espn_id = url.match(%r{/_/id/(\d+)/})&.[](1)
+    if espn_id
+      cached = Rails.cache.read("espn_article_#{espn_id}")
+      return cached[:image] if cached&.dig(:image).present?
+    end
+
+    # Cache the og:image result itself so we don't re-scrape every 30 min
+    cache_key = "espn_og_#{Digest::SHA1.hexdigest(url)[0, 12]}"
+    Rails.cache.fetch(cache_key, expires_in: 6.hours) do
+      resp = Faraday.get(url) do |req|
+        req.options.timeout      = 6
+        req.options.open_timeout = 4
+        req.headers["User-Agent"]      = MOBILE_USER_AGENT
+        req.headers["Accept"]          = "text/html,application/xhtml+xml"
+        req.headers["Accept-Language"] = "es-MX,es;q=0.9,en;q=0.8"
+        req.headers["Referer"]         = "https://espndeportes.espn.com/"
+      end
+
+      next nil unless resp.status == 200
+
+      doc = Nokogiri::HTML(resp.body)
+      doc.at_css("meta[property='og:image']")&.attr("content")&.then { |u|
+        u =~ /\Ahttps?:\/\// ? u : nil
+      }
+    end
+  rescue => e
+    Rails.logger.warn("[NewsService] fetch_espn_og_image #{url}: #{e.message}")
+    nil
   end
 
   def extract_link(item)
