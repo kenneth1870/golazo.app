@@ -109,12 +109,27 @@ class LiveScoresClient
   end
 
   # All featured matches for a given date (UTC).
-  def matches_for_date(date)
-    Rails.cache.fetch("live_scores_date_v13_#{date.to_date.iso8601}", expires_in: 10.minutes) do
-      data = get("fixtures", date: date.to_date.iso8601, timezone: "UTC")
-      (data.dig("response") || [])
-        .filter_map { |f| normalize_fixture(f) }
-        .select     { |m| featured_league?(m) }
+  # all_leagues: true  → used by TodayPage: returns ALL senior international
+  #   matches (only women's/youth excluded by name). No league-ID whitelist.
+  # all_leagues: false → used by home/live feeds: only FEATURED_LEAGUES.
+  def matches_for_date(date, all_leagues: false)
+    key = all_leagues \
+      ? "live_scores_date_all_v1_#{date.to_date.iso8601}" \
+      : "live_scores_date_v13_#{date.to_date.iso8601}"
+
+    Rails.cache.fetch(key, expires_in: 10.minutes) do
+      data    = get("fixtures", date: date.to_date.iso8601, timezone: "UTC")
+      matches = (data.dig("response") || []).filter_map { |f| normalize_fixture(f) }
+
+      if all_leagues
+        # Only filter out women's / youth by name; let every league through.
+        matches.reject do |m|
+          check = "#{m[:league_name]} #{m.dig(:home, :name)} #{m.dig(:away, :name)}"
+          check.match?(EXCLUDED_LEAGUE_PATTERN)
+        end
+      else
+        matches.select { |m| featured_league?(m) }
+      end
     end
   rescue => e
     Rails.logger.error("[LiveScoresClient] matches_for_date(#{date}): #{e.message}")
