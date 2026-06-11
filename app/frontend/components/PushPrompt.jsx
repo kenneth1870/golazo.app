@@ -17,7 +17,7 @@ export default function PushPrompt({ favoriteTeamName = null }) {
     if (!supported && !needsIosInstall) return
     if (permission === "denied") return
     if (subscribed) return
-    const dismissed = sessionStorage.getItem(DISMISSED_KEY)
+    const dismissed = localStorage.getItem(DISMISSED_KEY)
     if (dismissed) return
     const timer = setTimeout(() => setVisible(true), 3000)
     return () => clearTimeout(timer)
@@ -27,7 +27,7 @@ export default function PushPrompt({ favoriteTeamName = null }) {
   if (permission === "denied") return null
 
   const dismiss = () => {
-    sessionStorage.setItem(DISMISSED_KEY, "1")
+    localStorage.setItem(DISMISSED_KEY, "1")
     setVisible(false)
   }
 

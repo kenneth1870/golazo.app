@@ -1587,12 +1587,11 @@ export default function MatchShowPage() {
       const name = scorer?.player ? `⚽ ${scorer.player}` : "⚽ GOAL!"
       showToast(name)
 
-      if (Notification.permission === "granted") {
-        new Notification(`⚽ Goal! ${homeName} ${h}–${a} ${awayName}`, {
-          body: scorer?.player ? `${scorer.player} ${scorer.minute}'` : "",
-          icon: "/images/apple-touch-icon.png?v=2",
-        })
-      }
+      // NOTE: Do NOT use `new Notification()` here — it is blocked in the
+      // main thread on iOS (both Safari and PWA) and unreliable on Android.
+      // Foreground alerts are handled by the in-app toast above.
+      // Background/closed-app alerts are handled by server-side VAPID push
+      // via the service worker — no duplicate notification needed here.
     }
     prevGoalsRef.current = { h, a }
   }
