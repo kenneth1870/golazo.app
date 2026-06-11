@@ -1,6 +1,8 @@
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAuthContext } from "../contexts/AuthContext"
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 export default function LoginPage() {
   const { login, loading, error } = useAuthContext()
@@ -9,6 +11,64 @@ export default function LoginPage() {
   const from      = location.state?.from?.pathname || "/admin"
   const [email,    setEmail]    = useState("")
   const [password, setPassword] = useState("")
+  const [gError,   setGError]   = useState(null)
+  const [gLoading, setGLoading] = useState(false)
+  const googleBtnRef = useRef(null)
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return
+    const scriptId = "gsi-script"
+    if (document.getElementById(scriptId)) {
+      initGoogle()
+      return
+    }
+    const script = document.createElement("script")
+    script.id  = scriptId
+    script.src = "https://accounts.google.com/gsi/client"
+    script.async = true
+    script.defer = true
+    script.onload = initGoogle
+    document.head.appendChild(script)
+  }, [])
+
+  const initGoogle = () => {
+    if (!window.google || !googleBtnRef.current) return
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleCredential,
+    })
+    window.google.accounts.id.renderButton(googleBtnRef.current, {
+      theme: "outline",
+      size: "large",
+      width: 336,
+      text: "signin_with",
+      shape: "rectangular",
+    })
+  }
+
+  const handleGoogleCredential = async ({ credential }) => {
+    setGLoading(true)
+    setGError(null)
+    try {
+      const res = await fetch("/api/v1/sessions/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setGError(data.error || "Google sign-in failed")
+        return
+      }
+      localStorage.setItem("golazo_token", data.token)
+      localStorage.setItem("golazo_user",  JSON.stringify(data.user))
+      window.location.href = from
+    } catch {
+      setGError("Network error — try again")
+    } finally {
+      setGLoading(false)
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -38,6 +98,34 @@ export default function LoginPage() {
             Sign in to continue
           </p>
         </div>
+
+        {/* Google Sign-In */}
+        {GOOGLE_CLIENT_ID && (
+          <>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+              <div ref={googleBtnRef} />
+            </div>
+            {gLoading && (
+              <p style={{ textAlign: "center", color: "rgba(255,255,255,.4)", fontSize: "0.8rem", marginBottom: 8 }}>
+                Signing in with Google…
+              </p>
+            )}
+            {gError && (
+              <div style={{
+                background: "rgba(238,30,70,.12)", border: "1px solid rgba(238,30,70,.3)",
+                borderRadius: 8, padding: "10px 14px", marginBottom: 12,
+                color: "#f87171", fontSize: "0.82rem",
+              }}>
+                ⚠ {gError}
+              </div>
+            )}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0" }}>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
+              <span style={{ color: "rgba(255,255,255,.25)", fontSize: "0.75rem" }}>or</span>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
+            </div>
+          </>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 16 }}>

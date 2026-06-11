@@ -8,6 +8,7 @@ Rails.application.routes.draw do
       get    "sessions/me",       to: "sessions#me"
       delete "sessions",          to: "sessions#logout"
       post   "sessions/register", to: "sessions#register"
+      post   "sessions/google",   to: "sessions#google"
 
       # ── Admin ────────────────────────────────────────────
       namespace :admin do
@@ -15,6 +16,8 @@ Rails.application.routes.draw do
         resources :matches, only: %i[index show update]
         resources :users,   only: %i[index show update destroy]
         resources :news,    only: %i[index]
+        resources :teams,   only: %i[index update]
+        get  "standings",   to: "standings#index"
         get  "push",        to: "push#index"
         post "push/broadcast", to: "push#broadcast"
       end

@@ -43,6 +43,8 @@ const TransferCenterPage    = lazy(() => import("./pages/TransferCenterPage"))
 const AdminLayout           = lazy(() => import("./pages/admin/AdminLayout"))
 const AdminDashboardPage    = lazy(() => import("./pages/admin/AdminDashboardPage"))
 const AdminMatchesPage      = lazy(() => import("./pages/admin/AdminMatchesPage"))
+const AdminTeamsPage        = lazy(() => import("./pages/admin/AdminTeamsPage"))
+const AdminStandingsPage    = lazy(() => import("./pages/admin/AdminStandingsPage"))
 const AdminPushPage         = lazy(() => import("./pages/admin/AdminPushPage"))
 const AdminUsersPage        = lazy(() => import("./pages/admin/AdminUsersPage"))
 const AdminNewsPage         = lazy(() => import("./pages/admin/AdminNewsPage"))
@@ -71,6 +73,8 @@ export default function App() {
             <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
               <Route index              element={<AdminDashboardPage />} />
               <Route path="matches"     element={<AdminMatchesPage />} />
+              <Route path="teams"       element={<AdminTeamsPage />} />
+              <Route path="standings"   element={<AdminStandingsPage />} />
               <Route path="push"        element={<AdminPushPage />} />
               <Route path="users"       element={<AdminUsersPage />} />
               <Route path="news"        element={<AdminNewsPage />} />

@@ -2,11 +2,13 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom"
 import { useAuthContext } from "../../contexts/AuthContext"
 
 const NAV = [
-  { to: "/admin",         icon: "📊", label: "Dashboard",   end: true },
-  { to: "/admin/matches", icon: "⚽", label: "Matches"  },
-  { to: "/admin/push",    icon: "🔔", label: "Push"     },
-  { to: "/admin/users",   icon: "👥", label: "Users"    },
-  { to: "/admin/news",    icon: "📰", label: "News"     },
+  { to: "/admin",           icon: "📊", label: "Dashboard",  end: true },
+  { to: "/admin/matches",   icon: "⚽", label: "Matches"   },
+  { to: "/admin/teams",     icon: "🏳️", label: "Teams"     },
+  { to: "/admin/standings", icon: "🏆", label: "Standings"  },
+  { to: "/admin/users",     icon: "👥", label: "Users"     },
+  { to: "/admin/push",      icon: "🔔", label: "Push"      },
+  { to: "/admin/news",      icon: "📰", label: "News"      },
 ]
 
 const S = {
