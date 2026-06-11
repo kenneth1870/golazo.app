@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_11_005731) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_11_183914) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -77,6 +77,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_11_005731) do
     t.string "home_slot"
     t.bigint "home_team_id"
     t.datetime "kickoff_at"
+    t.datetime "lineups_notified_at"
     t.string "round"
     t.string "status"
     t.datetime "updated_at", null: false
