@@ -2009,7 +2009,7 @@ export default function MatchShowPage() {
             isLive={isLive}
             liveMinute={liveMinute}
             matchId={id}
-            notifEnabled={Notification?.permission === "granted"}
+            notifEnabled={notifSupported && Notification.permission === "granted"}
             notifSupported={notifSupported}
             onNotif={() => {}}
             events={data.events}
