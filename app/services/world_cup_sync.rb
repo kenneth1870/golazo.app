@@ -65,8 +65,69 @@ class WorldCupSync
     log("Done")
   end
 
-  # Sync teams and matches external_ids from football-data.org.
-  # Sets team.external_id + team.flag_url (SVG crest) and match.external_id on all 104 WC fixtures.
+  # Sync all WC 2026 fixture IDs (and team logos) from API-Football v3.
+  # This replaces the old football-data.org sync: once external_ids are API-Football
+  # fixture IDs, match_detail_controller can call the API directly to get lineups,
+  # events, and stats without any ID-namespace translation.
+  #
+  # Run once (or whenever fixtures are added/rescheduled):
+  #   bin/rails runner "WorldCupSync.new.sync_external_ids_from_api_football"
+  def sync_external_ids_from_api_football
+    competition = Competition.find_by!(code: @code)
+    data = @api.send(:get, "fixtures", league: WC_LEAGUE_ID, season: WC_SEASON_ID)
+    fixtures = data.dig("response") || []
+    raise "No fixtures returned from API-Football (check WC_LEAGUE_ID/WC_SEASON_ID env vars)" if fixtures.empty?
+
+    log("API-Football returned #{fixtures.size} WC fixtures")
+    updated_matches = 0
+    updated_teams   = 0
+
+    fixtures.each do |fx|
+      fixture_id = fx.dig("fixture", "id")
+      next unless fixture_id
+
+      home_api = fx.dig("teams", "home", "name").to_s
+      away_api = fx.dig("teams", "away", "name").to_s
+      home_logo = fx.dig("teams", "home", "logo").to_s.presence
+      away_logo = fx.dig("teams", "away", "logo").to_s.presence
+
+      home_team = find_team_by_api_name(home_api)
+      away_team = find_team_by_api_name(away_api)
+
+      # Update team logos from API-Football
+      if home_team && home_logo && home_team.flag_url != home_logo
+        home_team.update_column(:flag_url, home_logo)
+        updated_teams += 1
+      end
+      if away_team && away_logo && away_team.flag_url != away_logo
+        away_team.update_column(:flag_url, away_logo)
+        updated_teams += 1
+      end
+
+      next unless home_team && away_team
+
+      match = Match.find_by(home_team: home_team, away_team: away_team, competition: competition)
+      unless match
+        # For knockout rounds, slots may not be resolved yet — skip
+        next
+      end
+
+      if match.external_id != fixture_id
+        match.update_column(:external_id, fixture_id)
+        updated_matches += 1
+        log("  #{home_api} vs #{away_api} → fixture_id #{fixture_id}")
+      end
+    end
+
+    log("Done: #{updated_matches} matches updated, #{updated_teams} team logos updated")
+  rescue => e
+    log("sync_external_ids_from_api_football error: #{e.message}")
+    raise
+  end
+
+  # Legacy: kept for reference but superseded by sync_external_ids_from_api_football.
+  # football-data.org IDs are in a different namespace from API-Football — do not use.
+  # @deprecated
   def sync_from_football_data
     api_key = ENV["FOOTBALL_DATA_API_KEY"]
     raise "FOOTBALL_DATA_API_KEY not set" if api_key.blank?
@@ -339,6 +400,19 @@ class WorldCupSync
 
   def normalize_team_name(name)
     TEAM_ALIASES[name.downcase] || name.downcase
+  end
+
+  # Finds a Team by API-Football name using TEAM_ALIASES + fuzzy token match.
+  def find_team_by_api_name(api_name)
+    return nil if api_name.blank?
+    canonical = normalize_team_name(api_name)
+    team = Team.where("LOWER(name) = ?", canonical).first
+    return team if team
+
+    # Token match: all meaningful words must appear in the DB name
+    tokens = api_name.downcase.split(/[\s\-\.]+/).select { |t| t.length > 2 }
+    return nil if tokens.empty?
+    Team.where(tokens.map { "LOWER(name) LIKE ?" }.join(" AND "), *tokens.map { |t| "%#{t}%" }).first
   end
 
   # normalize_team_name lowercases and applies TEAM_ALIASES; when a name has no

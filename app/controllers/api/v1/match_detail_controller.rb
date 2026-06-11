@@ -15,37 +15,32 @@ module Api
 
         external_id = raw_id.sub(/\Aext-/, "").to_i
 
-        # Always check local DB first — WC matches use football-data.org IDs
-        # which are in a different namespace from the LiveScores/API-Football IDs.
-        # Calling the external API with a football-data ID returns the wrong match.
+        # Find the local DB record for this external_id (may be a WC match).
+        # We always try the API first — external_ids are now API-Football fixture IDs
+        # across the board (synced via WorldCupSync#sync_external_ids_from_api_football).
         local_match = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition)
                            .find_by(external_id: external_id)
-        if local_match
-          data = local_match_as_fixture(local_match)
-          data[:fixture]["fixture"]["db_id"] = local_match.id
-          return render json: data
-        end
 
         data = client.match_detail(external_id)
 
-        # Full detail unavailable — cascade through fallbacks
+        # Full detail unavailable — fall back to local DB data, then cached list data
         if data.nil? || data[:fixture].nil?
-          # Build a basic fixture from the cached date-list data
+          if local_match
+            data = local_match_as_fixture(local_match)
+            data[:fixture]["fixture"]["db_id"] = local_match.id
+            return render json: data
+          end
           data = client.match_from_list(external_id)
           return render json: { fixture: nil, error: "not_found", stats: [], events: [], lineups: [] } unless data
         end
 
         # Try fallback whenever stats are missing — even if events/lineups exist.
-        # A match can have goal events + lineups but the stats endpoint returns
-        # nothing (common for friendlies). The fallback searches by team name
-        # and may resolve a different fixture_id that has stats.
         data = api_sports_fallback(data) if data[:fixture].present? && data[:stats].to_a.empty?
 
         # Inject db_id so frontend can call AI summary endpoint
-        local = Match.select(:id).find_by(external_id: external_id)
-        if local && data[:fixture].is_a?(Hash)
+        if local_match && data[:fixture].is_a?(Hash)
           data[:fixture]["fixture"] ||= {}
-          data[:fixture]["fixture"]["db_id"] = local.id
+          data[:fixture]["fixture"]["db_id"] = local_match.id
         end
 
         broadcast_if_changed(external_id, data)
