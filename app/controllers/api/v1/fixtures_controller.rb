@@ -33,9 +33,10 @@ module Api
 
       # Returns a UTC Range covering the full local calendar day in the given timezone.
       def local_day_range(date, timezone)
-        tz         = TZInfo::Timezone.get(timezone)
-        day_start  = tz.local_time(date.year, date.month, date.day, 0, 0, 0)
-        day_end    = tz.local_time(date.year, date.month, date.day, 23, 59, 59)
+        tz = TZInfo::Timezone.get(timezone)
+        # dst: :first on start → earlier UTC (wider window); dst: :last on end → later UTC
+        day_start = tz.local_time(date.year, date.month, date.day, 0, 0, 0, 0, dst: :first)
+        day_end   = tz.local_time(date.year, date.month, date.day, 23, 59, 59, 0, dst: :last)
         day_start.utc..day_end.utc
       rescue
         date.all_day

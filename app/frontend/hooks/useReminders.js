@@ -15,24 +15,30 @@ function persist(arr) {
 export function useReminders() {
   const [reminders, setReminders] = useState(load)
 
+  // Prune expired reminders once on mount — separate from the scheduling
+  // effect so it doesn't create an infinite loop (prune → state change →
+  // schedule re-runs → prune → …).
   useEffect(() => {
     const now = Date.now()
-    // Prune reminders that fired > 1 hour ago
-    const fresh = reminders.filter(r => new Date(r.kickoff_at).getTime() > now - 3_600_000)
-    if (fresh.length !== reminders.length) {
-      persist(fresh)
-      setReminders(fresh)
-    }
+    setReminders(prev => {
+      const fresh = prev.filter(r => new Date(r.kickoff_at).getTime() > now - 3_600_000)
+      if (fresh.length !== prev.length) persist(fresh)
+      return fresh
+    })
+  }, [])
 
-    // Schedule in-app notifications for reminders within 48h
-    const timers = fresh.map(r => {
+  // Schedule in-app notifications whenever the reminders list changes.
+  // Returns a cleanup that clears all pending timers on re-run.
+  useEffect(() => {
+    const now = Date.now()
+    const timers = reminders.map(r => {
       const delay = new Date(r.kickoff_at).getTime() - now
       if (delay <= 0 || delay > 48 * 3_600_000) return null
       return setTimeout(() => {
-        if (Notification.permission === "granted") {
+        // typeof guard — Notification is absent in some WebViews (iOS WKWebView)
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
           // Use ServiceWorkerRegistration.showNotification instead of
-          // `new Notification()` — iOS blocks the Notification constructor
-          // in the main thread (PWA and Safari), only the SW form is allowed.
+          // `new Notification()` — iOS blocks the constructor on the main thread.
           navigator.serviceWorker?.ready.then(reg => {
             reg.showNotification("⚽ Kickoff!", {
               body: `${r.home_team} vs ${r.away_team} is starting now`,
