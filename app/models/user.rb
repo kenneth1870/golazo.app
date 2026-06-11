@@ -27,7 +27,7 @@ class User < ApplicationRecord
 
   def self.from_token(token)
     return nil if token.blank?
-    payload = JWT.decode(token, JWT_SECRET, true, algorithm: "HS256").first
+    payload = JWT.decode(token, JWT_SECRET, true, algorithms: ["HS256"]).first
     find_by(id: payload["sub"])
   rescue JWT::DecodeError
     nil
