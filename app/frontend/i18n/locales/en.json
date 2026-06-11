@@ -200,7 +200,10 @@
     "predPoweredBy": "Prediction powered by API-Football",
     "firstGoalScorer": "First Goal Scorer",
     "liveOdds": "Live Odds",
-    "noOdds": "Odds not available for this match"
+    "noOdds": "Odds not available for this match",
+    "injuries": "Injuries & Suspensions",
+    "ratingsEmpty": "No ratings yet",
+    "ratingsAppear": "Ratings appear during or after the match"
   },
   "error": {
     "dataUnavailable": "Data temporarily unavailable",

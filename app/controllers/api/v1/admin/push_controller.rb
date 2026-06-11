@@ -21,6 +21,8 @@ module Api
           team_name = params[:team_name].to_s.strip.presence
 
           return render json: { error: "title required" }, status: :unprocessable_entity if title.blank?
+          return render json: { error: "title too long" }, status: :unprocessable_entity if title.length > 100
+          return render json: { error: "body too long" }, status: :unprocessable_entity if body_text.length > 500
 
           subscriptions = team_name.present? ? PushSubscription.for_teams([team_name]) : PushSubscription.all
 

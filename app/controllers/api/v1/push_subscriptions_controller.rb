@@ -6,6 +6,7 @@ module Api
       def create
         endpoint = params[:endpoint].to_s.strip
         return render json: { error: "Missing endpoint" }, status: :unprocessable_entity if endpoint.blank?
+        return render json: { error: "Invalid endpoint" }, status: :unprocessable_entity unless endpoint.start_with?("https://")
 
         sub = PushSubscription.find_or_initialize_by(endpoint: endpoint)
         sub.assign_attributes(

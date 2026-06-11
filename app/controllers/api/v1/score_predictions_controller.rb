@@ -54,7 +54,6 @@ module Api
         rows = ScorePrediction.leaderboard(limit: 100)
         render json: rows.map { |r|
           {
-            device_id:        r.device_id,
             display_name:     r.display_name.presence || "Anonymous",
             total_points:     r.total_points.to_i,
             predictions_made: r.predictions_made.to_i

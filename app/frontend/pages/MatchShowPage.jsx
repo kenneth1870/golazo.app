@@ -14,6 +14,7 @@ import { usePushNotifications } from "../hooks/usePushNotifications"
 import { getMatchColor } from "../utils/teamColors"
 import { sourceColor } from "../utils/sourceColors"
 import { storageGet, storageSet } from "../utils/safeStorage"
+import { fetchWithTimeout } from "../utils/fetchWithTimeout"
 
 // ─── Reminder button ──────────────────────────────────
 function ReminderButton({ match }) {
@@ -928,6 +929,7 @@ function ComparisonBar({ label, home, away }) {
 }
 
 function InjuriesSection({ fixtureId, homeName, awayName }) {
+  const { t } = useTranslation()
   const [injuries, setInjuries] = useState(null)
 
   useEffect(() => {
@@ -949,7 +951,7 @@ function InjuriesSection({ fixtureId, homeName, awayName }) {
 
   return (
     <section className="match-section" style={{ marginBottom: 20 }}>
-      <h3 className="match-section__title">🚑 Bajas y Suspensiones</h3>
+      <h3 className="match-section__title">🚑 {t("match.injuries")}</h3>
       {Object.entries(byTeam).map(([teamName, list]) => (
         <div key={teamName} style={{ marginBottom: 12 }}>
           <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: ".08em" }}>{teamName}</div>
@@ -1344,6 +1346,7 @@ const RATING_COLOR = r => {
 }
 
 function PlayerRatingsPanel({ fixtureId }) {
+  const { t } = useTranslation()
   const [teams, setTeams]     = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -1367,8 +1370,8 @@ function PlayerRatingsPanel({ fixtureId }) {
   if (!teams) return (
     <div className="empty-state" style={{ paddingTop: 40 }}>
       <div className="empty-state__icon">📊</div>
-      <h3>Sin valoraciones aún</h3>
-      <p>Las valoraciones aparecen durante o tras el partido</p>
+      <h3>{t("match.ratingsEmpty")}</h3>
+      <p>{t("match.ratingsAppear")}</p>
     </div>
   )
 
@@ -1804,7 +1807,7 @@ export default function MatchShowPage() {
       return Promise.resolve()
     }
     const fetchStarted = Date.now()
-    return fetch(`/api/v1/match_detail/${id}`)
+    return fetchWithTimeout(`/api/v1/match_detail/${id}`, 10000)
       .then(r => r.json())
       .then(d => {
         setData(prev => {

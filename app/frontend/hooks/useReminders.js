@@ -50,7 +50,7 @@ export function useReminders() {
     }).filter(Boolean)
 
     return () => timers.forEach(clearTimeout)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [reminders])
 
   const isReminded = useCallback(
     id => reminders.some(r => r.id === String(id)),

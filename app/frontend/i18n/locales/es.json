@@ -200,7 +200,10 @@
     "predPoweredBy": "Predicción por API-Football",
     "firstGoalScorer": "Primer Goleador",
     "liveOdds": "Cuotas en Vivo",
-    "noOdds": "Cuotas no disponibles para este partido"
+    "noOdds": "Cuotas no disponibles para este partido",
+    "injuries": "Bajas y Suspensiones",
+    "ratingsEmpty": "Sin valoraciones aún",
+    "ratingsAppear": "Las valoraciones aparecen durante o tras el partido"
   },
   "error": {
     "dataUnavailable": "Datos temporalmente no disponibles",

@@ -270,7 +270,7 @@ module Api
         end
 
         raw_id      = params[:id].to_s
-        lang        = params[:lang].to_s.presence || "en"
+        lang        = %w[en es fr de it pt].include?(params[:lang]) ? params[:lang] : "en"
         external_id = raw_id.sub(/\Aext-/, "").to_i
         client      = LiveScoresClient.new
 
