@@ -2,6 +2,7 @@ module Api
   module V1
     class FixtureRatingsController < BaseController
       def show
+        expires_in 5.minutes, public: true
         data = LiveScoresClient.new.player_ratings(resolved_fixture_id)
         render json: data
       rescue => e

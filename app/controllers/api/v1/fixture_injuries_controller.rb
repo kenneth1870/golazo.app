@@ -2,6 +2,7 @@ module Api
   module V1
     class FixtureInjuriesController < BaseController
       def show
+        expires_in 1.hour, public: true
         data = LiveScoresClient.new.fixture_injuries(resolved_fixture_id)
         render json: data
       rescue => e

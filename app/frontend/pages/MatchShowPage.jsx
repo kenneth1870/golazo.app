@@ -371,19 +371,27 @@ function addToCalendar(fixture) {
 function VenuePhoto({ venueId, venueName }) {
   const [img, setImg] = useState(null)
   const [cap, setCap] = useState(null)
+  const ref = useRef(null)
 
   useEffect(() => {
-    if (!venueId) return
-    fetch(`/api/v1/venue_detail/${venueId}`)
-      .then(r => r.json())
-      .then(d => {
-        if (d?.image) setImg(d.image)
-        if (d?.capacity) setCap(d.capacity)
-      })
-      .catch(() => {})
+    if (!venueId || !ref.current) return
+    const el = ref.current
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return
+      observer.disconnect()
+      fetch(`/api/v1/venue_detail/${venueId}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d?.image) setImg(d.image)
+          if (d?.capacity) setCap(d.capacity)
+        })
+        .catch(() => {})
+    }, { rootMargin: "200px" })
+    observer.observe(el)
+    return () => observer.disconnect()
   }, [venueId])
 
-  if (!img) return null
+  if (!img) return <div ref={ref} />
   return (
     <div style={{ position: "relative", overflow: "hidden", borderRadius: "0 0 12px 12px", marginTop: 2 }}>
       <img src={img} alt={venueName} style={{ width: "100%", maxHeight: 140, objectFit: "cover", display: "block" }}
@@ -1578,43 +1586,32 @@ const NEWS_SEARCHABLE_LEAGUES = new Set([
 
 function RelatedNewsPanel({ homeName, awayName, leagueName, lang, t }) {
   const [articles, setArticles] = useState([])
-  const fetchedRef = useRef(false)   // only fetch once per mount — team names never change
+  const fetchedRef = useRef(false)
 
   useEffect(() => {
-    if (fetchedRef.current) return         // already fetched or in-flight; skip re-poll triggers
-    if (!homeName && !awayName) return     // wait until names arrive from the first data load
+    if (fetchedRef.current) return
+    if (!homeName && !awayName) return
     fetchedRef.current = true
-    fetch(`/api/v1/news?lang=${lang}&limit=60`)
+
+    // Build keyword list — only include league when it's specific enough
+    const leagueWords = leagueName &&
+      NEWS_SEARCHABLE_LEAGUES.has(leagueName.toLowerCase().trim())
+        ? leagueName.toLowerCase().split(/[\s\-\/]+/).filter(k => k.length > 3)
+        : []
+    const GENERIC = new Set(["real", "city", "club", "united", "atletico", "atleticó"])
+    const words = [...[homeName, awayName]
+      .filter(Boolean)
+      .flatMap(n => n.toLowerCase().split(/[\s\-\/]+/))
+      .filter(k => k.length > 3 && !GENERIC.has(k)),
+      ...leagueWords,
+    ]
+    if (words.length === 0) return
+
+    // Send keywords server-side — avoids fetching 60 articles to filter 3
+    const q = encodeURIComponent(words.join(","))
+    fetch(`/api/v1/news?lang=${lang}&q=${q}`)
       .then(r => r.ok ? r.json() : [])
-      .then(items => {
-        if (!Array.isArray(items) || items.length === 0) return
-
-        // Only include league as a keyword when it's a well-known named competition
-        const leagueWords = leagueName &&
-          NEWS_SEARCHABLE_LEAGUES.has(leagueName.toLowerCase().trim())
-            ? leagueName.toLowerCase().split(/[\s\-\/]+/).filter(k => k.length > 3)
-            : []
-
-        // Build keyword set: all meaningful words from team names + (selective) league
-        const words = [...[homeName, awayName]
-          .filter(Boolean)
-          .flatMap(n => n.toLowerCase().split(/[\s\-\/]+/))
-          .filter(k => k.length > 3)
-          // Remove generic words that appear in every football article
-          .filter(k => !["real", "city", "club", "united", "atletico", "atleticó"].includes(k)),
-          ...leagueWords,
-        ]
-
-        if (words.length === 0) return
-
-        const filtered = items.filter(a => {
-          const text = `${a.title} ${a.summary || ""}`.toLowerCase()
-          return words.some(k => text.includes(k))
-        })
-
-        // Only show if we found genuinely relevant articles — never fall back to unrelated news
-        if (filtered.length > 0) setArticles(filtered.slice(0, 4))
-      })
+      .then(items => { if (Array.isArray(items) && items.length > 0) setArticles(items) })
       .catch(() => {})
   }, [homeName, awayName, leagueName, lang])
 

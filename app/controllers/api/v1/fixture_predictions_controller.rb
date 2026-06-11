@@ -3,6 +3,7 @@ module Api
     class FixturePredictionsController < BaseController
       # GET /api/v1/fixture_predictions/:fixture_id
       def show
+        expires_in 10.minutes, public: true
         fixture_id = params[:fixture_id].to_i
         client     = LiveScoresClient.new
 

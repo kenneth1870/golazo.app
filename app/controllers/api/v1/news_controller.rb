@@ -2,8 +2,19 @@ module Api
   module V1
     class NewsController < BaseController
       def index
-        lang = normalize_lang(params[:lang])
-        render json: NewsService.new.latest(limit: 60, lang: lang)
+        lang     = normalize_lang(params[:lang])
+        keywords = extract_keywords(params[:q])
+        articles = NewsService.new.latest(limit: 60, lang: lang)
+        if keywords.any?
+          articles = articles.select { |a|
+            text = "#{a[:title]} #{a[:summary]}".downcase
+            keywords.any? { |k| text.include?(k) }
+          }.first(4)
+          expires_in 5.minutes, public: true
+        else
+          expires_in 3.minutes, public: true
+        end
+        render json: articles
       rescue => e
         Rails.logger.error("[NewsController] #{e.message}")
         render json: []
@@ -46,6 +57,11 @@ module Api
       def normalize_lang(raw)
         code = raw.to_s.split("-").first&.downcase
         code.presence_in(%w[en es pt fr de ar ja ko]) || "en"
+      end
+
+      def extract_keywords(raw)
+        return [] if raw.blank?
+        raw.to_s.downcase.split(/[\s,]+/).map(&:strip).select { |k| k.length > 3 }.first(10)
       end
     end
   end
