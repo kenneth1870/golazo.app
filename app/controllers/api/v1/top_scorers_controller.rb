@@ -13,16 +13,45 @@ module Api
       }.freeze
 
       def index
+        render json: normalize_players(LiveScoresClient.new.top_scorers(*league_season))
+      rescue => e
+        Rails.logger.error("[TopScorersController#index] #{e.message}")
+        render json: []
+      end
+
+      def assists
+        render json: normalize_players(LiveScoresClient.new.top_assists(*league_season))
+      rescue => e
+        Rails.logger.error("[TopScorersController#assists] #{e.message}")
+        render json: []
+      end
+
+      def cards
+        type = params[:type] == "red" ? :top_red_cards : :top_yellow_cards
+        render json: normalize_players(LiveScoresClient.new.public_send(type, *league_season), stat_key: params[:type] == "red" ? :red_cards : :yellow_cards)
+      rescue => e
+        Rails.logger.error("[TopScorersController#cards] #{e.message}")
+        render json: []
+      end
+
+      private
+
+      def league_season
         ids = COMPETITION_IDS[params[:competition]]
-        league_id = ids&.dig(:league_id) || params[:league_id]
-        season_id = ids&.dig(:season_id) || params[:season_id]
+        [
+          ids&.dig(:league_id) || params[:league_id],
+          ids&.dig(:season_id) || params[:season_id]
+        ]
+      end
 
-        scorers = LiveScoresClient.new.top_scorers(league_id, season_id)
-
-        # API-Football v3 shape:
-        # { player: {id, name, photo}, statistics: [{team: {name, logo}, goals: {total, assists}, games: {appearences}}] }
-        render json: scorers.map { |s|
+      def normalize_players(raw, stat_key: nil)
+        raw.map do |s|
           stats = s.dig("statistics", 0) || {}
+          value = case stat_key
+          when :yellow_cards then stats.dig("cards", "yellow")
+          when :red_cards    then stats.dig("cards", "red")
+          else stats.dig("goals", "assists")
+          end
           {
             player: {
               id:          s.dig("player", "id"),
@@ -32,17 +61,16 @@ module Api
             },
             team: {
               name:  stats.dig("team", "name"),
-              crest: stats.dig("team", "logo"),
-              tla:   nil
+              crest: stats.dig("team", "logo")
             },
             goals:   stats.dig("goals", "total"),
             assists: stats.dig("goals", "assists"),
-            played:  stats.dig("games", "appearences")
+            yellow_cards: stats.dig("cards", "yellow"),
+            red_cards:    stats.dig("cards", "red"),
+            played:  stats.dig("games", "appearences"),
+            value:   value
           }
-        }
-      rescue => e
-        Rails.logger.error("[TopScorersController] #{e.message}")
-        render json: []
+        end
       end
     end
   end

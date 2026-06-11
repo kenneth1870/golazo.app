@@ -359,6 +359,119 @@ class LiveScoresClient
 
   # ── Player extras ────────────────────────────────────────────────────────────
 
+  # ── Player ratings per fixture ────────────────────────────────────────────
+
+  def player_ratings(fixture_id)
+    Rails.cache.fetch("fixture_ratings_v1_#{fixture_id}", expires_in: 60.seconds, race_condition_ttl: 10.seconds) do
+      raw = get("fixtures/players", fixture: fixture_id)
+      (raw.dig("response") || []).map do |team|
+        {
+          team: { name: team.dig("team", "name"), logo: team.dig("team", "logo") },
+          players: (team["players"] || []).map do |p|
+            pl = p["player"] || {}
+            st = (p["statistics"] || []).first || {}
+            {
+              id:       pl["id"],
+              name:     pl["name"],
+              photo:    pl["photo"],
+              number:   st.dig("games", "number"),
+              position: st.dig("games", "position"),
+              rating:   st.dig("games", "rating"),
+              minutes:  st.dig("games", "minutes"),
+              captain:  st.dig("games", "captain"),
+              shots:     { total: st.dig("shots", "total"),    on:      st.dig("shots", "on") },
+              goals:     { total: st.dig("goals", "total"),    assists: st.dig("goals", "assists") },
+              passes:    { total: st.dig("passes", "total"),   accuracy: st.dig("passes", "accuracy") },
+              tackles:   { total: st.dig("tackles", "total"),  interceptions: st.dig("tackles", "interceptions") },
+              dribbles:  { attempts: st.dig("dribbles", "attempts"), success: st.dig("dribbles", "success") },
+              fouls:     { committed: st.dig("fouls", "committed"),  drawn: st.dig("fouls", "drawn") },
+              cards:     { yellow: st.dig("cards", "yellow"), red: st.dig("cards", "red") }
+            }
+          end
+        }
+      end
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] player_ratings(#{fixture_id}): #{e.message}")
+    []
+  end
+
+  # ── Pre-match injuries / suspensions ─────────────────────────────────────
+
+  def fixture_injuries(fixture_id)
+    Rails.cache.fetch("fixture_injuries_v1_#{fixture_id}", expires_in: 30.minutes) do
+      raw = get("injuries", fixture: fixture_id)
+      (raw.dig("response") || []).map do |r|
+        {
+          player: { id: r.dig("player", "id"), name: r.dig("player", "name"), photo: r.dig("player", "photo") },
+          team:   { id: r.dig("team", "id"),   name: r.dig("team", "name"),   logo:  r.dig("team", "logo") },
+          type:   r["type"],
+          reason: r["reason"]
+        }
+      end
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] fixture_injuries(#{fixture_id}): #{e.message}")
+    []
+  end
+
+  # ── Tournament leaderboards ───────────────────────────────────────────────
+
+  def top_assists(league_id, season_id)
+    Rails.cache.fetch("live_scores_assists_v1_#{league_id}_#{season_id}", expires_in: 30.minutes) do
+      data = get("players/topassists", league: league_id, season: season_id)
+      data.dig("response") || []
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] top_assists: #{e.message}")
+    []
+  end
+
+  def top_yellow_cards(league_id, season_id)
+    Rails.cache.fetch("live_scores_yellowcards_v1_#{league_id}_#{season_id}", expires_in: 30.minutes) do
+      data = get("players/topyellowcards", league: league_id, season: season_id)
+      data.dig("response") || []
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] top_yellow_cards: #{e.message}")
+    []
+  end
+
+  def top_red_cards(league_id, season_id)
+    Rails.cache.fetch("live_scores_redcards_v1_#{league_id}_#{season_id}", expires_in: 30.minutes) do
+      data = get("players/topredcards", league: league_id, season: season_id)
+      data.dig("response") || []
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] top_red_cards: #{e.message}")
+    []
+  end
+
+  # ── Venue detail (photo, capacity, surface) ────────────────────────────────
+
+  def venue_detail(venue_id)
+    return nil unless venue_id.present?
+    Rails.cache.fetch("venue_detail_v1_#{venue_id}", expires_in: 24.hours) do
+      raw = get("venues", id: venue_id)
+      v   = raw.dig("response", 0)
+      next nil unless v
+      {
+        id:       v["id"],
+        name:     v["name"],
+        city:     v["city"],
+        country:  v["country"],
+        capacity: v["capacity"],
+        surface:  v["surface"],
+        image:    v["image"]
+      }
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] venue_detail(#{venue_id}): #{e.message}")
+    nil
+  end
+
+  # ── Player extras ────────────────────────────────────────────────────────────
+
   def player_transfers(player_id)
     cached = Rails.cache.read("player_transfers_v1_#{player_id}")
     return cached if cached&.any?
@@ -478,6 +591,7 @@ class LiveScoresClient
           "elapsed" => fx.dig("fixture", "status", "elapsed")
         },
         "venue" => {
+          "id"   => fx.dig("fixture", "venue", "id"),
           "name" => fx.dig("fixture", "venue", "name"),
           "city" => fx.dig("fixture", "venue", "city")
         }

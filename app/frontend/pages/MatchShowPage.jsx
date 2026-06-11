@@ -367,6 +367,39 @@ function addToCalendar(fixture) {
   URL.revokeObjectURL(url)
 }
 
+function VenuePhoto({ venueId, venueName }) {
+  const [img, setImg] = useState(null)
+  const [cap, setCap] = useState(null)
+
+  useEffect(() => {
+    if (!venueId) return
+    fetch(`/api/v1/venue_detail/${venueId}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d?.image) setImg(d.image)
+        if (d?.capacity) setCap(d.capacity)
+      })
+      .catch(() => {})
+  }, [venueId])
+
+  if (!img) return null
+  return (
+    <div style={{ position: "relative", overflow: "hidden", borderRadius: "0 0 12px 12px", marginTop: 2 }}>
+      <img src={img} alt={venueName} style={{ width: "100%", maxHeight: 140, objectFit: "cover", display: "block" }}
+        onError={e => e.target.style.display="none"} />
+      {cap && (
+        <div style={{
+          position: "absolute", bottom: 6, right: 8,
+          background: "rgba(0,0,0,.65)", color: "#fff",
+          fontSize: "0.62rem", fontWeight: 700, padding: "2px 8px", borderRadius: 10,
+        }}>
+          🏟️ {cap.toLocaleString()} aforo
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, notifEnabled, notifSupported, events }) {
   const { t, i18n } = useTranslation()
   const [copied, setCopied] = useState(false)
@@ -566,6 +599,7 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
           </div>
         </div>
       </div>
+      <VenuePhoto venueId={fixture?.fixture?.venue?.id} venueName={fixture?.fixture?.venue?.name} />
     </div>
   )
 }
@@ -893,8 +927,65 @@ function ComparisonBar({ label, home, away }) {
   )
 }
 
+function InjuriesSection({ fixtureId, homeName, awayName }) {
+  const [injuries, setInjuries] = useState(null)
+
+  useEffect(() => {
+    const apiId = String(fixtureId).replace(/^ext-/, "")
+    fetch(`/api/v1/fixture_injuries/${apiId}`)
+      .then(r => r.json())
+      .then(d => setInjuries(Array.isArray(d) && d.length ? d : []))
+      .catch(() => setInjuries([]))
+  }, [fixtureId])
+
+  if (!injuries?.length) return null
+
+  const byTeam = injuries.reduce((acc, inj) => {
+    const name = inj.team?.name || "?"
+    if (!acc[name]) acc[name] = []
+    acc[name].push(inj)
+    return acc
+  }, {})
+
+  return (
+    <section className="match-section" style={{ marginBottom: 20 }}>
+      <h3 className="match-section__title">🚑 Bajas y Suspensiones</h3>
+      {Object.entries(byTeam).map(([teamName, list]) => (
+        <div key={teamName} style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: ".08em" }}>{teamName}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {list.map((inj, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px", background: "var(--surface2)", borderRadius: 8 }}>
+                {inj.player?.photo && (
+                  <img src={inj.player.photo} alt="" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                    onError={e => e.target.style.display="none"} />
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {inj.player?.name}
+                  </div>
+                  <div style={{ fontSize: "0.7rem", color: "var(--muted)" }}>{inj.reason}</div>
+                </div>
+                <span style={{
+                  fontSize: "0.65rem", fontWeight: 700,
+                  padding: "3px 8px", borderRadius: 10,
+                  background: inj.type === "Missing Fixture" ? "rgba(239,68,68,.15)" : "rgba(245,158,11,.15)",
+                  color: inj.type === "Missing Fixture" ? "#ef4444" : "#f59e0b",
+                  whiteSpace: "nowrap",
+                }}>
+                  {inj.type === "Missing Fixture" ? "Baja" : "Dudoso"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </section>
+  )
+}
+
 function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
-  const [pred, setPred]     = useState(null)
+  const [pred, setPred]       = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -914,9 +1005,12 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
   )
 
   if (!pred) return (
-    <div className="empty-state" style={{ paddingTop: 40 }}>
-      <div className="empty-state__icon">🔮</div>
-      <h3>{t("match.noPrediction")}</h3>
+    <div style={{ paddingBottom: 8 }}>
+      <InjuriesSection fixtureId={fixtureId} homeName={homeName} awayName={awayName} />
+      <div className="empty-state" style={{ paddingTop: 20 }}>
+        <div className="empty-state__icon">🔮</div>
+        <h3>{t("match.noPrediction")}</h3>
+      </div>
     </div>
   )
 
@@ -932,6 +1026,7 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
 
   return (
     <div style={{ paddingBottom: 8 }}>
+      <InjuriesSection fixtureId={fixtureId} homeName={homeName} awayName={awayName} />
       {/* Win probability */}
       <div className="match-section" style={{ marginBottom: 20 }}>
         <div className="match-section__title">{t("match.winProbability")}</div>
@@ -1236,6 +1331,112 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t, lang }) {
         </div>
       </section>
     </>
+  )
+}
+
+// ─── Player Ratings tab ───────────────────────────────
+const RATING_COLOR = r => {
+  const n = parseFloat(r)
+  if (isNaN(n)) return "var(--muted)"
+  if (n >= 8)   return "#10b981"
+  if (n >= 6.5) return "#f59e0b"
+  return "#ef4444"
+}
+
+function PlayerRatingsPanel({ fixtureId }) {
+  const [teams, setTeams]     = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const apiId = String(fixtureId).replace(/^ext-/, "")
+    fetch(`/api/v1/fixture_ratings/${apiId}`)
+      .then(r => r.json())
+      .then(d => setTeams(Array.isArray(d) && d.length ? d : null))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [fixtureId])
+
+  if (loading) return (
+    <div style={{ paddingTop: 16 }}>
+      {[...Array(6)].map((_, i) => (
+        <div key={i} className="loading-shimmer" style={{ height: 56, borderRadius: 8, marginBottom: 6 }} />
+      ))}
+    </div>
+  )
+
+  if (!teams) return (
+    <div className="empty-state" style={{ paddingTop: 40 }}>
+      <div className="empty-state__icon">📊</div>
+      <h3>Sin valoraciones aún</h3>
+      <p>Las valoraciones aparecen durante o tras el partido</p>
+    </div>
+  )
+
+  return (
+    <div style={{ paddingBottom: 8 }}>
+      {teams.map((team, ti) => (
+        <section key={ti} className="match-section" style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            {team.team?.logo && <img src={team.team.logo} alt="" style={{ width: 22, height: 22, objectFit: "contain" }} onError={e => e.target.style.display="none"} />}
+            <h3 className="match-section__title" style={{ margin: 0 }}>{team.team?.name}</h3>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {(team.players || [])
+              .sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0))
+              .map((p, pi) => {
+                const rating = parseFloat(p.rating)
+                const color  = RATING_COLOR(p.rating)
+                return (
+                  <div key={pi} style={{
+                    display: "grid", gridTemplateColumns: "22px 1fr 80px 44px",
+                    gap: 8, alignItems: "center",
+                    padding: "8px 12px",
+                    background: pi % 2 === 0 ? "transparent" : "rgba(255,255,255,.02)",
+                    borderRadius: 6,
+                  }}>
+                    <span style={{ fontSize: "0.72rem", color: "var(--muted)", textAlign: "center", fontWeight: 700 }}>
+                      {p.number ?? ""}
+                    </span>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {p.captain ? "©" : ""}{p.name}
+                      </div>
+                      <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>
+                        {p.position ?? ""}{p.minutes ? ` · ${p.minutes}'` : ""}
+                        {(p.goals?.total > 0) ? ` ⚽×${p.goals.total}` : ""}
+                        {(p.goals?.assists > 0) ? ` 🎯×${p.goals.assists}` : ""}
+                        {(p.cards?.yellow > 0) ? " 🟨" : ""}
+                        {(p.cards?.red > 0) ? " 🟥" : ""}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      {p.passes?.total != null && (
+                        <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>
+                          {p.passes.total} pases {p.passes.accuracy != null ? `· ${p.passes.accuracy}%` : ""}
+                        </div>
+                      )}
+                      {p.shots?.total != null && (
+                        <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>
+                          {p.shots.total} tiros{p.shots.on != null ? ` (${p.shots.on} a puerta)` : ""}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{
+                      fontWeight: 900, fontSize: "1rem", color,
+                      textAlign: "right",
+                      padding: "4px 8px",
+                      background: `${color}18`,
+                      borderRadius: 6,
+                    }}>
+                      {isNaN(rating) ? "–" : rating.toFixed(1)}
+                    </div>
+                  </div>
+                )
+              })}
+          </div>
+        </section>
+      ))}
+    </div>
   )
 }
 
@@ -1722,9 +1923,18 @@ export default function MatchShowPage() {
   const hasEvents   = eventCount > 0
   const goalCount   = data?.events?.filter(e => e.type === "Goal").length ?? 0
   const isNS        = statusShort === "NS" || statusShort === "TBD"
-  // Dynamic tab list — "preview" prepended for pre-kickoff matches
-  const TAB_KEYS    = isNS ? ["preview", "summary", "lineups", "h2h"] : ["summary", "stats", "lineups", "h2h"]
-  const TABS        = TAB_KEYS.map(k => ({ key: k, label: t(`match.${k}`) }))
+  const isFinished  = ["FT", "AET", "PEN"].includes(statusShort)
+  // Dynamic tab list — "preview" prepended for pre-kickoff; "ratings" for live/finished
+  const TAB_KEYS    = [
+    ...(isNS ? ["preview"] : []),
+    "summary",
+    ...(isNS ? [] : ["stats"]),
+    "lineups",
+    "h2h",
+    ...((isLive || isFinished) ? ["ratings"] : []),
+  ]
+  const TAB_LABELS  = { preview: t("match.preview"), summary: t("match.summary"), stats: t("match.stats"), lineups: t("match.lineups"), h2h: "H2H", ratings: "⭐ Ratings" }
+  const TABS        = TAB_KEYS.map(k => ({ key: k, label: TAB_LABELS[k] ?? k }))
 
   // Swipe between tabs
   function handleTabSwipeStart(e) { swipeStartX.current = e.touches[0].clientX }
@@ -1962,6 +2172,10 @@ export default function MatchShowPage() {
 
         {tab === "h2h" && (
           <H2HPanel h2h={data?.h2h} homeTeamName={homeName} awayTeamName={awayName} t={t} lang={i18n.language} />
+        )}
+
+        {tab === "ratings" && (
+          <PlayerRatingsPanel fixtureId={id} />
         )}
 
         {/* Related News — shown on every tab when fixture is loaded */}
