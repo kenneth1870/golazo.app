@@ -46,7 +46,7 @@ function EditModal({ match, onClose, onSave }) {
         borderRadius: 14, padding: "28px 28px", width: "100%", maxWidth: 420,
       }}>
         <h3 style={{ color: "#fff", margin: "0 0 4px" }}>
-          {match.home_team?.name} vs {match.away_team?.name}
+          {match.home_team?.name || match.home_slot || "TBD"} vs {match.away_team?.name || match.away_slot || "TBD"}
         </h3>
         <p style={{ color: "rgba(255,255,255,.3)", fontSize: "0.8rem", marginBottom: 20 }}>
           Edit match status and score
@@ -61,11 +61,11 @@ function EditModal({ match, onClose, onSave }) {
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
           <div>
-            <label style={labelStyle}>{match.home_team?.name} score</label>
+            <label style={labelStyle}>{match.home_team?.name || match.home_slot || "Home"} score</label>
             <input type="number" min="0" max="99" value={form.home_score} onChange={e => set("home_score", e.target.value)} style={inputStyle} />
           </div>
           <div>
-            <label style={labelStyle}>{match.away_team?.name} score</label>
+            <label style={labelStyle}>{match.away_team?.name || match.away_slot || "Away"} score</label>
             <input type="number" min="0" max="99" value={form.away_score} onChange={e => set("away_score", e.target.value)} style={inputStyle} />
           </div>
         </div>
@@ -164,7 +164,7 @@ export default function AdminMatchesPage() {
               {filtered.map(m => (
                 <tr key={m.id} style={{ borderTop: "1px solid rgba(255,255,255,.05)" }}>
                   <td style={{ padding: "12px 16px", color: "#fff", fontSize: "0.88rem", fontWeight: 600 }}>
-                    {m.home_team?.name} vs {m.away_team?.name}
+                    {m.home_team?.name || m.home_slot || "TBD"} vs {m.away_team?.name || m.away_slot || "TBD"}
                   </td>
                   <td style={{ padding: "12px 16px", color: "rgba(255,255,255,.4)", fontSize: "0.78rem", whiteSpace: "nowrap" }}>
                     {m.kickoff_at ? new Date(m.kickoff_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}

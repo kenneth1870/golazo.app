@@ -45,6 +45,8 @@ module Api
             away_score:  m.away_score,
             round:       m.round,
             group_stage: m.group_stage,
+            home_slot:   m.home_slot,
+            away_slot:   m.away_slot,
             home_team:   { id: m.home_team&.id, name: m.home_team&.name, flag_url: m.home_team&.flag_url },
             away_team:   { id: m.away_team&.id, name: m.away_team&.name, flag_url: m.away_team&.flag_url },
           }
