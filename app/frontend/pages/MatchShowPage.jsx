@@ -1158,7 +1158,25 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t, lang }) {
     </div>
   )
 
-  const [hw, d, aw] = h2h.summary || [0, 0, 0]
+  const computedSummary = (() => {
+    let hw = 0, d = 0, aw = 0
+    const homeLower = (homeTeamName || "").toLowerCase()
+    const awayLower = (awayTeamName || "").toLowerCase()
+    for (const m of h2h.matches) {
+      const hs = Number(m.home?.score ?? NaN)
+      const as_ = Number(m.away?.score ?? NaN)
+      if (isNaN(hs) || isNaN(as_)) continue
+      const mHomeLower = (m.home?.name || "").toLowerCase()
+      const mAwayLower = (m.away?.name || "").toLowerCase()
+      const homeIsHome = homeLower.split(" ").some(w => w.length > 2 && mHomeLower.includes(w))
+      const homeIsAway = homeLower.split(" ").some(w => w.length > 2 && mAwayLower.includes(w))
+      if (hs === as_) { d++; continue }
+      if ((homeIsHome && hs > as_) || (homeIsAway && as_ > hs)) hw++
+      else aw++
+    }
+    return [hw, d, aw]
+  })()
+  const [hw, d, aw] = h2h.summary || computedSummary
   const total = hw + d + aw || 1
 
   return (
@@ -1183,7 +1201,7 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t, lang }) {
         <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "var(--surface2)" }}>
           <div style={{ width: `${(hw/total)*100}%`, background: "#ee1e46" }} />
           <div style={{ width: `${(d/total)*100}%`, background: "rgba(255,255,255,.2)" }} />
-          <div style={{ flex: 1, background: "#3b82f6" }} />
+          <div style={{ width: `${(aw/total)*100}%`, background: "#3b82f6" }} />
         </div>
       </section>
 
