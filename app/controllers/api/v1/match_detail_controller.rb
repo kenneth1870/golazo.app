@@ -19,6 +19,7 @@ module Api
               kickoff_at: match.kickoff_at,
             )
             if resolved&.dig(:fixture, "teams").present?
+              sync_db_from_resolved(match, resolved)
               resolved[:fixture]["fixture"]["db_id"] = match.id
               return render json: resolved
             end
@@ -59,6 +60,7 @@ module Api
                 kickoff_at: local_match.kickoff_at,
               )
               if resolved&.dig(:fixture, "teams").present?
+                sync_db_from_resolved(local_match, resolved)
                 resolved[:fixture]["fixture"]["db_id"] = local_match.id
                 broadcast_if_changed(external_id, resolved)
                 return render json: resolved
@@ -124,6 +126,27 @@ module Api
       rescue => e
         Rails.logger.warn("[MatchDetail] api_sports_fallback failed: #{e.message}")
         data
+      end
+
+      # Write API-Football result back to the local DB record so the HOY widget
+      # and standings reflect the real score without waiting for WorldCupSync.
+      def sync_db_from_resolved(match, resolved)
+        fx           = resolved.dig(:fixture, "fixture") || {}
+        status_short = fx.dig("status", "short")
+        api_status   = LiveScoresClient::STATUS_MAP[status_short]
+        api_home     = resolved.dig(:fixture, "goals", "home")
+        api_away     = resolved.dig(:fixture, "goals", "away")
+        api_ext_id   = fx["id"]
+
+        updates = {}
+        updates[:status]      = api_status  if api_status.present?  && match.status != api_status
+        updates[:home_score]  = api_home    if api_home.present?     && match.home_score != api_home
+        updates[:away_score]  = api_away    if api_away.present?     && match.away_score != api_away
+        updates[:external_id] = api_ext_id  if api_ext_id.present?   && match.external_id != api_ext_id
+
+        match.update_columns(updates) if updates.any?
+      rescue => e
+        Rails.logger.warn("[MatchDetail#sync_db] #{e.message}")
       end
 
       def broadcast_if_changed(fixture_id, data)
