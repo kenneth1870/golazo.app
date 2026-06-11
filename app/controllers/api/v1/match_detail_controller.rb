@@ -15,15 +15,32 @@ module Api
 
         external_id = raw_id.sub(/\Aext-/, "").to_i
 
-        # Find the local DB record for this external_id (may be a WC match).
-        # We always try the API first — external_ids are now API-Football fixture IDs
-        # across the board (synced via WorldCupSync#sync_external_ids_from_api_football).
         local_match = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition)
                            .find_by(external_id: external_id)
 
         data = client.match_detail(external_id)
 
-        # Full detail unavailable — fall back to local DB data, then cached list data
+        # If the API returned a match but the team names don't match the local DB record,
+        # the external_id is still in the old namespace (football-data.org). Fall back to
+        # local data until sync_external_ids_from_api_football updates the IDs.
+        if local_match && data&.dig(:fixture, "teams").present?
+          api_home = data.dig(:fixture, "teams", "home", "name").to_s.downcase
+          api_away = data.dig(:fixture, "teams", "away", "name").to_s.downcase
+          db_home  = local_match.home_team&.name.to_s.downcase
+          db_away  = local_match.away_team&.name.to_s.downcase
+
+          # Allow for minor name differences (e.g. "Korea Republic" vs "South Korea")
+          names_match = api_home.split.any? { |w| db_home.include?(w) } &&
+                        api_away.split.any? { |w| db_away.include?(w) }
+
+          unless names_match
+            data = local_match_as_fixture(local_match)
+            data[:fixture]["fixture"]["db_id"] = local_match.id
+            return render json: data
+          end
+        end
+
+        # API returned nothing — fall back to local DB, then cached list data
         if data.nil? || data[:fixture].nil?
           if local_match
             data = local_match_as_fixture(local_match)

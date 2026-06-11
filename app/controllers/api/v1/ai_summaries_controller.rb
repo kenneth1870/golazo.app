@@ -4,7 +4,7 @@ module Api
     class AiSummariesController < BaseController
       def show
         match = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition)
-                     .find_by(id: params[:match_id])
+                     .find_by(id: params[:id])
 
         return render json: { error: "not_found" }, status: :not_found unless match
         return render json: { error: "match_not_finished" }, status: :unprocessable_entity unless match.status == "finished"
