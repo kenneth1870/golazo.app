@@ -30,10 +30,15 @@ export function useReminders() {
       if (delay <= 0 || delay > 48 * 3_600_000) return null
       return setTimeout(() => {
         if (Notification.permission === "granted") {
-          new Notification("⚽ Kickoff!", {
-            body: `${r.home_team} vs ${r.away_team} is starting now`,
-            icon: "/images/icon-192.png",
-            tag: `match-${r.id}`,
+          // Use ServiceWorkerRegistration.showNotification instead of
+          // `new Notification()` — iOS blocks the Notification constructor
+          // in the main thread (PWA and Safari), only the SW form is allowed.
+          navigator.serviceWorker?.ready.then(reg => {
+            reg.showNotification("⚽ Kickoff!", {
+              body: `${r.home_team} vs ${r.away_team} is starting now`,
+              icon: "/images/icon-192.png",
+              tag: `match-${r.id}`,
+            })
           })
         }
         setReminders(prev => {
