@@ -7,7 +7,6 @@ import { useExternalMatchChannel } from "../hooks/useExternalMatchChannel"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
 import { useLiveMinute, useGoalNotifications } from "./match/useMatchLive"
-import PredictionPanel from "./match/PredictionPanel"
 import ScorePredictionPanel from "./match/ScorePredictionPanel"
 import MatchReactions from "../components/MatchReactions"
 import { useReminders } from "../hooks/useReminders"
@@ -933,26 +932,6 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
 
   return (
     <div style={{ paddingBottom: 8 }}>
-      {/* Winner chip */}
-      {winner?.name && (
-        <div style={{
-          background: "rgba(238,30,70,.08)", border: "1px solid rgba(238,30,70,.2)",
-          borderRadius: 12, padding: "14px 18px", marginBottom: 20,
-          display: "flex", alignItems: "center", gap: 14,
-        }}>
-          <span style={{ fontSize: "1.6rem" }}>🔮</span>
-          <div>
-            <div style={{ fontSize: "0.6rem", color: "var(--muted)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 3 }}>
-              {t("match.matchPrediction")}
-            </div>
-            <div style={{ fontWeight: 900, fontSize: "1.05rem", color: "#fff" }}>{winner.name}</div>
-            {advice && (
-              <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,.45)", marginTop: 4 }}>{advice}</div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Win probability */}
       <div className="match-section" style={{ marginBottom: 20 }}>
         <div className="match-section__title">{t("match.winProbability")}</div>
@@ -1881,7 +1860,6 @@ export default function MatchShowPage() {
             </div>
 
             {hasFixture && <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} kickoffAt={kickoffAt} t={t} />}
-            {hasFixture && <PredictionPanel matchId={id} homeTeamName={homeName} awayTeamName={awayName} t={t} />}
 
             {/* AI Match Summary — shown after full time */}
             {["FT","AET","PEN"].includes(statusShort) && (
