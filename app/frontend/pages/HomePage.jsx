@@ -77,14 +77,23 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
 }
 
 // ─── Today's matches strip ────────────────────────────────────────────────────
-function TodayMatchesSection({ liveMatches, upcomingMatches, navigate, t }) {
-  // Only show matches kicking off today (local date) — not the full upcoming list
-  const todayStr = new Date().toLocaleDateString("en-CA") // "YYYY-MM-DD"
-  const todayUpcoming = upcomingMatches.filter(m => {
-    if (!m.kickoff_at) return false
-    return new Date(m.kickoff_at).toLocaleDateString("en-CA") === todayStr
-  })
-  const all     = [...liveMatches, ...todayUpcoming]
+function TodayMatchesSection({ liveMatches, todayMatches, upcomingMatches, navigate, t }) {
+  // Use local date ("YYYY-MM-DD") so late evening matches in UTC-6 etc. aren't cut off.
+  const todayStr = new Date().toLocaleDateString("en-CA")
+  const liveIds  = new Set(liveMatches.map(m => m.id))
+
+  // Finished today — comes from the "today" backend scope (UTC); good enough for same-day results.
+  const finishedToday = (todayMatches || [])
+    .filter(m => m.status === "finished" && !liveIds.has(m.id))
+
+  // Upcoming today — filter by local date so matches at 8 PM local (next UTC day) still appear.
+  const usedIds = new Set([...liveIds, ...finishedToday.map(m => m.id)])
+  const upcomingToday = (upcomingMatches || [])
+    .filter(m => !usedIds.has(m.id) && m.kickoff_at &&
+      new Date(m.kickoff_at).toLocaleDateString("en-CA") === todayStr)
+
+  const all     = [...liveMatches, ...finishedToday, ...upcomingToday]
+    .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
   const visible = all.slice(0, 6)
   if (visible.length === 0) return null
 
@@ -204,6 +213,7 @@ export default function HomePage() {
 
   const { matches: liveWC }         = useMatches("live",     { competition: "WC" })
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: "WC" })
+  const { matches: todayWC }         = useMatches("today",    { competition: "WC" })
   const { news: latestNews, newsError, retryNews } = useLatestNews()
 
   const nextMatch = liveWC[0] || upcomingMatches[0]
@@ -217,6 +227,7 @@ export default function HomePage() {
       <div className="container" style={{ paddingTop: 24, paddingBottom: 0 }}>
         <TodayMatchesSection
           liveMatches={liveWC}
+          todayMatches={todayWC}
           upcomingMatches={upcomingMatches}
           navigate={navigate}
           t={t}
