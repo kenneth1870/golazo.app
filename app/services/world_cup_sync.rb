@@ -434,13 +434,20 @@ class WorldCupSync
   end
 
   def broadcast_score(match, minute = nil)
-    ActionCable.server.broadcast("match_#{match.id}", {
+    payload = {
       type:       "score_update",
       home_score: match.home_score,
       away_score: match.away_score,
       status:     match.status,
       minute:     minute
-    })
+    }
+    ActionCable.server.broadcast("match_#{match.id}", payload)
+
+    # Also broadcast to the external_match channel so MatchShowPage (which
+    # subscribes by external_id) receives live score updates without polling.
+    if match.external_id
+      ActionCable.server.broadcast("external_match_#{match.external_id}", payload.merge(type: "match_update"))
+    end
 
     # Fire push notification to subscribers following either team (async)
     SendGoalAlertJob.perform_later(

@@ -34,6 +34,21 @@ module Api
                         api_away.split.any? { |w| db_away.include?(w) }
 
           unless names_match
+            # ID namespace mismatch (football-data.org vs API-Football).
+            # Try to resolve the correct fixture via team-name + kickoff search.
+            if local_match.home_team && local_match.away_team && local_match.kickoff_at
+              resolved = ApiSportsClient.new.match_detail(
+                home_name:  local_match.home_team.name,
+                away_name:  local_match.away_team.name,
+                kickoff_at: local_match.kickoff_at,
+              )
+              if resolved&.dig(:fixture, "teams").present?
+                resolved[:fixture]["fixture"]["db_id"] = local_match.id
+                broadcast_if_changed(external_id, resolved)
+                return render json: resolved
+              end
+            end
+            # ApiSportsClient also failed — serve local DB data as last resort
             data = local_match_as_fixture(local_match)
             data[:fixture]["fixture"]["db_id"] = local_match.id
             return render json: data

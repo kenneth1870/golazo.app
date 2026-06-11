@@ -1610,11 +1610,34 @@ export default function MatchShowPage() {
   // ActionCable subscription — push updates when live.
   // Stamps dataFetchedAt so concurrent polls know this data is the freshest.
   const handleCableMessage = useCallback((msg) => {
-    if (msg.type === "match_update") {
+    if (msg.type === "match_update" && msg.fixture) {
       dataFetchedAt.current = Date.now()
       setData(prev => {
         if (prev) checkGoals(msg.fixture?.goals, msg.events)
         return { fixture: msg.fixture, events: msg.events, stats: msg.stats, lineups: msg.lineups }
+      })
+    } else if (msg.type === "score_update" || (msg.type === "match_update" && !msg.fixture)) {
+      // Lightweight score-only update (broadcast from WorldCupSync) — patch existing data
+      dataFetchedAt.current = Date.now()
+      setData(prev => {
+        if (!prev?.fixture) return prev
+        const updated = {
+          ...prev,
+          fixture: {
+            ...prev.fixture,
+            goals: { home: msg.home_score, away: msg.away_score },
+            fixture: {
+              ...prev.fixture.fixture,
+              status: {
+                ...prev.fixture.fixture?.status,
+                short:   msg.status === "live" ? (prev.fixture.fixture?.status?.short || "1H") : msg.status,
+                elapsed: msg.minute,
+              },
+            },
+          },
+        }
+        checkGoals(updated.fixture.goals, prev.events)
+        return updated
       })
     }
   }, [])
