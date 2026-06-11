@@ -38,7 +38,7 @@ gem "web-push"
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"
 # JWT for stateless API authentication
-gem "jwt", "~> 2.9"
+gem "jwt", "~> 3.2"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
