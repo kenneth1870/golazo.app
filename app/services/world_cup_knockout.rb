@@ -11,11 +11,13 @@
 # Bracket positions are global so later rounds can reference their feeders:
 #   R32: 1..16   R16: 17..24   QF: 25..28   SF: 29..30   3rd: 31   Final: 32
 #
-# NOTE: the R32 group-slot pairings below reflect the standard 48-team bracket
-# *shape*; the precise official 2026 slotting (especially which group's third-
-# placed team lands in which slot) should be reconciled against FIFA's published
-# bracket. Third-placed teams are assigned to their slots in ranked order — a
-# documented simplification, since FIFA uses a fixed combination lookup table.
+# R32 positions 1–16 correspond to official FIFA match numbers 73–88 respectively.
+#
+# Third-place team slots (T1–T8) are assigned in best-to-worst ranking order as a
+# practical approximation. The exact slot assignment depends on which groups the 8
+# advancing third-placed teams come from (FIFA uses a 495-combination lookup table).
+# The ranked fallback may display a slightly different opponent for 3rd-place slots
+# until the combination is resolved at end of group stage.
 class WorldCupKnockout
   ROUND_DATES = {
     "Round of 32"   => Date.new(2026, 6, 28),
@@ -26,21 +28,53 @@ class WorldCupKnockout
     "Final"         => Date.new(2026, 7, 19)
   }.freeze
 
-  # 16 R32 matches: [home_slot, away_slot]. Slots: "1X"/"2X" = winner/runner-up
-  # of group X; "T1".."T8" = best third-placed teams (ranked).
+  # Official FIFA 2026 Round of 32 pairings (FIFA matches 73–88 in tournament order).
+  # Source: FIFA official bracket + Wikipedia 2026 FIFA World Cup knockout stage.
   #
-  # TODO (URGENT — tournament is now underway as of 2026-06-09):
-  # Verify these pairings against the official FIFA 2026 bracket once the group
-  # stage is complete and the actual R32 draw pairings are published.
-  # Third-placed team slots (T1-T8) are especially likely to differ from the
-  # placeholder ranking-order assignment used here — FIFA uses a fixed lookup
-  # table that maps the specific groups' third-placed teams to predetermined slots.
-  # See: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/
+  # 8 certain matchups (group winner vs runner-up, or runner-up vs runner-up):
+  #   2A-2B, 1F-2C, 1C-2F, 2E-2I, 1H-2J, 1J-2H, 2K-2L, 2D-2G
+  #
+  # 8 slots where the opponent is the best available 3rd-placed team (T1=best…T8):
+  #   1E-T1, 1I-T2, 1A-T3, 1L-T4, 1D-T5, 1G-T6, 1B-T7, 1K-T8
   R32_SLOTS = [
-    %w[1A T1], %w[1C 2F], %w[1E 2D], %w[1G T2],
-    %w[1I 2L], %w[1K T3], %w[1B 2I], %w[1D T4],
-    %w[1F 2C], %w[1H 2J], %w[1J T5], %w[1L 2E],
-    %w[2A 2B], %w[T6 2H], %w[T7 2G], %w[T8 2K]
+    %w[2A 2B],  # M73: Runner-up A vs Runner-up B
+    %w[1E T1],  # M74: Winner E vs best 3rd (from A/B/C/D/F)
+    %w[1F 2C],  # M75: Winner F vs Runner-up C
+    %w[1C 2F],  # M76: Winner C vs Runner-up F
+    %w[1I T2],  # M77: Winner I vs best 3rd (from C/D/F/G/H)
+    %w[2E 2I],  # M78: Runner-up E vs Runner-up I
+    %w[1A T3],  # M79: Winner A vs best 3rd (from C/E/F/H/I)
+    %w[1L T4],  # M80: Winner L vs best 3rd (from E/H/I/J/K)
+    %w[1D T5],  # M81: Winner D vs best 3rd (from B/E/F/I/J)
+    %w[1G T6],  # M82: Winner G vs best 3rd (from A/E/H/I/J)
+    %w[2K 2L],  # M83: Runner-up K vs Runner-up L
+    %w[1H 2J],  # M84: Winner H vs Runner-up J
+    %w[1B T7],  # M85: Winner B vs best 3rd (from E/F/G/I/J)
+    %w[1J 2H],  # M86: Winner J vs Runner-up H
+    %w[1K T8],  # M87: Winner K vs best 3rd (from D/E/I/J/L)
+    %w[2D 2G],  # M88: Runner-up D vs Runner-up G
+  ].freeze
+
+  # Official R16 cross-bracket pairings (FIFA matches 89–96).
+  # Each pair is [R32_pos_home, R32_pos_away] using positions 1–16 above.
+  R16_PAIRINGS = [
+    [2,  5],   # M89 (pos 17): W74 vs W77
+    [1,  3],   # M90 (pos 18): W73 vs W75
+    [4,  6],   # M91 (pos 19): W76 vs W78
+    [7,  8],   # M92 (pos 20): W79 vs W80
+    [11, 12],  # M93 (pos 21): W83 vs W84
+    [9,  10],  # M94 (pos 22): W81 vs W82
+    [14, 16],  # M95 (pos 23): W86 vs W88
+    [13, 15],  # M96 (pos 24): W85 vs W87
+  ].freeze
+
+  # Official QF cross-bracket pairings (FIFA matches 97–100).
+  # Each pair is [R16_pos_home, R16_pos_away] using positions 17–24 above.
+  QF_PAIRINGS = [
+    [17, 18],  # M97 (pos 25): W89 vs W90
+    [21, 22],  # M98 (pos 26): W93 vs W94
+    [19, 20],  # M99 (pos 27): W91 vs W92
+    [23, 24],  # M100 (pos 28): W95 vs W96
   ].freeze
 
   def self.rebuild!
@@ -60,25 +94,27 @@ class WorldCupKnockout
     propagate_later_rounds
   end
 
-  # Creates the 32 knockout fixtures if they don't already exist.
+  # Creates or corrects the 32 knockout fixtures.
+  # Slot labels on unfinished matches are always updated so bracket corrections propagate.
   def ensure_fixtures!
     return unless @competition
 
     bracket_definition.each do |defn|
       match = @competition.matches.find_or_initialize_by(bracket_pos: defn[:pos])
-      match.round       = defn[:round]
-      match.home_slot ||= defn[:home_slot]
-      match.away_slot ||= defn[:away_slot]
+      match.round      = defn[:round]
       match.group_stage = nil
       match.status    ||= "scheduled"
       match.kickoff_at ||= defn[:date].in_time_zone("UTC")
+      unless match.status == "finished"
+        match.home_slot = defn[:home_slot]
+        match.away_slot = defn[:away_slot]
+      end
       match.save!
     end
   end
 
   private
 
-  # Full 32-match bracket definition with feeder-derived slot labels.
   def bracket_definition
     defs = []
 
@@ -87,31 +123,25 @@ class WorldCupKnockout
                 date: ROUND_DATES["Round of 32"] }
     end
 
-    # R16 17..24 fed by R32 winners
-    8.times do |i|
+    R16_PAIRINGS.each_with_index do |(a, b), i|
       defs << { pos: 17 + i, round: "Round of 16",
-                home_slot: "W#{2 * i + 1}", away_slot: "W#{2 * i + 2}",
+                home_slot: "W#{a}", away_slot: "W#{b}",
                 date: ROUND_DATES["Round of 16"] }
     end
 
-    # QF 25..28 fed by R16 winners
-    4.times do |i|
+    QF_PAIRINGS.each_with_index do |(a, b), i|
       defs << { pos: 25 + i, round: "Quarter Final",
-                home_slot: "W#{17 + 2 * i}", away_slot: "W#{17 + 2 * i + 1}",
+                home_slot: "W#{a}", away_slot: "W#{b}",
                 date: ROUND_DATES["Quarter Final"] }
     end
 
-    # SF 29..30 fed by QF winners
-    2.times do |i|
-      defs << { pos: 29 + i, round: "Semi Final",
-                home_slot: "W#{25 + 2 * i}", away_slot: "W#{25 + 2 * i + 1}",
-                date: ROUND_DATES["Semi Final"] }
-    end
-
-    # 3rd place 31 fed by SF losers; Final 32 fed by SF winners
-    defs << { pos: 31, round: "3rd Place", home_slot: "L29", away_slot: "L30",
+    defs << { pos: 29, round: "Semi Final", home_slot: "W25", away_slot: "W26",
+              date: ROUND_DATES["Semi Final"] }
+    defs << { pos: 30, round: "Semi Final", home_slot: "W27", away_slot: "W28",
+              date: ROUND_DATES["Semi Final"] }
+    defs << { pos: 31, round: "3rd Place",  home_slot: "L29", away_slot: "L30",
               date: ROUND_DATES["3rd Place"] }
-    defs << { pos: 32, round: "Final", home_slot: "W29", away_slot: "W30",
+    defs << { pos: 32, round: "Final",      home_slot: "W29", away_slot: "W30",
               date: ROUND_DATES["Final"] }
 
     defs
@@ -123,7 +153,7 @@ class WorldCupKnockout
     all_done   = all_groups_complete?
 
     @competition.matches.where(round: "Round of 32").find_each do |m|
-      next if m.status == "finished" # don't disturb a played match
+      next if m.status == "finished"
 
       home = team_for_group_slot(m.home_slot, qualifiers, thirds, all_done)
       away = team_for_group_slot(m.away_slot, qualifiers, thirds, all_done)
@@ -132,9 +162,6 @@ class WorldCupKnockout
     end
   end
 
-  # A group's winner/runner-up is only final once every team in it has played all
-  # its group games (each team plays the other N-1). Counting played games rather
-  # than "no unfinished rows" stays correct even if not every fixture exists yet.
   def group_complete?(letter)
     team_ids = Team.where(group: letter).pluck(:id)
     return false if team_ids.size < 2
@@ -150,14 +177,12 @@ class WorldCupKnockout
     team_ids.all? { |id| counts[id] >= needed }
   end
 
-  # The best-third-placed ranking is only final once every group is complete.
   def all_groups_complete?
     groups = Team.where.not(group: nil).distinct.pluck(:group)
     groups.any? && groups.all? { |g| group_complete?(g) }
   end
 
   def propagate_later_rounds
-    # Process in bracket order so a round's winners are available to the next.
     @competition.matches.knockout.where.not(round: "Round of 32")
                 .order(:bracket_pos).find_each do |m|
       next if m.status == "finished"
@@ -168,8 +193,6 @@ class WorldCupKnockout
     end
   end
 
-  # "1A"/"2B" → qualifier; "T3" → 3rd-placed rank 3. Returns nil (stay TBD)
-  # until the feeding group(s) are actually complete.
   def team_for_group_slot(slot, qualifiers, thirds, all_done)
     return nil if slot.blank?
 
@@ -183,7 +206,6 @@ class WorldCupKnockout
     end
   end
 
-  # "W29" → winner of bracket match 29; "L30" → loser of bracket match 30
   def team_for_feeder_slot(slot)
     return nil if slot.blank?
 
@@ -191,7 +213,7 @@ class WorldCupKnockout
     pos  = slot[1..].to_i
     feeder = @competition.matches.find_by(bracket_pos: pos)
     return nil unless feeder&.status == "finished" && feeder.home_score && feeder.away_score
-    return nil if feeder.home_score == feeder.away_score # undecided (would need ET/pens)
+    return nil if feeder.home_score == feeder.away_score
 
     home_won = feeder.home_score > feeder.away_score
     case kind
