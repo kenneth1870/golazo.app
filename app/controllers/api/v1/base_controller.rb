@@ -11,12 +11,45 @@ module Api
         request.format = :json
       end
 
-      # Tiered HTTP cache so CDN/browser caching actually kicks in.
-      # Live and today endpoints get short TTLs; static reference data gets longer.
+      # ── JWT authentication ──────────────────────────────
+      def current_user
+        return @current_user if defined?(@current_user)
+        token = extract_bearer_token
+        @current_user = token ? User.from_token(token) : nil
+      end
+
+      def require_user!
+        render json: { error: "unauthorized" }, status: :unauthorized unless current_user
+      end
+
+      def require_admin!
+        # Legacy ENV token (still works for data-sync scripts)
+        env_token = ENV["ADMIN_API_TOKEN"].to_s
+        provided  = request.authorization.to_s.sub(/\ABearer\s+/i, "")
+
+        return if env_token.present? && provided.present? &&
+                  ActiveSupport::SecurityUtils.secure_compare(provided, env_token)
+
+        # JWT-based admin check
+        return if current_user&.admin?
+
+        render json: { error: "unauthorized" }, status: :unauthorized
+      end
+
+      def extract_bearer_token
+        auth = request.authorization.to_s
+        return nil unless auth.start_with?("Bearer ")
+        auth.sub("Bearer ", "").strip
+      end
+
+      # ── HTTP cache headers ──────────────────────────────
       def set_cache_headers
         return unless response.ok?
-        return unless request.get? || request.head?   # never cache POST/PUT/PATCH/DELETE
-        return if request.path.include?("/search") || request.path.include?("/predictions") || request.path.include?("/locale")
+        return unless request.get? || request.head?
+        return if request.path.include?("/search") ||
+                  request.path.include?("/predictions") ||
+                  request.path.include?("/locale") ||
+                  request.path.include?("/admin")
         ttl = case request.path
         when %r{/today|/live_scores|/match_detail}  then 30.seconds
         when %r{/matches|/fixtures|/results}        then 2.minutes
@@ -26,20 +59,6 @@ module Api
         else                                             1.minute
         end
         response.set_header("Cache-Control", "public, max-age=#{ttl.to_i}, stale-while-revalidate=#{(ttl * 2).to_i}")
-      end
-
-      # Guards write endpoints (score/goal/stat mutations). Requires
-      # `Authorization: Bearer <ADMIN_API_TOKEN>`. Fails closed: if
-      # ADMIN_API_TOKEN is unset, every request is rejected, so these endpoints
-      # are never anonymously writable in any environment.
-      def require_admin!
-        configured = ENV["ADMIN_API_TOKEN"].to_s
-        provided   = request.authorization.to_s.sub(/\ABearer\s+/i, "")
-
-        return if configured.present? && provided.present? &&
-                  ActiveSupport::SecurityUtils.secure_compare(provided, configured)
-
-        render json: { error: "unauthorized" }, status: :unauthorized
       end
     end
   end

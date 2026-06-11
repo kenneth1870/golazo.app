@@ -3,6 +3,22 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
+      # ── Auth ────────────────────────────────────────────
+      post   "sessions",          to: "sessions#create"
+      get    "sessions/me",       to: "sessions#me"
+      delete "sessions",          to: "sessions#logout"
+      post   "sessions/register", to: "sessions#register"
+
+      # ── Admin ────────────────────────────────────────────
+      namespace :admin do
+        get  "/",           to: "dashboard#index"
+        resources :matches, only: %i[index show update]
+        resources :users,   only: %i[index show update destroy]
+        resources :news,    only: %i[index]
+        get  "push",        to: "push#index"
+        post "push/broadcast", to: "push#broadcast"
+      end
+
       resources :competitions, only: [ :index, :show ], param: :code
       get "search",       to: "search#index"
       get "locale",       to: "locale#index"
