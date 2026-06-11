@@ -8,6 +8,8 @@ import InstallPrompt from "./components/InstallPrompt"
 import ScrollToTop from "./components/ScrollToTop"
 import ErrorBoundary from "./components/ErrorBoundary"
 import OnboardingModal, { useOnboarding } from "./components/OnboardingModal"
+import RequireAdmin from "./components/RequireAdmin"
+import LoginPage from "./pages/LoginPage"
 
 // Critical path — loaded eagerly (always needed on first paint)
 import HomePage   from "./pages/HomePage"
@@ -38,6 +40,12 @@ const LeaderboardPage       = lazy(() => import("./pages/LeaderboardPage"))
 const PlayerPage            = lazy(() => import("./pages/PlayerPage"))
 const ComparePage           = lazy(() => import("./pages/ComparePage"))
 const TransferCenterPage    = lazy(() => import("./pages/TransferCenterPage"))
+const AdminLayout           = lazy(() => import("./pages/admin/AdminLayout"))
+const AdminDashboardPage    = lazy(() => import("./pages/admin/AdminDashboardPage"))
+const AdminMatchesPage      = lazy(() => import("./pages/admin/AdminMatchesPage"))
+const AdminPushPage         = lazy(() => import("./pages/admin/AdminPushPage"))
+const AdminUsersPage        = lazy(() => import("./pages/admin/AdminUsersPage"))
+const AdminNewsPage         = lazy(() => import("./pages/admin/AdminNewsPage"))
 
 function PageLoader() {
   return (
@@ -51,6 +59,29 @@ export default function App() {
   const location = useLocation()
   useLocale() // auto-detect language from IP / device on every session
   const { show: showOnboarding, dismiss: dismissOnboarding } = useOnboarding()
+
+  // Admin + login routes render outside the public layout (no Navbar/Footer/BottomNav)
+  const isAdminOrAuth = location.pathname.startsWith("/admin") || location.pathname === "/login"
+  if (isAdminOrAuth) {
+    return (
+      <ErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
+              <Route index              element={<AdminDashboardPage />} />
+              <Route path="matches"     element={<AdminMatchesPage />} />
+              <Route path="push"        element={<AdminPushPage />} />
+              <Route path="users"       element={<AdminUsersPage />} />
+              <Route path="news"        element={<AdminNewsPage />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
+    )
+  }
+
   return (
     <div className="site-wrap">
       <ScrollToTop />
