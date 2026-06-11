@@ -14,22 +14,25 @@ module Api
         end
 
         external_id = raw_id.sub(/\Aext-/, "").to_i
+
+        # Always check local DB first — WC matches use football-data.org IDs
+        # which are in a different namespace from the LiveScores/API-Football IDs.
+        # Calling the external API with a football-data ID returns the wrong match.
+        local_match = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition)
+                           .find_by(external_id: external_id)
+        if local_match
+          data = local_match_as_fixture(local_match)
+          data[:fixture]["fixture"]["db_id"] = local_match.id
+          return render json: data
+        end
+
         data = client.match_detail(external_id)
 
         # Full detail unavailable — cascade through fallbacks
         if data.nil? || data[:fixture].nil?
-          # 1. Local DB (synced matches with external_id)
-          match = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition)
-                       .find_by(external_id: external_id)
-          if match
-            data = local_match_as_fixture(match)
-            # Merge db_id into fixture so frontend can call AI summary
-            data[:fixture]&.dig("fixture")&.merge!("db_id" => match.id)
-          else
-            # 2. Build a basic fixture from the cached date-list data
-            data = client.match_from_list(external_id)
-            return render json: { fixture: nil, error: "not_found", stats: [], events: [], lineups: [] } unless data
-          end
+          # Build a basic fixture from the cached date-list data
+          data = client.match_from_list(external_id)
+          return render json: { fixture: nil, error: "not_found", stats: [], events: [], lineups: [] } unless data
         end
 
         # Try fallback whenever stats are missing — even if events/lineups exist.

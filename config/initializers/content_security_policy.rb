@@ -27,8 +27,8 @@ Rails.application.configure do
     policy.style_src :self, :unsafe_inline, "https://fonts.googleapis.com"
 
     if Rails.env.development?
-      # Vite HMR requires eval for module hot-reloading
-      policy.script_src :self, :unsafe_eval,
+      # Vite HMR requires eval + inline module scripts (React Refresh preamble)
+      policy.script_src :self, :unsafe_eval, :unsafe_inline,
                         "http://#{ViteRuby.config.host_with_port}"
       policy.connect_src :self, :https,
                          "http://#{ViteRuby.config.host_with_port}",

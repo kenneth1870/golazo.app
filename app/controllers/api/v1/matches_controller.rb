@@ -35,8 +35,13 @@ module Api
       end
 
       def show
-        match = Match.includes(:home_team, :away_team, :competition,
-                               goals: :team, match_stats: :team).find(params[:id])
+        scope = Match.includes(:home_team, :away_team, :competition,
+                               goals: :team, match_stats: :team)
+        match = if params[:id].to_s.start_with?("db-")
+          scope.find(params[:id].delete_prefix("db-").to_i)
+        else
+          scope.find_by!(external_id: params[:id])
+        end
         render json: match
       end
 

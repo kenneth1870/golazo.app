@@ -51,12 +51,8 @@ const LEAGUES = [
 ]
 
 const LANGS = [
-  { code: "en", label: "English",    flag: "🇬🇧" },
-  { code: "es", label: "Español",    flag: "🇪🇸" },
-  { code: "pt", label: "Português",  flag: "🇧🇷" },
-  { code: "fr", label: "Français",   flag: "🇫🇷" },
-  { code: "de", label: "Deutsch",    flag: "🇩🇪" },
-  { code: "ar", label: "العربية",    flag: "🇸🇦" },
+  { code: "en", label: "English", flag: "🇬🇧" },
+  { code: "es", label: "Español", flag: "🇪🇸" },
 ]
 
 export function useOnboarding() {

@@ -12,17 +12,16 @@ export const SUPPORTED_LANGUAGES = [
 
 const SUPPORTED = ["en", "es"]
 
-// Priority: 1) user-saved preference  2) device/browser language  3) English
+// Priority: 1) user-saved preference  2) Spanish
 const savedLang  = storageGet("golazo_lang")
-const deviceLang = (navigator.language || navigator.userLanguage || "en").split("-")[0].toLowerCase()
-const initialLang = savedLang || (SUPPORTED.includes(deviceLang) ? deviceLang : "en")
+const initialLang = savedLang || "es"
 
 i18n
   .use(initReactI18next)
   .init({
     resources: { en: { translation: en }, es: { translation: es } },
     lng: initialLang,
-    fallbackLng: "en",
+    fallbackLng: "es",
     supportedLngs: SUPPORTED,
     interpolation: { escapeValue: false },
   })
