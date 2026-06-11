@@ -58,7 +58,7 @@ export default function SearchBar({ onClose }) {
     if (result.type === "team") {
       navigate(`/teams/${result.id}`)
     } else if (result.type === "match") {
-      const dest = result.external_id ? `/matches/${result.external_id}` : `/matches/db-${result.id}`
+      const dest = `/matches/db-${result.id}`
       navigate(dest)
     }
     onClose()

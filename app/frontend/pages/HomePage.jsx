@@ -53,7 +53,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
       {next ? (
         <div
           style={{ marginLeft: "auto", cursor: "pointer", textAlign: "right" }}
-          onClick={() => next.external_id ? navigate(`/matches/${next.external_id}`) : navigate("/scores/fixtures")}
+          onClick={() => navigate(`/matches/db-${next.id}`)}
         >
           <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>
             {next.status === "live" ? t("home.playingNow") : t("hero.nextMatch")}
@@ -116,7 +116,7 @@ function TodayMatchesSection({ liveMatches, upcomingMatches, navigate, t }) {
             <MatchRow
               match={m}
               showDate={false}
-              onClick={() => m.external_id ? navigate(`/matches/${m.external_id}`) : navigate(`/matches/db-${m.id}`)}
+              onClick={() => navigate(`/matches/db-${m.id}`)}
             />
           </div>
         ))}

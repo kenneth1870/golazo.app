@@ -5,12 +5,28 @@ module Api
         raw_id = params[:id].to_s
         client = LiveScoresClient.new
 
-        # db-{id} — direct DB lookup (WC matches without an external_id)
+        # db-{id} — direct DB lookup (WC matches navigated from the HOY widget)
         if raw_id.start_with?("db-")
           db_id = raw_id.sub("db-", "").to_i
           match = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition).find_by(id: db_id)
           return render json: { fixture: nil, error: "not_found", stats: [], events: [], lineups: [] } unless match
-          return render json: local_match_as_fixture(match)
+
+          # Try to resolve the real API-Football fixture so lineups, stats, ratings, etc. work.
+          if match.home_team && match.away_team && match.kickoff_at
+            resolved = ApiSportsClient.new.match_detail(
+              home_name:  match.home_team.name,
+              away_name:  match.away_team.name,
+              kickoff_at: match.kickoff_at,
+            )
+            if resolved&.dig(:fixture, "teams").present?
+              resolved[:fixture]["fixture"]["db_id"] = match.id
+              return render json: resolved
+            end
+          end
+
+          data = local_match_as_fixture(match)
+          data[:fixture]["fixture"]["db_id"] = match.id
+          return render json: data
         end
 
         external_id = raw_id.sub(/\Aext-/, "").to_i
