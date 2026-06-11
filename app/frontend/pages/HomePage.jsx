@@ -78,7 +78,13 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
 
 // ─── Today's matches strip ────────────────────────────────────────────────────
 function TodayMatchesSection({ liveMatches, upcomingMatches, navigate, t }) {
-  const all     = [...liveMatches, ...upcomingMatches]
+  // Only show matches kicking off today (local date) — not the full upcoming list
+  const todayStr = new Date().toLocaleDateString("en-CA") // "YYYY-MM-DD"
+  const todayUpcoming = upcomingMatches.filter(m => {
+    if (!m.kickoff_at) return false
+    return new Date(m.kickoff_at).toLocaleDateString("en-CA") === todayStr
+  })
+  const all     = [...liveMatches, ...todayUpcoming]
   const visible = all.slice(0, 6)
   if (visible.length === 0) return null
 
