@@ -12,6 +12,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { storageGet, storageSet } from "../utils/safeStorage"
 import { useFavorites } from "../hooks/useFavorites"
+import { usePushNotifications } from "../hooks/usePushNotifications"
 
 const ONBOARDED_KEY = "golazo_onboarded"
 
@@ -74,6 +75,7 @@ export function useOnboarding() {
 export default function OnboardingModal({ onDismiss }) {
   const { t, i18n } = useTranslation()
   const { addFavorite, favorites } = useFavorites()
+  const { subscribe } = usePushNotifications()
 
   const [step, setStep]               = useState(0)
   const [selectedTeams, setTeams]     = useState([])
@@ -115,10 +117,15 @@ export default function OnboardingModal({ onDismiss }) {
   }
 
   const requestNotifications = async () => {
+    // subscribe() calls Notification.requestPermission() AND creates a
+    // PushManager subscription — bare requestPermission() alone does neither
+    // on iOS (silent ignore) nor creates the server-side record needed for
+    // VAPID delivery on Android.
     try {
-      const perm = await Notification.requestPermission()
-      setNotifDone(true)
+      await subscribe(selectedTeams.map(t => t.name))
     } catch {
+      // swallow — user may have denied; setNotifDone below marks step done
+    } finally {
       setNotifDone(true)
     }
   }
