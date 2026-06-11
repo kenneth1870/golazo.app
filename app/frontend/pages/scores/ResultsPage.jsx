@@ -122,7 +122,8 @@ export default function ResultsPage() {
   const load = useCallback((d) => {
     setLoading(true)
     setError(false)
-    fetchWithTimeout(`/api/v1/results?date=${toISO(d)}`)
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    fetchWithTimeout(`/api/v1/results?date=${toISO(d)}&tz=${encodeURIComponent(tz)}`)
       .then(r => r.json())
       .then(data => {
         const finished = data.map(normalizeMatch).filter(m => m.status === "finished")

@@ -148,7 +148,8 @@ export default function FixturesPage() {
   const load = useCallback((date) => {
     setLoading(true)
     setError(false)
-    fetchWithTimeout(`/api/v1/fixtures?date=${toISO(date)}`)
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    fetchWithTimeout(`/api/v1/fixtures?date=${toISO(date)}&tz=${encodeURIComponent(tz)}`)
       .then(r => r.json())
       .then(setMatches)
       .catch(() => { setError(true); setMatches([]) })

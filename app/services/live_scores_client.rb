@@ -125,17 +125,16 @@ class LiveScoresClient
     []
   end
 
-  # All important matches for a given date (UTC).
+  # All important matches for a given date.
   # Returns every senior men's international/continental competition — World Cup,
   # Copa América, AFCON, Asian/regional friendlies, WC qualifiers, etc. —
   # plus any FEATURED_LEAGUES club competition. Women's and youth excluded.
-  def matches_for_date(date)
-    date = date.to_date
-    # Past dates are immutable — cache for 24 h.  Today / future stay at 10 min
-    # so newly-added fixtures and status changes appear promptly.
+  def matches_for_date(date, timezone: "UTC")
+    date   = date.to_date
+    tz_key = timezone.gsub(/[^A-Za-z0-9_]/, "_").downcase
     ttl = date < Date.today ? 24.hours : 10.minutes
-    Rails.cache.fetch("live_scores_date_v14_#{date.iso8601}", expires_in: ttl, race_condition_ttl: 30.seconds) do
-      data = get("fixtures", date: date.iso8601, timezone: "UTC")
+    Rails.cache.fetch("live_scores_date_v15_#{date.iso8601}_#{tz_key}", expires_in: ttl, race_condition_ttl: 30.seconds) do
+      data = get("fixtures", date: date.iso8601, timezone: timezone)
       (data.dig("response") || [])
         .filter_map { |f| normalize_fixture(f) }
         .select     { |m| featured_league?(m) }

@@ -3,7 +3,8 @@ module Api
     class ResultsController < BaseController
       def index
         date = parse_date(params[:date]) || Date.yesterday
-        render json: LiveScoresClient.new.matches_for_date(date)
+        tz   = sanitize_tz(params[:tz])
+        render json: LiveScoresClient.new.matches_for_date(date, timezone: tz)
       rescue => e
         Rails.logger.error("[ResultsController] #{e.message}")
         render json: []
@@ -16,6 +17,14 @@ module Api
         Date.parse(val)
       rescue ArgumentError
         nil
+      end
+
+      def sanitize_tz(val)
+        return "UTC" if val.blank?
+        TZInfo::Timezone.get(val)
+        val
+      rescue TZInfo::InvalidTimezoneIdentifier
+        "UTC"
       end
     end
   end
