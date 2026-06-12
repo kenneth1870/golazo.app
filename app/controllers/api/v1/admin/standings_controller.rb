@@ -4,6 +4,15 @@ module Api
       class StandingsController < BaseController
         before_action :require_admin!
 
+        def recalculate
+          WorldCupSync.new(competition_code: "WC").recalculate_standings_from_results
+          Rails.cache.delete("standings_WC")
+          WorldCupKnockout.rebuild!
+          render json: { ok: true }
+        rescue => e
+          render json: { error: e.message }, status: :internal_server_error
+        end
+
         def index
           groups = Team.where.not(group: [nil, ""]).order(:group, :name).group_by(&:group)
 

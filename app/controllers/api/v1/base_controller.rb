@@ -46,6 +46,7 @@ module Api
       def set_cache_headers
         return unless response.ok?
         return unless request.get? || request.head?
+        return if Rails.env.development?
         return if request.path.include?("/search") ||
                   request.path.include?("/predictions") ||
                   request.path.include?("/locale") ||

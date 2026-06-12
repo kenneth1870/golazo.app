@@ -17,7 +17,8 @@ Rails.application.routes.draw do
         resources :users,   only: %i[index show update destroy]
         resources :news,    only: %i[index]
         resources :teams,   only: %i[index update]
-        get  "standings",   to: "standings#index"
+        get  "standings",         to: "standings#index"
+        post "standings/recalculate", to: "standings#recalculate"
         get  "push",        to: "push#index"
         post "push/broadcast", to: "push#broadcast"
       end
