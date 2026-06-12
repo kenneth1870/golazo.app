@@ -117,7 +117,8 @@ module Api
 
           seen = Set.new(matches.map { |m| m[:external_id] })
           combined = matches + next_day.reject { |m| seen.include?(m[:external_id]) }
-          combined.map { |m| normalize_api(m) }
+          combined.select { |m| LEAGUE_ID_TO_CODE[m[:league_id].to_i] == "WC" }
+                  .map { |m| normalize_api(m) }
         end
       rescue => e
         Rails.logger.error("[TodayController] API matches failed: #{e.message}")
