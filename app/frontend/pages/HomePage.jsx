@@ -245,7 +245,7 @@ export default function HomePage() {
     (!m.kickoff_at || new Date(m.kickoff_at).toLocaleDateString("en-CA") !== todayStr)
   )
 
-  const nextMatch = liveWC[0] || upcomingMatches[0]
+  const nextMatch = liveWC.length === 0 ? upcomingMatches[0] : null
 
   return (
     <>
