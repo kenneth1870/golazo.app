@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { translateLeague } from "../../i18n/leagueNames"
+import { translateLeague, translateCountry } from "../../i18n/leagueNames"
 import MatchRow from "../../components/MatchRow"
 import FlagImg from "../../components/FlagImg"
 import { useLocale } from "../../hooks/useLocale"
@@ -43,6 +43,8 @@ function useDateLabel(date, t) {
 
 // ─── Date strip ───────────────────────────────────────
 function DateStrip({ selected, onChange }) {
+  const { i18n }    = useTranslation()
+  const locale      = i18n.language || "en"
   const todayISO    = toISO(new Date())
   const selectedISO = toISO(selected)
   const touchStartX = useRef(null)
@@ -98,10 +100,10 @@ function DateStrip({ selected, onChange }) {
               }}
             >
               <div style={{ fontWeight: isSel || isToday ? 700 : 400 }}>
-                {d.toLocaleDateString([], { weekday: "short" })}
+                {d.toLocaleDateString(locale, { weekday: "short" })}
               </div>
               <div style={{ fontSize: "0.65rem", opacity: 0.8 }}>
-                {d.toLocaleDateString([], { month: "short", day: "numeric" })}
+                {d.toLocaleDateString(locale, { month: "short", day: "numeric" })}
               </div>
             </button>
           )
@@ -172,17 +174,6 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
   )
 }
 
-const COUNTRY_ES = {
-  "World": "Mundial",
-  "International": "Internacional",
-  "Europe": "Europa",
-  "South America": "Sudamérica",
-  "North America": "Norteamérica",
-  "Africa": "África",
-  "Asia": "Asia",
-  "Oceania": "Oceanía",
-}
-
 // ─── Competition block ────────────────────────────────
 function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
   const { t, i18n } = useTranslation()
@@ -190,12 +181,6 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
   const hasLive = matches.some(m => m.status === "live")
   const isReal  = typeof matches[0]?.id === "string" && matches[0]?.id?.startsWith("ext_")
   const canNav  = comp?.code && !String(comp.code).match(/^\d+$/)
-
-  const lang = (i18n.language || "en").split("-")[0].toLowerCase()
-  function localCountry(c) {
-    if (!c) return null
-    return lang === "es" ? (COUNTRY_ES[c] ?? c) : c
-  }
 
   const sorted = [...matches].sort((a, b) => {
     const order = { live: 0, scheduled: 1, finished: 2 }
@@ -211,7 +196,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
       >
         <FlagImg src={comp?.logo} name={comp?.name} size={20} className="logo-sm" />
         <h3 style={{ margin: 0 }}>{translateLeague(comp?.name, i18n.language) ?? "Other"}</h3>
-        <span className="widget-meta-country" style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{localCountry(comp?.country)}</span>
+        <span className="widget-meta-country" style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{translateCountry(comp?.country, i18n.language)}</span>
         {hasLive && <span className="live-badge">{t("status.live")}</span>}
         {canNav && <span style={{ fontSize: "0.75rem", color: "#ee1e46" }}>→</span>}
       </div>

@@ -55,9 +55,26 @@ const ES = {
  * @param {string} lang                – current i18n language code, e.g. "es"
  * @returns {string}
  */
+const COUNTRY_ES = {
+  "World":         "Mundial",
+  "International": "Internacional",
+  "Europe":        "Europa",
+  "South America": "Sudamérica",
+  "North America": "Norteamérica",
+  "Africa":        "África",
+  "Asia":          "Asia",
+  "Oceania":       "Oceanía",
+}
+
 export function translateLeague(name, lang) {
   if (!name) return name
   const base = (lang || "en").split("-")[0].toLowerCase()
   if (base === "es" && ES[name]) return ES[name]
   return name
+}
+
+export function translateCountry(country, lang) {
+  if (!country) return null
+  const base = (lang || "en").split("-")[0].toLowerCase()
+  return base === "es" ? (COUNTRY_ES[country] ?? country) : country
 }
