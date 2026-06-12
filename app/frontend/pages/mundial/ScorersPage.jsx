@@ -126,8 +126,9 @@ function PlayerRow({ player, rank, maxValue, tab, lang }) {
   )
 }
 
-// ─── Cache fetched data per tab to avoid re-fetching ─
-const cache = {}
+// 5-minute TTL so stale empty results don't persist across navigations
+const CACHE_TTL = 5 * 60 * 1000
+const cache = {} // key → { rows, ts }
 
 export default function ScorersPage() {
   const { t, i18n } = useTranslation()
@@ -139,15 +140,16 @@ export default function ScorersPage() {
   const tab = TABS.find(t => t.key === activeTab)
 
   useEffect(() => {
-    if (cache[activeTab]) {
-      setData(prev => ({ ...prev, [activeTab]: cache[activeTab] }))
+    const cached = cache[activeTab]
+    if (cached && Date.now() - cached.ts < CACHE_TTL) {
+      setData(prev => ({ ...prev, [activeTab]: cached.rows }))
       return
     }
     setLoading(true)
     fetch(tab.endpoint)
       .then(r => r.json())
       .then(rows => {
-        cache[activeTab] = rows
+        cache[activeTab] = { rows, ts: Date.now() }
         setData(prev => ({ ...prev, [activeTab]: rows }))
       })
       .finally(() => setLoading(false))

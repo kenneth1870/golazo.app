@@ -13,14 +13,20 @@ module Api
       }.freeze
 
       def index
-        render json: normalize_players(LiveScoresClient.new.top_scorers(*league_season))
+        raw = LiveScoresClient.new.top_scorers(*league_season)
+        if raw.empty? && params[:competition].present?
+          render json: WorldCupScorers.scorers(params[:competition])
+        else
+          render json: normalize_players(raw)
+        end
       rescue => e
         Rails.logger.error("[TopScorersController#index] #{e.message}")
-        render json: []
+        render json: WorldCupScorers.scorers(params[:competition].presence || "WC") rescue []
       end
 
       def assists
-        render json: normalize_players(LiveScoresClient.new.top_assists(*league_season))
+        raw = LiveScoresClient.new.top_assists(*league_season)
+        render json: normalize_players(raw)
       rescue => e
         Rails.logger.error("[TopScorersController#assists] #{e.message}")
         render json: []
@@ -28,7 +34,13 @@ module Api
 
       def cards
         type = params[:type] == "red" ? :top_red_cards : :top_yellow_cards
-        render json: normalize_players(LiveScoresClient.new.public_send(type, *league_season), stat_key: params[:type] == "red" ? :red_cards : :yellow_cards)
+        raw = LiveScoresClient.new.public_send(type, *league_season)
+        if raw.empty? && params[:competition].present?
+          card_type = params[:type] == "red" ? :red : :yellow
+          render json: WorldCupScorers.cards(params[:competition], type: card_type)
+        else
+          render json: normalize_players(raw, stat_key: params[:type] == "red" ? :red_cards : :yellow_cards)
+        end
       rescue => e
         Rails.logger.error("[TopScorersController#cards] #{e.message}")
         render json: []
