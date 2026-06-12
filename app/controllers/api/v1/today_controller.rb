@@ -26,24 +26,51 @@ module Api
       end
 
       # Common country name aliases across data providers (football-data.org vs API-Football).
+      # Maps any API name variant → the canonical DB team name (lowercase).
+      # Keep in sync with WorldCupSync::TEAM_ALIASES.
       TEAM_ALIASES = {
-        "czech republic"        => "czechia",
-        "korea republic"        => "south korea",
-        "republic of korea"     => "south korea",
-        "dpr korea"             => "north korea",
-        "republic of ireland"   => "ireland",
-        "ivory coast"           => "côte d'ivoire",
-        "cape verde"            => "cape verde islands",
-        "usa"                   => "united states",
-        "trinidad & tobago"     => "trinidad and tobago",
-        "bosnia & herz."        => "bosnia & herzegovina",
-        "bosnia and herzegovina" => "bosnia & herzegovina",
-        "north macedonia"       => "macedonia",
-        "fyr macedonia"         => "macedonia",
-        # Curaçao: API-Football uses accented ç; DB stores plain Curacao
-        "curaçao"               => "curacao",
-        # Ivory Coast reversed: DB may store either direction
-        "côte d'ivoire"         => "ivory coast",
+        # South Korea
+        "korea republic"               => "south korea",
+        "republic of korea"            => "south korea",
+        "dpr korea"                    => "north korea",
+        # Ivory Coast — API uses French name, DB stores English
+        "côte d'ivoire"                => "ivory coast",
+        "cote d'ivoire"                => "ivory coast",
+        "cote divoire"                 => "ivory coast",
+        # DR Congo — API-Football uses "Congo DR"; DB stores "DR Congo"
+        "congo dr"                     => "dr congo",
+        "rd congo"                     => "dr congo",
+        "democratic republic of congo" => "dr congo",
+        "dr. congo"                    => "dr congo",
+        # United States
+        "usa"                          => "united states",
+        "united states of america"     => "united states",
+        # Bosnia — DB stores abbreviation
+        "bosnia and herzegovina"       => "bosnia & herz.",
+        "bosnia & herzegovina"         => "bosnia & herz.",
+        "bosnia-herzegovina"           => "bosnia & herz.",
+        # Czechia
+        "czech republic"               => "czechia",
+        # Cape Verde — DB stores full name
+        "cabo verde"                   => "cape verde",
+        "cape verde islands"           => "cape verde",
+        # Curaçao — API uses accented ç; DB stores plain ascii
+        "curaçao"                      => "curacao",
+        # Turkey
+        "türkiye"                      => "turkey",
+        "turkiye"                      => "turkey",
+        # Iran
+        "ir iran"                      => "iran",
+        "islamic republic of iran"     => "iran",
+        # Saudi Arabia
+        "ksa"                          => "saudi arabia",
+        # Algeria
+        "algérie"                      => "algeria",
+        # Legacy / other providers
+        "republic of ireland"          => "ireland",
+        "trinidad & tobago"            => "trinidad and tobago",
+        "north macedonia"              => "macedonia",
+        "fyr macedonia"                => "macedonia",
       }.freeze
 
       def normalize_team_name(name)
