@@ -58,7 +58,7 @@ Live data flows through two clients:
 
 ### Requirements
 
-- Ruby **3.2.2** (pinned in `.ruby-version`; 3.3 has an ActionView syntax error on darwin 25)
+- Ruby **3.2.2** locally (pinned in `.ruby-version`; Ruby 3.3 has an ActionView syntax error on macOS darwin 25 — Docker/Render uses 3.3.0)
 - Node **22.x**
 - PostgreSQL **15+**
 
