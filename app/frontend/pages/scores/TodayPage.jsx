@@ -462,7 +462,9 @@ export default function TodayPage() {
   const todayMatches    = matches.filter(m => !m.upcoming_preview)
 
   const byComp = todayMatches.reduce((acc, m) => {
-    const key = m.competition?.id ?? m.competition?.code ?? "other"
+    // Prefer competition.code so API (code="WC", id=league_id) and DB (code="WC", id=db_id)
+    // always land in the same bucket instead of creating duplicate competition blocks.
+    const key = m.competition?.code ?? m.competition?.id ?? "other"
     if (!acc[key]) acc[key] = []
     acc[key].push(m)
     return acc

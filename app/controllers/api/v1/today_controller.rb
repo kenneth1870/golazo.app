@@ -40,6 +40,10 @@ module Api
         "bosnia and herzegovina" => "bosnia & herzegovina",
         "north macedonia"       => "macedonia",
         "fyr macedonia"         => "macedonia",
+        # Curaçao: API-Football uses accented ç; DB stores plain Curacao
+        "curaçao"               => "curacao",
+        # Ivory Coast reversed: DB may store either direction
+        "côte d'ivoire"         => "ivory coast",
       }.freeze
 
       def normalize_team_name(name)
@@ -123,7 +127,15 @@ module Api
         []
       end
 
+      # Canonical names for key competitions so API and DB matches render
+      # the same section header regardless of what the API returns.
+      LEAGUE_CANONICAL_NAMES = {
+        1 => "FIFA World Cup 2026",
+      }.freeze
+
       def normalize_api(m)
+        league_id = m[:league_id].to_i
+        code      = league_code(league_id)
         {
           id:          "ext_#{m[:external_id]}",
           external_id: m[:external_id],
@@ -135,9 +147,9 @@ module Api
           round:       nil,
           group_stage: nil,
           competition: {
-            id:      m[:league_id],
-            name:    m[:league_name],
-            code:    league_code(m[:league_id]),
+            id:      code,
+            name:    LEAGUE_CANONICAL_NAMES[league_id] || m[:league_name],
+            code:    code,
             logo:    m[:league_logo],
             country: m[:league_country]
           },

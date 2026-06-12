@@ -4,6 +4,7 @@
  */
 const ES = {
   // FIFA / International
+  "FIFA World Cup 2026":          "Copa Mundial FIFA 2026",
   "FIFA World Cup":               "Copa Mundial FIFA",
   "World Cup":                    "Copa del Mundo",
   "International Friendlies":     "Amistosos Internacionales",
