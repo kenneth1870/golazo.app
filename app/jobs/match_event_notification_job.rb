@@ -3,12 +3,18 @@ require "web-push"
 class MatchEventNotificationJob < ApplicationJob
   queue_as :default
 
+  # Retry transient push-service errors (5xx, network) up to 3 times.
+  # Expired/invalid subscriptions are cleaned up immediately without retrying.
+  retry_on WebPush::ResponseError, wait: :polynomially_longer, attempts: 3
+  discard_on WebPush::ExpiredSubscription, WebPush::InvalidSubscription
+
   EVENT_EMOJIS = {
     "goal"      => "⚽",
     "kickoff"   => "🏁",
     "halftime"  => "⏸",
     "fulltime"  => "✅",
-    "red_card"  => "🟥"
+    "red_card"  => "🟥",
+    "prematch"  => "⏰"
   }.freeze
 
   def perform(event_type:, match_id:, home_name:, away_name:, home_score: nil, away_score: nil, match_url: nil, minute: nil)
@@ -47,8 +53,6 @@ class MatchEventNotificationJob < ApplicationJob
     rescue WebPush::ExpiredSubscription, WebPush::InvalidSubscription => e
       Rails.logger.info("[PushNotification] Removing stale subscription #{sub.id}: #{e.message}")
       sub.destroy
-    rescue => e
-      Rails.logger.error("[PushNotification] Error for sub #{sub.id}: #{e.message}")
     end
   end
 
@@ -67,6 +71,8 @@ class MatchEventNotificationJob < ApplicationJob
       [ "✅ Full-time · #{home} #{score} #{away}", "That's the final whistle!" ]
     when "red_card"
       [ "🟥 Red card! #{home} vs #{away}", minute ? "#{minute}' · Red card shown!" : "Red card shown!" ]
+    when "prematch"
+      [ "⏰ #{home} vs #{away}", "Kicks off in 10 minutes — get ready!" ]
     else
       [ "#{home} vs #{away}", "" ]
     end

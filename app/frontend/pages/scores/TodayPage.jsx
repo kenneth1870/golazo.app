@@ -8,7 +8,6 @@ import { useLocale } from "../../hooks/useLocale"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useFavorites } from "../../hooks/useFavorites"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
-import PushPrompt from "../../components/PushPrompt"
 
 // ─── Helpers ──────────────────────────────────────────
 function toISO(date) {
@@ -520,7 +519,6 @@ export default function TodayPage() {
       )}
 
       {/* Push notification prompt — shown 3s after load */}
-      <PushPrompt favoriteTeamName={favTeam?.name || null} />
 
       <div className="container">
         {/* Date strip */}

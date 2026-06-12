@@ -137,13 +137,15 @@ export function usePushNotifications() {
     "PushManager" in window &&
     "Notification" in window
 
-  // On iOS, push notifications only work when installed as a PWA (added to home screen).
-  // navigator.standalone is true only in that case.
-  const isIos = typeof window !== "undefined" &&
-    /iphone|ipad|ipod/i.test(navigator.userAgent)
-  const isIosPwa = isIos && navigator.standalone === true
-  // Show iOS hint if on iOS but NOT installed as PWA
-  const needsIosInstall = isIos && !isIosPwa
+  // Push on iOS only works in Safari PWA mode (iOS 16.4+).
+  // Chrome/Firefox on iOS use WebKit but don't support push even as a PWA —
+  // exclude them so we don't mislead those users with an "install" hint.
+  const isIosSafari = typeof window !== "undefined" &&
+    /iphone|ipad|ipod/i.test(navigator.userAgent) &&
+    /safari/i.test(navigator.userAgent) &&
+    !/crios|fxios|opios|mercury/i.test(navigator.userAgent)
+  const isIosPwa = isIosSafari && navigator.standalone === true
+  const needsIosInstall = isIosSafari && !isIosPwa
 
   return { supported, permission, subscribed, loading, subscribe, unsubscribe, updateTeams, needsIosInstall }
 }

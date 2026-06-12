@@ -2,9 +2,10 @@ import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 
-const DISMISSED_KEY = "golazo_push_dismissed"
+const DISMISSED_KEY = "golazo_push_dismissed_at"
+const DISMISS_TTL_MS = 7 * 24 * 60 * 60 * 1000 // re-prompt after 7 days
 
-// Shown once per session after a user has viewed Today for 3 seconds.
+// Shown after a user views the page for 3 seconds.
 // Asks to enable goal alerts, optionally scoped to a favorite team.
 export default function PushPrompt({ favoriteTeamName = null }) {
   const { t } = useTranslation()
@@ -17,8 +18,8 @@ export default function PushPrompt({ favoriteTeamName = null }) {
     if (!supported && !needsIosInstall) return
     if (permission === "denied") return
     if (subscribed) return
-    const dismissed = localStorage.getItem(DISMISSED_KEY)
-    if (dismissed) return
+    const dismissedAt = parseInt(localStorage.getItem(DISMISSED_KEY) || "0", 10)
+    if (dismissedAt && Date.now() - dismissedAt < DISMISS_TTL_MS) return
     const timer = setTimeout(() => setVisible(true), 3000)
     return () => clearTimeout(timer)
   }, [supported, needsIosInstall, permission, subscribed])
@@ -27,7 +28,7 @@ export default function PushPrompt({ favoriteTeamName = null }) {
   if (permission === "denied") return null
 
   const dismiss = () => {
-    localStorage.setItem(DISMISSED_KEY, "1")
+    localStorage.setItem(DISMISSED_KEY, Date.now().toString())
     setVisible(false)
   }
 

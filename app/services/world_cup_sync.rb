@@ -378,7 +378,7 @@ class WorldCupSync
     attrs[:away_score] = away_score unless status == "scheduled"
 
     match.update!(attrs)
-    broadcast_score(match, m[:minute]) if status == "live"
+    broadcast_score(match, m[:minute], notify: false) if status == "live"
 
     # Full-time: WC match just finished — notify subscribers
     if status == "finished" && was_live && match.competition&.code == "WC"
@@ -522,7 +522,7 @@ class WorldCupSync
     nil
   end
 
-  def broadcast_score(match, minute = nil, event_type: "goal")
+  def broadcast_score(match, minute = nil, event_type: "goal", notify: true)
     payload = {
       type:       "score_update",
       home_score: match.home_score,
@@ -536,6 +536,7 @@ class WorldCupSync
       ActionCable.server.broadcast("external_match_#{match.external_id}", payload.merge(type: "match_update"))
     end
 
+    return unless notify
     fire_notification(match, event_type, minute: minute,
       home_score: match.home_score.to_i, away_score: match.away_score.to_i)
   end

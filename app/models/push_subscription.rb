@@ -15,10 +15,12 @@ class PushSubscription < ApplicationRecord
 
   def self.for_teams(names)
     return none if names.blank?
-    # Use PostgreSQL's jsonb ?| operator to filter in-database — avoids loading
-    # every row into Ruby memory.  ??| is the Rails-escaped form of ?| so the
-    # ?  character is not mistaken for a bind-parameter placeholder.
-    where("team_ids::jsonb ??| array[:names]", names: names.map(&:to_s))
+    # Include subscriptions that match one of the team names OR subscriptions
+    # with no team filter (team_ids = '[]') which means "all WC matches".
+    where(
+      "team_ids = '[]' OR team_ids::jsonb ??| array[:names]",
+      names: names.map(&:to_s)
+    )
   end
 
   def web_push_message(title:, body:, url: "/", icon: "/images/apple-touch-icon.png?v=2")

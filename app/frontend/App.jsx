@@ -8,8 +8,10 @@ import InstallPrompt from "./components/InstallPrompt"
 import ScrollToTop from "./components/ScrollToTop"
 import ErrorBoundary from "./components/ErrorBoundary"
 import OnboardingModal, { useOnboarding } from "./components/OnboardingModal"
+import PushPrompt from "./components/PushPrompt"
 import RequireAdmin from "./components/RequireAdmin"
 import LoginPage from "./pages/LoginPage"
+import { useFavorites } from "./hooks/useFavorites"
 
 // Critical path — loaded eagerly (always needed on first paint)
 import HomePage   from "./pages/HomePage"
@@ -60,6 +62,8 @@ export default function App() {
   const location = useLocation()
   useLocale() // auto-detect language from IP / device on every session
   const { show: showOnboarding, dismiss: dismissOnboarding } = useOnboarding()
+  const { favoriteTeams } = useFavorites()
+  const favTeamName = favoriteTeams[0]?.name ?? null
 
   // Admin + login routes render outside the public layout (no Navbar/Footer/BottomNav)
   const isAdminOrAuth = location.pathname.startsWith("/admin") || location.pathname === "/login"
@@ -90,6 +94,7 @@ export default function App() {
       <ScrollToTop />
       <Navbar />
       {showOnboarding && <OnboardingModal onDismiss={dismissOnboarding} />}
+      <PushPrompt favoriteTeamName={favTeamName} />
 
       <main key={location.pathname} className="main-content page-transition">
         <ErrorBoundary>

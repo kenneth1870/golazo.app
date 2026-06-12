@@ -22,3 +22,8 @@ production:
     class: SyncPreMatchDataJob
     schedule: "every 5 minutes"
     queue: default
+
+  pre_match_notifications:
+    class: PreMatchNotificationJob
+    schedule: "every 2 minutes"
+    queue: default
