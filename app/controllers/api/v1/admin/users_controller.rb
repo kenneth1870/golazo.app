@@ -29,6 +29,9 @@ module Api
           if @user.admin? && params[:role] == "user" && User.admin.count <= 1
             return render json: { error: "Cannot demote the last admin" }, status: :unprocessable_entity
           end
+
+          @user.role = params[:role] if params.key?(:role)
+
           if @user.update(user_params)
             render json: @user.as_json_public
           else
@@ -51,7 +54,7 @@ module Api
         end
 
         def user_params
-          params.permit(:name, :email, :role, :password, :password_confirmation)
+          params.permit(:name, :email, :password, :password_confirmation)
         end
       end
     end
