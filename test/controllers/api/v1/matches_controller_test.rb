@@ -39,7 +39,7 @@ class Api::V1::MatchesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "read endpoints stay public" do
-    get "/api/v1/matches/#{@match.id}"
+    get "/api/v1/matches/db-#{@match.id}"
     assert_response :success
   end
 

@@ -50,9 +50,9 @@ class WorldCupKnockoutTest < ActiveSupport::TestCase
     builder.ensure_fixtures!
     builder.rebuild!
 
-    assert_equal "GA1", @wc.matches.find_by(bracket_pos: 1).home_team.code  # slot 1A
-    assert_equal "GA2", @wc.matches.find_by(bracket_pos: 13).home_team.code # slot 2A
-    assert_nil @wc.matches.find_by(bracket_pos: 1).away_team, "T1 needs all groups complete"
+    assert_equal "GA1", @wc.matches.find_by(bracket_pos: 7).home_team.code  # slot 1A (pos 7 in R32_SLOTS)
+    assert_equal "GA2", @wc.matches.find_by(bracket_pos: 1).home_team.code  # slot 2A (pos 1 in R32_SLOTS)
+    assert_nil @wc.matches.find_by(bracket_pos: 7).away_team, "T3 slot needs all groups complete"
   end
 
   test "winners propagate from R32 into R16" do
@@ -60,12 +60,13 @@ class WorldCupKnockoutTest < ActiveSupport::TestCase
     builder = WorldCupKnockout.new(competition: @wc)
     builder.ensure_fixtures!
 
+    # R16_PAIRINGS[1] = [1, 3] → bracket_pos 18 feeds from winners of R32 pos 1 and 3
     @wc.matches.find_by(bracket_pos: 1).update!(home_team: t[0], away_team: t[1], status: "finished", home_score: 2, away_score: 0)
-    @wc.matches.find_by(bracket_pos: 2).update!(home_team: t[2], away_team: t[3], status: "finished", home_score: 0, away_score: 1)
+    @wc.matches.find_by(bracket_pos: 3).update!(home_team: t[2], away_team: t[3], status: "finished", home_score: 0, away_score: 1)
 
     builder.rebuild!
 
-    r16 = @wc.matches.find_by(bracket_pos: 17) # fed by winners of matches 1 and 2
+    r16 = @wc.matches.find_by(bracket_pos: 18) # W1 vs W3
     assert_equal "KO1", r16.home_team.code
     assert_equal "KO4", r16.away_team.code
   end
