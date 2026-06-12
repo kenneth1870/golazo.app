@@ -136,7 +136,7 @@ function TodayMatchesSection({ liveMatches, todayMatches, upcomingMatches, navig
           onClick={() => navigate("/scores/today")}
           style={{ width: "100%", marginTop: 8, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: 8, padding: "9px", fontSize: ".72rem", fontWeight: 700, cursor: "pointer" }}
         >
-          +{all.length - 6} more matches →
+          {t("home.moreMatches", { count: all.length - 6 })}
         </button>
       )}
     </div>

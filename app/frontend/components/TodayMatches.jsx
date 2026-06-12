@@ -82,6 +82,7 @@ function MatchRow({ match, onClick }) {
 }
 
 function CompetitionGroup({ competition, matches, onMatchSelect }) {
+  const { i18n } = useTranslation()
   const liveCount = matches.filter(m => m.status === "live").length
 
   return (
@@ -120,8 +121,9 @@ export default function TodayMatches({ onMatchSelect }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     const fetch_ = () => {
-      fetch("/api/v1/today")
+      fetch(`/api/v1/today?tz=${encodeURIComponent(tz)}`)
         .then(r => r.json())
         .then(matches => {
           // Group by competition

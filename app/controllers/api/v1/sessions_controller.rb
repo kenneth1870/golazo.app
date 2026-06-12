@@ -81,7 +81,7 @@ module Api
           name:     params[:name],
           password: params[:password],
           password_confirmation: params[:password_confirmation],
-          role:     params[:role].presence || "user"
+          role:     "user"
         )
         if user.save
           render json: { token: user.generate_token, user: user.as_json_public }, status: :created

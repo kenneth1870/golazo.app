@@ -108,7 +108,7 @@ self.addEventListener("push", event => {
     body:    payload.body  || "",
     icon:    payload.icon  || "/images/apple-touch-icon.png?v=2",
     badge:   payload.badge || "/images/badge-72.png",
-    tag:     "golazo-score",          // replace previous notification from same match
+    tag:     payload.match_id ? `match-${payload.match_id}` : `golazo-${Date.now()}`,
     renotify: true,
     data:    { url: payload.url || "/" },
     vibrate: [200, 100, 200],

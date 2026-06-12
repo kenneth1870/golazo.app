@@ -14,33 +14,27 @@ module Api
         end
 
         def index
-          groups = Team.where.not(group: [nil, ""]).order(:group, :name).group_by(&:group)
+          competition = Competition.find_by!(code: "WC")
+          calc        = WorldCupStandings.new(competition)
 
-          render json: groups.transform_values do |teams|
-            teams.map do |t|
-              finished = Match.where("(home_team_id = ? OR away_team_id = ?) AND status = 'finished'", t.id, t.id)
-              played = finished.count
-              won    = finished.count { |m| (m.home_team_id == t.id && m.home_score.to_i > m.away_score.to_i) ||
-                                            (m.away_team_id == t.id && m.away_score.to_i > m.home_score.to_i) }
-              drawn  = finished.count { |m| m.home_score.to_i == m.away_score.to_i }
-              lost   = played - won - drawn
-              gf     = finished.sum { |m| m.home_team_id == t.id ? m.home_score.to_i : m.away_score.to_i }
-              ga     = finished.sum { |m| m.home_team_id == t.id ? m.away_score.to_i : m.home_score.to_i }
-
+          render json: calc.groups.transform_values do |ranked|
+            ranked.map do |s|
               {
-                team:          { id: t.id, name: t.name, code: t.code, flag_url: t.flag_url },
-                group:         t.group,
-                played:        played,
-                won:           won,
-                drawn:         drawn,
-                lost:          lost,
-                goals_for:     gf,
-                goals_against: ga,
-                goal_diff:     gf - ga,
-                points:        won * 3 + drawn,
+                team:          { id: s.team.id, name: s.team.name, code: s.team.code, flag_url: s.team.flag_url },
+                group:         s.team.group,
+                played:        s.played,
+                won:           s.won,
+                drawn:         s.drawn,
+                lost:          s.lost,
+                goals_for:     s.goals_for,
+                goals_against: s.goals_against,
+                goal_diff:     s.goal_difference,
+                points:        s.points,
               }
-            end.sort_by { |r| [-r[:points], -r[:goal_diff], -r[:goals_for]] }
+            end
           end
+        rescue ActiveRecord::RecordNotFound
+          render json: {}, status: :not_found
         end
       end
     end

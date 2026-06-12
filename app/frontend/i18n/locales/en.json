@@ -38,6 +38,7 @@
     "nextMatch": "Next Match",
     "upcomingMatches": "Upcoming Matches",
     "viewAll": "View all →",
+    "moreMatches": "+{{count}} more matches →",
     "fullSchedule": "Full schedule →",
     "yourTeam": "Your team",
     "playingNow": "Playing now",

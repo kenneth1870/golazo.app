@@ -3,7 +3,8 @@ module Api
     class TodayController < BaseController
       def index
         date = parse_date(params[:date]) || Date.today
-        all  = merge_matches(date).sort_by { |m| m[:kickoff_at].to_s }
+        tz   = sanitize_tz(params[:tz])
+        all  = merge_matches(date, tz).sort_by { |m| m[:kickoff_at].to_s }
 
         # When today has no matches, append next upcoming WC fixtures so the
         # frontend can show a teaser without a second round-trip.
@@ -26,9 +27,9 @@ module Api
 
       # Merge live-API matches with DB matches for the date.
       # API match wins on duplicate (same home+away team pair) since it has live scores.
-      def merge_matches(date)
+      def merge_matches(date, tz = "UTC")
         api_matches = fetch_api_matches(date)
-        db_matches  = fetch_db_matches(date)
+        db_matches  = fetch_db_matches(date, tz)
 
         # Index API matches by normalised home+away pair for dedup
         api_keys = api_matches.each_with_object(Set.new) do |m, s|
@@ -48,21 +49,23 @@ module Api
       end
 
       def fetch_api_matches(date)
-        client  = LiveScoresClient.new
-        matches = client.matches_for_date(date)
+        Rails.cache.fetch("today_api_#{date.iso8601}", expires_in: 30.seconds) do
+          client  = LiveScoresClient.new
+          matches = client.matches_for_date(date)
 
-        # Also pull the next UTC day so that evening matches in western timezones
-        # (Americas, UTC-8 to UTC-3) are included. A match at 01:00 UTC on June 10
-        # is 17:00–22:00 local on June 9 — the user's "today". Only include
-        # tomorrow-UTC matches that start before 07:00 UTC (≤ midnight UTC-7).
-        next_day = client.matches_for_date(date + 1).select do |m|
-          t = Time.parse(m[:kickoff_at].to_s) rescue nil
-          t && t.utc.hour < 7
+          # Also pull the next UTC day so that evening matches in western timezones
+          # (Americas, UTC-8 to UTC-3) are included. A match at 01:00 UTC on June 10
+          # is 17:00–22:00 local on June 9 — the user's "today". Only include
+          # tomorrow-UTC matches that start before 07:00 UTC (≤ midnight UTC-7).
+          next_day = client.matches_for_date(date + 1).select do |m|
+            t = Time.parse(m[:kickoff_at].to_s) rescue nil
+            t && t.utc.hour < 7
+          end
+
+          seen = Set.new(matches.map { |m| m[:external_id] })
+          combined = matches + next_day.reject { |m| seen.include?(m[:external_id]) }
+          combined.map { |m| normalize_api(m) }
         end
-
-        seen = Set.new(matches.map { |m| m[:external_id] })
-        combined = matches + next_day.reject { |m| seen.include?(m[:external_id]) }
-        combined.map { |m| normalize_api(m) }
       rescue => e
         Rails.logger.error("[TodayController] API matches failed: #{e.message}")
         []
@@ -85,11 +88,11 @@ module Api
         []
       end
 
-      def fetch_db_matches(date)
+      def fetch_db_matches(date, tz = "UTC")
         Match
           .joins(:competition)
           .where(competitions: { code: "WC" })
-          .where(kickoff_at: date.all_day)
+          .where(kickoff_at: local_day_range(date, tz))
           .includes(:home_team, :away_team, :competition)
           .order(:kickoff_at)
           .map { |m| normalize_db(m) }
