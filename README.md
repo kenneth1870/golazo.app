@@ -1,43 +1,95 @@
-# Golazo.app — Mundial 2026 Live Scores
+# Golazo.app — FIFA World Cup 2026 Live Scores
 
-Live scores, real-time stats, and every goal from the FIFA World Cup 2026 (USA · Canada · Mexico) and international football.
+> Live scores · Real-time stats · Full bracket · Push notifications
+> **golazo.app** — hosted on [Render.com](https://render.com)
+
+---
 
 ## Stack
 
-- **Backend**: Ruby on Rails 8.1 API + PostgreSQL
-- **Frontend**: React 18 + Vite (via `vite_rails`)
-- **Data**: [free-api-live-football-data](https://rapidapi.com/heisenbug/api/free-api-live-football-data) on RapidAPI (FotMob-based)
-- **i18n**: 8 languages (EN, ES, PT, FR, DE, AR, JA, KO) with IP-based auto-detection
+| Layer | Technology |
+|---|---|
+| Backend | Ruby on Rails 8.1 (API mode) |
+| Frontend | React 19 + Vite (`vite_rails`) |
+| Database | PostgreSQL 15 |
+| Jobs | Solid Queue (DB-backed, runs inside Puma) |
+| Cache | Solid Cache (DB-backed) |
+| WebSockets | Solid Cable (ActionCable over Postgres) |
+| Auth | JWT (`jwt` gem) + bcrypt |
+| Push | Web Push / VAPID (`web-push` gem) |
+| Observability | Sentry |
+| Rate limiting | Rack::Attack |
+| Deployment | Docker → Render.com |
+
+---
 
 ## Features
 
-- **Live Matches** — date-navigable strip (±3 days), auto-refresh, live minute display
-- **Team logos** — FotMob CDN resolved from team IDs
-- **Timezone-aware** — IP geolocation sets language + timezone; date filter uses browser local time so no cross-midnight bleed
-- **Featured leagues only** — International Friendlies, UEFA competitions, top domestic leagues; obscure/lower-tier and women's matches filtered out
-- **Match detail** — Summary, Stats, Lineups (pitch grid), H2H fetched in parallel threads
-- **i18n** — IP → country → language mapping; manual override persisted in localStorage
+- **Live scores** — auto-refreshing match list with live minute, score, and red-card display
+- **Today / Fixtures / Results** — date-navigable strip with client-timezone-aware filtering (no cross-midnight bleed)
+- **Group stage** — all 12 groups with mini standings tables and FIFA tiebreakers
+- **Knockout bracket** — official FIFA 2026 R32 → R16 → QF → SF → Final bracket; auto-populates as teams advance
+- **Bracket predictor** — users can fill in their own bracket predictions
+- **Match detail** — summary, stats, lineups (pitch grid), H2H, injuries, player ratings, venue photo, AI-generated match summary
+- **Team & player pages** — squad, stats, transfers, trophies
+- **Score predictions** — predict scorelines before kickoff; graded leaderboard after FT
+- **Push notifications** — VAPID Web Push for match reminders and live score alerts; per-team subscriptions
+- **PWA** — installable, service worker with network-first API caching and offline fallback
+- **i18n** — 8 languages (EN, ES, PT, FR, DE, AR, JA, KO); IP-based auto-detection, manual override persisted in `localStorage`
+- **News feed** — live football news filtered to match context
+- **Admin panel** — match score entry, standings recalculation, push broadcast, user management
+
+---
+
+## Data sources
+
+| Source | Used for |
+|---|---|
+| [API-Football (API-Sports) v3](https://www.api-football.com) | Live scores, lineups, stats, player ratings, injuries, predictions, odds |
+| [football-data.org](https://www.football-data.org) | One-off WC metadata sync (teams, fixtures) |
+
+Live data flows through two clients:
+- `LiveScoresClient` — wraps API-Football v3, used for all match-day queries
+- `ApiSportsClient` — resolves internal fixture IDs when needed
+
+---
 
 ## Setup
 
 ### Requirements
 
-- Ruby 3.2.2 (pinned in `.ruby-version`; 3.3 has an actionview SyntaxError on darwin25)
-- Node 22.x
-- PostgreSQL 15+
+- Ruby **3.2.2** (pinned in `.ruby-version`; 3.3 has an ActionView syntax error on darwin 25)
+- Node **22.x**
+- PostgreSQL **15+**
 
 ### Environment variables
 
-```
+```bash
+# Required
 DATABASE_URL=postgres://...
-RAPIDAPI_KEY=your_rapidapi_key       # free-api-live-football-data on RapidAPI (required)
-FOOTBALL_DATA_API_KEY=...            # football-data.org, for one-off WC metadata sync (optional)
-ADMIN_API_TOKEN=...                  # Bearer token required by the write endpoints
-                                     #   (matches#update, goals#create, stats/upsert).
-                                     #   If unset, those endpoints reject every request.
-ALLOWED_ORIGINS=https://your-host    # comma-separated CORS allowlist (default http://localhost:3036)
-SENTRY_DSN=...                       # error monitoring (optional; inert if unset)
-RAPIDAPI_WC_LEAGUE_ID=4              # override the FotMob WC league id if needed
+RAILS_MASTER_KEY=...                  # decrypts credentials.yml.enc
+
+# Live scores API (required for any score data)
+RAPIDAPI_KEY=your_api_football_key    # API-Football via RapidAPI or direct
+
+# Auth & security
+JWT_SECRET=...                        # signs JWT tokens; defaults to secret_key_base if unset
+ADMIN_API_TOKEN=...                   # static Bearer token for data-sync scripts
+ALLOWED_ORIGINS=https://golazo.app   # comma-separated CORS allowlist
+
+# Web Push (optional — push notifications disabled if unset)
+VAPID_PUBLIC_KEY=...
+VAPID_PRIVATE_KEY=...
+VAPID_SUBJECT=mailto:you@example.com  # contact address required by push servers
+
+# Optional
+FOOTBALL_DATA_API_KEY=...             # football-data.org, for one-off WC metadata imports
+SENTRY_DSN=...                        # error tracking; inert if unset
+```
+
+Generate VAPID keys:
+```bash
+rails webpush:generate_keys
 ```
 
 ### Install & run
@@ -45,38 +97,120 @@ RAPIDAPI_WC_LEAGUE_ID=4              # override the FotMob WC league id if neede
 ```bash
 bundle install
 npm install
-rails db:create db:migrate db:seed   # seed loads WC teams, group fixtures, and the knockout bracket
 
-# Two terminals:
-rails server    # http://localhost:3000
-npm run dev     # Vite HMR on :3036
+rails db:create db:migrate db:seed
+# seed imports WC teams, all 104 group fixtures, and the knockout bracket skeleton
 ```
 
-### Production notes
+Two terminals for local development:
+```bash
+rails server          # API + ActionCable on :3000
+npm run dev           # Vite HMR (proxies to Rails)
+```
 
-- **Caching** uses Solid Cache and **Action Cable** uses Solid Cable — both backed by the
-  primary Postgres DB so they work across the web and Solid Queue worker processes. (The
-  `async` cable adapter only works in a single process and would silently drop live updates.)
-- **Recurring syncs** are defined once in `config/recurring.yml` (production only) and run
-  inside Puma via the Solid Queue plugin.
-- **Rate limiting** is enforced by `rack-attack` (see `config/initializers/rack_attack.rb`).
-- **Schedule data** lives in `db/world_cup_group_fixtures.yml`; reload it any time with
-  `rails golazo:load_schedule` (group fixtures + knockout bracket).
+The app is served entirely from `:3000` in development. Vite assets are proxied transparently.
+
+---
+
+## Architecture
+
+### Request flow
+
+```
+Browser → Service Worker (network-first for /api/*, cache-first for assets)
+       → Rails API (JSON only)
+           ├── Solid Cache (standings, fixtures — 15-30 min TTL)
+           ├── LiveScoresClient → API-Football v3
+           └── ActionCable → Solid Cable → browser (live score push)
+```
+
+### Background jobs (Solid Queue, runs inside Puma)
+
+| Job | Schedule | Purpose |
+|---|---|---|
+| `SyncStandingsJob` | every 30 min | Syncs WC standings from API-Football |
+| `RecalculateStandingsJob` | on FT | Recomputes standings from DB results with FIFA tiebreakers |
+| `SyncScoresJob` | every 2 min on match days | Polls live scores, broadcasts via ActionCable |
+
+Recurring schedule is defined in `config/recurring.yml` (production only).
+
+### Timezone handling
+
+All date filtering uses the **client's IANA timezone** (sent as `?tz=America/Mexico_City`). The backend converts to a UTC range via `TZInfo` so matches near local midnight are never dropped. This applies to `/api/v1/matches`, `/api/v1/fixtures`, `/api/v1/results`, and `/api/v1/today`.
+
+### Standings
+
+`WorldCupStandings` computes group tables purely from finished DB matches, applying FIFA tiebreakers in order: points → goal difference → goals for → head-to-head (points, GD, GF) → alphabetical. Results are written to the `standings` table and cached for 15 minutes.
+
+### Knockout bracket
+
+`WorldCupKnockout` maintains the official FIFA 2026 bracket (R32 match numbers 73–88, R16 pairings, QF, SF, Final) and auto-fills slots as matches finish. The third-place table for the 16 R32 best-third slots follows the 495-combination FIFA lookup — approximated until after the group stage (June 25, 2026).
+
+---
 
 ## Key files
 
-| File | Purpose |
-|------|---------|
-| `app/services/live_scores_client.rb` | RapidAPI client — fetches today+tomorrow, normalizes, filters leagues |
+| Path | Purpose |
+|---|---|
+| `app/services/live_scores_client.rb` | API-Football v3 wrapper — scores, lineups, ratings |
+| `app/services/world_cup_standings.rb` | FIFA tiebreaker standings calculator |
+| `app/services/world_cup_knockout.rb` | Bracket slot assignment |
+| `app/services/world_cup_sync.rb` | Full WC data sync orchestrator |
 | `app/controllers/api/v1/today_controller.rb` | Merges DB + API matches, deduplicates |
-| `app/frontend/pages/scores/TodayPage.jsx` | Date strip, match list, local timezone filter |
-| `app/frontend/hooks/useLocale.js` | IP geolocation → language + timezone |
-| `app/frontend/i18n/` | Translation files for 8 languages |
+| `app/controllers/api/v1/base_controller.rb` | JWT auth, timezone helpers, cache headers |
+| `app/frontend/hooks/useMatches.js` | Module-level match cache + polling (shared across all components) |
+| `app/frontend/pages/MatchShowPage.jsx` | Full match detail page |
+| `app/frontend/pages/scores/GroupStagePage.jsx` | Group stage with mini standings |
+| `app/frontend/pages/scores/KnockoutPage.jsx` | Bracket visualisation |
+| `db/world_cup_group_fixtures.yml` | Canonical WC 2026 group schedule (source of truth for seeding) |
+| `public/sw.js` | Service worker — network-first API, cache-first assets, push handler |
+| `config/recurring.yml` | Solid Queue recurring job schedule (production) |
 
-## API notes
+---
 
-- `football-get-matches-by-date` requires `YYYYMMDD` format
-- FotMob buckets matches by ~UTC+1 day boundary — late-evening games appear in the next UTC day bucket, so we fetch both `date` and `date+1` then filter client-side by local timezone
-- Team logos: `https://images.fotmob.com/image_resources/logo/teamlogo/{id}_large.png`
-- Match detail uses `eventid` param (not `matchId`)
-- Status codes: 2/3=live halves, 10/11=half-time, 6=FT, 9/13/14=postponed/abandoned
+## Admin endpoints
+
+All admin routes require `Authorization: Bearer <ADMIN_API_TOKEN>` or a valid admin JWT.
+
+| Method | Path | Action |
+|---|---|---|
+| `GET` | `/api/v1/admin/standings` | Computed standings (no N+1) |
+| `POST` | `/api/v1/admin/standings/recalculate` | Recalculate from DB + bust cache |
+| `PATCH` | `/api/v1/admin/matches/:id` | Update score / status |
+| `POST` | `/api/v1/admin/push/broadcast` | Send push to all subscribers |
+
+---
+
+## Deployment (Render.com)
+
+```bash
+# Build command (in render.yaml / Dockerfile)
+bundle exec rails assets:precompile
+bundle exec rails db:migrate
+
+# Start command
+bundle exec thrust bundle exec puma -C config/puma.rb
+```
+
+`Thruster` sits in front of Puma to handle HTTP/2, asset compression, and X-Sendfile.
+All three Solid adapters (Queue, Cache, Cable) share the same Postgres connection pool — no Redis required.
+
+---
+
+## Reload the WC schedule
+
+If the fixture list changes:
+
+```bash
+# Re-import group fixtures from db/world_cup_group_fixtures.yml
+rails golazo:load_schedule
+
+# Recalculate standings + rebuild bracket from current DB state
+rails runner "RecalculateStandingsJob.perform_now"
+```
+
+---
+
+## License
+
+Private — all rights reserved.
