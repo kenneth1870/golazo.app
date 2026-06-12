@@ -44,9 +44,6 @@ function MundialMegaMenu({ t }) {
       <div className="mega-menu__col mega-menu__col--groups">
         <div className="mega-menu__section-label">
           {t("nav.groups")}
-          <NavLink to="/groups" style={{ marginLeft: "auto", fontSize: "0.68rem", color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
-            {t("footer.allGroups")}
-          </NavLink>
         </div>
         <div className="mega-menu__group-grid">
           {GROUPS.map(g => (
@@ -59,6 +56,9 @@ function MundialMegaMenu({ t }) {
             </NavLink>
           ))}
         </div>
+        <NavLink to="/groups" className="mega-menu__all-groups-link">
+          {t("footer.allGroups")} →
+        </NavLink>
       </div>
     </div>
   )
