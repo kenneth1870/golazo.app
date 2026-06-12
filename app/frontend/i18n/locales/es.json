@@ -397,5 +397,22 @@
     "updated": "Actualizado",
     "refreshes": "Se actualiza cada 20s",
     "checkBack": "Vuelve durante los horarios de los partidos"
+  },
+  "ios": {
+    "title": "Obtén la experiencia completa",
+    "subtitle": "Añade Golazo a tu pantalla de inicio para activar las alertas de goles en vivo y acceder más rápido.",
+    "howToInstall": "Cómo instalar:",
+    "step1": "Toca el botón",
+    "step1b": "Compartir",
+    "step1Desc": "en la parte inferior de Safari",
+    "step2prefix": "Toca",
+    "step2": "\"Añadir a la pantalla de inicio\"",
+    "step2Desc": "desplázate hacia abajo en el menú",
+    "step3prefix": "Abre Golazo desde tu pantalla de inicio y activa las alertas",
+    "step3": "Toca \"Añadir\"",
+    "step3Desc": "luego abre Golazo desde tu pantalla de inicio",
+    "tapShare": "Toca Compartir abajo",
+    "gotIt": "¡Entendido!",
+    "later": "Recordármelo después"
   }
 }

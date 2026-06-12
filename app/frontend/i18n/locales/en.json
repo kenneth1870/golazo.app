@@ -397,5 +397,22 @@
     "updated": "Updated",
     "refreshes": "Refreshes every 20s",
     "checkBack": "Check back during match times"
+  },
+  "ios": {
+    "title": "Get the full experience",
+    "subtitle": "Add Golazo to your home screen to enable live goal alerts and faster access.",
+    "howToInstall": "How to install:",
+    "step1": "Tap the",
+    "step1b": "Share button",
+    "step1Desc": "at the bottom of Safari",
+    "step2prefix": "Tap",
+    "step2": "\"Add to Home Screen\"",
+    "step2Desc": "scroll down in the share sheet",
+    "step3prefix": "Open Golazo from your home screen and enable alerts",
+    "step3": "Tap \"Add\"",
+    "step3Desc": "then open Golazo from your home screen",
+    "tapShare": "Tap Share below",
+    "gotIt": "Got it!",
+    "later": "Remind me later"
   }
 }
