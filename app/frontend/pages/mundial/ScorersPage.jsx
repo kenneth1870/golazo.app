@@ -8,10 +8,10 @@ const MEDALS = ["🥇", "🥈", "🥉"]
 const RANK_COLORS = ["#f59e0b", "#94a3b8", "#cd7f32"]
 
 const TABS = [
-  { key: "goals",   label: "Goles",         icon: "⚽", endpoint: "/api/v1/top_scorers?competition=WC",       valueKey: "goals",        unit: "goles" },
-  { key: "assists", label: "Asistencias",   icon: "🎯", endpoint: "/api/v1/top_assists?competition=WC",        valueKey: "assists",      unit: "asist." },
-  { key: "yellow",  label: "T. Amarillas",  icon: "🟨", endpoint: "/api/v1/top_cards?competition=WC&type=yellow", valueKey: "yellow_cards", unit: "amarillas" },
-  { key: "red",     label: "T. Rojas",      icon: "🟥", endpoint: "/api/v1/top_cards?competition=WC&type=red",   valueKey: "red_cards",    unit: "rojas" },
+  { key: "goals",   label: "Goleadores",   icon: "⚽", endpoint: "/api/v1/top_scorers?competition=WC",           valueKey: "goals",        unit: "goles" },
+  { key: "assists", label: "Asistencias",  icon: "🎯", endpoint: "/api/v1/top_assists?competition=WC",            valueKey: "assists",      unit: "asist." },
+  { key: "yellow",  label: "Amarillas",    icon: "🟨", endpoint: "/api/v1/top_cards?competition=WC&type=yellow",  valueKey: "yellow_cards", unit: "amarillas" },
+  { key: "red",     label: "Rojas",        icon: "🟥", endpoint: "/api/v1/top_cards?competition=WC&type=red",     valueKey: "red_cards",    unit: "rojas" },
 ]
 
 // ─── Leader hero card ──────────────────────────────────
@@ -155,7 +155,7 @@ export default function ScorersPage() {
       .finally(() => setLoading(false))
   }, [activeTab])
 
-  const rows     = data[activeTab] || []
+  const rows     = (data[activeTab] || []).filter(p => (p[tab.valueKey] ?? 0) > 0)
   const leader   = rows[0]
   const maxValue = leader?.[tab.valueKey] ?? 1
   const rest     = rows.slice(1)
