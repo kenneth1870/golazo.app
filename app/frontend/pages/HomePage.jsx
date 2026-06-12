@@ -12,6 +12,33 @@ import MatchCard from "../components/MatchCard"
 import MatchRow from "../components/MatchRow"
 import FavoriteTeamPicker from "../components/FavoriteTeamPicker"
 
+function useTodayWC() {
+  const [matches, setMatches] = useState([])
+  useEffect(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const load = () => {
+      fetch(`/api/v1/today?tz=${encodeURIComponent(tz)}`)
+        .then(r => r.json())
+        .then(all => {
+          const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: tz })
+          setMatches(
+            all.filter(m => {
+              if (m.competition?.code !== "WC") return false
+              const ko = m.kickoff_at || m.kickoff
+              if (!ko) return false
+              return new Date(ko).toLocaleDateString("en-CA", { timeZone: tz }) === todayStr
+            })
+          )
+        })
+        .catch(() => {})
+    }
+    load()
+    const iv = setInterval(load, 30_000)
+    return () => clearInterval(iv)
+  }, [])
+  return matches
+}
+
 function useLatestNews() {
   const { i18n } = useTranslation()
   const [news, setNews]   = useState([])
@@ -77,23 +104,12 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
 }
 
 // ─── Today's matches strip ────────────────────────────────────────────────────
-function TodayMatchesSection({ liveMatches, todayMatches, upcomingMatches, navigate, t }) {
-  // Use local date ("YYYY-MM-DD") so late evening matches in UTC-6 etc. aren't cut off.
-  const todayStr = new Date().toLocaleDateString("en-CA")
-  const liveIds  = new Set(liveMatches.map(m => m.id))
-
-  // Finished today — comes from the "today" backend scope (UTC); good enough for same-day results.
-  const finishedToday = (todayMatches || [])
-    .filter(m => m.status === "finished" && !liveIds.has(m.id))
-
-  // Upcoming today — filter by local date so matches at 8 PM local (next UTC day) still appear.
-  const usedIds = new Set([...liveIds, ...finishedToday.map(m => m.id)])
-  const upcomingToday = (upcomingMatches || [])
-    .filter(m => !usedIds.has(m.id) && m.kickoff_at &&
-      new Date(m.kickoff_at).toLocaleDateString("en-CA") === todayStr)
-
-  const all     = [...liveMatches, ...finishedToday, ...upcomingToday]
-    .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
+function TodayMatchesSection({ todayMatches, navigate, t }) {
+  // todayMatches comes from /api/v1/today filtered to WC — same source as scores/today page.
+  // Already deduplicated and timezone-correct; just sort and slice.
+  const all     = [...(todayMatches || [])]
+    .sort((a, b) => new Date(a.kickoff_at || a.kickoff) - new Date(b.kickoff_at || b.kickoff))
+  const liveCount = all.filter(m => m.status === "live").length
   const visible = all.slice(0, 6)
   if (visible.length === 0) return null
 
@@ -102,7 +118,7 @@ function TodayMatchesSection({ liveMatches, todayMatches, upcomingMatches, navig
       {/* Section header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {liveMatches.length > 0
+          {liveCount > 0
             ? <><span className="live-dot" /><span style={{ fontWeight: 800, fontSize: ".78rem", color: "#fff" }}>LIVE</span></>
             : <span style={{ fontWeight: 800, fontSize: ".78rem", color: "#fff", textTransform: "uppercase", letterSpacing: ".06em" }}>{t("time.today", "Today")}</span>
           }
@@ -125,7 +141,7 @@ function TodayMatchesSection({ liveMatches, todayMatches, upcomingMatches, navig
             <MatchRow
               match={m}
               showDate={false}
-              onClick={() => navigate(m.external_id ? `/matches/${m.external_id}` : `/matches/db-${m.id}`)}
+              onClick={() => navigate(`/matches/${m.external_id ?? m.id}`)}
             />
           </div>
         ))}
@@ -211,15 +227,16 @@ export default function HomePage() {
     "url": "https://golazo.app/world-cup-2026"
   })
 
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
   const { matches: liveWC }         = useMatches("live",     { competition: "WC" })
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: "WC" })
-  const { matches: todayWC }         = useMatches("today",    { competition: "WC", tz })
+  const todayWC                      = useTodayWC()
   const { news: latestNews, newsError, retryNews } = useLatestNews()
 
+  const todayWCIds = new Set(todayWC.map(m => m.external_id).filter(Boolean))
   const todayStr = new Date().toLocaleDateString("en-CA")
   const upcomingFuture = upcomingMatches.filter(m =>
-    !m.kickoff_at || new Date(m.kickoff_at).toLocaleDateString("en-CA") !== todayStr
+    !todayWCIds.has(m.external_id) &&
+    (!m.kickoff_at || new Date(m.kickoff_at).toLocaleDateString("en-CA") !== todayStr)
   )
 
   const nextMatch = liveWC[0] || upcomingMatches[0]
@@ -232,9 +249,7 @@ export default function HomePage() {
       {/* ── Today's matches / Live ── */}
       <div className="container" style={{ paddingTop: 24, paddingBottom: 0 }}>
         <TodayMatchesSection
-          liveMatches={liveWC}
           todayMatches={todayWC}
-          upcomingMatches={upcomingMatches}
           navigate={navigate}
           t={t}
         />

@@ -25,6 +25,24 @@ module Api
         nil
       end
 
+      # Common country name aliases across data providers (football-data.org vs API-Football).
+      TEAM_ALIASES = {
+        "czech republic"      => "czechia",
+        "korea republic"      => "south korea",
+        "republic of korea"   => "south korea",
+        "dpr korea"           => "north korea",
+        "republic of ireland" => "ireland",
+        "ivory coast"         => "côte d'ivoire",
+        "cape verde"          => "cape verde islands",
+        "usa"                 => "united states",
+        "trinidad & tobago"   => "trinidad and tobago",
+      }.freeze
+
+      def normalize_team_name(name)
+        n = name.to_s.downcase.strip
+        TEAM_ALIASES[n] || n
+      end
+
       # Merge live-API matches with DB matches for the date.
       # API match wins on duplicate (same home+away team pair) since it has live scores.
       def merge_matches(date, tz = "UTC")
@@ -33,15 +51,15 @@ module Api
 
         # Index API matches by normalised home+away pair for dedup
         api_keys = api_matches.each_with_object(Set.new) do |m, s|
-          h = m.dig(:home_team, :name).to_s.downcase.strip
-          a = m.dig(:away_team, :name).to_s.downcase.strip
+          h = normalize_team_name(m.dig(:home_team, :name))
+          a = normalize_team_name(m.dig(:away_team, :name))
           s << "#{h}|#{a}"
         end
 
         # Include DB matches that don't already appear in the API response
         db_only = db_matches.reject do |m|
-          h = m.dig(:home_team, :name).to_s.downcase.strip
-          a = m.dig(:away_team, :name).to_s.downcase.strip
+          h = normalize_team_name(m.dig(:home_team, :name))
+          a = normalize_team_name(m.dig(:away_team, :name))
           api_keys.include?("#{h}|#{a}")
         end
 
@@ -115,7 +133,7 @@ module Api
           competition: {
             id:      m[:league_id],
             name:    m[:league_name],
-            code:    m[:league_id].to_s,
+            code:    league_code(m[:league_id]),
             logo:    m[:league_logo],
             country: m[:league_country]
           },
@@ -124,6 +142,21 @@ module Api
           home_team: { name: m.dig(:home, :name), flag_url: m.dig(:home, :logo) },
           away_team: { name: m.dig(:away, :name), flag_url: m.dig(:away, :logo) }
         }
+      end
+
+      # Map API-Football league IDs to the codes used in our DB.
+      LEAGUE_ID_TO_CODE = {
+        1   => "WC",
+        2   => "CL",
+        39  => "PL",
+        78  => "BL1",
+        135 => "SA",
+        140 => "LAL",
+        61  => "L1",
+      }.freeze
+
+      def league_code(league_id)
+        LEAGUE_ID_TO_CODE[league_id.to_i] || league_id.to_s
       end
 
       def normalize_db(m)
