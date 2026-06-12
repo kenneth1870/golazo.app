@@ -1,78 +1,20 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { storageGet, storageSet } from "../utils/safeStorage"
+import { isIosSafari, isStandalone } from "../utils/platform"
 
-const DISMISSED_KEY = "golazo_install_dismissed"
+const DISMISSED_KEY    = "golazo_install_dismissed_at"
+const DISMISS_TTL_MS   = 30 * 24 * 60 * 60 * 1000 // re-prompt after 30 days
 
-function isIOS() {
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
-}
-
-function isIOSSafari() {
-  // Must be iOS and not Chrome/Firefox/Edge on iOS
-  return isIOS() && /Safari/.test(navigator.userAgent) &&
-    !/CriOS|FxiOS|EdgiOS|OPiOS/.test(navigator.userAgent)
-}
-
-function isStandalone() {
-  return window.navigator.standalone === true ||
-    window.matchMedia("(display-mode: standalone)").matches
-}
-
-// ── iOS instruction banner ────────────────────────────
-function IOSBanner({ onDismiss }) {
-  const { t } = useTranslation()
-  return (
-    <div style={{
-      position: "fixed", bottom: "calc(64px + env(safe-area-inset-bottom))",
-      left: 12, right: 12, zIndex: 1500,
-      background: "#161b22", border: "1px solid rgba(238,30,70,.3)",
-      borderRadius: 14, padding: "16px 18px",
-      boxShadow: "0 8px 40px rgba(0,0,0,.6)",
-      animation: "pageIn .25s ease",
-    }}>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-        <span style={{ fontSize: "1.8rem", flexShrink: 0, lineHeight: 1 }}>⚽</span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 800, fontSize: ".9rem", color: "#fff", marginBottom: 6 }}>
-            {t("install.addToHomeScreen")}
-          </div>
-          <div style={{ fontSize: ".78rem", color: "#7d8590", lineHeight: 1.55 }}>
-            Tap{" "}
-            <span style={{
-              display: "inline-flex", alignItems: "center", gap: 3,
-              background: "rgba(255,255,255,.1)", borderRadius: 5,
-              padding: "1px 6px", color: "#e6edf3", fontWeight: 600,
-            }}>
-              {/* iOS share icon */}
-              <svg width="12" height="14" viewBox="0 0 24 28" fill="currentColor">
-                <path d="M12 0L6 6h4v12h4V6h4L12 0zM2 20v6h20v-6h-2v4H4v-4H2z"/>
-              </svg>
-              {t("match.share")}
-            </span>
-            {" "}then{" "}
-            <strong style={{ color: "#e6edf3" }}>{t("install.addToHomeScreen")}</strong>
-            {" "}for live scores without the browser.
-          </div>
-        </div>
-        <button
-          onClick={onDismiss}
-          style={{
-            background: "none", border: "none", color: "#555",
-            fontSize: "1.1rem", cursor: "pointer", padding: "0 0 0 4px", flexShrink: 0, lineHeight: 1,
-          }}
-        >✕</button>
-      </div>
-
-      {/* Arrow pointing down toward Safari toolbar */}
-      <div style={{
-        position: "absolute", bottom: -10, left: "50%", transform: "translateX(-50%)",
-        width: 0, height: 0,
-        borderLeft: "10px solid transparent", borderRight: "10px solid transparent",
-        borderTop: "10px solid rgba(238,30,70,.3)",
-      }} />
-    </div>
-  )
+function wasDismissed() {
+  // Migrate old permanent flag to timestamped key
+  const old = storageGet("golazo_install_dismissed")
+  if (old) {
+    storageSet(DISMISSED_KEY, Date.now().toString())
+    localStorage.removeItem("golazo_install_dismissed")
+  }
+  const at = parseInt(storageGet(DISMISSED_KEY) || "0", 10)
+  return at && Date.now() - at < DISMISS_TTL_MS
 }
 
 // ── Android / Chrome install prompt ──────────────────
@@ -122,22 +64,18 @@ function AndroidBanner({ onInstall, onDismiss }) {
 }
 
 // ── Main component ────────────────────────────────────
+// Note: iOS Safari install instructions are handled by IosInstallGuide.jsx.
+// This component only handles the Android/Chrome beforeinstallprompt flow.
 export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [showAndroid, setShowAndroid]       = useState(false)
-  const [showIOS, setShowIOS]               = useState(false)
 
   useEffect(() => {
-    if (storageGet(DISMISSED_KEY)) return
+    // iOS Safari is handled by IosInstallGuide — skip here to avoid double prompts
+    if (isIosSafari()) return
     if (isStandalone()) return
+    if (wasDismissed()) return
 
-    // iOS Safari: show manual instructions
-    if (isIOSSafari()) {
-      setTimeout(() => setShowIOS(true), 8000)
-      return
-    }
-
-    // Android / Chrome: use beforeinstallprompt
     const handler = e => {
       e.preventDefault()
       setDeferredPrompt(e)
@@ -148,21 +86,19 @@ export default function InstallPrompt() {
   }, [])
 
   function dismiss() {
-    storageSet(DISMISSED_KEY, "1")
+    storageSet(DISMISSED_KEY, Date.now().toString())
     setShowAndroid(false)
-    setShowIOS(false)
   }
 
   async function install() {
     if (!deferredPrompt) return
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
-    if (outcome === "accepted") storageSet(DISMISSED_KEY, "1")
+    if (outcome === "accepted") storageSet(DISMISSED_KEY, Date.now().toString())
     setDeferredPrompt(null)
     setShowAndroid(false)
   }
 
-  if (showIOS)     return <IOSBanner onDismiss={dismiss} />
   if (showAndroid) return <AndroidBanner onInstall={install} onDismiss={dismiss} />
   return null
 }

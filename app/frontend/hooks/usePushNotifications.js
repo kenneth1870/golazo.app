@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { storageGet, storageSet } from "../utils/safeStorage"
+import { isIosSafari, isStandalone } from "../utils/platform"
 
 const DEVICE_KEY = "golazo_device_id"
 
@@ -137,15 +138,9 @@ export function usePushNotifications() {
     "PushManager" in window &&
     "Notification" in window
 
-  // Push on iOS only works in Safari PWA mode (iOS 16.4+).
-  // Chrome/Firefox on iOS use WebKit but don't support push even as a PWA —
-  // exclude them so we don't mislead those users with an "install" hint.
-  const isIosSafari = typeof window !== "undefined" &&
-    /iphone|ipad|ipod/i.test(navigator.userAgent) &&
-    /safari/i.test(navigator.userAgent) &&
-    !/crios|fxios|opios|mercury/i.test(navigator.userAgent)
-  const isIosPwa = isIosSafari && navigator.standalone === true
-  const needsIosInstall = isIosSafari && !isIosPwa
+  const iosSafari = isIosSafari()
+  const isIosPwa = iosSafari && isStandalone()
+  const needsIosInstall = iosSafari && !isIosPwa
 
   return { supported, permission, subscribed, loading, subscribe, unsubscribe, updateTeams, needsIosInstall }
 }

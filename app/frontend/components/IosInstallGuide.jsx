@@ -1,21 +1,9 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { storageGet, storageSet } from "../utils/safeStorage"
+import { isIosSafari, isStandalone } from "../utils/platform"
 
 const SHOWN_KEY = "golazo_ios_guide_shown"
-
-function isIosSafari() {
-  if (typeof window === "undefined") return false
-  const ua = navigator.userAgent
-  return /iphone|ipad|ipod/i.test(ua) &&
-    /safari/i.test(ua) &&
-    !/crios|fxios|opios|mercury/i.test(ua)
-}
-
-function isStandalone() {
-  return navigator.standalone === true ||
-    window.matchMedia("(display-mode: standalone)").matches
-}
 
 const STEPS = [
   {

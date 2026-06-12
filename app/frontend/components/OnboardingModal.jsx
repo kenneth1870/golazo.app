@@ -13,19 +13,7 @@ import { useTranslation } from "react-i18next"
 import { storageGet, storageSet } from "../utils/safeStorage"
 import { useFavorites } from "../hooks/useFavorites"
 import { usePushNotifications } from "../hooks/usePushNotifications"
-
-function isIosSafari() {
-  if (typeof window === "undefined") return false
-  const ua = navigator.userAgent
-  return /iphone|ipad|ipod/i.test(ua) &&
-    /safari/i.test(ua) &&
-    !/crios|fxios|opios|mercury/i.test(ua)
-}
-
-function isStandalone() {
-  return navigator.standalone === true ||
-    window.matchMedia("(display-mode: standalone)").matches
-}
+import { isIosSafari, isStandalone } from "../utils/platform"
 
 const ONBOARDED_KEY = "golazo_onboarded"
 

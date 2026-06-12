@@ -3,9 +3,8 @@ require "web-push"
 class MatchEventNotificationJob < ApplicationJob
   queue_as :default
 
-  # Retry transient push-service errors (5xx, network) up to 3 times.
-  # Expired/invalid subscriptions are cleaned up immediately without retrying.
-  retry_on WebPush::ResponseError, wait: :polynomially_longer, attempts: 3
+  # Subscription errors are handled inline (per-sub rescue) so the job never
+  # raises them — discard_on is a safety net for unexpected propagation only.
   discard_on WebPush::ExpiredSubscription, WebPush::InvalidSubscription
 
   EVENT_EMOJIS = {
@@ -53,6 +52,11 @@ class MatchEventNotificationJob < ApplicationJob
     rescue WebPush::ExpiredSubscription, WebPush::InvalidSubscription => e
       Rails.logger.info("[PushNotification] Removing stale subscription #{sub.id}: #{e.message}")
       sub.destroy
+    rescue WebPush::ResponseError => e
+      # Transient 5xx — log and continue; don't abort remaining subscribers
+      Rails.logger.warn("[PushNotification] Transient error for sub #{sub.id}: #{e.message}")
+    rescue => e
+      Rails.logger.error("[PushNotification] Unexpected error for sub #{sub.id}: #{e.message}")
     end
   end
 

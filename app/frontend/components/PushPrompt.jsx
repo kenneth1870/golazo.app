@@ -18,6 +18,12 @@ export default function PushPrompt({ favoriteTeamName = null }) {
     if (!supported && !needsIosInstall) return
     if (permission === "denied") return
     if (subscribed) return
+    // Migrate old permanent flag (value "1") to a timestamped key
+    const oldKey = "golazo_push_dismissed"
+    if (localStorage.getItem(oldKey)) {
+      localStorage.setItem(DISMISSED_KEY, Date.now().toString())
+      localStorage.removeItem(oldKey)
+    }
     const dismissedAt = parseInt(localStorage.getItem(DISMISSED_KEY) || "0", 10)
     if (dismissedAt && Date.now() - dismissedAt < DISMISS_TTL_MS) return
     const timer = setTimeout(() => setVisible(true), 3000)
