@@ -3,7 +3,7 @@
 # The companion AiMatchSummaryService covers DB-tracked WC matches.
 class AiMatchSummaryExternalService
   CACHE_TTL  = 7.days
-  MODEL      = "claude-haiku-4-5".freeze
+  MODEL      = "claude-haiku-4-5-20251001".freeze
   MAX_TOKENS = 500
 
   # @param data   [Hash]   Normalised match detail: { fixture:, events:, stats:, lineups: }

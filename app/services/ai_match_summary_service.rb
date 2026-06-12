@@ -4,7 +4,7 @@
 # Caches the result for 7 days so we only call the API once per match.
 class AiMatchSummaryService
   CACHE_TTL  = 7.days
-  MODEL      = "claude-haiku-4-5".freeze
+  MODEL      = "claude-haiku-4-5-20251001".freeze
   MAX_TOKENS = 500
 
   # @param match  [Match]  AR record, should include :home_team, :away_team, :goals, :match_stats, :competition
