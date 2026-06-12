@@ -230,10 +230,6 @@ export default function Navbar() {
               <span className="mobile-quick-icon">📰</span>
               <span>{t("nav.news", "Noticias")}</span>
             </NavLink>
-            <NavLink to="/transfers" className={({ isActive }) => `mobile-quick-item${isActive ? " active" : ""}`}>
-              <span className="mobile-quick-icon">🔄</span>
-              <span>{t("nav.transfers", "Transfers")}</span>
-            </NavLink>
           </div>
 
           <div className="mobile-drawer-divider">{t("nav.mundial", "Mundial 2026")}</div>
@@ -313,10 +309,6 @@ export default function Navbar() {
 
               <NavLink to="/news" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
                 {t("nav.news")}
-              </NavLink>
-
-              <NavLink to="/transfers" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
-                🔄 {t("nav.transfers", "Transfers")}
               </NavLink>
 
               {/* Search */}

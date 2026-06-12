@@ -52,7 +52,6 @@ Rails.application.routes.draw do
       get "venues",       to: "venues#index"
       get "all_leagues",  to: "all_leagues#index"
       get "all_leagues/live", to: "all_leagues#live"
-      get "transfers",    to: "transfers#index"
       get  "vapid_public_key",         to: "push_subscriptions#vapid_key"
       post "push_subscriptions",       to: "push_subscriptions#create"
       put  "push_subscriptions/teams", to: "push_subscriptions#update_teams"
@@ -67,7 +66,6 @@ Rails.application.routes.draw do
       resources :players,  only: [ :show ] do
         collection { get :search }
         member do
-          get :transfers
           get :trophies
           get :sidelined
         end

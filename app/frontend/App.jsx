@@ -39,7 +39,6 @@ const BracketPredictorPage  = lazy(() => import("./pages/BracketPredictorPage"))
 const LeaderboardPage       = lazy(() => import("./pages/LeaderboardPage"))
 const PlayerPage            = lazy(() => import("./pages/PlayerPage"))
 const ComparePage           = lazy(() => import("./pages/ComparePage"))
-const TransferCenterPage    = lazy(() => import("./pages/TransferCenterPage"))
 const AdminLayout           = lazy(() => import("./pages/admin/AdminLayout"))
 const AdminDashboardPage    = lazy(() => import("./pages/admin/AdminDashboardPage"))
 const AdminMatchesPage      = lazy(() => import("./pages/admin/AdminMatchesPage"))
@@ -128,7 +127,6 @@ export default function App() {
               <Route path="/predictor"     element={<BracketPredictorPage />} />
               <Route path="/leaderboard"   element={<LeaderboardPage />} />
               <Route path="/compare"       element={<ComparePage />} />
-              <Route path="/transfers"     element={<TransferCenterPage />} />
               <Route path="/players/:id"   element={<PlayerPage />} />
               <Route path="/news"          element={<NewsPage />} />
               <Route path="/news/:id"      element={<NewsShowPage />} />

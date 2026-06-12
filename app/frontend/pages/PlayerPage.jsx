@@ -103,115 +103,7 @@ function TrophiesTab({ playerId, t }) {
   )
 }
 
-// ─── Transfers Tab ────────────────────────────────────────────────────────────
 
-function TransfersTab({ playerId, t }) {
-  const [transfers, setTransfers] = useState(null)
-  const fetchedRef = useRef(false)
-
-  useEffect(() => {
-    if (fetchedRef.current) return
-    fetchedRef.current = true
-    fetch(`/api/v1/players/${playerId}/transfers`)
-      .then(r => r.json())
-      .then(setTransfers)
-      .catch(() => setTransfers([]))
-  }, [playerId])
-
-  if (!transfers) return <div className="loading-shimmer" style={{ height: 200, borderRadius: 12, margin: "20px 0" }} />
-
-  if (!transfers.length) return (
-    <div className="empty-state" style={{ paddingTop: 40 }}>
-      <div className="empty-state__icon">💰</div>
-      <h3>{t("player.noTransfers")}</h3>
-    </div>
-  )
-
-  function feeColor(fee) {
-    if (!fee || fee === "Free") return "#10b981"
-    if (fee.toLowerCase().includes("loan")) return "#f59e0b"
-    return "#ee1e46"
-  }
-
-  function feeLabel(fee) {
-    if (!fee) return "—"
-    if (fee === "Free") return t("player.free")
-    if (fee.toLowerCase().includes("loan")) return t("player.loan")
-    return fee
-  }
-
-  return (
-    <div style={{ paddingTop: 8 }}>
-      <div style={{ position: "relative" }}>
-        {/* Timeline line */}
-        <div style={{
-          position: "absolute", left: 28, top: 0, bottom: 0,
-          width: 2, background: "var(--border)", zIndex: 0,
-        }} />
-
-        {transfers.map((tr, i) => (
-          <div key={i} style={{ display: "flex", gap: 16, marginBottom: 16, position: "relative", zIndex: 1 }}>
-            {/* Year bubble */}
-            <div style={{
-              width: 58, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-            }}>
-              <div style={{
-                width: 14, height: 14, borderRadius: "50%",
-                background: i === transfers.length - 1 ? "#10b981" : "var(--accent)",
-                border: "2px solid var(--bg)",
-                marginTop: 4,
-              }} />
-              <span style={{ fontSize: "0.62rem", color: "var(--muted)", textAlign: "center" }}>
-                {tr.date ? tr.date.slice(0, 4) : "—"}
-              </span>
-            </div>
-
-            {/* Card */}
-            <div style={{
-              flex: 1, background: "var(--surface2)", borderRadius: 10, padding: "12px 14px",
-              border: "1px solid var(--border)",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                {/* From */}
-                <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flex: 1 }}>
-                  {tr.from?.logo && (
-                    <img src={tr.from.logo} alt="" style={{ width: 18, height: 18, objectFit: "contain", flexShrink: 0 }}
-                      onError={e => (e.target.style.display = "none")} />
-                  )}
-                  <span style={{ fontSize: "0.78rem", color: "rgba(255,255,255,.65)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {tr.from?.name || "—"}
-                  </span>
-                </div>
-                <span style={{ color: "var(--muted)", fontSize: "0.8rem", flexShrink: 0 }}>→</span>
-                {/* To */}
-                <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0, flex: 1, justifyContent: "flex-end" }}>
-                  <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>
-                    {tr.to?.name || "—"}
-                  </span>
-                  {tr.to?.logo && (
-                    <img src={tr.to.logo} alt="" style={{ width: 18, height: 18, objectFit: "contain", flexShrink: 0 }}
-                      onError={e => (e.target.style.display = "none")} />
-                  )}
-                </div>
-              </div>
-              {tr.type && (
-                <div style={{ textAlign: "right" }}>
-                  <span style={{
-                    fontSize: "0.7rem", fontWeight: 700, padding: "2px 8px", borderRadius: 6,
-                    background: `${feeColor(tr.type)}18`,
-                    color: feeColor(tr.type),
-                  }}>
-                    {feeLabel(tr.type)}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 // ─── Injuries Tab ─────────────────────────────────────────────────────────────
 
@@ -293,7 +185,7 @@ function InjuriesTab({ playerId, t }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const PLAYER_TABS = ["stats", "trophies", "transfers", "injuries"]
+const PLAYER_TABS = ["stats", "trophies", "injuries"]
 
 export default function PlayerPage() {
   const { t }         = useTranslation()
@@ -444,7 +336,6 @@ export default function PlayerPage() {
           )}
 
           {playerTab === "trophies" && <TrophiesTab playerId={id} t={t} />}
-          {playerTab === "transfers" && <TransfersTab playerId={id} t={t} />}
           {playerTab === "injuries" && <InjuriesTab playerId={id} t={t} />}
         </div>
       </div>

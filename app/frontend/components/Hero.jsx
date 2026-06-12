@@ -68,7 +68,6 @@ const FEATURES = [
   { icon: "👥", label: "Teams" },
   { icon: "👤", label: "Players" },
   { icon: "🔔", label: "Goal Alerts" },
-  { icon: "🔄", label: "Transfers" },
   { icon: "🗞️", label: "News" },
 ]
 

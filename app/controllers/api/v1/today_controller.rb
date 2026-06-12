@@ -27,15 +27,19 @@ module Api
 
       # Common country name aliases across data providers (football-data.org vs API-Football).
       TEAM_ALIASES = {
-        "czech republic"      => "czechia",
-        "korea republic"      => "south korea",
-        "republic of korea"   => "south korea",
-        "dpr korea"           => "north korea",
-        "republic of ireland" => "ireland",
-        "ivory coast"         => "côte d'ivoire",
-        "cape verde"          => "cape verde islands",
-        "usa"                 => "united states",
-        "trinidad & tobago"   => "trinidad and tobago",
+        "czech republic"        => "czechia",
+        "korea republic"        => "south korea",
+        "republic of korea"     => "south korea",
+        "dpr korea"             => "north korea",
+        "republic of ireland"   => "ireland",
+        "ivory coast"           => "côte d'ivoire",
+        "cape verde"            => "cape verde islands",
+        "usa"                   => "united states",
+        "trinidad & tobago"     => "trinidad and tobago",
+        "bosnia & herz."        => "bosnia & herzegovina",
+        "bosnia and herzegovina" => "bosnia & herzegovina",
+        "north macedonia"       => "macedonia",
+        "fyr macedonia"         => "macedonia",
       }.freeze
 
       def normalize_team_name(name)

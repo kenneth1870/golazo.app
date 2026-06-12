@@ -42,13 +42,6 @@ module Api
         render json: player_not_found, status: :service_unavailable
       end
 
-      # GET /api/v1/players/:id/transfers
-      def transfers
-        render json: LiveScoresClient.new.player_transfers(params[:id])
-      rescue => e
-        Rails.logger.error("[PlayersController#transfers] #{e.message}")
-        render json: []
-      end
 
       # GET /api/v1/players/:id/trophies
       def trophies
