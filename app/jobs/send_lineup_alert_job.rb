@@ -8,7 +8,7 @@ class SendLineupAlertJob < ApplicationJob
   def perform(match_id:, home_name:, away_name:, kickoff_at: nil, match_url: nil)
     time_str = kickoff_at ? Time.parse(kickoff_at.to_s).strftime("%-H:%M") : nil
     title = "📋 Alineaciones publicadas"
-    body  = [home_name, "vs", away_name, time_str ? "· #{time_str}" : nil].compact.join(" ")
+    body  = [ home_name, "vs", away_name, time_str ? "· #{time_str}" : nil ].compact.join(" ")
     url   = match_url || "/"
 
     subs = PushSubscription.for_teams([ home_name, away_name ])
@@ -23,7 +23,7 @@ class SendLineupAlertJob < ApplicationJob
         url:   url,
         icon:  "/images/apple-touch-icon.png?v=2",
         badge: "/images/badge-72.png",
-        tag:   "lineup-#{match_id}",
+        tag:   "lineup-#{match_id}"
       }.to_json
 
       WebPush.payload_send(
@@ -34,7 +34,7 @@ class SendLineupAlertJob < ApplicationJob
         vapid: {
           subject:     ENV["VAPID_SUBJECT"],
           public_key:  ENV["VAPID_PUBLIC_KEY"],
-          private_key: ENV["VAPID_PRIVATE_KEY"],
+          private_key: ENV["VAPID_PRIVATE_KEY"]
         },
         ttl: 3600
       )

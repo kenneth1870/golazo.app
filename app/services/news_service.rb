@@ -5,12 +5,12 @@ class NewsService
   ESPN_API_ENDPOINTS = {
     "es" => [
       "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=50&lang=es",
-      "https://site.api.espn.com/apis/site/v2/sports/soccer/all/news?limit=50&lang=es",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/all/news?limit=50&lang=es"
     ],
     "en" => [
       "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=50",
-      "https://site.api.espn.com/apis/site/v2/sports/soccer/all/news?limit=50",
-    ],
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/all/news?limit=50"
+    ]
   }.freeze
 
   # Primary RSS feeds per locale.
@@ -213,7 +213,7 @@ class NewsService
         source:       source,
         image:        img,
         published_at: published,
-        date_label:   published ? published.strftime("%-d %b %Y") : nil,
+        date_label:   published ? published.strftime("%-d %b %Y") : nil
       }
 
       # Side-cache so fetch_espn_article_content can look up by ESPN numeric ID
@@ -282,7 +282,7 @@ class NewsService
       found = nil
       [ "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=50&lang=es",
         "https://site.api.espn.com/apis/site/v2/sports/soccer/all/news?limit=50&lang=es",
-        "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=50",
+        "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/news?limit=50"
       ].each do |api_url|
         response = Faraday.get(api_url) do |req|
           req.options.timeout = 6

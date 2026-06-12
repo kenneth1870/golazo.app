@@ -8,7 +8,7 @@ class MatchEventNotificationJob < ApplicationJob
     "kickoff"   => "🏁",
     "halftime"  => "⏸",
     "fulltime"  => "✅",
-    "red_card"  => "🟥",
+    "red_card"  => "🟥"
   }.freeze
 
   def perform(event_type:, match_id:, home_name:, away_name:, home_score: nil, away_score: nil, match_url: nil, minute: nil)

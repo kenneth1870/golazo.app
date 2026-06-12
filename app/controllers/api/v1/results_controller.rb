@@ -18,7 +18,6 @@ module Api
       rescue ArgumentError
         nil
       end
-
     end
   end
 end

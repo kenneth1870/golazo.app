@@ -13,7 +13,7 @@ module Api
             total_matches:    Match.count,
             predictions:      ScorePrediction.count,
             news_articles:    0,
-            recent_users:     User.order(created_at: :desc).limit(5).map(&:as_json_public),
+            recent_users:     User.order(created_at: :desc).limit(5).map(&:as_json_public)
           }
         end
       end

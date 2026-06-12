@@ -93,7 +93,7 @@ class LiveScoresClient
     "Europe",
     "South America",
     "North America",
-    "Oceania",
+    "Oceania"
   ].freeze
 
   def initialize

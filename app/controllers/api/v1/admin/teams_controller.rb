@@ -15,7 +15,7 @@ module Api
               confederation: t.confederation,
               external_id:   t.external_id,
               matches_played: Match.where("home_team_id = ? OR away_team_id = ?", t.id, t.id)
-                                   .where(status: "finished").count,
+                                   .where(status: "finished").count
             }
           end
           render json: teams

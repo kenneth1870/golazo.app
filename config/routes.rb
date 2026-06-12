@@ -12,7 +12,7 @@ Rails.application.routes.draw do
 
       # ── Admin ────────────────────────────────────────────
       namespace :admin do
-        get  "/",           to: "dashboard#index"
+        get "/",           to: "dashboard#index"
         resources :matches, only: %i[index show update]
         resources :users,   only: %i[index show update destroy]
         resources :news,    only: %i[index]

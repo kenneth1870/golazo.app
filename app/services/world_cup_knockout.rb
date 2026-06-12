@@ -52,29 +52,29 @@ class WorldCupKnockout
     %w[1B T7],  # M85: Winner B vs best 3rd (from E/F/G/I/J)
     %w[1J 2H],  # M86: Winner J vs Runner-up H
     %w[1K T8],  # M87: Winner K vs best 3rd (from D/E/I/J/L)
-    %w[2D 2G],  # M88: Runner-up D vs Runner-up G
+    %w[2D 2G]  # M88: Runner-up D vs Runner-up G
   ].freeze
 
   # Official R16 cross-bracket pairings (FIFA matches 89–96).
   # Each pair is [R32_pos_home, R32_pos_away] using positions 1–16 above.
   R16_PAIRINGS = [
-    [2,  5],   # M89 (pos 17): W74 vs W77
-    [1,  3],   # M90 (pos 18): W73 vs W75
-    [4,  6],   # M91 (pos 19): W76 vs W78
-    [7,  8],   # M92 (pos 20): W79 vs W80
-    [11, 12],  # M93 (pos 21): W83 vs W84
-    [9,  10],  # M94 (pos 22): W81 vs W82
-    [14, 16],  # M95 (pos 23): W86 vs W88
-    [13, 15],  # M96 (pos 24): W85 vs W87
+    [ 2,  5 ],   # M89 (pos 17): W74 vs W77
+    [ 1,  3 ],   # M90 (pos 18): W73 vs W75
+    [ 4,  6 ],   # M91 (pos 19): W76 vs W78
+    [ 7,  8 ],   # M92 (pos 20): W79 vs W80
+    [ 11, 12 ],  # M93 (pos 21): W83 vs W84
+    [ 9,  10 ],  # M94 (pos 22): W81 vs W82
+    [ 14, 16 ],  # M95 (pos 23): W86 vs W88
+    [ 13, 15 ]  # M96 (pos 24): W85 vs W87
   ].freeze
 
   # Official QF cross-bracket pairings (FIFA matches 97–100).
   # Each pair is [R16_pos_home, R16_pos_away] using positions 17–24 above.
   QF_PAIRINGS = [
-    [17, 18],  # M97 (pos 25): W89 vs W90
-    [21, 22],  # M98 (pos 26): W93 vs W94
-    [19, 20],  # M99 (pos 27): W91 vs W92
-    [23, 24],  # M100 (pos 28): W95 vs W96
+    [ 17, 18 ],  # M97 (pos 25): W89 vs W90
+    [ 21, 22 ],  # M98 (pos 26): W93 vs W94
+    [ 19, 20 ],  # M99 (pos 27): W91 vs W92
+    [ 23, 24 ]  # M100 (pos 28): W95 vs W96
   ].freeze
 
   def self.rebuild!

@@ -70,7 +70,7 @@ module Api
         "republic of ireland"          => "ireland",
         "trinidad & tobago"            => "trinidad and tobago",
         "north macedonia"              => "macedonia",
-        "fyr macedonia"                => "macedonia",
+        "fyr macedonia"                => "macedonia"
       }.freeze
 
       def normalize_team_name(name)
@@ -157,7 +157,7 @@ module Api
       # Canonical names for key competitions so API and DB matches render
       # the same section header regardless of what the API returns.
       LEAGUE_CANONICAL_NAMES = {
-        1 => "FIFA World Cup 2026",
+        1 => "FIFA World Cup 2026"
       }.freeze
 
       def normalize_api(m)
@@ -195,7 +195,7 @@ module Api
         78  => "BL1",
         135 => "SA",
         140 => "LAL",
-        61  => "L1",
+        61  => "L1"
       }.freeze
 
       def league_code(league_id)

@@ -20,14 +20,14 @@ class User < ApplicationRecord
       sub:  id,
       role: role,
       iat:  Time.now.to_i,
-      exp:  JWT_EXPIRY.from_now.to_i,
+      exp:  JWT_EXPIRY.from_now.to_i
     }
     JWT.encode(payload, JWT_SECRET, "HS256")
   end
 
   def self.from_token(token)
     return nil if token.blank?
-    payload = JWT.decode(token, JWT_SECRET, true, algorithms: ["HS256"]).first
+    payload = JWT.decode(token, JWT_SECRET, true, algorithms: [ "HS256" ]).first
     find_by(id: payload["sub"])
   rescue JWT::DecodeError
     nil

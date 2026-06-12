@@ -48,7 +48,7 @@ module Api
             home_slot:   m.home_slot,
             away_slot:   m.away_slot,
             home_team:   { id: m.home_team&.id, name: m.home_team&.name, flag_url: m.home_team&.flag_url },
-            away_team:   { id: m.away_team&.id, name: m.away_team&.name, flag_url: m.away_team&.flag_url },
+            away_team:   { id: m.away_team&.id, name: m.away_team&.name, flag_url: m.away_team&.flag_url }
           }
         end
       end

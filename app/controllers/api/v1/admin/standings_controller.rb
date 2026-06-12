@@ -30,7 +30,7 @@ module Api
                 goals_for:     s.goals_for,
                 goals_against: s.goals_against,
                 goal_diff:     s.goal_difference,
-                points:        s.points,
+                points:        s.points
               }
             end
           end
@@ -47,7 +47,7 @@ module Api
             last_recalculated_at: Rails.cache.read("standings_last_recalculated_at"),
             match_status_counts: status_counts,
             live_match_count:    live_count,
-            anomaly_count:       anomalies,
+            anomaly_count:       anomalies
           }
         rescue ActiveRecord::RecordNotFound
           render json: {}, status: :not_found

@@ -13,7 +13,7 @@ class MatchReaction < ApplicationRecord
       { match_id: match_id, emoji: emoji, count: 1,
         created_at: Time.current, updated_at: Time.current },
       on_duplicate: Arel.sql("count = match_reactions.count + 1, updated_at = NOW()"),
-      unique_by: [:match_id, :emoji]
+      unique_by: [ :match_id, :emoji ]
     )
     true
   rescue => e

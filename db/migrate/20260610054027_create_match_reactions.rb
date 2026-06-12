@@ -7,7 +7,7 @@ class CreateMatchReactions < ActiveRecord::Migration[8.1]
 
       t.timestamps
     end
-    add_index :match_reactions, [:match_id, :emoji], unique: true
+    add_index :match_reactions, [ :match_id, :emoji ], unique: true
     add_index :match_reactions, :match_id
   end
 end

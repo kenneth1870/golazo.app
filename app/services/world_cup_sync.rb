@@ -46,7 +46,7 @@ class WorldCupSync
 
     # Bust cached fixture lists for today and the next day (early-UTC matches
     # like 02:00 UTC are stored under tomorrow's date key in the API cache).
-    [Date.today, Date.today + 1].each do |d|
+    [ Date.today, Date.today + 1 ].each do |d|
       Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
       Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
     end

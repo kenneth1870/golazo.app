@@ -39,7 +39,7 @@ class WorldCupScorers
     finished.each do |fixture_id|
       events = fetch_events(fixture_id)
       events.each do |e|
-        next unless e["type"].in?(["Goal", "Card"])
+        next unless e["type"].in?([ "Goal", "Card" ])
 
         if e["type"] == "Goal" && e["detail"] != "Missed Penalty"
           scorer = e.dig("player", "name").presence

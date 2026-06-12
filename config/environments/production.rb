@@ -80,7 +80,7 @@ Rails.application.configure do
   # Only accept requests addressed to the real domain (DNS-rebinding protection).
   config.hosts = [
     "golazoapp.live",
-    "www.golazoapp.live",
+    "www.golazoapp.live"
   ]
   # Allow health checks without a Host header (load-balancer / uptime probes).
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
