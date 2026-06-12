@@ -1096,57 +1096,6 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
   )
 }
 
-// ─── Live Odds Pulse ───────────────────────────────────────────────────────────
-
-function LiveOddsPulse({ fixtureId, homeName, awayName, t }) {
-  const [odds, setOdds] = useState(null)
-
-  useEffect(() => {
-    if (!fixtureId) return
-    let mounted = true
-    const poll = () =>
-      fetch(`/api/v1/fixture_odds/${fixtureId}/live`)
-        .then(r => r.ok ? r.json() : null)
-        .then(d => { if (mounted && d?.bets?.length) setOdds(d) })
-        .catch(() => {})
-    poll()
-    const iv = setInterval(poll, 30000)
-    return () => { mounted = false; clearInterval(iv) }
-  }, [fixtureId])
-
-  if (!odds?.bets?.length) return null
-
-  // Prefer Asian Handicap for live in-play context; fall back to first available
-  const handicap = odds.bets.find(b => b.name === "Asian Handicap")
-  const overUnder = odds.bets.find(b => b.name === "Over/Under Line" || b.name.startsWith("Over/Under") && !b.name.includes("Half"))
-  if (!handicap && !overUnder) return null
-
-  return (
-    <div style={{
-      display: "flex", alignItems: "center", justifyContent: "center",
-      gap: 6, padding: "7px 16px", margin: "0 0 0",
-      background: "rgba(16,185,129,.06)", borderTop: "1px solid rgba(16,185,129,.12)",
-      borderBottom: "1px solid rgba(16,185,129,.12)",
-      fontSize: "0.7rem", overflowX: "auto", WebkitOverflowScrolling: "touch",
-      flexWrap: "wrap",
-    }}>
-      <span style={{ color: "#10b981", fontWeight: 700, letterSpacing: ".06em", fontSize: "0.62rem", flexShrink: 0 }}>
-        ⚡ {t("match.liveOdds")}
-      </span>
-      {handicap && handicap.values.map(v => (
-        <span key={v.value} style={{ background: "rgba(16,185,129,.1)", borderRadius: 6, padding: "3px 8px", color: "rgba(255,255,255,.75)", whiteSpace: "nowrap" }}>
-          {v.value === "Home" ? homeName : v.value === "Away" ? awayName : v.value} {v.odd}
-        </span>
-      ))}
-      {overUnder && overUnder.values.slice(0, 2).map(v => (
-        <span key={v.value} style={{ background: "rgba(245,158,11,.08)", borderRadius: 6, padding: "3px 8px", color: "rgba(255,255,255,.6)", whiteSpace: "nowrap" }}>
-          {v.value} {v.odd}
-        </span>
-      ))}
-    </div>
-  )
-}
-
 // ─── First Goal Scorer Odds ───────────────────────────────────────────────────
 
 function FirstScorerOdds({ fixtureId, t }) {
@@ -2023,11 +1972,6 @@ export default function MatchShowPage() {
           </div>
         )
       }
-
-      {/* Live Odds Pulse — compact strip shown during live matches */}
-      {isLive && hasFixture && (
-        <LiveOddsPulse fixtureId={id} homeName={homeName} awayName={awayName} t={t} />
-      )}
 
       {/* Tab bar — always visible */}
       <div className="tab-bar sticky-tabs">
