@@ -82,7 +82,7 @@ class NewsService
     # Store the FULL merged pool in cache — don't truncate inside the block.
     # Different callers (index: 60, show/content: 60, sitemap: 200) all read
     # from the same pool and slice with .first(limit) after the cache hit.
-    all_items = Rails.cache.fetch("news_feed_v7_#{lang}", expires_in: 30.minutes) do
+    all_items = Rails.cache.fetch("news_feed_v8_#{lang}", expires_in: 30.minutes) do
       # ESPN JSON API first — items with images win deduplication by link.
       espn_threads = (ESPN_API_ENDPOINTS[espn_lang] || [])
                        .map { |url| Thread.new { fetch_espn_api(url, lang: espn_lang) } }
@@ -181,7 +181,7 @@ class NewsService
     response = Faraday.get(url) do |req|
       req.options.timeout      = 6
       req.options.open_timeout = 4
-      req.headers["User-Agent"] = "GolazoApp/1.0"
+      req.headers["User-Agent"] = USER_AGENT
       req.headers["Accept"]     = "application/json"
     end
 

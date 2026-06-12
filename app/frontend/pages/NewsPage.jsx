@@ -12,8 +12,8 @@ const PAGE_SIZE = 12
 function FeaturedCard({ article }) {
   const color = sourceColor(article.source)
   const bg = article.image
-    ? `url(${article.image})`
-    : "linear-gradient(135deg,#1a1a2e,#16213e)"
+    ? `url(${article.image}), url('/images/hero_2.jpg')`
+    : "url('/images/hero_2.jpg')"
   return (
     <Link to={`/news/${article.id}`} className="nc-featured" style={{ textDecoration: "none" }}>
       <div className="nc-featured__img" style={{ backgroundImage: bg }} />
@@ -33,8 +33,8 @@ function FeaturedCard({ article }) {
 function MediumCard({ article }) {
   const color = sourceColor(article.source)
   const bg = article.image
-    ? `url(${article.image})`
-    : "linear-gradient(135deg,#1a1a2e,#16213e)"
+    ? `url(${article.image}), url('/images/hero_2.jpg')`
+    : "url('/images/hero_2.jpg')"
   return (
     <Link to={`/news/${article.id}`} className="nc-medium" style={{ textDecoration: "none" }}>
       <div className="nc-medium__img" style={{ backgroundImage: bg }} />
@@ -55,8 +55,9 @@ function CompactCard({ article }) {
       <div
         className="nc-compact__thumb"
         style={{
-          backgroundImage: article.image ? `url(${article.image})` : undefined,
-          background: article.image ? undefined : "linear-gradient(135deg,#1a1a2e,#16213e)",
+          backgroundImage: article.image
+            ? `url(${article.image}), url('/images/hero_2.jpg')`
+            : "url('/images/hero_2.jpg')",
         }}
       />
       <div className="nc-compact__body">
@@ -180,16 +181,6 @@ export default function NewsPage() {
               </button>
             )}
 
-            {/* Source tabs — only shown in "all" tab mode */}
-            {tab === "all" && sources.map(s => (
-              <button
-                key={s}
-                className={`tab-link${active === s ? " tab-link--active" : ""}`}
-                onClick={() => setSource(s === allLabel ? null : s)}
-              >
-                {s}
-              </button>
-            ))}
 
             {/* "All news" button when in For You mode */}
             {tab === "foryou" && (

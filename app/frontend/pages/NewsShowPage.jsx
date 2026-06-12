@@ -202,30 +202,8 @@ export default function NewsShowPage() {
           </p>
         ) : null}
 
-        {/* Read original link */}
-        {article.link && (
-          <div style={{ marginTop: 36, padding: "20px 0", borderTop: "1px solid var(--border)" }}>
-            <p style={{ fontSize: "0.82rem", color: "var(--muted)", marginBottom: 12 }}>
-              {t("news.originalOn", { source: article.source })}
-            </p>
-            <a
-              href={article.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 6,
-                background: color, color: "#fff",
-                padding: "10px 20px", borderRadius: 8,
-                fontWeight: 700, fontSize: "0.85rem", textDecoration: "none",
-              }}
-            >
-              {t("news.readOn", { source: article.source })}
-            </a>
-          </div>
-        )}
-
         {/* Back */}
-        <div style={{ marginTop: 32 }}>
+        <div style={{ marginTop: 40, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
           <Link to="/news" style={{ color: "var(--accent)", fontSize: "0.85rem", textDecoration: "none" }}>
             ← {t("news.backToNews")}
           </Link>
