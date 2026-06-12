@@ -44,19 +44,34 @@ class WorldCupSync
 
     log("#{just_finished.count} WC match(es) just finished — busting cache and scheduling sync")
 
-    # Bust the cached today fixture list so sync_today gets a fresh API response
-    Rails.cache.delete("live_scores_date_v15_#{Date.today.iso8601}_utc")
-    Rails.cache.delete("live_scores_date_v15_#{Date.today.iso8601}_")
+    # Bust cached fixture lists for today and the next day (early-UTC matches
+    # like 02:00 UTC are stored under tomorrow's date key in the API cache).
+    [Date.today, Date.today + 1].each do |d|
+      Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
+      Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
+    end
 
     SyncTodayMatchesJob.perform_later
   end
 
-  # Sync today's matches (scheduled + live + finished today)
+  # Sync today's matches (scheduled + live + finished today).
+  # Also syncs early-UTC matches on the next calendar day (kicks before 07:00 UTC)
+  # so that evening fixtures in the Americas aren't missed (e.g. 02:00 UTC June 12
+  # = 8 PM June 11 in Mexico City).
   def sync_today
-    matches = @api.matches_for_date(Date.today)
+    today_matches = @api.matches_for_date(Date.today)
+
+    next_day_early = @api.matches_for_date(Date.today + 1).select do |m|
+      t = Time.parse(m[:kickoff_at].to_s) rescue nil
+      t && t.utc.hour < 7
+    end
+
+    seen = Set.new(today_matches.map { |m| m[:external_id] })
+    matches = today_matches + next_day_early.reject { |m| seen.include?(m[:external_id]) }
+
     return log("No matches today") if matches.empty?
 
-    log("Today: #{matches.length} matches")
+    log("Today: #{matches.length} matches (#{next_day_early.length} early next-day)")
     updated = 0
     matches.each { |m| updated += 1 if sync_match_from_normalized(m) }
     log("Updated #{updated} matches")
