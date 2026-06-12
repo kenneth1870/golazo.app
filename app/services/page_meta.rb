@@ -54,7 +54,7 @@ class PageMeta
       return for_league(m[1])
     end
 
-    if (m = path.match(%r{\A/news/(\d+)\z}))
+    if (m = path.match(%r{\A/news/([a-zA-Z0-9]+)\z}))
       return for_news(m[1])
     end
 
@@ -178,7 +178,47 @@ class PageMeta
   end
 
   def self.for_news(id)
-    # NewsArticle meta enrichment if we have a local cache
+    article = Rails.cache.fetch("page_meta_news_#{id}", expires_in: 15.minutes) do
+      NewsService.new.latest(limit: 60, lang: "en").find { |a| a[:id].to_s == id.to_s } ||
+        NewsService.new.latest(limit: 60, lang: "es").find { |a| a[:id].to_s == id.to_s }
+    end
+
+    return Meta.new(
+      title:       "Football News — #{SITE}",
+      description: "The latest FIFA World Cup 2026 and international football news on Golazo.",
+      type:        "article",
+      image:       DEFAULT_IMG,
+      json_ld:     nil
+    ) unless article
+
+    title = article[:title].presence || "Football News"
+    desc  = article[:summary].presence || title
+    image = article[:image].presence || DEFAULT_IMG
+
+    json_ld = {
+      "@context"        => "https://schema.org",
+      "@type"           => "NewsArticle",
+      "headline"        => title.truncate(110),
+      "description"     => desc.truncate(300),
+      "image"           => image,
+      "datePublished"   => article[:published_at]&.iso8601,
+      "url"             => "#{BASE_URL}/news/#{id}",
+      "publisher"       => {
+        "@type" => "Organization",
+        "name"  => article[:source] || "Golazo",
+        "logo"  => { "@type" => "ImageObject", "url" => "#{BASE_URL}/images/apple-touch-icon.png?v=2" }
+      }
+    }.compact
+
+    Meta.new(
+      title:       "#{title} — #{SITE}",
+      description: desc.truncate(160),
+      type:        "article",
+      image:       image,
+      json_ld:     json_ld
+    )
+  rescue => e
+    Rails.logger.error("[PageMeta.for_news] #{e.message}")
     Meta.new(
       title:       "Football News — #{SITE}",
       description: "The latest FIFA World Cup 2026 and international football news on Golazo.",

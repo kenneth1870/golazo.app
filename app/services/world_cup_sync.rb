@@ -299,16 +299,32 @@ class WorldCupSync
   # Updates a DB match from a normalized match hash (from live_matches).
   # Receives the same shape as sync_match_from_normalized.
   def sync_match_from_live(raw)
-    home_name  = raw.dig(:home, :name)
-    away_name  = raw.dig(:away, :name)
+    home_name    = raw.dig(:home, :name)
+    away_name    = raw.dig(:away, :name)
     return false unless home_name && away_name
 
-    home_score = raw.dig(:home, :score)
-    away_score = raw.dig(:away, :score)
-    minute     = raw[:minute]
+    home_score   = raw.dig(:home, :score)
+    away_score   = raw.dig(:away, :score)
+    minute       = raw[:minute]
+    status_short = raw[:status_short]
 
     match = find_match_by_teams(home_name, away_name)
     return false unless match
+
+    # Kickoff: match transitions from scheduled → live feed
+    if match.status == "scheduled"
+      match.update!(status: "live", home_score: home_score, away_score: away_score)
+      broadcast_score(match, minute, event_type: "kickoff")
+      return true
+    end
+
+    # Half-time: status_short == "HT" — notify once per match
+    if status_short == "HT" && !Rails.cache.read("ht_notified_#{match.id}")
+      Rails.cache.write("ht_notified_#{match.id}", true, expires_in: 3.hours)
+      fire_notification(match, "halftime", minute: minute,
+        home_score: match.home_score.to_i, away_score: match.away_score.to_i)
+    end
+
     return false if home_score == match.home_score && away_score == match.away_score
 
     match.update!(status: "live", home_score: home_score, away_score: away_score)
@@ -332,12 +348,20 @@ class WorldCupSync
     match = find_match_by_teams(home_name, away_name)
     return false unless match
 
+    was_live = match.status == "live"
+
     attrs = { status: status }
     attrs[:home_score] = home_score unless status == "scheduled"
     attrs[:away_score] = away_score unless status == "scheduled"
 
     match.update!(attrs)
     broadcast_score(match, m[:minute]) if status == "live"
+
+    # Full-time: WC match just finished — notify subscribers
+    if status == "finished" && was_live && match.competition&.code == "WC"
+      fire_notification(match, "fulltime",
+        home_score: home_score.to_i, away_score: away_score.to_i)
+    end
 
     # Recalculate group standings after a WC match finishes
     if status == "finished" && match.competition&.code == "WC"
@@ -475,7 +499,7 @@ class WorldCupSync
     nil
   end
 
-  def broadcast_score(match, minute = nil)
+  def broadcast_score(match, minute = nil, event_type: "goal")
     payload = {
       type:       "score_update",
       home_score: match.home_score,
@@ -485,19 +509,23 @@ class WorldCupSync
     }
     ActionCable.server.broadcast("match_#{match.id}", payload)
 
-    # Also broadcast to the external_match channel so MatchShowPage (which
-    # subscribes by external_id) receives live score updates without polling.
     if match.external_id
       ActionCable.server.broadcast("external_match_#{match.external_id}", payload.merge(type: "match_update"))
     end
 
-    # Fire push notification to subscribers following either team (async)
-    SendGoalAlertJob.perform_later(
+    fire_notification(match, event_type, minute: minute,
+      home_score: match.home_score.to_i, away_score: match.away_score.to_i)
+  end
+
+  def fire_notification(match, event_type, home_score: nil, away_score: nil, minute: nil)
+    MatchEventNotificationJob.perform_later(
+      event_type: event_type,
       match_id:   match.id,
       home_name:  match.home_team&.name.to_s,
       away_name:  match.away_team&.name.to_s,
-      home_score: match.home_score.to_i,
-      away_score: match.away_score.to_i,
+      home_score: home_score,
+      away_score: away_score,
+      minute:     minute,
       match_url:  "/matches/#{match.external_id || "db-#{match.id}"}"
     )
   end
