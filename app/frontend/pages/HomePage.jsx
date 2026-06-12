@@ -53,7 +53,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
       {next ? (
         <div
           style={{ marginLeft: "auto", cursor: "pointer", textAlign: "right" }}
-          onClick={() => navigate(`/matches/db-${next.id}`)}
+          onClick={() => navigate(next.external_id ? `/matches/${next.external_id}` : `/matches/db-${next.id}`)}
         >
           <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>
             {next.status === "live" ? t("home.playingNow") : t("hero.nextMatch")}
@@ -125,7 +125,7 @@ function TodayMatchesSection({ liveMatches, todayMatches, upcomingMatches, navig
             <MatchRow
               match={m}
               showDate={false}
-              onClick={() => navigate(`/matches/db-${m.id}`)}
+              onClick={() => navigate(m.external_id ? `/matches/${m.external_id}` : `/matches/db-${m.id}`)}
             />
           </div>
         ))}
@@ -216,6 +216,11 @@ export default function HomePage() {
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: "WC" })
   const { matches: todayWC }         = useMatches("today",    { competition: "WC", tz })
   const { news: latestNews, newsError, retryNews } = useLatestNews()
+
+  const todayStr = new Date().toLocaleDateString("en-CA")
+  const upcomingFuture = upcomingMatches.filter(m =>
+    !m.kickoff_at || new Date(m.kickoff_at).toLocaleDateString("en-CA") !== todayStr
+  )
 
   const nextMatch = liveWC[0] || upcomingMatches[0]
 
@@ -426,7 +431,7 @@ export default function HomePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {upcomingMatches.slice(0, 8).map(m => (
+                      {upcomingFuture.slice(0, 8).map(m => (
                         <tr key={m.id} style={{ cursor: "pointer" }} onClick={() => navigate("/scores/fixtures")}>
                           <td style={{ fontSize: "0.75rem", color: "gray" }}>
                             {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString([], { month: "short", day: "numeric" }) : "TBD"}
@@ -453,7 +458,7 @@ export default function HomePage() {
 
                 {/* Mobile rows */}
                 <div className="d-md-none widget-body p-0">
-                  {upcomingMatches.slice(0, 6).map(m => (
+                  {upcomingFuture.slice(0, 6).map(m => (
                     <div key={m.id} className="match-row match-row--clickable" onClick={() => navigate("/scores/fixtures")}>
                       <div className="match-row__status">
                         <span className="match-status-time" style={{ fontSize: "0.65rem" }}>

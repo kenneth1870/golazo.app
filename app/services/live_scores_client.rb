@@ -232,10 +232,11 @@ class LiveScoresClient
 
   # Top scorers for a league/season. Returns raw API-Football response array.
   def top_scorers(league_id, season_id)
-    Rails.cache.fetch("live_scores_scorers_v2_#{league_id}_#{season_id}", expires_in: 30.minutes) do
+    cached = Rails.cache.fetch("live_scores_scorers_v2_#{league_id}_#{season_id}", expires_in: 5.minutes) do
       data = get("players/topscorers", league: league_id, season: season_id)
       data.dig("response") || []
     end
+    cached.presence || []
   rescue => e
     Rails.logger.error("[LiveScoresClient] top_scorers: #{e.message}")
     []
@@ -417,30 +418,33 @@ class LiveScoresClient
   # ── Tournament leaderboards ───────────────────────────────────────────────
 
   def top_assists(league_id, season_id)
-    Rails.cache.fetch("live_scores_assists_v1_#{league_id}_#{season_id}", expires_in: 30.minutes) do
+    cached = Rails.cache.fetch("live_scores_assists_v1_#{league_id}_#{season_id}", expires_in: 5.minutes) do
       data = get("players/topassists", league: league_id, season: season_id)
       data.dig("response") || []
     end
+    cached.presence || []
   rescue => e
     Rails.logger.error("[LiveScoresClient] top_assists: #{e.message}")
     []
   end
 
   def top_yellow_cards(league_id, season_id)
-    Rails.cache.fetch("live_scores_yellowcards_v1_#{league_id}_#{season_id}", expires_in: 30.minutes) do
+    cached = Rails.cache.fetch("live_scores_yellowcards_v1_#{league_id}_#{season_id}", expires_in: 5.minutes) do
       data = get("players/topyellowcards", league: league_id, season: season_id)
       data.dig("response") || []
     end
+    cached.presence || []
   rescue => e
     Rails.logger.error("[LiveScoresClient] top_yellow_cards: #{e.message}")
     []
   end
 
   def top_red_cards(league_id, season_id)
-    Rails.cache.fetch("live_scores_redcards_v1_#{league_id}_#{season_id}", expires_in: 30.minutes) do
+    cached = Rails.cache.fetch("live_scores_redcards_v1_#{league_id}_#{season_id}", expires_in: 5.minutes) do
       data = get("players/topredcards", league: league_id, season: season_id)
       data.dig("response") || []
     end
+    cached.presence || []
   rescue => e
     Rails.logger.error("[LiveScoresClient] top_red_cards: #{e.message}")
     []
