@@ -368,50 +368,25 @@ function addToCalendar(fixture) {
   URL.revokeObjectURL(url)
 }
 
-function VenuePhoto({ venueId, venueName }) {
-  const [img, setImg] = useState(null)
-  const [cap, setCap] = useState(null)
-  const ref = useRef(null)
-
-  useEffect(() => {
-    if (!venueId || !ref.current) return
-    const el = ref.current
-    const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return
-      observer.disconnect()
-      fetch(`/api/v1/venue_detail/${venueId}`)
-        .then(r => r.json())
-        .then(d => {
-          if (d?.image) setImg(d.image)
-          if (d?.capacity) setCap(d.capacity)
-        })
-        .catch(() => {})
-    }, { rootMargin: "200px" })
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [venueId])
-
-  if (!img) return <div ref={ref} />
-  return (
-    <div style={{ position: "relative", overflow: "hidden", borderRadius: "0 0 12px 12px", marginTop: 2 }}>
-      <img src={img} alt={venueName} style={{ width: "100%", maxHeight: 140, objectFit: "cover", display: "block" }}
-        onError={e => e.target.style.display="none"} />
-      {cap && (
-        <div style={{
-          position: "absolute", bottom: 6, right: 8,
-          background: "rgba(0,0,0,.65)", color: "#fff",
-          fontSize: "0.62rem", fontWeight: 700, padding: "2px 8px", borderRadius: 10,
-        }}>
-          🏟️ {cap.toLocaleString()} aforo
-        </div>
-      )}
-    </div>
-  )
-}
 
 function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, notifEnabled, notifSupported, events }) {
   const { t, i18n } = useTranslation()
   const [copied, setCopied] = useState(false)
+  const [venueImg, setVenueImg] = useState(null)
+  const [venueCap, setVenueCap] = useState(null)
+
+  const venueId = fixture?.fixture?.venue?.id
+  useEffect(() => {
+    if (!venueId) return
+    fetch(`/api/v1/venue_detail/${venueId}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d?.image) setVenueImg(d.image)
+        if (d?.capacity) setVenueCap(d.capacity)
+      })
+      .catch(() => {})
+  }, [venueId])
+
   const home   = fixture?.teams?.home
   const away   = fixture?.teams?.away
   const homeName = translateTeam(home?.name, i18n.language)
@@ -468,7 +443,24 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
     : null
 
   return (
-    <div className="scoreboard" style={teamColor ? { "--team-color": teamColor, "--team-color-dim": `${teamColor}22` } : {}}>
+    <div
+      className="scoreboard"
+      style={{
+        ...(teamColor ? { "--team-color": teamColor, "--team-color-dim": `${teamColor}22` } : {}),
+        ...(venueImg ? {
+          backgroundImage: `url(${venueImg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center 40%",
+        } : {}),
+      }}
+    >
+      {venueImg && (
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(180deg, rgba(4,8,18,.78) 0%, rgba(4,8,18,.92) 100%)",
+          zIndex: 0,
+        }} />
+      )}
       <div className="scoreboard__half scoreboard__half--home" style={teamColor ? { background: `linear-gradient(135deg, ${teamColor}18 0%, transparent 70%)` } : {}} />
       <div className="scoreboard__half scoreboard__half--away" />
 
@@ -570,6 +562,7 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
             <span className="scoreboard__venue">
               📍 {fixture.fixture.venue.name}
               {fixture.fixture.venue.city ? `, ${fixture.fixture.venue.city}` : ""}
+              {venueCap ? <span style={{ opacity: .5, marginLeft: 6 }}>· 🏟️ {venueCap.toLocaleString()}</span> : null}
             </span>
           )}
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -608,7 +601,6 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
           </div>
         </div>
       </div>
-      <VenuePhoto venueId={fixture?.fixture?.venue?.id} venueName={fixture?.fixture?.venue?.name} />
     </div>
   )
 }

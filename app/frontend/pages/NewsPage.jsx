@@ -3,14 +3,12 @@ import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { fetchWithTimeout } from "../utils/fetchWithTimeout"
-import { sourceColor } from "../utils/sourceColors"
 import { useFavorites } from "../hooks/useFavorites"
 
 const PAGE_SIZE = 12
 
 // ── Featured card: full-bleed image with gradient overlay ─────────────────
 function FeaturedCard({ article }) {
-  const color = sourceColor(article.source)
   const bg = article.image
     ? `url(${article.image}), url('/images/hero_2.jpg')`
     : "url('/images/hero_2.jpg')"
@@ -19,7 +17,6 @@ function FeaturedCard({ article }) {
       <div className="nc-featured__img" style={{ backgroundImage: bg }} />
       <div className="nc-featured__overlay">
         <div className="nc-featured__meta">
-          <span className="nc-badge" style={{ background: color }}>{article.source}</span>
           <span className="nc-featured__date">{article.date_label}</span>
         </div>
         <h2 className="nc-featured__title">{article.title}</h2>
@@ -31,7 +28,6 @@ function FeaturedCard({ article }) {
 
 // ── Medium card (2-col): overlay style ───────────────────────────────────
 function MediumCard({ article }) {
-  const color = sourceColor(article.source)
   const bg = article.image
     ? `url(${article.image}), url('/images/hero_2.jpg')`
     : "url('/images/hero_2.jpg')"
@@ -39,7 +35,6 @@ function MediumCard({ article }) {
     <Link to={`/news/${article.id}`} className="nc-medium" style={{ textDecoration: "none" }}>
       <div className="nc-medium__img" style={{ backgroundImage: bg }} />
       <div className="nc-medium__overlay">
-        <span className="nc-badge" style={{ background: color }}>{article.source}</span>
         <h3 className="nc-medium__title">{article.title}</h3>
         <span className="nc-medium__date">{article.date_label}</span>
       </div>
@@ -49,7 +44,6 @@ function MediumCard({ article }) {
 
 // ── Compact card (3-col+): horizontal thumbnail + text ────────────────────
 function CompactCard({ article }) {
-  const color = sourceColor(article.source)
   return (
     <Link to={`/news/${article.id}`} className="nc-compact" style={{ textDecoration: "none" }}>
       <div
@@ -62,7 +56,6 @@ function CompactCard({ article }) {
       />
       <div className="nc-compact__body">
         <div className="nc-compact__meta">
-          <span className="nc-badge" style={{ background: color }}>{article.source}</span>
           <span className="nc-compact__date">{article.date_label}</span>
         </div>
         <h4 className="nc-compact__title">{article.title}</h4>
