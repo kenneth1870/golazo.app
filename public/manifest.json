@@ -2,11 +2,17 @@
   "name": "Golazo — Mundial 2026",
   "short_name": "Golazo",
   "description": "Live World Cup 2026 scores, fixtures, and stats",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
+  "id": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
   "orientation": "portrait",
   "background_color": "#0d1117",
   "theme_color": "#ee1e46",
+  "lang": "es",
+  "dir": "ltr",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/images/icon-192.png",
@@ -31,6 +37,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/hero_1.jpg",
+      "sizes": "1400x933",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Live scores and standings"
+    },
+    {
+      "src": "/images/hero_2.jpg",
+      "sizes": "1400x818",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Match details and stats"
     }
   ],
   "shortcuts": [

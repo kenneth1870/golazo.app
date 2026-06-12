@@ -14,6 +14,19 @@ import { storageGet, storageSet } from "../utils/safeStorage"
 import { useFavorites } from "../hooks/useFavorites"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 
+function isIosSafari() {
+  if (typeof window === "undefined") return false
+  const ua = navigator.userAgent
+  return /iphone|ipad|ipod/i.test(ua) &&
+    /safari/i.test(ua) &&
+    !/crios|fxios|opios|mercury/i.test(ua)
+}
+
+function isStandalone() {
+  return navigator.standalone === true ||
+    window.matchMedia("(display-mode: standalone)").matches
+}
+
 const ONBOARDED_KEY = "golazo_onboarded"
 
 // Top WC 2026 nations — hardcoded so onboarding works offline / before API loads
@@ -81,7 +94,12 @@ export default function OnboardingModal({ onDismiss }) {
   const [selectedTeams, setTeams]     = useState([])
   const [selectedLeagues, setLeagues] = useState([])
   const [notifDone, setNotifDone]     = useState(false)
+  const [notifErr, setNotifErr]       = useState(null)
+  const [notifLoading, setNotifLoading] = useState(false)
   const [animating, setAnimating]     = useState(false)
+
+  const onIosSafari  = isIosSafari()
+  const onIosPwa     = onIosSafari && isStandalone()
 
   const toggleTeam = (team) => {
     setTeams(prev =>
@@ -117,15 +135,17 @@ export default function OnboardingModal({ onDismiss }) {
   }
 
   const requestNotifications = async () => {
-    // subscribe() calls Notification.requestPermission() AND creates a
-    // PushManager subscription — bare requestPermission() alone does neither
-    // on iOS (silent ignore) nor creates the server-side record needed for
-    // VAPID delivery on Android.
-    try {
-      await subscribe(selectedTeams.map(t => t.name))
-    } catch {
-      // swallow — user may have denied; setNotifDone below marks step done
-    } finally {
+    setNotifLoading(true)
+    setNotifErr(null)
+    const result = await subscribe(selectedTeams.map(t => t.name))
+    setNotifLoading(false)
+    if (result?.ok) {
+      setNotifDone(true)
+    } else if (result?.error === "Permission denied") {
+      setNotifDone(true) // user denied — don't block, just move on
+    } else if (result?.error) {
+      setNotifErr(result.error)
+    } else {
       setNotifDone(true)
     }
   }
@@ -242,35 +262,83 @@ export default function OnboardingModal({ onDismiss }) {
     {
       key: "notifications",
       title: t("onboarding.alerts", "Never miss a goal ⚽"),
-      subtitle: t("onboarding.alertsSub", "Get instant push notifications for goals, cards, and final whistles from your teams."),
+      subtitle: onIosSafari && !onIosPwa
+        ? t("onboarding.iosAlertsSub", "Add Golazo to your home screen to enable live push notifications.")
+        : t("onboarding.alertsSub", "Get instant push notifications for goals, cards, and final whistles from your teams."),
       content: (
-        <div style={{ textAlign: "center", marginTop: 24 }}>
-          <div style={{ fontSize: "3rem", marginBottom: 16 }}>🔔</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 280, margin: "0 auto" }}>
-            {["⚽ Goal alerts", "🟥 Red cards", "🏁 Final scores", "📰 Team news"].map(item => (
+        <div style={{ textAlign: "center", marginTop: 16 }}>
+          {/* Alert types */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 280, margin: "0 auto 20px" }}>
+            {["⚽ Goal alerts", "🟥 Red cards", "🏁 Kick-offs", "✅ Final scores"].map(item => (
               <div key={item} style={{
                 display: "flex", alignItems: "center", gap: 10,
-                padding: "10px 16px", borderRadius: 10,
+                padding: "9px 14px", borderRadius: 10,
                 background: "var(--surface2,#1a1a1a)", border: "1px solid var(--border,#2a2a2a)",
-                fontSize: "0.9rem", color: "#ccc",
+                fontSize: "0.85rem", color: "#ccc",
               }}>
                 <span>{item}</span>
               </div>
             ))}
           </div>
-          {!notifDone ? (
-            <button
-              onClick={requestNotifications}
-              style={{
-                marginTop: 24, padding: "14px 32px", borderRadius: 12,
-                background: "var(--accent,#ee1e46)", border: "none",
-                color: "#fff", fontSize: "1rem", fontWeight: 700, cursor: "pointer",
-              }}
-            >
-              {t("onboarding.enableAlerts", "Enable alerts")}
+
+          {/* iOS Safari — not yet installed as PWA */}
+          {onIosSafari && !onIosPwa && (
+            <div style={{
+              background: "rgba(238,30,70,.08)", border: "1px solid rgba(238,30,70,.25)",
+              borderRadius: 12, padding: "16px 14px", maxWidth: 300, margin: "0 auto",
+            }}>
+              <div style={{ fontSize: ".8rem", color: "rgba(255,255,255,.7)", lineHeight: 1.6 }}>
+                <div style={{ marginBottom: 10, fontWeight: 700, color: "#fff" }}>
+                  📲 {t("ios.howToInstall", "How to install:")}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, textAlign: "left" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: "1.1rem" }}>1.</span>
+                    <span>{t("ios.step1", "Tap the")} <strong style={{ color: "#fff" }}>Share</strong> {t("ios.step1b", "button")} <svg style={{ display: "inline", verticalAlign: "middle" }} width="14" height="16" viewBox="0 0 24 28" fill="currentColor"><path d="M12 0L6 6h4v12h4V6h4L12 0zM2 20v6h20v-6h-2v4H4v-4H2z"/></svg></span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: "1.1rem" }}>2.</span>
+                    <span>{t("ios.step2prefix", "Tap")} <strong style={{ color: "#fff" }}>{t("ios.step2", '"Add to Home Screen"')}</strong></span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: "1.1rem" }}>3.</span>
+                    <span>{t("ios.step3prefix", "Open Golazo from your home screen and enable alerts")}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* iOS PWA — can enable now */}
+          {onIosPwa && !notifDone && (
+            <button onClick={requestNotifications} disabled={notifLoading} style={{
+              padding: "13px 28px", borderRadius: 12, background: "var(--accent,#ee1e46)",
+              border: "none", color: "#fff", fontSize: ".95rem", fontWeight: 700,
+              cursor: notifLoading ? "default" : "pointer", opacity: notifLoading ? .6 : 1,
+            }}>
+              {notifLoading ? t("push.enabling", "Enabling…") : t("onboarding.enableAlerts", "Enable alerts")}
             </button>
-          ) : (
-            <div style={{ marginTop: 24, color: "#10b981", fontWeight: 600 }}>
+          )}
+
+          {/* Chrome / Android — enable directly */}
+          {!onIosSafari && !notifDone && (
+            <button onClick={requestNotifications} disabled={notifLoading} style={{
+              padding: "13px 28px", borderRadius: 12, background: "var(--accent,#ee1e46)",
+              border: "none", color: "#fff", fontSize: ".95rem", fontWeight: 700,
+              cursor: notifLoading ? "default" : "pointer", opacity: notifLoading ? .6 : 1,
+            }}>
+              {notifLoading ? t("push.enabling", "Enabling…") : t("onboarding.enableAlerts", "Enable alerts")}
+            </button>
+          )}
+
+          {notifErr && (
+            <div style={{ marginTop: 12, fontSize: ".78rem", color: "#f87171" }}>
+              ⚠ {notifErr}
+            </div>
+          )}
+
+          {notifDone && (
+            <div style={{ marginTop: 16, color: "#10b981", fontWeight: 700, fontSize: ".95rem" }}>
               ✓ {t("onboarding.alertsEnabled", "Alerts enabled!")}
             </div>
           )}

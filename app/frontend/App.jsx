@@ -9,6 +9,7 @@ import ScrollToTop from "./components/ScrollToTop"
 import ErrorBoundary from "./components/ErrorBoundary"
 import OnboardingModal, { useOnboarding } from "./components/OnboardingModal"
 import PushPrompt from "./components/PushPrompt"
+import IosInstallGuide from "./components/IosInstallGuide"
 import RequireAdmin from "./components/RequireAdmin"
 import LoginPage from "./pages/LoginPage"
 import { useFavorites } from "./hooks/useFavorites"
@@ -95,6 +96,7 @@ export default function App() {
       <Navbar />
       {showOnboarding && <OnboardingModal onDismiss={dismissOnboarding} />}
       <PushPrompt favoriteTeamName={favTeamName} />
+      <IosInstallGuide />
 
       <main key={location.pathname} className="main-content page-transition">
         <ErrorBoundary>
