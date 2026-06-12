@@ -8,6 +8,12 @@ class WorldCupScorers
     end.presence || []
   end
 
+  def self.assists(competition_code = "WC")
+    Rails.cache.fetch("wc_assists_v1_#{competition_code}", expires_in: CACHE_TTL) do
+      aggregate(competition_code, stat: :assists)
+    end.presence || []
+  end
+
   def self.cards(competition_code = "WC", type: :yellow)
     key = "wc_#{type}_cards_v1_#{competition_code}"
     Rails.cache.fetch(key, expires_in: CACHE_TTL) do
@@ -28,27 +34,35 @@ class WorldCupScorers
 
     return [] if finished.empty?
 
-    tally = Hash.new { |h, k| h[k] = { goals: 0, yellow_cards: 0, red_cards: 0, team_name: nil, team_logo: nil } }
+    tally = Hash.new { |h, k| h[k] = { goals: 0, assists: 0, yellow_cards: 0, red_cards: 0, team_name: nil, team_logo: nil } }
 
     finished.each do |fixture_id|
       events = fetch_events(fixture_id)
       events.each do |e|
         next unless e["type"].in?(["Goal", "Card"])
-        player = e.dig("player", "name").presence
-        next if player.blank?
 
-        key = player
-        tally[key][:team_name] ||= e.dig("team", "name")
-        tally[key][:team_logo] ||= e.dig("team", "logo")
+        if e["type"] == "Goal" && e["detail"] != "Missed Penalty"
+          scorer = e.dig("player", "name").presence
+          if scorer
+            tally[scorer][:team_name] ||= e.dig("team", "name")
+            tally[scorer][:team_logo] ||= e.dig("team", "logo")
+            tally[scorer][:goals] += 1
+          end
 
-        case e["type"]
-        when "Goal"
-          next if e["detail"] == "Missed Penalty"
-          tally[key][:goals] += 1
-        when "Card"
+          assister = e.dig("assist", "name").presence
+          if assister
+            tally[assister][:team_name] ||= e.dig("team", "name")
+            tally[assister][:team_logo] ||= e.dig("team", "logo")
+            tally[assister][:assists] += 1
+          end
+        elsif e["type"] == "Card"
+          player = e.dig("player", "name").presence
+          next if player.blank?
+          tally[player][:team_name] ||= e.dig("team", "name")
+          tally[player][:team_logo] ||= e.dig("team", "logo")
           case e["detail"]
-          when "Yellow Card"    then tally[key][:yellow_cards] += 1
-          when "Red Card"       then tally[key][:red_cards] += 1
+          when "Yellow Card" then tally[player][:yellow_cards] += 1
+          when "Red Card"    then tally[player][:red_cards] += 1
           end
         end
       end
@@ -59,6 +73,7 @@ class WorldCupScorers
         player: { name: name, photo: nil, nationality: nil },
         team:   { name: stats[:team_name], crest: stats[:team_logo] },
         goals:        stats[:goals],
+        assists:      stats[:assists],
         yellow_cards: stats[:yellow_cards],
         red_cards:    stats[:red_cards],
         value: stats[stat]

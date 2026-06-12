@@ -26,10 +26,14 @@ module Api
 
       def assists
         raw = LiveScoresClient.new.top_assists(*league_season)
-        render json: normalize_players(raw)
+        if raw.empty? && params[:competition].present?
+          render json: WorldCupScorers.assists(params[:competition])
+        else
+          render json: normalize_players(raw)
+        end
       rescue => e
         Rails.logger.error("[TopScorersController#assists] #{e.message}")
-        render json: []
+        render json: WorldCupScorers.assists(params[:competition].presence || "WC") rescue []
       end
 
       def cards
