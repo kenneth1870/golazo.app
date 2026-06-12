@@ -120,6 +120,7 @@ function DateStrip({ selected, onChange }) {
 
 // ─── Real-match row (API shape) ────────────────────────
 function RealMatchRow({ match, onMatchClick, flashing }) {
+  const { t }      = useTranslation()
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
   const hasScore   = match.home_score !== null && match.away_score !== null
@@ -136,9 +137,9 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
     >
       <div className="match-row__status">
         {isLive
-          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'` : "LIVE"}</span>
+          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'` : t("status.live")}</span>
           : isFinished
-          ? <span className="match-status-ft">FT</span>
+          ? <span className="match-status-ft">{t("status.ft")}</span>
           : <span className="match-status-time">{kickoffTime}</span>
         }
       </div>
@@ -171,13 +172,30 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
   )
 }
 
+const COUNTRY_ES = {
+  "World": "Mundial",
+  "International": "Internacional",
+  "Europe": "Europa",
+  "South America": "Sudamérica",
+  "North America": "Norteamérica",
+  "Africa": "África",
+  "Asia": "Asia",
+  "Oceania": "Oceanía",
+}
+
 // ─── Competition block ────────────────────────────────
 function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const comp    = matches[0]?.competition
   const hasLive = matches.some(m => m.status === "live")
   const isReal  = typeof matches[0]?.id === "string" && matches[0]?.id?.startsWith("ext_")
   const canNav  = comp?.code && !String(comp.code).match(/^\d+$/)
+
+  const lang = (i18n.language || "en").split("-")[0].toLowerCase()
+  function localCountry(c) {
+    if (!c) return null
+    return lang === "es" ? (COUNTRY_ES[c] ?? c) : c
+  }
 
   const sorted = [...matches].sort((a, b) => {
     const order = { live: 0, scheduled: 1, finished: 2 }
@@ -193,8 +211,8 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
       >
         <FlagImg src={comp?.logo} name={comp?.name} size={20} className="logo-sm" />
         <h3 style={{ margin: 0 }}>{translateLeague(comp?.name, i18n.language) ?? "Other"}</h3>
-        <span className="widget-meta-country" style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{comp?.country}</span>
-        {hasLive && <span className="live-badge">LIVE</span>}
+        <span className="widget-meta-country" style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{localCountry(comp?.country)}</span>
+        {hasLive && <span className="live-badge">{t("status.live")}</span>}
         {canNav && <span style={{ fontSize: "0.75rem", color: "#ee1e46" }}>→</span>}
       </div>
       <div className="widget-body p-0">
