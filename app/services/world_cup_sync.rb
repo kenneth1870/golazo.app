@@ -15,6 +15,13 @@ class WorldCupSync
 
   # Sync all live matches across all leagues, updating DB records matched by team name
   def sync_live
+    # Skip the API call when no WC matches are live or kicking off within 2 hours.
+    # Saves API quota during the ~23 hours/day with no active WC matches.
+    unless wc_matches_active?
+      log("No WC matches live or imminent — skipping live API call")
+      return
+    end
+
     matches = @api.live_matches
     updated = 0
 
@@ -296,6 +303,19 @@ class WorldCupSync
   end
 
   private
+
+  # True if any WC match is currently live OR kicks off within the next 2 hours.
+  # Used to gate sync_live so we don't burn API quota during the ~23 h/day with
+  # no active WC action.
+  def wc_matches_active?
+    wc = Competition.find_by(code: "WC")
+    return false unless wc
+
+    Match.where(competition: wc, status: "live").exists? ||
+      Match.where(competition: wc, status: "scheduled")
+           .where(kickoff_at: Time.current..2.hours.from_now)
+           .exists?
+  end
 
   # Updates a DB match from a normalized match hash (from live_matches).
   # Receives the same shape as sync_match_from_normalized.

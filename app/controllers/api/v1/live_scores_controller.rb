@@ -14,7 +14,8 @@ module Api
       # always derived from identical data and we never hit the API twice.
       def count
         matches = Rails.cache.read("live_scores_live_v6") || LiveScoresClient.new.live_matches
-        render json: { count: matches.length }
+        wc_count = matches.count { |m| m[:league_id].to_i == 1 }
+        render json: { count: wc_count }
       rescue => e
         Rails.logger.error("[LiveScoresController#count] #{e.message}")
         render json: { count: 0 }
