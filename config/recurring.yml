@@ -18,6 +18,11 @@ production:
     schedule: "every 30 minutes"
     queue: default
 
+  recalculate_standings:
+    class: RecalculateStandingsJob
+    schedule: "every 5 minutes"
+    queue: default
+
   sync_pre_match_data:
     class: SyncPreMatchDataJob
     schedule: "every 5 minutes"

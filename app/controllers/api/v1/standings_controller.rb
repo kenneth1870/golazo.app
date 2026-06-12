@@ -5,7 +5,7 @@ module Api
         competition_code = params[:competition].presence || "WC"
         # DB standings are updated by SyncStandingsJob every 30 min — caching the
         # serialized result for 15/30 min avoids hundreds of redundant DB queries.
-        ttl = competition_code == "WC" ? 15.minutes : 30.minutes
+        ttl = competition_code == "WC" ? 3.minutes : 30.minutes
 
         result = Rails.cache.fetch("standings_#{competition_code}", expires_in: ttl) do
           scope = Standing.includes(:team, :competition)

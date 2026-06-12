@@ -16,12 +16,39 @@ class WorldCupSync
   # Sync all live matches across all leagues, updating DB records matched by team name
   def sync_live
     matches = @api.live_matches
-    return log("No live matches") if matches.empty?
-
-    log("Live: #{matches.length} matches")
     updated = 0
-    matches.each { |raw| updated += 1 if sync_match_from_live(raw) }
-    log("Updated #{updated} matches")
+
+    if matches.any?
+      log("Live: #{matches.length} matches")
+      matches.each { |raw| updated += 1 if sync_match_from_live(raw) }
+      log("Updated #{updated} matches")
+    end
+
+    # Detect WC matches that were live but are no longer in the feed — they just finished
+    check_wc_matches_just_finished(matches)
+  end
+
+  # If any DB-live WC match is missing from the current live feed, it just ended.
+  # Clear the today-cache and schedule an immediate today-sync so the match gets
+  # marked "finished" and standings are recalculated within the next few seconds.
+  def check_wc_matches_just_finished(live_matches)
+    wc = Competition.find_by(code: "WC")
+    return unless wc
+
+    db_live = Match.where(status: "live", competition: wc)
+    return unless db_live.exists?
+
+    live_external_ids = live_matches.filter_map { |m| m[:external_id]&.to_s }
+    just_finished = db_live.reject { |m| live_external_ids.include?(m.external_id.to_s) }
+    return if just_finished.empty?
+
+    log("#{just_finished.count} WC match(es) just finished — busting cache and scheduling sync")
+
+    # Bust the cached today fixture list so sync_today gets a fresh API response
+    Rails.cache.delete("live_scores_date_v15_#{Date.today.iso8601}_utc")
+    Rails.cache.delete("live_scores_date_v15_#{Date.today.iso8601}_")
+
+    SyncTodayMatchesJob.perform_later
   end
 
   # Sync today's matches (scheduled + live + finished today)
