@@ -211,9 +211,10 @@ export default function HomePage() {
     "url": "https://golazo.app/world-cup-2026"
   })
 
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
   const { matches: liveWC }         = useMatches("live",     { competition: "WC" })
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: "WC" })
-  const { matches: todayWC }         = useMatches("today",    { competition: "WC" })
+  const { matches: todayWC }         = useMatches("today",    { competition: "WC", tz })
   const { news: latestNews, newsError, retryNews } = useLatestNews()
 
   const nextMatch = liveWC[0] || upcomingMatches[0]

@@ -17,7 +17,10 @@ module Api
 
         scope = case params[:filter]
         when "live"     then scope.live
-        when "today"    then scope.today
+        when "today"
+          tz   = sanitize_tz(params[:tz])
+          range = tz ? local_day_range(Date.today, tz) : Time.current.beginning_of_day..Time.current.end_of_day
+          scope.where(kickoff_at: range).order(:kickoff_at)
         when "upcoming" then scope.upcoming.limit(30)
         else scope.order(kickoff_at: :asc).limit(200)
         end

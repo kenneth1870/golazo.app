@@ -42,6 +42,24 @@ module Api
         auth.sub("Bearer ", "").strip
       end
 
+      # ── Timezone helpers ────────────────────────────────
+      def sanitize_tz(val)
+        return "UTC" if val.blank?
+        TZInfo::Timezone.get(val)
+        val
+      rescue TZInfo::InvalidTimezoneIdentifier
+        "UTC"
+      end
+
+      def local_day_range(date, timezone)
+        tz = TZInfo::Timezone.get(timezone)
+        day_start = tz.local_time(date.year, date.month, date.day, 0, 0, 0, 0, dst: :first)
+        day_end   = tz.local_time(date.year, date.month, date.day, 23, 59, 59, 0, dst: :last)
+        day_start.utc..day_end.utc
+      rescue
+        date.all_day
+      end
+
       # ── HTTP cache headers ──────────────────────────────
       def set_cache_headers
         return unless response.ok?

@@ -6,8 +6,8 @@ const cache  = new Map()  // key → { data, ts, promise }
 const subs   = new Map()  // key → Set of setState callbacks
 const timers = new Map()  // key → { interval, onVisible }
 
-function cacheKey(filter, { competition, group } = {}) {
-  return `${filter}|${competition || ""}|${group || ""}`
+function cacheKey(filter, { competition, group, tz } = {}) {
+  return `${filter}|${competition || ""}|${group || ""}|${tz || ""}`
 }
 
 function notify(key, data) {
@@ -18,6 +18,7 @@ async function fetchKey(key, filter, opts) {
   const params = new URLSearchParams({ filter })
   if (opts.competition) params.set("competition", opts.competition)
   if (opts.group)       params.set("group",       opts.group)
+  if (opts.tz)          params.set("tz",          opts.tz)
 
   try {
     const res  = await fetch(`/api/v1/matches?${params}`)

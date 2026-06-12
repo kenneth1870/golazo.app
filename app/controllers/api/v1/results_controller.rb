@@ -19,13 +19,6 @@ module Api
         nil
       end
 
-      def sanitize_tz(val)
-        return "UTC" if val.blank?
-        TZInfo::Timezone.get(val)
-        val
-      rescue TZInfo::InvalidTimezoneIdentifier
-        "UTC"
-      end
     end
   end
 end
