@@ -102,7 +102,7 @@ module Api
       end
 
       def fetch_api_matches(date)
-        Rails.cache.fetch("today_api_#{date.iso8601}", expires_in: 30.seconds) do
+        Rails.cache.fetch("today_api_#{date.iso8601}", expires_in: 90.seconds, race_condition_ttl: 15.seconds) do
           client  = LiveScoresClient.new
           matches = client.matches_for_date(date)
 

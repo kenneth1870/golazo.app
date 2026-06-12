@@ -71,11 +71,23 @@ async function cacheFirst(request, cacheName) {
   return response
 }
 
+const API_CACHE_MAX = 60
+
+async function trimApiCache(cache) {
+  const keys = await cache.keys()
+  if (keys.length > API_CACHE_MAX) {
+    await Promise.all(keys.slice(0, keys.length - API_CACHE_MAX).map(k => cache.delete(k)))
+  }
+}
+
 async function networkFirstApi(request) {
   const cache = await caches.open(API_CACHE)
   try {
     const response = await fetch(request)
-    if (response.ok) cache.put(request, response.clone())
+    if (response.ok) {
+      cache.put(request, response.clone())
+      trimApiCache(cache)
+    }
     return response
   } catch {
     const cached = await cache.match(request)

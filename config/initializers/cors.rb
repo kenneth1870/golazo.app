@@ -1,6 +1,6 @@
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins ENV.fetch("ALLOWED_ORIGINS", "https://www.golazoapp.live,https://golazoapp.live,http://localhost:3036").split(",")
+    origins ENV.fetch("ALLOWED_ORIGINS", "https://www.golazoapp.live,https://golazoapp.live").split(",")
 
     resource "/api/*",
       headers: :any,

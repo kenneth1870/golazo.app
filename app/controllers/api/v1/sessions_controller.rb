@@ -36,10 +36,18 @@ module Api
 
         # Verify with Google's tokeninfo endpoint — no extra gem needed
         uri  = URI("https://oauth2.googleapis.com/tokeninfo?id_token=#{URI.encode_www_form_component(id_token)}")
-        resp = Net::HTTP.get_response(uri)
+        resp = Net::HTTP.start(uri.host, uri.port, use_ssl: true, read_timeout: 5, open_timeout: 3) do |http|
+          http.get(uri.request_uri)
+        end
         return render json: { error: "invalid token" }, status: :unauthorized unless resp.is_a?(Net::HTTPOK)
 
         payload = JSON.parse(resp.body)
+
+        # Validate issuer
+        valid_issuers = %w[accounts.google.com https://accounts.google.com]
+        unless valid_issuers.include?(payload["iss"])
+          return render json: { error: "invalid token issuer" }, status: :unauthorized
+        end
 
         # Validate audience when client ID is configured
         client_id = ENV["GOOGLE_CLIENT_ID"].to_s.strip

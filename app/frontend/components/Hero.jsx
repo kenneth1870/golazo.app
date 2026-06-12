@@ -92,7 +92,8 @@ export default function Hero({ nextMatch, liveCount = 0 }) {
   const activeLayerRef  = useRef("a")   // mirror of activeLayer for stable interval closure
 
   useEffect(() => {
-    const iv = setInterval(() => {
+    function tick() {
+      if (document.visibilityState === "hidden") return
       const newIdx = nextBgIdx(currentIdxRef.current)
       currentIdxRef.current = newIdx
       if (activeLayerRef.current === "a") {
@@ -104,7 +105,8 @@ export default function Hero({ nextMatch, liveCount = 0 }) {
         activeLayerRef.current = "a"
         setActiveLayer("a")
       }
-    }, 7000)
+    }
+    const iv = setInterval(tick, 7000)
     return () => clearInterval(iv)
   }, [])  // runs once — refs keep the closure fresh
 

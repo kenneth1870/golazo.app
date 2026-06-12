@@ -19,6 +19,7 @@ export default function FlagImg({ src, name, size = 16, className, style }) {
       <img
         src={src}
         alt={name || ""}
+        loading="lazy"
         className={className}
         style={{ width: size, height: size, objectFit: "contain", ...style }}
         onError={() => setErr(true)}

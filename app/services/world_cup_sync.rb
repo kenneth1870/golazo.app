@@ -260,7 +260,8 @@ class WorldCupSync
 
     log("Standings recalculated for #{calc.groups.size} groups")
   rescue => e
-    log("recalculate_standings_from_results error: #{e.message}")
+    Rails.logger.error("[WorldCupSync] recalculate_standings_from_results failed: #{e.class}: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
+    raise
   end
 
   # Canonical WC 2026 group fixtures, kept as data (not baked into a migration)
@@ -310,6 +311,8 @@ class WorldCupSync
 
     match = find_match_by_teams(home_name, away_name)
     return false unless match
+
+    match.lock!
 
     # Kickoff: match transitions from scheduled → live feed
     if match.status == "scheduled"
@@ -420,7 +423,7 @@ class WorldCupSync
       s.save!
     end
   rescue => e
-    log("Standing upsert error for #{team_name}: #{e.message}")
+    Rails.logger.error("[WorldCupSync] upsert_standing failed for #{team_name}: #{e.message}")
   end
 
   # API-Football v3 uses different spellings for some WC nations.

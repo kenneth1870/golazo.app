@@ -82,7 +82,7 @@ class NewsService
     # Store the FULL merged pool in cache — don't truncate inside the block.
     # Different callers (index: 60, show/content: 60, sitemap: 200) all read
     # from the same pool and slice with .first(limit) after the cache hit.
-    all_items = Rails.cache.fetch("news_feed_v8_#{lang}", expires_in: 30.minutes) do
+    all_items = Rails.cache.fetch("news_feed_v8_#{lang}", expires_in: 30.minutes, race_condition_ttl: 30.seconds) do
       # ESPN JSON API first — items with images win deduplication by link.
       espn_threads = (ESPN_API_ENDPOINTS[espn_lang] || [])
                        .map { |url| Thread.new { fetch_espn_api(url, lang: espn_lang) } }
@@ -111,9 +111,13 @@ class NewsService
       end
 
       merged
-    end
+    end.tap { |items| Rails.cache.write("news_feed_stale_#{lang}", items, expires_in: 4.hours) if items.any? }
 
     all_items.first(limit)
+  rescue => e
+    Rails.logger.error("[NewsService] Feed fetch failed: #{e.message} — serving stale cache")
+    stale = Rails.cache.read("news_feed_stale_#{lang}") || []
+    stale.first(limit)
   end
 
   # Fetches and parses the full article body from the original URL.

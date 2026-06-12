@@ -54,6 +54,16 @@ class Rack::Attack
     req.ip if api_request?(req) && !req.get? && !req.head?
   end
 
+  # Authentication endpoints — brute-force and credential-stuffing protection.
+  throttle("auth/ip", limit: 10, period: 5.minutes) do |req|
+    req.ip if req.path.start_with?("/api/v1/sessions")
+  end
+
+  # Push subscription creation — prevent subscription table flooding.
+  throttle("push_subscriptions/ip", limit: 10, period: 1.hour) do |req|
+    req.ip if req.post? && req.path == "/api/v1/push_subscriptions"
+  end
+
   # AI summary endpoint — each cache miss triggers an Anthropic API call.
   # The ?lang= parameter creates separate cache keys, so an attacker can bypass
   # the general expensive-endpoint limit by cycling through languages.
