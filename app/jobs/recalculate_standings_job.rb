@@ -23,7 +23,6 @@ class RecalculateStandingsJob < ApplicationJob
 
     Rails.cache.write(lock_key, true, expires_in: 30.seconds)
     sync = WorldCupSync.new(competition_code: "WC")
-    sync.sync_today
     sync.recalculate_standings_from_results
     WorldCupKnockout.rebuild!
     Rails.cache.delete("standings_WC")

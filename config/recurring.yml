@@ -13,11 +13,6 @@ production:
     schedule: "every 10 minutes"
     queue: default
 
-  sync_standings:
-    class: SyncStandingsJob
-    schedule: "every 30 minutes"
-    queue: default
-
   recalculate_standings:
     class: RecalculateStandingsJob
     schedule: "every 5 minutes"
