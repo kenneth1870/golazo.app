@@ -98,8 +98,8 @@ class NewsService
         .sort_by { |a| a[:published_at] || Time.at(0) }.reverse
 
       # Backfill images for ESPN articles still missing one (came from RSS supplement).
-      # Fire parallel mobile-UA requests — same technique that bypasses the WAF.
-      imageless = merged.select { |a| a[:image].blank? && a[:source]&.include?("ESPN") }
+      # Cap at 5 concurrent threads to avoid OOM on large imageless batches.
+      imageless = merged.select { |a| a[:image].blank? && a[:source]&.include?("ESPN") }.first(5)
       if imageless.any?
         backfill_threads = imageless.map do |article|
           Thread.new do

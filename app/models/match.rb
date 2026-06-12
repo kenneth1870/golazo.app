@@ -22,7 +22,9 @@ class Match < ApplicationRecord
   def teams_decided? = home_team_id.present? && away_team_id.present?
 
   def as_json(options = {})
-    super(options.merge(
+    # reverse_merge so explicit callers can override the default includes.
+    # (List views pass a minimal include: to avoid loading goals/match_stats.)
+    super(options.reverse_merge(
       include: {
         home_team:   { only: %i[id name code flag_url] },
         away_team:   { only: %i[id name code flag_url] },
