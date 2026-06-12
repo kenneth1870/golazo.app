@@ -1685,6 +1685,7 @@ export default function MatchShowPage() {
   const [aiSummary, setAiSummary]   = useState(null)
   const [aiLoading, setAiLoading]   = useState(false)
   const [aiError, setAiError]       = useState(false)
+  const aiRequestedRef              = useRef(false)
   const toastQueue    = useRef([])   // queue so rapid goals don't cut each other short
   const toastTimer    = useRef(null)
   const swipeStartX   = useRef(null)
@@ -1870,30 +1871,35 @@ export default function MatchShowPage() {
     if (Notification.permission === "default") setShowNotifBanner(true)
   }, [isLive])
 
-  // Fetch AI summary for finished matches (lazy — only when available)
+  // Fetch AI summary for finished matches — fires once per mount via ref guard.
+  // aiLoading intentionally excluded from deps: setting it would re-trigger the
+  // effect before the in-flight request completes (especially in StrictMode).
   useEffect(() => {
     if (!data?.fixture) return
     const status = data?.fixture?.fixture?.status?.short
     const isFinished = ["FT", "AET", "PEN"].includes(status)
-    if (!isFinished || aiSummary || aiLoading || aiError) return
+    if (!isFinished || aiSummary || aiError || aiRequestedRef.current) return
 
-    // Prefer DB-id endpoint (WC matches); fall back to external match-detail endpoint
-    const lang        = i18n.language?.slice(0, 2) || "en"
-    const matchDbId   = data?.fixture?.fixture?.localId || data?.fixture?.fixture?.db_id
-    const summaryUrl  = matchDbId
+    aiRequestedRef.current = true
+    const lang       = i18n.language?.slice(0, 2) || "en"
+    const matchDbId  = data?.fixture?.fixture?.localId || data?.fixture?.fixture?.db_id
+    const summaryUrl = matchDbId
       ? `/api/v1/matches/${matchDbId}/ai_summary?lang=${lang}`
       : `/api/v1/match_detail/${id}/ai_summary?lang=${lang}`
 
     setAiLoading(true)
     fetch(summaryUrl)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(r.status)
+        return r.json()
+      })
       .then(d => {
         if (d.summary) setAiSummary(d)
         else setAiError(true)
       })
       .catch(() => setAiError(true))
       .finally(() => setAiLoading(false))
-  }, [data?.fixture?.fixture?.status?.short, aiSummary, aiLoading, aiError]) // eslint-disable-line
+  }, [data?.fixture?.fixture?.status?.short, aiSummary, aiError]) // eslint-disable-line
 
   // Auto-select "preview" tab for pre-kickoff matches on first load
   useEffect(() => {
