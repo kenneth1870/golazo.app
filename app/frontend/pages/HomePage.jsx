@@ -17,6 +17,7 @@ function useTodayWC() {
   useEffect(() => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     const load = () => {
+      if (document.hidden) return
       fetch(`/api/v1/today?tz=${encodeURIComponent(tz)}`)
         .then(r => r.json())
         .then(all => {
@@ -32,9 +33,14 @@ function useTodayWC() {
         })
         .catch(() => {})
     }
+    const onVisible = () => { if (!document.hidden) load() }
     load()
+    document.addEventListener("visibilitychange", onVisible)
     const iv = setInterval(load, 30_000)
-    return () => clearInterval(iv)
+    return () => {
+      clearInterval(iv)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
   }, [])
   return matches
 }

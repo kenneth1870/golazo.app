@@ -42,11 +42,13 @@ export default function AllLeaguesPage() {
   const [error, setError]               = useState(false)
   const navigate = useNavigate()
 
-  const loadLive = () =>
+  const loadLive = () => {
+    if (document.hidden) return
     fetch("/api/v1/live_scores")
       .then(r => r.json())
       .then(data => { if (Array.isArray(data)) setLiveMatches(data) })
       .catch(() => {})
+  }
 
   const load = () => {
     setLoading(true)
@@ -64,9 +66,14 @@ export default function AllLeaguesPage() {
 
   useEffect(() => {
     load()
+    const onVisible = () => { if (!document.hidden) loadLive() }
+    document.addEventListener("visibilitychange", onVisible)
     const iv = setInterval(loadLive, 30_000)
-    return () => clearInterval(iv)
-  }, [])
+    return () => {
+      clearInterval(iv)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Count live matches per competition, matched by external league_id
   const liveByExternalId = liveMatches.reduce((acc, m) => {

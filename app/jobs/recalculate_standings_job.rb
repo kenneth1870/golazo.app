@@ -6,6 +6,18 @@ class RecalculateStandingsJob < ApplicationJob
   discard_on(ActiveJob::DeserializationError)
 
   def perform
+    wc = Competition.find_by(code: "WC")
+    if wc
+      active = Match.where(competition: wc)
+                    .where("(status IN ('live','finished') AND kickoff_at > ?) OR (status = 'scheduled' AND kickoff_at BETWEEN ? AND ?)",
+                           12.hours.ago, Time.current, 2.hours.from_now)
+                    .exists?
+      unless active
+        Rails.logger.info("[RecalculateStandingsJob] No active WC matches — skipping")
+        return
+      end
+    end
+
     lock_key = "recalculate_standings_running"
     return if Rails.cache.read(lock_key)
 

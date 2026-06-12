@@ -123,6 +123,7 @@ export default function TodayMatches({ onMatchSelect }) {
   useEffect(() => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     const fetch_ = () => {
+      if (document.hidden) return
       fetch(`/api/v1/today?tz=${encodeURIComponent(tz)}`)
         .then(r => r.json())
         .then(matches => {
@@ -138,9 +139,14 @@ export default function TodayMatches({ onMatchSelect }) {
         })
         .finally(() => setLoading(false))
     }
+    const onVisible = () => { if (!document.hidden) fetch_() }
     fetch_()
+    document.addEventListener("visibilitychange", onVisible)
     const iv = setInterval(fetch_, 30000)
-    return () => clearInterval(iv)
+    return () => {
+      clearInterval(iv)
+      document.removeEventListener("visibilitychange", onVisible)
+    }
   }, [])
 
   if (loading) return (
