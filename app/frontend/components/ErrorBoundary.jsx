@@ -1,6 +1,19 @@
 import { Component } from "react"
 import { Link } from "react-router-dom"
 
+const CHUNK_RELOAD_KEY = "golazo_chunk_reload_at"
+const CHUNK_RELOAD_TTL = 15_000
+
+function isChunkError(error) {
+  const msg = error?.message || ""
+  return (
+    msg.includes("Failed to fetch dynamically imported module") ||
+    msg.includes("Loading chunk") ||
+    msg.includes("Loading CSS chunk") ||
+    error?.name === "ChunkLoadError"
+  )
+}
+
 export default class ErrorBoundary extends Component {
   constructor(props) {
     super(props)
@@ -8,6 +21,14 @@ export default class ErrorBoundary extends Component {
   }
 
   static getDerivedStateFromError(error) {
+    if (isChunkError(error)) {
+      const last = parseInt(sessionStorage.getItem(CHUNK_RELOAD_KEY) || "0", 10)
+      if (Date.now() - last > CHUNK_RELOAD_TTL) {
+        sessionStorage.setItem(CHUNK_RELOAD_KEY, Date.now().toString())
+        window.location.reload()
+        return null
+      }
+    }
     return { hasError: true, error }
   }
 

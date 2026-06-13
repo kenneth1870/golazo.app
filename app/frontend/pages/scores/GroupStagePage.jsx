@@ -98,6 +98,8 @@ export default function GroupStagePage() {
                     <MatchRow
                       key={m.id}
                       match={m}
+                      showDate
+                      showMeta={false}
                       onClick={() => m.external_id ? navigate(`/matches/${m.external_id}`) : navigate(`/groups/${g}`)}
                     />
                   ))}

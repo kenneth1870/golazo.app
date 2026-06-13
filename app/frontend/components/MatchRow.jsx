@@ -2,7 +2,7 @@ import { formatKickoff, formatMatchDate } from "../hooks/useLocalTime"
 import { useTranslation } from "react-i18next"
 import { translateTeam } from "../i18n/teamNames"
 
-export default function MatchRow({ match, onClick, showDate = false }) {
+export default function MatchRow({ match, onClick, showDate = false, showMeta = true }) {
   const { i18n } = useTranslation()
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
@@ -41,10 +41,12 @@ export default function MatchRow({ match, onClick, showDate = false }) {
         </div>
       </div>
 
-      <div className="match-row__meta">
-        <span>{match.round || match.group_stage}</span>
-        {match.competition && <span className="competition-badge">{match.competition.code}</span>}
-      </div>
+      {showMeta && (
+        <div className="match-row__meta">
+          <span>{match.round || match.group_stage}</span>
+          {match.competition && <span className="competition-badge">{match.competition.code}</span>}
+        </div>
+      )}
     </div>
   )
 }
