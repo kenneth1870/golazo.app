@@ -1,3 +1,4 @@
+// @refresh reset
 /**
  * OnboardingModal — shown once to new users on first visit.
  * Three steps:
