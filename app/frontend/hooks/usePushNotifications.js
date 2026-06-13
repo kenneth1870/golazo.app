@@ -1,18 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
-import { storageGet, storageSet } from "../utils/safeStorage"
 import { isIosSafari, isStandalone } from "../utils/platform"
+import { getDeviceId } from "../utils/deviceId"
 import i18n from "../i18n"
-
-const DEVICE_KEY = "golazo_device_id"
-
-function getDeviceId() {
-  let id = storageGet(DEVICE_KEY)
-  if (!id) {
-    id = (crypto.randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36))
-    storageSet(DEVICE_KEY, id)
-  }
-  return id
-}
 
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4)

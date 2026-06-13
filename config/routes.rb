@@ -22,6 +22,7 @@ Rails.application.routes.draw do
         get  "push",          to: "push#index"
         get  "push/devices",  to: "push#devices"
         post "push/broadcast", to: "push#broadcast"
+        get  "devices",       to: "devices#index"
       end
 
       resources :competitions, only: [ :index, :show ], param: :code
@@ -58,6 +59,7 @@ Rails.application.routes.draw do
       put  "push_subscriptions/teams", to: "push_subscriptions#update_teams"
       delete "push_subscriptions",     to: "push_subscriptions#destroy"
       post "push_test",                to: "push_subscriptions#test_push"
+      post "track",                    to: "tracking#ping"
       resources :teams, only: [ :index, :show ] do
         get :squad, on: :member
       end

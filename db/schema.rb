@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -23,6 +23,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_000001) do
     t.string "logo"
     t.string "name"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "devices", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "device_id", null: false
+    t.integer "engaged_seconds", default: 0, null: false
+    t.datetime "first_seen_at"
+    t.string "last_path"
+    t.datetime "last_seen_at"
+    t.string "locale", default: "es"
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.integer "visit_count", default: 0, null: false
+    t.index ["device_id"], name: "index_devices_on_device_id", unique: true
+    t.index ["last_seen_at"], name: "index_devices_on_last_seen_at"
   end
 
   create_table "goals", force: :cascade do |t|

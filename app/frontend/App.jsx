@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react"
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { useLocale } from "./hooks/useLocale"
+import { useAnalytics } from "./hooks/useAnalytics"
 import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
 import BottomNav from "./components/BottomNav"
@@ -48,6 +49,7 @@ const AdminMatchesPage      = lazy(() => import("./pages/admin/AdminMatchesPage"
 const AdminTeamsPage        = lazy(() => import("./pages/admin/AdminTeamsPage"))
 const AdminStandingsPage    = lazy(() => import("./pages/admin/AdminStandingsPage"))
 const AdminPushPage         = lazy(() => import("./pages/admin/AdminPushPage"))
+const AdminDevicesPage      = lazy(() => import("./pages/admin/AdminDevicesPage"))
 const AdminUsersPage        = lazy(() => import("./pages/admin/AdminUsersPage"))
 const AdminNewsPage         = lazy(() => import("./pages/admin/AdminNewsPage"))
 
@@ -62,6 +64,7 @@ function PageLoader() {
 export default function App() {
   const location = useLocation()
   useLocale() // auto-detect language from IP / device on every session
+  useAnalytics() // fire-and-forget usage heartbeat for the admin device panel
   const { show: showOnboarding, dismiss: dismissOnboarding } = useOnboarding()
   const { favoriteTeams } = useFavorites()
   const favTeamName = favoriteTeams[0]?.name ?? null
@@ -80,6 +83,7 @@ export default function App() {
               <Route path="teams"       element={<AdminTeamsPage />} />
               <Route path="standings"   element={<AdminStandingsPage />} />
               <Route path="push"        element={<AdminPushPage />} />
+              <Route path="devices"     element={<AdminDevicesPage />} />
               <Route path="users"       element={<AdminUsersPage />} />
               <Route path="news"        element={<AdminNewsPage />} />
             </Route>

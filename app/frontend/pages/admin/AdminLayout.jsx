@@ -8,6 +8,7 @@ const NAV = [
   { to: "/admin/standings", icon: "🏆", label: "Standings"  },
   { to: "/admin/users",     icon: "👥", label: "Users"     },
   { to: "/admin/push",      icon: "🔔", label: "Push"      },
+  { to: "/admin/devices",   icon: "📱", label: "Devices"   },
   { to: "/admin/news",      icon: "📰", label: "News"      },
 ]
 
