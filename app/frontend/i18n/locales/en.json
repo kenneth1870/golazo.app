@@ -32,7 +32,15 @@
     "fixturesBtn": "Fixtures",
     "nextMatch": "Next match",
     "opensIn": "⚽ World Cup opens in",
-    "badge": "FIFA World Cup 2026 · Live Coverage"
+    "badge": "FIFA World Cup 2026 · Live Coverage",
+    "featLiveScores": "Live Scores",
+    "featStats": "Match Stats",
+    "featStandings": "Standings",
+    "featTeams": "Teams",
+    "featPlayers": "Players",
+    "featAlerts": "Goal Alerts",
+    "featNews": "News",
+    "liveNow": "{{count}} live now"
   },
   "home": {
     "latestNews": "Latest News",
@@ -231,7 +239,10 @@
     "failedToLoad": "Failed to load group standings.",
     "failedToLoadNews": "Failed to load news.",
     "newsUnavailable": "Couldn't load news.",
-    "tryAgain": "Couldn't load matches. Check your connection."
+    "tryAgain": "Couldn't load matches. Check your connection.",
+    "somethingWrong": "Something went wrong",
+    "unexpected": "An unexpected error occurred.",
+    "backHome": "Back to Home"
   },
   "status": {
     "live": "LIVE",

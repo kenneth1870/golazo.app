@@ -5,6 +5,17 @@ module Api
       before_action :set_default_format
       after_action  :set_cache_headers
 
+      # Return clean JSON for the common API errors instead of Rails' default
+      # HTML error pages. The SPA fetches these endpoints and parses the body
+      # as JSON, so an HTML 404/500 surfaces as an opaque parse failure.
+      rescue_from ActiveRecord::RecordNotFound do
+        render json: { error: "not_found" }, status: :not_found
+      end
+
+      rescue_from ActionController::ParameterMissing do |e|
+        render json: { error: "missing_parameter", param: e.param }, status: :bad_request
+      end
+
       private
 
       def set_default_format

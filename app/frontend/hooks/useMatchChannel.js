@@ -4,6 +4,10 @@ import { createConsumer } from "@rails/actioncable"
 export function useMatchChannel(matchId, onMessage) {
   const cableRef = useRef(null)
   const subRef = useRef(null)
+  const cbRef  = useRef(onMessage)
+
+  // Keep callback ref fresh without re-subscribing
+  useEffect(() => { cbRef.current = onMessage }, [onMessage])
 
   useEffect(() => {
     if (!matchId) return
@@ -11,7 +15,7 @@ export function useMatchChannel(matchId, onMessage) {
     cableRef.current = createConsumer("/cable")
     subRef.current = cableRef.current.subscriptions.create(
       { channel: "MatchChannel", match_id: matchId },
-      { received: onMessage }
+      { received: (data) => cbRef.current?.(data) }
     )
 
     return () => {

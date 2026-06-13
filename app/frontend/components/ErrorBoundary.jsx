@@ -1,5 +1,6 @@
 import { Component } from "react"
 import { Link } from "react-router-dom"
+import i18n from "../i18n"
 
 const CHUNK_RELOAD_KEY = "golazo_chunk_reload_at"
 const CHUNK_RELOAD_TTL = 15_000
@@ -44,16 +45,16 @@ export default class ErrorBoundary extends Component {
         <div className="container">
           <div className="empty-state" style={{ padding: "60px 20px" }}>
             <div className="empty-state__icon">⚠️</div>
-            <h3 style={{ color: "#fff", marginBottom: 8 }}>Something went wrong</h3>
+            <h3 style={{ color: "#fff", marginBottom: 8 }}>{i18n.t("error.somethingWrong")}</h3>
             <p style={{ color: "var(--muted)", marginBottom: 24, fontSize: "0.85rem" }}>
-              {this.state.error?.message || "An unexpected error occurred."}
+              {this.state.error?.message || i18n.t("error.unexpected")}
             </p>
             <Link
               to="/"
               className="btn btn-primary"
               onClick={() => this.setState({ hasError: false, error: null })}
             >
-              ← Back to Home
+              ← {i18n.t("error.backHome")}
             </Link>
           </div>
         </div>

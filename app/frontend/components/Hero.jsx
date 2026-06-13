@@ -60,15 +60,15 @@ function Countdown({ targetDate, label }) {
   )
 }
 
-// Feature pills shown in the hero
+// Feature pills shown in the hero — labels resolved via i18n at render time
 const FEATURES = [
-  { icon: "🔴", label: "Live Scores" },
-  { icon: "📊", label: "Match Stats" },
-  { icon: "🏆", label: "Standings" },
-  { icon: "👥", label: "Teams" },
-  { icon: "👤", label: "Players" },
-  { icon: "🔔", label: "Goal Alerts" },
-  { icon: "🗞️", label: "News" },
+  { icon: "🔴", labelKey: "hero.featLiveScores" },
+  { icon: "📊", labelKey: "hero.featStats" },
+  { icon: "🏆", labelKey: "hero.featStandings" },
+  { icon: "👥", labelKey: "hero.featTeams" },
+  { icon: "👤", labelKey: "hero.featPlayers" },
+  { icon: "🔔", labelKey: "hero.featAlerts" },
+  { icon: "🗞️", labelKey: "hero.featNews" },
 ]
 
 // Pick a random index that differs from the current one
@@ -168,7 +168,7 @@ export default function Hero({ nextMatch, liveCount = 0 }) {
                   fontSize: ".68rem", fontWeight: 800, color: "#ee1e46", letterSpacing: ".08em", textTransform: "uppercase",
                 }}>
                   <span className="live-dot" />
-                  {liveCount} {liveCount === 1 ? "match" : "matches"} live now
+                  {t("hero.liveNow", { count: liveCount })}
                 </span>
               </div>
             ) : (
@@ -225,13 +225,13 @@ export default function Hero({ nextMatch, liveCount = 0 }) {
             {/* Feature proof chips */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {FEATURES.map(f => (
-                <span key={f.label} style={{
+                <span key={f.labelKey} style={{
                   display: "inline-flex", alignItems: "center", gap: 4,
                   background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)",
                   borderRadius: 6, padding: "4px 10px",
                   fontSize: ".65rem", fontWeight: 600, color: "rgba(255,255,255,.65)",
                 }}>
-                  {f.icon} {f.label}
+                  {f.icon} {t(f.labelKey)}
                 </span>
               ))}
             </div>

@@ -101,10 +101,14 @@ export function useMatch(matchId) {
 
   useEffect(() => {
     if (!matchId) return
+    let cancelled = false
+    setLoading(true)
     fetch(`/api/v1/matches/${matchId}`)
-      .then(r => r.json())
-      .then(setMatch)
-      .finally(() => setLoading(false))
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => { if (!cancelled) setMatch(data) })
+      .catch(() => { if (!cancelled) setMatch(null) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [matchId])
 
   return { match, loading, setMatch }

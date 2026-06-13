@@ -32,7 +32,15 @@
     "fixturesBtn": "Calendario",
     "nextMatch": "Próximo partido",
     "opensIn": "⚽ El Mundial comienza en",
-    "badge": "Mundial FIFA 2026 · Cobertura en Vivo"
+    "badge": "Mundial FIFA 2026 · Cobertura en Vivo",
+    "featLiveScores": "Marcadores en Vivo",
+    "featStats": "Estadísticas",
+    "featStandings": "Clasificación",
+    "featTeams": "Equipos",
+    "featPlayers": "Jugadores",
+    "featAlerts": "Alertas de Goles",
+    "featNews": "Noticias",
+    "liveNow": "{{count}} en vivo ahora"
   },
   "home": {
     "latestNews": "Últimas Noticias",
@@ -231,7 +239,10 @@
     "failedToLoad": "Error al cargar la clasificación de grupos.",
     "failedToLoadNews": "No se pudieron cargar las noticias.",
     "newsUnavailable": "No se pueden cargar las noticias.",
-    "tryAgain": "No se pudieron cargar los partidos. Comprueba tu conexión."
+    "tryAgain": "No se pudieron cargar los partidos. Comprueba tu conexión.",
+    "somethingWrong": "Algo salió mal",
+    "unexpected": "Ocurrió un error inesperado.",
+    "backHome": "Volver al Inicio"
   },
   "status": {
     "live": "EN VIVO",
