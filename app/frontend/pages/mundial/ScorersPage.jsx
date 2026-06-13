@@ -7,15 +7,16 @@ import { translateTeam } from "../../i18n/teamNames"
 const MEDALS = ["🥇", "🥈", "🥉"]
 const RANK_COLORS = ["#f59e0b", "#94a3b8", "#cd7f32"]
 
-const TABS = [
-  { key: "goals",   label: "Goleadores",   icon: "⚽", endpoint: "/api/v1/top_scorers?competition=WC",           valueKey: "goals",        unit: "goles" },
-  { key: "assists", label: "Asistencias",  icon: "🎯", endpoint: "/api/v1/top_assists?competition=WC",            valueKey: "assists",      unit: "asist." },
-  { key: "yellow",  label: "Amarillas",    icon: "🟨", endpoint: "/api/v1/top_cards?competition=WC&type=yellow",  valueKey: "yellow_cards", unit: "amarillas" },
-  { key: "red",     label: "Rojas",        icon: "🟥", endpoint: "/api/v1/top_cards?competition=WC&type=red",     valueKey: "red_cards",    unit: "rojas" },
+const TAB_DEFS = [
+  { key: "goals",   labelKey: "mundial.tabGoals",   unitKey: "mundial.unitGoals",   icon: "⚽", endpoint: "/api/v1/top_scorers?competition=WC",           valueKey: "goals"        },
+  { key: "assists", labelKey: "mundial.tabAssists",  unitKey: "mundial.unitAssists", icon: "🎯", endpoint: "/api/v1/top_assists?competition=WC",            valueKey: "assists"      },
+  { key: "yellow",  labelKey: "mundial.tabYellow",   unitKey: "mundial.unitYellow",  icon: "🟨", endpoint: "/api/v1/top_cards?competition=WC&type=yellow",  valueKey: "yellow_cards" },
+  { key: "red",     labelKey: "mundial.tabRed",      unitKey: "mundial.unitRed",     icon: "🟥", endpoint: "/api/v1/top_cards?competition=WC&type=red",     valueKey: "red_cards"    },
 ]
 
 // ─── Leader hero card ──────────────────────────────────
 function LeaderHero({ player, tab, lang }) {
+  const { t } = useTranslation()
   if (!player) return null
   const value    = player[tab.valueKey] ?? 0
   const teamName = translateTeam(player.team?.name, lang)
@@ -31,7 +32,7 @@ function LeaderHero({ player, tab, lang }) {
       <div style={{ textAlign: "center", flexShrink: 0 }}>
         <div style={{ fontSize: "2.8rem", lineHeight: 1 }}>{tab.icon}</div>
         <div style={{ fontSize: "0.6rem", fontWeight: 800, letterSpacing: ".12em", color: barColor, textTransform: "uppercase", marginTop: 4 }}>
-          Líder
+          {t("mundial.leader")}
         </div>
       </div>
 
@@ -51,7 +52,7 @@ function LeaderHero({ player, tab, lang }) {
           <div style={{ color: "#fff", fontWeight: 900, fontSize: "1.2rem" }}>{player.player?.name}</div>
         )}
         <div style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 2 }}>
-          {player.played ?? 0} partidos jugados
+          {player.played ?? 0} {t("mundial.matchesPlayed")}
         </div>
       </div>
 
@@ -137,7 +138,8 @@ export default function ScorersPage() {
   const [data, setData]           = useState({})
   const [loading, setLoading]     = useState(false)
 
-  const tab = TABS.find(t => t.key === activeTab)
+  const TABS = TAB_DEFS.map(d => ({ ...d, label: t(d.labelKey), unit: t(d.unitKey) }))
+  const tab = TABS.find(tab => tab.key === activeTab)
 
   useEffect(() => {
     const cached = cache[activeTab]
@@ -195,8 +197,8 @@ export default function ScorersPage() {
         {!loading && rows.length === 0 && (
           <div className="empty-state">
             <div className="empty-state__icon">{tab.icon}</div>
-            <h3>Sin datos aún</h3>
-            <p>Aparecerán cuando comiencen los partidos</p>
+            <h3>{t("mundial.noData")}</h3>
+            <p>{t("mundial.appearsWhenPlayed")}</p>
           </div>
         )}
 

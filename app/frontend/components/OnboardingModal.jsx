@@ -257,7 +257,7 @@ export default function OnboardingModal({ onDismiss }) {
         <div style={{ textAlign: "center", marginTop: 16 }}>
           {/* Alert types */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 280, margin: "0 auto 20px" }}>
-            {["⚽ Goal alerts", "🟥 Red cards", "🏁 Kick-offs", "✅ Final scores"].map(item => (
+            {[t("onboarding.alertGoals"), t("onboarding.alertCards"), t("onboarding.alertKickoffs"), t("onboarding.alertFinal")].map(item => (
               <div key={item} style={{
                 display: "flex", alignItems: "center", gap: 10,
                 padding: "9px 14px", borderRadius: 10,

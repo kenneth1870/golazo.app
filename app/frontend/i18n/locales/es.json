@@ -115,7 +115,19 @@
     "venueMatches": "{{count}} partidos",
     "goals": "Goles",
     "assists": "Asistencias",
-    "gamesPlayed": "PJ"
+    "gamesPlayed": "PJ",
+    "tabGoals": "Goleadores",
+    "tabAssists": "Asistencias",
+    "tabYellow": "Amarillas",
+    "tabRed": "Rojas",
+    "unitGoals": "goles",
+    "unitAssists": "asist.",
+    "unitYellow": "amarillas",
+    "unitRed": "rojas",
+    "leader": "Líder",
+    "matchesPlayed": "partidos jugados",
+    "noData": "Sin datos aún",
+    "appearsWhenPlayed": "Aparecerán cuando comiencen los partidos"
   },
   "table": {
     "pos": "#",
@@ -205,7 +217,8 @@
     "noOdds": "Cuotas no disponibles para este partido",
     "injuries": "Bajas y Suspensiones",
     "ratingsEmpty": "Sin valoraciones aún",
-    "ratingsAppear": "Las valoraciones aparecen durante o tras el partido"
+    "ratingsAppear": "Las valoraciones aparecen durante o tras el partido",
+    "info": "Info del Partido"
   },
   "error": {
     "dataUnavailable": "Datos temporalmente no disponibles",
@@ -361,7 +374,12 @@
     "notYetDetermined": "El cuadro eliminatorio aún no está determinado",
     "predictorLink": "Predictor de Cuadro",
     "thirdPlace": "3er Puesto",
-    "swipeHint": "← Desliza para ver todas las rondas →"
+    "swipeHint": "← Desliza para ver todas las rondas →",
+    "r32": "R32",
+    "roundOf16": "Octavos de Final",
+    "quarterFinals": "Cuartos de Final",
+    "semiFinals": "Semifinales",
+    "final": "Final"
   },
   "push": {
     "getAlerts": "Alertas de goles",
@@ -402,7 +420,16 @@
     "matchesLive": "{{count}} partidos en vivo",
     "updated": "Actualizado",
     "refreshes": "Se actualiza cada 20s",
-    "checkBack": "Vuelve durante los horarios de los partidos"
+    "checkBack": "Vuelve durante los horarios de los partidos",
+    "matchStats": "Estadísticas del Partido",
+    "statPossession": "Posesión",
+    "statShots": "Tiros",
+    "statShotsOnTarget": "Tiros a Puerta",
+    "statCorners": "Córners",
+    "statFouls": "Faltas",
+    "statYellowCards": "Tarjetas Amarillas",
+    "statRedCards": "Tarjetas Rojas",
+    "statOffsides": "Fuera de Juego"
   },
   "onboarding": {
     "welcome": "¡Bienvenido a Golazo! ⚽",
@@ -418,7 +445,11 @@
     "alertsEnabled": "¡Alertas activadas!",
     "letsGo": "¡Vamos!",
     "continue": "Continuar",
-    "skip": "Omitir"
+    "skip": "Omitir",
+    "alertGoals": "⚽ Alertas de goles",
+    "alertCards": "🟥 Tarjetas rojas",
+    "alertKickoffs": "🏁 Inicios de partido",
+    "alertFinal": "✅ Resultados finales"
   },
   "ios": {
     "title": "Obtén la experiencia completa",

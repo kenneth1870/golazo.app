@@ -12,7 +12,7 @@ const R32_SEEDS = [
   ["T1","T2"],["T3","T4"],["T5","T6"],["T7","T8"],
 ]
 
-const ROUND_LABELS = ["R32","Round of 16","Quarter Finals","Semi Finals","Final"]
+const ROUND_LABEL_KEYS = ["bracket.r32","bracket.roundOf16","bracket.quarterFinals","bracket.semiFinals","bracket.final"]
 const ROUND_SIZES  = [16, 8, 4, 2, 1]
 
 function seedLabel(slot) {
@@ -271,7 +271,7 @@ export default function BracketPredictorPage() {
                   textTransform: "uppercase", letterSpacing: ".08em",
                   padding: "0 4px 10px", textAlign: "center",
                 }}>
-                  {ROUND_LABELS[ri]}
+                  {t(ROUND_LABEL_KEYS[ri])}
                 </div>
                 <div style={{
                   display: "flex", flexDirection: "column",

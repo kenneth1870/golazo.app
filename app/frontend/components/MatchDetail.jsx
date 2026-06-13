@@ -1,9 +1,11 @@
 import { useState, useCallback } from "react"
+import { useTranslation } from "react-i18next"
 import { useMatch } from "../hooks/useMatches"
 import { useMatchChannel } from "../hooks/useMatchChannel"
 import LiveStats from "./LiveStats"
 
 export default function MatchDetail({ matchId, onBack }) {
+  const { t } = useTranslation()
   const { match, loading, setMatch } = useMatch(matchId)
 
   const handleMessage = useCallback((data) => {
@@ -102,7 +104,7 @@ export default function MatchDetail({ matchId, onBack }) {
             <div className="col-lg-6">
               <div className="widget-next-match">
                 <div className="widget-title">
-                  <h3>Match Info</h3>
+                  <h3>{t("match.info")}</h3>
                 </div>
                 <div className="widget-body text-center widget-vs-contents py-3">
                   <h4>{match.round || match.group_stage}</h4>
@@ -137,7 +139,7 @@ export default function MatchDetail({ matchId, onBack }) {
                 />
               ) : (
                 <div className="widget-next-match">
-                  <div className="widget-title"><h3>Match Stats</h3></div>
+                  <div className="widget-title"><h3>{t("live.matchStats")}</h3></div>
                   <div className="widget-body text-center py-4">
                     <p style={{ color: "gray" }}>Stats will appear when the match starts</p>
                   </div>

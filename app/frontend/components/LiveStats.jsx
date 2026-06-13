@@ -1,13 +1,4 @@
-const STAT_LABELS = {
-  possession:       "Possession",
-  shots:            "Shots",
-  shots_on_target:  "Shots on Target",
-  corners:          "Corners",
-  fouls:            "Fouls",
-  yellow_cards:     "Yellow Cards",
-  red_cards:        "Red Cards",
-  offsides:         "Offsides",
-}
+import { useTranslation } from "react-i18next"
 
 function StatRow({ label, homeVal, awayVal, isPercent }) {
   const h = homeVal ?? 0
@@ -31,13 +22,25 @@ function StatRow({ label, homeVal, awayVal, isPercent }) {
 }
 
 export default function LiveStats({ stats, homeTeam, awayTeam }) {
+  const { t } = useTranslation()
   const homeStat = stats.find(s => s.team_id === homeTeam?.id) || {}
   const awayStat = stats.find(s => s.team_id === awayTeam?.id) || {}
+
+  const STAT_LABELS = [
+    { key: "possession",      label: t("live.statPossession"),     isPercent: true  },
+    { key: "shots",           label: t("live.statShots"),          isPercent: false },
+    { key: "shots_on_target", label: t("live.statShotsOnTarget"),  isPercent: false },
+    { key: "corners",         label: t("live.statCorners"),        isPercent: false },
+    { key: "fouls",           label: t("live.statFouls"),          isPercent: false },
+    { key: "yellow_cards",    label: t("live.statYellowCards"),    isPercent: false },
+    { key: "red_cards",       label: t("live.statRedCards"),       isPercent: false },
+    { key: "offsides",        label: t("live.statOffsides"),       isPercent: false },
+  ]
 
   return (
     <div className="widget-next-match mt-4">
       <div className="widget-title">
-        <h3>Match Stats</h3>
+        <h3>{t("live.matchStats")}</h3>
       </div>
       <div className="widget-body">
         <div className="d-flex justify-content-between mb-3" style={{ padding: "0 8px" }}>
@@ -45,13 +48,13 @@ export default function LiveStats({ stats, homeTeam, awayTeam }) {
           <span style={{ color: "gray", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: 1 }}>vs</span>
           <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>{awayTeam?.code}</span>
         </div>
-        {Object.entries(STAT_LABELS).map(([key, label]) => (
+        {STAT_LABELS.map(({ key, label, isPercent }) => (
           <StatRow
             key={key}
             label={label}
             homeVal={homeStat[key]}
             awayVal={awayStat[key]}
-            isPercent={key === "possession"}
+            isPercent={isPercent}
           />
         ))}
       </div>

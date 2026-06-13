@@ -115,7 +115,19 @@
     "venueMatches": "{{count}} matches",
     "goals": "Goals",
     "assists": "Assists",
-    "gamesPlayed": "GP"
+    "gamesPlayed": "GP",
+    "tabGoals": "Scorers",
+    "tabAssists": "Assists",
+    "tabYellow": "Yellow",
+    "tabRed": "Red",
+    "unitGoals": "goals",
+    "unitAssists": "assists",
+    "unitYellow": "yellow",
+    "unitRed": "red",
+    "leader": "Leader",
+    "matchesPlayed": "matches played",
+    "noData": "No data yet",
+    "appearsWhenPlayed": "Data will appear when matches begin"
   },
   "table": {
     "pos": "#",
@@ -205,7 +217,8 @@
     "noOdds": "Odds not available for this match",
     "injuries": "Injuries & Suspensions",
     "ratingsEmpty": "No ratings yet",
-    "ratingsAppear": "Ratings appear during or after the match"
+    "ratingsAppear": "Ratings appear during or after the match",
+    "info": "Match Info"
   },
   "error": {
     "dataUnavailable": "Data temporarily unavailable",
@@ -361,7 +374,12 @@
     "notYetDetermined": "Knockout bracket not yet determined",
     "predictorLink": "Bracket Predictor",
     "thirdPlace": "3rd Place",
-    "swipeHint": "← Swipe to see all rounds →"
+    "swipeHint": "← Swipe to see all rounds →",
+    "r32": "R32",
+    "roundOf16": "Round of 16",
+    "quarterFinals": "Quarter Finals",
+    "semiFinals": "Semi Finals",
+    "final": "Final"
   },
   "push": {
     "getAlerts": "Get goal alerts",
@@ -402,7 +420,16 @@
     "matchesLive": "{{count}} matches live",
     "updated": "Updated",
     "refreshes": "Refreshes every 20s",
-    "checkBack": "Check back during match times"
+    "checkBack": "Check back during match times",
+    "matchStats": "Match Stats",
+    "statPossession": "Possession",
+    "statShots": "Shots",
+    "statShotsOnTarget": "Shots on Target",
+    "statCorners": "Corners",
+    "statFouls": "Fouls",
+    "statYellowCards": "Yellow Cards",
+    "statRedCards": "Red Cards",
+    "statOffsides": "Offsides"
   },
   "onboarding": {
     "welcome": "Welcome to Golazo! ⚽",
@@ -418,7 +445,11 @@
     "alertsEnabled": "Alerts enabled!",
     "letsGo": "Let's go!",
     "continue": "Continue",
-    "skip": "Skip"
+    "skip": "Skip",
+    "alertGoals": "⚽ Goal alerts",
+    "alertCards": "🟥 Red cards",
+    "alertKickoffs": "🏁 Kick-offs",
+    "alertFinal": "✅ Final scores"
   },
   "ios": {
     "title": "Get the full experience",
