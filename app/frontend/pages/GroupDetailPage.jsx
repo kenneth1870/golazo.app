@@ -257,7 +257,7 @@ export default function GroupDetailPage() {
                 ) : (
                   matchDayEntries.map(([dateKey, dayMatches], dayIdx) => {
                     const dateLabel = dateKey === "tbd" ? "TBD"
-                      : new Date(dateKey + "T12:00:00").toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })
+                      : new Date(dateKey + "T12:00:00").toLocaleDateString(i18n.language || undefined, { weekday: "long", month: "long", day: "numeric" })
                     const hasLive = dayMatches.some(m => m.status === "live")
                     return (
                       <div key={dateKey}>

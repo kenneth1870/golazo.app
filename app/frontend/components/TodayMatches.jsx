@@ -2,13 +2,14 @@ import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { translateLeague } from "../i18n/leagueNames"
 
-function formatKickoff(utcDate) {
-  return new Date(utcDate).toLocaleTimeString([], {
+function formatKickoff(utcDate, locale) {
+  return new Date(utcDate).toLocaleTimeString(locale || undefined, {
     hour: "2-digit", minute: "2-digit", timeZoneName: "short"
   })
 }
 
 function MatchRow({ match, onClick }) {
+  const { i18n } = useTranslation()
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
   const hasScore   = match.home_score !== null && match.away_score !== null
@@ -36,7 +37,7 @@ function MatchRow({ match, onClick }) {
           <span style={{ color: "gray", fontSize: "0.72rem" }}>FT</span>
         ) : (
           <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem" }}>
-            {formatKickoff(match.kickoff_at)}
+            {formatKickoff(match.kickoff_at, i18n.language)}
           </span>
         )}
       </div>

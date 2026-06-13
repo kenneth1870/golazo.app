@@ -20,7 +20,7 @@ function addDays(date, n) {
   return d
 }
 
-function useDateLabel(date, t) {
+function useDateLabel(date, t, locale) {
   const todayISO     = toISO(new Date())
   const tomorrowISO  = toISO(addDays(new Date(), 1))
   const yesterdayISO = toISO(addDays(new Date(), -1))
@@ -28,10 +28,10 @@ function useDateLabel(date, t) {
   if (iso === todayISO)     return t("time.today")
   if (iso === tomorrowISO)  return t("time.tomorrow")
   if (iso === yesterdayISO) return t("time.yesterday")
-  return date.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })
+  return date.toLocaleDateString(locale || undefined, { weekday: "long", month: "long", day: "numeric" })
 }
 
-function DateStrip({ selected, onChange }) {
+function DateStrip({ selected, onChange, locale }) {
   const todayISO    = toISO(new Date())
   const selectedISO = toISO(selected)
   const days        = Array.from({ length: 7 }, (_, i) => addDays(selected, i - 3))
@@ -58,10 +58,10 @@ function DateStrip({ selected, onChange }) {
               }}
             >
               <div style={{ fontWeight: isSel || isToday ? 700 : 400 }}>
-                {d.toLocaleDateString([], { weekday: "short" })}
+                {d.toLocaleDateString(locale || undefined, { weekday: "short" })}
               </div>
               <div style={{ fontSize: "0.68rem", opacity: 0.8 }}>
-                {d.toLocaleDateString([], { month: "short", day: "numeric" })}
+                {d.toLocaleDateString(locale || undefined, { month: "short", day: "numeric" })}
               </div>
             </button>
           )
@@ -133,7 +133,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick }) {
 }
 
 export default function FixturesPage() {
-  const { t }    = useTranslation()
+  const { t, i18n } = useTranslation()
   usePageMeta(t("nav.fixtures"), "Upcoming FIFA World Cup 2026 fixtures and all football match schedules — kickoff times, venues and dates.")
   const [selected, setSelected] = useState(() => addDays(new Date(), 1))
   const [matches, setMatches]   = useState([])
@@ -179,13 +179,13 @@ export default function FixturesPage() {
     (a[0]?.competition?.name ?? "").localeCompare(b[0]?.competition?.name ?? "")
   )
 
-  const label = useDateLabel(selected, t)
+  const label = useDateLabel(selected, t, i18n.language)
 
   return (
     <div className="site-section">
       <div className="container">
         <div className="mb-4">
-          <DateStrip selected={selected} onChange={d => { setSelected(d); setMatches([]) }} />
+          <DateStrip selected={selected} onChange={d => { setSelected(d); setMatches([]) }} locale={i18n.language} />
         </div>
 
         <div className="d-flex align-items-center justify-content-between mb-3" style={{ flexWrap: "wrap", gap: 8 }}>

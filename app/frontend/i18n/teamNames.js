@@ -6,7 +6,22 @@ const ES = {
   // Americas
   "United States":          "Estados Unidos",
   "Mexico":                 "México",
+  "Brazil":                 "Brasil",
+  "Canada":                 "Canadá",
+  "Haiti":                  "Haití",
+  "Panama":                 "Panamá",
+  "Colombia":               "Colombia",
+  "Ecuador":                "Ecuador",
+  "Argentina":              "Argentina",
+  "Uruguay":                "Uruguay",
+  "Chile":                  "Chile",
+  "Peru":                   "Perú",
   "Costa Rica":             "Costa Rica",
+  "Jamaica":                "Jamaica",
+  "Cuba":                   "Cuba",
+  "Honduras":               "Honduras",
+  "Guatemala":              "Guatemala",
+  "El Salvador":            "El Salvador",
   "Trinidad and Tobago":    "Trinidad y Tobago",
   "Dominican Republic":     "República Dominicana",
   "Bolivia":                "Bolivia",
@@ -98,6 +113,11 @@ const ES = {
   "Syria":                  "Siria",
   "Palestine":              "Palestina",
   "Israel":                 "Israel",
+
+  // Caribbean / Other
+  "Curacao":                "Curazao",
+  "Cape Verde":             "Cabo Verde",
+  "Cabo Verde":             "Cabo Verde",
 
   // Oceania / Pacific
   "Fiji":                   "Fiyi",

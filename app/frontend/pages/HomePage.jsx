@@ -64,6 +64,7 @@ function useLatestNews() {
 
 // ─── Favorite team card ───────────────────────────────────────────────────────
 function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
+  const { i18n } = useTranslation()
   const favMatches = upcomingMatches.filter(m =>
     m.home_team?.name === fav.name || m.away_team?.name === fav.name
   )
@@ -98,7 +99,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
             {next.status === "live"
               ? `LIVE ${next.minute ? `${next.minute}'` : ""}`
               : next.kickoff_at
-              ? new Date(next.kickoff_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+              ? new Date(next.kickoff_at).toLocaleString(i18n.language || undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
               : "TBD"}
           </div>
         </div>
@@ -211,8 +212,8 @@ function NewsCard({ post, index }) {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function HomePage() {
-  const { t }      = useTranslation()
-  const navigate   = useNavigate()
+  const { t, i18n } = useTranslation()
+  const navigate    = useNavigate()
   const liveCount  = useLiveCount()
   const [fav]      = useFavoriteTeam()
 
@@ -417,12 +418,12 @@ export default function HomePage() {
                     <p className="mb-5">
                       <span className="d-block">
                         {nextMatch.kickoff_at
-                          ? new Date(nextMatch.kickoff_at).toLocaleString([], { month: "long", day: "numeric", year: "numeric" })
+                          ? new Date(nextMatch.kickoff_at).toLocaleString(i18n.language || undefined, { month: "long", day: "numeric", year: "numeric" })
                           : "TBD"}
                       </span>
                       <span className="d-block">
                         {nextMatch.kickoff_at
-                          ? new Date(nextMatch.kickoff_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", timeZoneName: "short" })
+                          ? new Date(nextMatch.kickoff_at).toLocaleTimeString(i18n.language || undefined, { hour: "2-digit", minute: "2-digit", timeZoneName: "short" })
                           : ""}
                       </span>
                       <strong className="text-primary">{nextMatch.venue}</strong>
@@ -455,7 +456,7 @@ export default function HomePage() {
                       {upcomingFuture.slice(0, 8).map(m => (
                         <tr key={m.id} style={{ cursor: "pointer" }} onClick={() => navigate("/scores/fixtures")}>
                           <td style={{ fontSize: "0.75rem", color: "gray" }}>
-                            {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString([], { month: "short", day: "numeric" }) : "TBD"}
+                            {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString(i18n.language || undefined, { month: "short", day: "numeric" }) : "TBD"}
                           </td>
                           <td>
                             <div className="d-flex align-items-center" style={{ gap: 6 }}>
@@ -483,7 +484,7 @@ export default function HomePage() {
                     <div key={m.id} className="match-row match-row--clickable" onClick={() => navigate("/scores/fixtures")}>
                       <div className="match-row__status">
                         <span className="match-status-time" style={{ fontSize: "0.65rem" }}>
-                          {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString([], { month: "short", day: "numeric" }) : "TBD"}
+                          {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString(i18n.language || undefined, { month: "short", day: "numeric" }) : "TBD"}
                         </span>
                       </div>
                       <div className="match-row__teams">

@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { formatMatchDateTime } from "../hooks/useLocalTime"
 
 function ResultBadge({ result }) {
@@ -36,10 +37,11 @@ function TeamFlag({ src, code, name, size = 72 }) {
 }
 
 export default function MatchCard({ match, onClick }) {
+  const { i18n } = useTranslation()
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
   const hasScore   = match.home_score !== null && match.away_score !== null
-  const kickoff    = formatMatchDateTime(match.kickoff_at)
+  const kickoff    = formatMatchDateTime(match.kickoff_at, i18n.language)
 
   const homeGoals = match.goals?.filter(g => g.team_id === match.home_team?.id) || []
   const awayGoals = match.goals?.filter(g => g.team_id === match.away_team?.id) || []

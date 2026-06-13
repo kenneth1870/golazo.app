@@ -6,13 +6,13 @@ import { formatMatchDate } from "../../hooks/useLocalTime"
 import { usePageMeta } from "../../hooks/usePageMeta"
 
 export default function SchedulePage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   usePageMeta(t("mundial.scheduleTitle"), "Full FIFA World Cup 2026 schedule — all 104 matches, kickoff times and venues.")
   const { matches, loading } = useMatches("all", { competition: "WC" })
   const navigate = useNavigate()
 
   const byDate = matches.reduce((acc, m) => {
-    const d = formatMatchDate(m.kickoff_at)
+    const d = formatMatchDate(m.kickoff_at, i18n.language)
     if (!acc[d]) acc[d] = []
     acc[d].push(m)
     return acc

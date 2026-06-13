@@ -16,8 +16,8 @@ export default function MatchRow({ match, onClick, showDate = false }) {
           : isFinished
           ? <span className="match-status-ft">FT</span>
           : <span className="match-status-time">
-              {showDate && <span className="match-date">{formatMatchDate(match.kickoff_at)}</span>}
-              {formatKickoff(match.kickoff_at)}
+              {showDate && <span className="match-date">{formatMatchDate(match.kickoff_at, i18n.language)}</span>}
+              {formatKickoff(match.kickoff_at, i18n.language)}
             </span>
         }
       </div>

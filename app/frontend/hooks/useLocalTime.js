@@ -1,28 +1,24 @@
-export function formatKickoff(utcDate) {
+export function formatKickoff(utcDate, locale) {
   if (!utcDate) return "TBD"
-  const d = new Date(utcDate)
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  return new Date(utcDate).toLocaleTimeString(locale || undefined, { hour: "2-digit", minute: "2-digit" })
 }
 
-export function formatMatchDate(utcDate) {
+export function formatMatchDate(utcDate, locale) {
   if (!utcDate) return "TBD"
-  const d = new Date(utcDate)
-  return d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })
+  return new Date(utcDate).toLocaleDateString(locale || undefined, { weekday: "short", month: "short", day: "numeric" })
 }
 
-export function formatMatchDateTime(utcDate) {
+export function formatMatchDateTime(utcDate, locale) {
   if (!utcDate) return "TBD"
-  const d = new Date(utcDate)
-  return d.toLocaleString([], {
+  return new Date(utcDate).toLocaleString(locale || undefined, {
     month: "short", day: "numeric",
     hour: "2-digit", minute: "2-digit"
   })
 }
 
-export function formatFull(utcDate) {
+export function formatFull(utcDate, locale) {
   if (!utcDate) return "TBD"
-  const d = new Date(utcDate)
-  return d.toLocaleString([], {
+  return new Date(utcDate).toLocaleString(locale || undefined, {
     weekday: "long", month: "long", day: "numeric", year: "numeric",
     hour: "2-digit", minute: "2-digit", timeZoneName: "short"
   })

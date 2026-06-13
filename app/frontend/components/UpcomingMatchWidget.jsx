@@ -1,7 +1,9 @@
+import { useTranslation } from "react-i18next"
 import { formatFull } from "../hooks/useLocalTime"
 
 export default function UpcomingMatchWidget({ match, onClick }) {
-  const kickoff = formatFull(match.kickoff_at)
+  const { i18n } = useTranslation()
+  const kickoff = formatFull(match.kickoff_at, i18n.language)
 
   return (
     <div
