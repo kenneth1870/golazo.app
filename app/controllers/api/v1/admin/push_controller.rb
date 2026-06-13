@@ -13,6 +13,12 @@ module Api
           }
         end
 
+        # GET /api/v1/admin/push/devices — list subscribed devices for the admin table
+        def devices
+          subs = PushSubscription.order(Arel.sql("COALESCE(last_seen_at, updated_at) DESC")).limit(200)
+          render json: subs.map(&:admin_summary)
+        end
+
         # POST /api/v1/admin/push/broadcast — send to all or filter by team name
         def broadcast
           title     = params[:title].to_s.strip

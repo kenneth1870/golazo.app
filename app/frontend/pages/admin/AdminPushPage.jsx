@@ -1,15 +1,38 @@
 import { useState, useEffect } from "react"
 import { useAuthContext } from "../../contexts/AuthContext"
 
+function timeAgo(iso) {
+  if (!iso) return "—"
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+  if (diff < 60)    return "just now"
+  if (diff < 3600)  return `${Math.floor(diff / 60)} min ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)} h ago`
+  if (diff < 2592000) return `${Math.floor(diff / 86400)} d ago`
+  return new Date(iso).toLocaleDateString()
+}
+
+const PROVIDER_ICON = {
+  "Chrome / Android": "🤖",
+  "Safari / iOS":     "🍎",
+  "Firefox":          "🦊",
+  "Edge / Windows":   "🪟",
+  "Other":            "🌐",
+}
+
 export default function AdminPushPage() {
   const { authFetch } = useAuthContext()
   const [stats,    setStats]    = useState(null)
+  const [devices,  setDevices]  = useState([])
   const [form,     setForm]     = useState({ title: "", body: "", url: "/", team_name: "" })
   const [sending,  setSending]  = useState(false)
   const [result,   setResult]   = useState(null)
 
+  const loadDevices = () =>
+    authFetch("/api/v1/admin/push/devices").then(r => r.json()).then(d => setDevices(Array.isArray(d) ? d : [])).catch(() => {})
+
   useEffect(() => {
     authFetch("/api/v1/admin/push").then(r => r.json()).then(setStats).catch(() => {})
+    loadDevices()
   }, [])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
@@ -109,6 +132,55 @@ export default function AdminPushPage() {
             {sending ? "Sending…" : "🔔 Send notification"}
           </button>
         </form>
+      </div>
+
+      {/* Devices table */}
+      <div style={{ marginTop: 36 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <h3 style={{ color: "#fff", margin: 0, fontSize: "1.1rem" }}>Subscribed devices</h3>
+          <span style={{ color: "rgba(255,255,255,.35)", fontSize: "0.8rem" }}>{devices.length}</span>
+          <button onClick={loadDevices} style={{
+            marginLeft: "auto", background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)",
+            borderRadius: 8, padding: "6px 12px", color: "rgba(255,255,255,.7)", fontSize: "0.78rem", cursor: "pointer",
+          }}>↻ Refresh</button>
+        </div>
+
+        {devices.length === 0 ? (
+          <p style={{ color: "rgba(255,255,255,.3)", fontSize: "0.85rem" }}>No devices subscribed yet.</p>
+        ) : (
+          <div style={{ overflowX: "auto", background: "#161b22", border: "1px solid rgba(255,255,255,.07)", borderRadius: 14 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", minWidth: 720 }}>
+              <thead>
+                <tr style={{ color: "rgba(255,255,255,.4)", textAlign: "left" }}>
+                  {["Device", "Browser", "OS", "Lang", "Following", "Last seen", "Subscribed"].map(h => (
+                    <th key={h} style={{ padding: "12px 16px", fontWeight: 700, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: ".04em", borderBottom: "1px solid rgba(255,255,255,.08)" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {devices.map(d => (
+                  <tr key={d.id} style={{ color: "#fff", borderBottom: "1px solid rgba(255,255,255,.05)" }}>
+                    <td style={{ padding: "11px 16px" }}>
+                      {PROVIDER_ICON[d.provider] || "🌐"} {d.provider}
+                    </td>
+                    <td style={{ padding: "11px 16px", color: "rgba(255,255,255,.7)" }}>{d.browser}</td>
+                    <td style={{ padding: "11px 16px", color: "rgba(255,255,255,.7)" }}>{d.os}</td>
+                    <td style={{ padding: "11px 16px" }}>
+                      <span style={{ background: "rgba(255,255,255,.08)", borderRadius: 5, padding: "2px 7px", fontSize: "0.72rem", textTransform: "uppercase" }}>{d.locale}</span>
+                    </td>
+                    <td style={{ padding: "11px 16px", color: "rgba(255,255,255,.7)" }}>
+                      {d.global
+                        ? <span style={{ color: "#f59e0b" }}>All matches</span>
+                        : (d.teams || []).join(", ")}
+                    </td>
+                    <td style={{ padding: "11px 16px", color: "rgba(255,255,255,.55)" }}>{timeAgo(d.last_seen_at)}</td>
+                    <td style={{ padding: "11px 16px", color: "rgba(255,255,255,.4)" }}>{timeAgo(d.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )

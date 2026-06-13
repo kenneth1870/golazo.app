@@ -19,7 +19,8 @@ Rails.application.routes.draw do
         resources :teams,   only: %i[index update]
         get  "standings",         to: "standings#index"
         post "standings/recalculate", to: "standings#recalculate"
-        get  "push",        to: "push#index"
+        get  "push",          to: "push#index"
+        get  "push/devices",  to: "push#devices"
         post "push/broadcast", to: "push#broadcast"
       end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_13_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_13_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -111,9 +111,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_13_000000) do
     t.datetime "created_at", null: false
     t.string "device_id"
     t.text "endpoint", null: false
+    t.datetime "last_seen_at"
+    t.string "locale", default: "es"
     t.string "p256dh", null: false
     t.string "team_ids", default: "[]"
     t.datetime "updated_at", null: false
+    t.string "user_agent"
     t.index ["device_id"], name: "index_push_subscriptions_on_device_id"
     t.index ["endpoint"], name: "index_push_subscriptions_on_endpoint", unique: true
   end

@@ -8,12 +8,18 @@ module Api
         return render json: { error: "Missing endpoint" }, status: :unprocessable_entity if endpoint.blank?
         return render json: { error: "Invalid endpoint" }, status: :unprocessable_entity unless endpoint.start_with?("https://")
 
+        locale = params[:locale].to_s.split("-").first.downcase
+        locale = "es" unless %w[es en].include?(locale)
+
         sub = PushSubscription.find_or_initialize_by(endpoint: endpoint)
         sub.assign_attributes(
-          p256dh:    params[:p256dh].to_s,
-          auth:      params[:auth].to_s,
-          device_id: params[:device_id].to_s.presence,
-          team_ids:  (params[:team_ids] || []).to_json,
+          p256dh:       params[:p256dh].to_s,
+          auth:         params[:auth].to_s,
+          device_id:    params[:device_id].to_s.presence,
+          team_ids:     (params[:team_ids] || []).to_json,
+          locale:       locale,
+          user_agent:   request.user_agent.to_s.first(500),
+          last_seen_at: Time.current,
         )
 
         if sub.save
@@ -29,7 +35,7 @@ module Api
         sub = PushSubscription.find_by(endpoint: params[:endpoint])
         return render json: { error: "Not found" }, status: :not_found unless sub
 
-        sub.update!(team_ids: (params[:team_ids] || []).to_json)
+        sub.update!(team_ids: (params[:team_ids] || []).to_json, last_seen_at: Time.current)
         render json: { ok: true, team_ids: sub.team_names }
       end
 

@@ -350,8 +350,12 @@ class WorldCupSync
 
     return false if home_score == match.home_score && away_score == match.away_score
 
+    # Only push a "goal" alert when the total score actually increased — a
+    # downward correction or provider flap shouldn't fire a GOAL notification.
+    scored = (home_score.to_i + away_score.to_i) > (match.home_score.to_i + match.away_score.to_i)
+
     match.update!(status: "live", home_score: home_score, away_score: away_score)
-    broadcast_score(match, minute)
+    broadcast_score(match, minute, notify: scored)
     true
   rescue => e
     log("Live sync error for #{home_name} v #{away_name}: #{e.message}")

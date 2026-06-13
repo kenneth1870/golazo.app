@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { storageGet, storageSet } from "../utils/safeStorage"
 import { isIosSafari, isStandalone } from "../utils/platform"
+import i18n from "../i18n"
 
 const DEVICE_KEY = "golazo_device_id"
 
@@ -77,6 +78,7 @@ export function usePushNotifications() {
           auth:      subJson.keys?.auth,
           device_id: getDeviceId(),
           team_ids:  teamNames,
+          locale:    i18n.language,
         }),
       })
 

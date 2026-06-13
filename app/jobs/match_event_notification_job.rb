@@ -21,14 +21,19 @@ class MatchEventNotificationJob < ApplicationJob
     score_str  = "#{home_score}–#{away_score}" if home_score && away_score
     url        = match_url || "/"
 
-    title, body = build_copy(event_type, home_name, away_name, score_str, minute)
-
     subs = PushSubscription.for_teams([ home_name, away_name ])
     return if subs.empty?
 
     Rails.logger.info("[PushNotification] #{event_type} → #{subs.size} subscribers (#{home_name} vs #{away_name})")
 
+    # Copy is localised per subscriber; memoise per locale so we build it once.
+    copy_cache = {}
+
     subs.each do |sub|
+      locale      = %w[es en].include?(sub.locale) ? sub.locale : "es"
+      title, body = copy_cache[locale] ||=
+        build_copy(locale, event_type, home_name, away_name, score_str, minute)
+
       payload = {
         title:    title,
         body:     body,
@@ -63,7 +68,33 @@ class MatchEventNotificationJob < ApplicationJob
 
   private
 
-  def build_copy(event_type, home, away, score, minute)
+  def build_copy(locale, event_type, home, away, score, minute)
+    locale == "en" ? build_copy_en(event_type, home, away, score, minute)
+                   : build_copy_es(event_type, home, away, score, minute)
+  end
+
+  # Spanish copy — the app's default audience.
+  def build_copy_es(event_type, home, away, score, minute)
+    case event_type
+    when "goal"
+      [ "⚽ #{home} #{score} #{away}", "¡GOL! · EN VIVO" ]
+    when "kickoff"
+      min_str = minute ? " · #{minute}'" : ""
+      [ "🏁 #{home} vs #{away}#{min_str}", "¡Comenzó el partido!" ]
+    when "halftime"
+      [ "⏸ Medio tiempo · #{home} #{score} #{away}", "Nos vemos en 15 minutos." ]
+    when "fulltime"
+      [ "✅ Final · #{home} #{score} #{away}", "¡Final del partido!" ]
+    when "red_card"
+      [ "🟥 ¡Tarjeta roja! #{home} vs #{away}", minute ? "#{minute}' · ¡Tarjeta roja!" : "¡Tarjeta roja mostrada!" ]
+    when "prematch"
+      [ "⏰ #{home} vs #{away}", "Comienza en 10 minutos — ¡prepárate!" ]
+    else
+      [ "#{home} vs #{away}", "" ]
+    end
+  end
+
+  def build_copy_en(event_type, home, away, score, minute)
     case event_type
     when "goal"
       [ "⚽ #{home} #{score} #{away}", "LIVE · Goal scored!" ]
