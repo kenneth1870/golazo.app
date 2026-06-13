@@ -149,7 +149,7 @@ export default function LeagueDetailPage() {
   if (loading) {
     return (
       <div>
-        <div className="page-hero" style={{ backgroundImage: "url('/images/hero_3.jpg')" }}>
+        <div className="page-hero" style={{ backgroundImage: "url('/images/hero_5.jpg')" }}>
           <div className="container"><h1 className="page-hero__title">{t("loading")}</h1></div>
         </div>
         <div className="site-section container">
@@ -161,7 +161,7 @@ export default function LeagueDetailPage() {
 
   return (
     <div>
-      <div className="page-hero" style={{ backgroundImage: "url('/images/hero_3.jpg')" }}>
+      <div className="page-hero" style={{ backgroundImage: "url('/images/hero_5.jpg')" }}>
         <div className="container">
           <div className="d-flex align-items-center" style={{ gap: 16 }}>
             {competition?.logo && (

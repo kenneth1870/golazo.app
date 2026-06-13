@@ -12,7 +12,7 @@ export default function GroupsPage() {
   )
   return (
     <div>
-      <div className="page-hero" style={{ backgroundImage: "url('/images/hero_3.jpg')" }}>
+      <div className="page-hero" style={{ backgroundImage: "url('/images/hero_5.jpg')" }}>
         <div className="container">
           <h1 className="page-hero__title">{t("groups.title")}</h1>
           <p className="page-hero__sub">{t("groups.subtitle")}</p>
