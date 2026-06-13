@@ -30,11 +30,12 @@ class MatchEventNotificationJob < ApplicationJob
 
     subs.each do |sub|
       payload = {
-        title: title,
-        body:  body,
-        url:   url,
-        icon:  "/images/apple-touch-icon.png?v=2",
-        badge: "/images/badge-72.png"
+        title:    title,
+        body:     body,
+        url:      url,
+        icon:     "/images/apple-touch-icon.png?v=2",
+        badge:    "/images/badge-72.png",
+        match_id: match_id
       }.to_json
 
       WebPush.payload_send(

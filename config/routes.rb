@@ -56,6 +56,7 @@ Rails.application.routes.draw do
       post "push_subscriptions",       to: "push_subscriptions#create"
       put  "push_subscriptions/teams", to: "push_subscriptions#update_teams"
       delete "push_subscriptions",     to: "push_subscriptions#destroy"
+      post "push_test",                to: "push_subscriptions#test_push"
       resources :teams, only: [ :index, :show ] do
         get :squad, on: :member
       end

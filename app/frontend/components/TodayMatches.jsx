@@ -158,7 +158,7 @@ export default function TodayMatches({ onMatchSelect }) {
     </div>
   )
 
-  const today = new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })
+  const today = new Date().toLocaleDateString(i18n.language || undefined, { weekday: "long", month: "long", day: "numeric" })
 
   return (
     <div className="site-section">
