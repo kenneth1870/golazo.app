@@ -42,11 +42,27 @@ class WorldCupSync
     wc = Competition.find_by(code: "WC")
     return unless wc
 
+    # An empty feed almost always means a transient API error (live_matches
+    # rescues to []), NOT that every live match ended at once. Treating absence
+    # as "finished" here would fire false full-time alerts, so bail out.
+    if live_matches.blank?
+      log("Live feed empty — skipping just-finished check (likely API hiccup)")
+      return
+    end
+
     db_live = Match.where(status: "live", competition: wc)
     return unless db_live.exists?
 
     live_external_ids = live_matches.filter_map { |m| m[:external_id]&.to_s }
-    just_finished = db_live.reject { |m| live_external_ids.include?(m.external_id.to_s) }
+    just_finished = db_live
+      .reject { |m| live_external_ids.include?(m.external_id.to_s) }
+      # A real match can't be over until well after kickoff (90' + half-time +
+      # stoppage ≈ 105'+). Requiring ≥95 min since kickoff prevents a single
+      # feed flap right after kickoff from finishing a match that just started.
+      # Genuine early finishes still come through the feed's FT/AET/PEN status
+      # (handled in sync_match_from_live), and truly-stuck matches are caught by
+      # sync_stale_past_matches.
+      .select  { |m| m.kickoff_at.present? && m.kickoff_at < 95.minutes.ago }
     return if just_finished.empty?
 
     log("#{just_finished.count} WC match(es) just finished — marking finished immediately")
@@ -414,6 +430,18 @@ class WorldCupSync
       return true
     end
 
+    # Self-heal: the feed still lists this match with a live (non-finished)
+    # status, but the DB has it "finished" — it was wrongly finished by a flap.
+    # Revert to live and clear the full-time dedup key so the *real* full-time
+    # alert can still fire later.
+    if match.status == "finished"
+      match.update!(status: "live", home_score: home_score, away_score: away_score)
+      Rails.cache.delete("fulltime_notified_#{match.id}")
+      log("Reverted falsely-finished #{match.id} (#{home_name} vs #{away_name}) back to live")
+      broadcast_score(match, minute, notify: false)
+      return true
+    end
+
     # Kickoff: match transitions from scheduled → live feed
     if match.status == "scheduled"
       match.update!(status: "live", home_score: home_score, away_score: away_score)
@@ -612,7 +640,14 @@ class WorldCupSync
     Match
       .joins("INNER JOIN teams home_teams ON home_teams.id = matches.home_team_id")
       .joins("INNER JOIN teams away_teams ON away_teams.id = matches.away_team_id")
-      .where(status: %w[scheduled live])
+      # scheduled/live as usual, plus recently-finished matches (kickoff < 3h ago)
+      # so a match wrongly marked finished by a feed flap can be reached and
+      # reverted to live by the next live sync (self-heal).
+      .where(
+        "matches.status IN ('scheduled','live') OR " \
+        "(matches.status = 'finished' AND matches.kickoff_at > ?)",
+        3.hours.ago
+      )
       .find_by(
         "LOWER(home_teams.name) = ? AND LOWER(away_teams.name) = ?",
         normalize_team_name(home_name), normalize_team_name(away_name),
