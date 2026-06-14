@@ -18,7 +18,7 @@ module Api
               {
                 id:            s.id,
                 rank:          s.rank,
-                group_name:    s.group_name,
+                group_name:    s.group_name&.sub(/\AGroup\s+/i, ""),
                 team:          { id: s.team.id, name: s.team.name, code: s.team.code, flag_url: s.team.flag_url },
                 played:        s.played,
                 won:           s.won,

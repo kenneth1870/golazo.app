@@ -476,7 +476,7 @@ class WorldCupSync
     goals = all["goals"] || {}
 
     Standing.find_or_initialize_by(team: team, competition: competition).tap do |s|
-      s.group_name    = entry["group"]
+      s.group_name    = entry["group"]&.sub(/\AGroup\s+/i, "")
       s.rank          = entry["rank"]
       s.played        = all["played"]
       s.won           = all["win"]
