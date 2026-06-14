@@ -1,4 +1,4 @@
-const CACHE_VERSION = "golazo-v8"
+const CACHE_VERSION = "golazo-v9"
 const STATIC_CACHE  = `${CACHE_VERSION}-static`
 const API_CACHE     = `${CACHE_VERSION}-api`
 const IMAGE_CACHE   = `${CACHE_VERSION}-images`
@@ -13,6 +13,9 @@ const CDN_IMAGE_HOSTS = [
   "media-3.api-sports.io",
   "img.sofascore.com",
 ]
+
+// Hosts that send no CORS headers — skip the CORS attempt entirely
+const NO_CORS_HOSTS = ["crests.football-data.org"]
 
 // Font CDNs — stale-while-revalidate so the app looks correct offline
 const FONT_HOSTS = [
@@ -123,15 +126,33 @@ async function shellFirst(request) {
   }
 }
 
-// Cache-first for CDN images (flags). Uses opaque response fallback
-// so images still display even if CORS headers are missing.
+// Cache-first for CDN images (flags, crests, player photos).
+// Always strips credentials — CDN wildcard ACAO headers are incompatible
+// with credentialed requests. Falls back to no-cors for hosts with no CORS support.
 async function cacheFirstImage(request) {
   const cached = await caches.match(request)
   if (cached) return cached
 
+  const url = new URL(request.url)
+
+  // Hosts with no CORS support at all — go straight to opaque no-cors
+  if (NO_CORS_HOSTS.includes(url.hostname)) {
+    return fetch(new Request(request.url, { mode: "no-cors" })).catch(() =>
+      new Response("", { status: 408, statusText: "Offline" })
+    )
+  }
+
   try {
-    // Try CORS first for a proper cacheable response
-    const response = await fetch(request, { mode: "cors" })
+    // Create a fresh request with credentials omitted — required because:
+    // - The browser forwards cookies (credentials: include) to the SW
+    // - CDN servers return Access-Control-Allow-Origin: * which is
+    //   incompatible with credentialed requests, causing a CORS error
+    const corsRequest = new Request(request.url, {
+      method: "GET",
+      mode: "cors",
+      credentials: "omit",
+    })
+    const response = await fetch(corsRequest)
     if (response.ok) {
       const cache = await caches.open(IMAGE_CACHE)
       await trimImageCache(cache)
@@ -139,8 +160,8 @@ async function cacheFirstImage(request) {
     }
     return response
   } catch {
-    // Fallback: opaque no-cors fetch (won't be cached but will load)
-    return fetch(request, { mode: "no-cors" }).catch(() =>
+    // Fallback: opaque no-cors (displays in <img> but won't be cached)
+    return fetch(new Request(request.url, { mode: "no-cors" })).catch(() =>
       new Response("", { status: 408, statusText: "Offline" })
     )
   }
