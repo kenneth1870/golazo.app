@@ -432,11 +432,12 @@ class WorldCupSync
 
     # Self-heal: the feed still lists this match with a live (non-finished)
     # status, but the DB has it "finished" — it was wrongly finished by a flap.
-    # Revert to live and clear the full-time dedup key so the *real* full-time
-    # alert can still fire later.
+    # Revert the UI status to live, but DELIBERATELY keep the full-time dedup key
+    # so a flapping feed near the end can't fire a second "Final" alert. With the
+    # 95-min guard, any finish is already close to real full-time, so the alert
+    # already sent stands; re-arming it would just be spam.
     if match.status == "finished"
       match.update!(status: "live", home_score: home_score, away_score: away_score)
-      Rails.cache.delete("fulltime_notified_#{match.id}")
       log("Reverted falsely-finished #{match.id} (#{home_name} vs #{away_name}) back to live")
       broadcast_score(match, minute, notify: false)
       return true
@@ -458,9 +459,18 @@ class WorldCupSync
 
     return false if home_score == match.home_score && away_score == match.away_score
 
-    # Only push a "goal" alert when the total score actually increased — a
-    # downward correction or provider flap shouldn't fire a GOAL notification.
-    scored = (home_score.to_i + away_score.to_i) > (match.home_score.to_i + match.away_score.to_i)
+    old_total = match.home_score.to_i + match.away_score.to_i
+    new_total = home_score.to_i + away_score.to_i
+
+    # Anti-spam flap guard: ignore a downward total during live play. Providers
+    # occasionally dip a score for one cycle and restore it the next; persisting
+    # the dip would make the recovery look like a fresh goal and fire a duplicate
+    # alert. Keep the higher score live; the authoritative final score is written
+    # by the FT/AET/PEN path when the match actually ends.
+    return false if new_total < old_total
+
+    # Only push a "goal" alert when the total score actually increased.
+    scored = new_total > old_total
 
     match.update!(status: "live", home_score: home_score, away_score: away_score)
     broadcast_score(match, minute, notify: scored)
@@ -487,9 +497,17 @@ class WorldCupSync
     old_home   = match.home_score.to_i
     old_away   = match.away_score.to_i
 
+    # Anti-spam flap guard: during live play, don't persist a downward total —
+    # a one-cycle dip + recovery would otherwise look like a fresh goal and fire
+    # a duplicate alert. The FT path writes the authoritative final score.
+    downward_live = status == "live" &&
+                    (home_score.to_i + away_score.to_i) < (old_home + old_away)
+
     attrs = { status: status }
-    attrs[:home_score] = home_score unless status == "scheduled"
-    attrs[:away_score] = away_score unless status == "scheduled"
+    unless status == "scheduled" || downward_live
+      attrs[:home_score] = home_score
+      attrs[:away_score] = away_score
+    end
     # Backfill group_stage if missing — covers matches created before fixtures import
     if match.group_stage.nil?
       inferred_group = match.home_team&.group.presence || match.away_team&.group.presence
