@@ -1549,12 +1549,9 @@ const NEWS_SEARCHABLE_LEAGUES = new Set([
 
 function RelatedNewsPanel({ homeName, awayName, leagueName, lang, t }) {
   const [articles, setArticles] = useState([])
-  const fetchedRef = useRef(false)
 
   useEffect(() => {
-    if (fetchedRef.current) return
     if (!homeName && !awayName) return
-    fetchedRef.current = true
 
     // Build keyword list — only include league when it's specific enough
     const leagueWords = leagueName &&
@@ -1572,10 +1569,12 @@ function RelatedNewsPanel({ homeName, awayName, leagueName, lang, t }) {
 
     // Send keywords server-side — avoids fetching 60 articles to filter 3
     const q = encodeURIComponent(words.join(","))
-    fetch(`/api/v1/news?lang=${lang}&q=${q}`)
+    const controller = new AbortController()
+    fetch(`/api/v1/news?lang=${lang}&q=${q}`, { signal: controller.signal })
       .then(r => r.ok ? r.json() : [])
       .then(items => { if (Array.isArray(items) && items.length > 0) setArticles(items) })
       .catch(() => {})
+    return () => controller.abort()
   }, [homeName, awayName, leagueName, lang])
 
   if (articles.length === 0) return null

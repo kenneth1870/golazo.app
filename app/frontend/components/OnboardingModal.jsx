@@ -19,27 +19,28 @@ import { isIosSafari, isStandalone } from "../utils/platform"
 const ONBOARDED_KEY = "golazo_onboarded"
 
 // Top WC 2026 nations — hardcoded so onboarding works offline / before API loads
+// Flags from flagcdn.com (supports CORS, cached by SW)
 const WC_TEAMS = [
-  { id: 765, name: "Argentina",    flag: "https://crests.football-data.org/762.svg" },
-  { id: 760, name: "France",       flag: "https://crests.football-data.org/773.svg" },
-  { id: 764, name: "Brazil",       flag: "https://crests.football-data.org/764.svg" },
-  { id: 759, name: "England",      flag: "https://crests.football-data.org/770.svg" },
-  { id: 766, name: "Spain",        flag: "https://crests.football-data.org/760.svg" },
-  { id: 785, name: "Portugal",     flag: "https://crests.football-data.org/765.svg" },
-  { id: 769, name: "Mexico",       flag: "https://crests.football-data.org/769.svg" },
-  { id: 768, name: "Germany",      flag: "https://crests.football-data.org/759.svg" },
-  { id: 771, name: "Netherlands",  flag: "https://crests.football-data.org/784.svg" },
-  { id: 772, name: "South Korea",  flag: "https://crests.football-data.org/772.png" },
-  { id: 298, name: "Morocco",      flag: "https://crests.football-data.org/morocco.svg" },
-  { id: 773, name: "United States", flag: "https://crests.football-data.org/usa.svg" },
-  { id: 774, name: "Colombia",     flag: "https://crests.football-data.org/775.svg" },
-  { id: 311, name: "Canada",       flag: "https://crests.football-data.org/canada.svg" },
-  { id: 799, name: "Japan",        flag: "https://crests.football-data.org/799.svg" },
-  { id: 763, name: "Uruguay",      flag: "https://crests.football-data.org/803.svg" },
-  { id: 286, name: "Croatia",      flag: "https://crests.football-data.org/799.svg" },
-  { id: 762, name: "Senegal",      flag: "https://crests.football-data.org/senegal.svg" },
-  { id: 289, name: "Australia",    flag: "https://crests.football-data.org/772.png" },
-  { id: 778, name: "Ecuador",      flag: "https://crests.football-data.org/ecuador.svg" },
+  { id: 765, name: "Argentina",     flag: "https://flagcdn.com/w40/ar.png" },
+  { id: 760, name: "France",        flag: "https://flagcdn.com/w40/fr.png" },
+  { id: 764, name: "Brazil",        flag: "https://flagcdn.com/w40/br.png" },
+  { id: 759, name: "England",       flag: "https://flagcdn.com/w40/gb-eng.png" },
+  { id: 766, name: "Spain",         flag: "https://flagcdn.com/w40/es.png" },
+  { id: 785, name: "Portugal",      flag: "https://flagcdn.com/w40/pt.png" },
+  { id: 769, name: "Mexico",        flag: "https://flagcdn.com/w40/mx.png" },
+  { id: 768, name: "Germany",       flag: "https://flagcdn.com/w40/de.png" },
+  { id: 771, name: "Netherlands",   flag: "https://flagcdn.com/w40/nl.png" },
+  { id: 772, name: "South Korea",   flag: "https://flagcdn.com/w40/kr.png" },
+  { id: 298, name: "Morocco",       flag: "https://flagcdn.com/w40/ma.png" },
+  { id: 773, name: "United States", flag: "https://flagcdn.com/w40/us.png" },
+  { id: 774, name: "Colombia",      flag: "https://flagcdn.com/w40/co.png" },
+  { id: 311, name: "Canada",        flag: "https://flagcdn.com/w40/ca.png" },
+  { id: 799, name: "Japan",         flag: "https://flagcdn.com/w40/jp.png" },
+  { id: 763, name: "Uruguay",       flag: "https://flagcdn.com/w40/uy.png" },
+  { id: 286, name: "Croatia",       flag: "https://flagcdn.com/w40/hr.png" },
+  { id: 762, name: "Senegal",       flag: "https://flagcdn.com/w40/sn.png" },
+  { id: 289, name: "Australia",     flag: "https://flagcdn.com/w40/au.png" },
+  { id: 778, name: "Ecuador",       flag: "https://flagcdn.com/w40/ec.png" },
 ]
 
 const LEAGUES = [
@@ -355,7 +356,20 @@ export default function OnboardingModal({ onDismiss }) {
     >
       {/* Sheet */}
       <div
-        onTouchStart={e => { dragStart.current = e.touches[0].clientY }}
+        onTouchStart={e => {
+          // Don't start dismiss gesture if touch begins inside a scrollable child
+          // (e.g. the team grid on step 2 — scrolling it would wrongly dismiss)
+          let el = e.target
+          while (el && el !== e.currentTarget) {
+            const style = getComputedStyle(el)
+            if (["auto", "scroll"].includes(style.overflowY) && el.scrollHeight > el.clientHeight) {
+              dragStart.current = null
+              return
+            }
+            el = el.parentElement
+          }
+          dragStart.current = e.touches[0].clientY
+        }}
         onTouchMove={e => {
           if (dragStart.current === null) return
           const delta = e.touches[0].clientY - dragStart.current
