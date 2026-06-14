@@ -165,6 +165,21 @@ const STAT_ORDER = [
   "Yellow Cards","Red Cards","Goalkeeper Saves","Passes %",
 ]
 
+const STAT_I18N = {
+  "Ball Possession":   "match.statBallPossession",
+  "Total Shots":       "match.statTotalShots",
+  "Shots on Goal":     "match.statShotsOnGoal",
+  "Shots off Goal":    "match.statShotsOffGoal",
+  "Blocked Shots":     "match.statBlockedShots",
+  "Corner Kicks":      "match.statCornerKicks",
+  "Offsides":          "match.statOffsides",
+  "Fouls":             "match.statFouls",
+  "Yellow Cards":      "match.statYellowCards",
+  "Red Cards":         "match.statRedCards",
+  "Goalkeeper Saves":  "match.statGoalkeeperSaves",
+  "Passes %":          "match.statPassesAccuracy",
+}
+
 // ─── Score timeline (goal progression at a glance) ────
 function ScoreTimeline({ events, homeTeamRaw, homeName, awayName, t }) {
   const goals = (events ?? []).filter(e => e.type === "Goal" && e.detail !== "Missed Penalty")
@@ -241,6 +256,7 @@ function ScoreTimeline({ events, homeTeamRaw, homeName, awayName, t }) {
 
 // ─── Mini stats bar shown in Summary tab ──────────────
 function MiniStatsBar({ stats, homeName, awayName }) {
+  const { t } = useTranslation()
   if (!stats?.length) return null
   const [homeS, awayS] = stats
   const getStat = (s, type) => s?.stats?.find(r => r.type === type)?.value
@@ -262,7 +278,7 @@ function MiniStatsBar({ stats, homeName, awayName }) {
       {/* Team labels */}
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", fontWeight: 700, color: "var(--muted)", marginBottom: 2 }}>
         <span style={{ color: "#ee1e46" }}>{homeName}</span>
-        <span style={{ color: "var(--muted)", fontSize: "0.62rem" }}>STATS SNAPSHOT</span>
+        <span style={{ color: "var(--muted)", fontSize: "0.62rem" }}>{t("match.statStatsSnapshot")}</span>
         <span style={{ color: "#3b82f6" }}>{awayName}</span>
       </div>
 
@@ -271,7 +287,7 @@ function MiniStatsBar({ stats, homeName, awayName }) {
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", marginBottom: 4 }}>
             <span style={{ fontWeight: 700, color: "#fff" }}>{homePoss}%</span>
-            <span style={{ color: "var(--muted)", fontSize: "0.65rem" }}>Possession</span>
+            <span style={{ color: "var(--muted)", fontSize: "0.65rem" }}>{t("match.statBallPossession")}</span>
             <span style={{ fontWeight: 700, color: "#fff" }}>{awayPoss}%</span>
           </div>
           <div style={{ display: "flex", height: 5, borderRadius: 3, overflow: "hidden" }}>
@@ -285,7 +301,9 @@ function MiniStatsBar({ stats, homeName, awayName }) {
       {totalShots[0] !== undefined && (
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem" }}>
           <span style={{ fontWeight: 700, color: "#fff" }}>{totalShots[0] ?? 0}</span>
-          <span style={{ color: "var(--muted)", fontSize: "0.65rem" }}>Shots {onTarget[0] !== undefined ? `(${onTarget[0] ?? 0} / ${onTarget[1] ?? 0} on target)` : ""}</span>
+          <span style={{ color: "var(--muted)", fontSize: "0.65rem" }}>
+            {t("match.statShots")}{onTarget[0] !== undefined ? ` (${onTarget[0] ?? 0} / ${onTarget[1] ?? 0} ${t("match.statShotsOnTarget").toLowerCase()})` : ""}
+          </span>
           <span style={{ fontWeight: 700, color: "#fff" }}>{totalShots[1] ?? 0}</span>
         </div>
       )}
@@ -755,13 +773,15 @@ function StatBar({ label, homeVal, awayVal, isPct }) {
   const a = parseVal(awayVal)
   const total = h + a || 1
   const homePct = isPct ? h : Math.round((h / total) * 100)
+  // Display: always use the parsed number + suffix so we never double-append %
+  const fmt = (v) => `${parseVal(v)}${isPct ? "%" : ""}`
 
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: "0.8rem" }}>
-        <span style={{ fontWeight: 700, color: "#fff" }}>{homeVal ?? 0}{isPct ? "%" : ""}</span>
+        <span style={{ fontWeight: 700, color: "#fff" }}>{fmt(homeVal)}</span>
         <span style={{ color: "var(--muted)", fontSize: "0.72rem" }}>{label}</span>
-        <span style={{ fontWeight: 700, color: "#fff" }}>{awayVal ?? 0}{isPct ? "%" : ""}</span>
+        <span style={{ fontWeight: 700, color: "#fff" }}>{fmt(awayVal)}</span>
       </div>
       <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "var(--surface2)" }}>
         <div style={{ width: `${homePct}%`, background: "#ee1e46", transition: "width .4s" }} />
@@ -772,6 +792,7 @@ function StatBar({ label, homeVal, awayVal, isPct }) {
 }
 
 function StatsPanel({ stats, home, away, t, statusShort }) {
+  const { i18n } = useTranslation()
   const isFT = ["FT", "AET", "PEN"].includes(statusShort)
   const isNS = statusShort === "NS"
 
@@ -807,16 +828,16 @@ function StatsPanel({ stats, home, away, t, statusShort }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {home?.logo && <img src={home.logo} alt="" className="logo-sm" onError={e => (e.target.style.display = "none")} />}
-          <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#ee1e46" }}>{home?.name}</span>
+          <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#ee1e46" }}>{translateTeam(home?.name, i18n.language)}</span>
         </div>
         <h3 className="match-section__title" style={{ margin: 0 }}>{t("match.statistics")}</h3>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#3b82f6" }}>{away?.name}</span>
+          <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#3b82f6" }}>{translateTeam(away?.name, i18n.language)}</span>
           {away?.logo && <img src={away.logo} alt="" className="logo-sm" onError={e => (e.target.style.display = "none")} />}
         </div>
       </div>
       {pairs.map(({ type, h, a }) => (
-        <StatBar key={type} label={type} homeVal={h} awayVal={a} isPct={String(h).includes("%")} />
+        <StatBar key={type} label={t(STAT_I18N[type] || type)} homeVal={h} awayVal={a} isPct={String(h).includes("%")} />
       ))}
     </section>
   )

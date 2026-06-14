@@ -434,13 +434,22 @@
     "checkBack": "Check back during match times",
     "matchStats": "Match Stats",
     "statPossession": "Possession",
+    "statBallPossession": "Ball Possession",
     "statShots": "Shots",
+    "statTotalShots": "Total Shots",
     "statShotsOnTarget": "Shots on Target",
+    "statShotsOnGoal": "Shots on Goal",
+    "statShotsOffGoal": "Shots off Goal",
+    "statBlockedShots": "Blocked Shots",
     "statCorners": "Corners",
+    "statCornerKicks": "Corner Kicks",
     "statFouls": "Fouls",
     "statYellowCards": "Yellow Cards",
     "statRedCards": "Red Cards",
-    "statOffsides": "Offsides"
+    "statOffsides": "Offsides",
+    "statGoalkeeperSaves": "Goalkeeper Saves",
+    "statPassesAccuracy": "Pass Accuracy",
+    "statStatsSnapshot": "Stats"
   },
   "onboarding": {
     "welcome": "Welcome to Golazo! ⚽",

@@ -434,13 +434,22 @@
     "checkBack": "Vuelve durante los horarios de los partidos",
     "matchStats": "Estadísticas del Partido",
     "statPossession": "Posesión",
+    "statBallPossession": "Posesión del Balón",
     "statShots": "Tiros",
+    "statTotalShots": "Tiros Totales",
     "statShotsOnTarget": "Tiros a Puerta",
+    "statShotsOnGoal": "Tiros a Puerta",
+    "statShotsOffGoal": "Tiros Fuera",
+    "statBlockedShots": "Tiros Bloqueados",
     "statCorners": "Córners",
+    "statCornerKicks": "Tiros de Esquina",
     "statFouls": "Faltas",
     "statYellowCards": "Tarjetas Amarillas",
     "statRedCards": "Tarjetas Rojas",
-    "statOffsides": "Fuera de Juego"
+    "statOffsides": "Fuera de Juego",
+    "statGoalkeeperSaves": "Paradas del Portero",
+    "statPassesAccuracy": "Precisión de Pases",
+    "statStatsSnapshot": "Stats"
   },
   "onboarding": {
     "welcome": "¡Bienvenido a Golazo! ⚽",
