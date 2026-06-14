@@ -2,8 +2,12 @@ module Api
   module V1
     class TodayController < BaseController
       def index
-        date = parse_date(params[:date]) || Date.today
         tz   = sanitize_tz(params[:tz])
+        # When no explicit date is given (homepage), use the caller's local date,
+        # not the server's UTC date. The server runs in UTC; a user in CDT at
+        # 22:00 local is on June 13 while the server may already be June 14 UTC,
+        # which would cause June 13 matches (Qatar, Brazil) to be excluded.
+        date = parse_date(params[:date]) || TZInfo::Timezone.get(tz).now.to_date
         all  = merge_matches(date, tz).sort_by { |m| m[:kickoff_at].to_s }
 
         # Safety net: always inject finished/live WC matches from DB for the
