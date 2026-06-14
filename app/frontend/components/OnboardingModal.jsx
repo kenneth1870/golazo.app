@@ -9,7 +9,7 @@
  * Skipped entirely if localStorage key "golazo_onboarded" is set.
  * Writes selections directly into golazo_favorites (same format as useFavorites).
  */
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { storageGet, storageSet } from "../utils/safeStorage"
 import { useFavorites } from "../hooks/useFavorites"
@@ -86,6 +86,8 @@ export default function OnboardingModal({ onDismiss }) {
   const [notifErr, setNotifErr]       = useState(null)
   const [notifLoading, setNotifLoading] = useState(false)
   const [animating, setAnimating]     = useState(false)
+  const [dragY, setDragY]             = useState(0)
+  const dragStart                     = useRef(null)
 
   const onIosSafari  = isIosSafari()
   const onIosPwa     = onIosSafari && isStandalone()
@@ -353,15 +355,29 @@ export default function OnboardingModal({ onDismiss }) {
     >
       {/* Sheet */}
       <div
+        onTouchStart={e => { dragStart.current = e.touches[0].clientY }}
+        onTouchMove={e => {
+          if (dragStart.current === null) return
+          const delta = e.touches[0].clientY - dragStart.current
+          if (delta > 0) setDragY(delta)
+        }}
+        onTouchEnd={() => {
+          if (dragY > 80) { setDragY(0); dragStart.current = null; finish() }
+          else { setDragY(0); dragStart.current = null }
+        }}
         style={{
           width: "100%", maxWidth: 520, margin: "0 auto",
           background: "var(--surface,#111)", borderRadius: "20px 20px 0 0",
           padding: "28px 24px 40px", position: "relative",
           maxHeight: "90vh", overflowY: "auto",
-          opacity: animating ? 0 : 1, transform: animating ? "translateY(12px)" : "translateY(0)",
-          transition: "opacity .2s, transform .2s",
+          opacity: animating ? 0 : 1,
+          transform: animating ? "translateY(12px)" : `translateY(${dragY}px)`,
+          transition: dragY > 0 ? "none" : "opacity .2s, transform .2s",
         }}
       >
+        {/* Drag handle */}
+        <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border,#2a2a2a)", margin: "-12px auto 20px", flexShrink: 0 }} />
+
         {/* Progress dots */}
         <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 20 }}>
           {steps.map((_, i) => (

@@ -3,7 +3,7 @@ const STATIC_CACHE  = `${CACHE_VERSION}-static`
 const API_CACHE     = `${CACHE_VERSION}-api`
 const IMAGE_CACHE   = `${CACHE_VERSION}-images`
 
-// CDN domains to cache (team flags, crests)
+// CDN domains to cache (team flags, crests, player photos)
 const CDN_IMAGE_HOSTS = [
   "flagcdn.com",
   "crests.football-data.org",
@@ -11,6 +11,7 @@ const CDN_IMAGE_HOSTS = [
   "media-1.api-sports.io",
   "media-2.api-sports.io",
   "media-3.api-sports.io",
+  "img.sofascore.com",
 ]
 
 // Font CDNs — stale-while-revalidate so the app looks correct offline
