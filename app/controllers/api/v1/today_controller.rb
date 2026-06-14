@@ -138,24 +138,29 @@ module Api
         []
       end
 
-      # Returns finished/live WC matches from the DB for the given local date.
-      # Used as a safety net so stale API caches (24h TTL for past dates) never
-      # hide completed matches. For today we widen the lower bound to midnight
-      # UTC so late-night UTC kickoffs (still "tonight" for US users) are covered.
+      # Returns WC matches from the DB for the given local date as a safety net
+      # against stale API caches.
+      #
+      # Includes live/finished matches AND scheduled matches whose kickoff is
+      # already in the past (sync lag — the match has started/finished but the
+      # background job hasn't written the final status yet). Upcoming scheduled
+      # matches are excluded so they don't shadow the live API version.
       def fetch_wc_from_db_for_date(date, tz = "UTC")
         base = Match
           .joins(:competition)
           .where(competitions: { code: "WC" })
-          .where(status: %w[live finished])
           .includes(:home_team, :away_team, :competition)
 
-        scoped = if date == Date.today
-          base.where("kickoff_at >= ?", Date.today.beginning_of_day.utc)
+        date_scope = if date == Date.today
+          ->(s) { s.where("kickoff_at >= ?", Date.today.beginning_of_day.utc) }
         else
-          base.where(kickoff_at: local_day_range(date, tz))
+          ->(s) { s.where(kickoff_at: local_day_range(date, tz)) }
         end
 
-        scoped.map { |m| normalize_db(m) }
+        authoritative = date_scope.call(base.where(status: %w[live finished]))
+        overdue       = date_scope.call(base.where(status: "scheduled").where("kickoff_at < ?", Time.current))
+
+        (authoritative.to_a + overdue.to_a).map { |m| normalize_db(m) }.uniq { |m| m[:id] }
       rescue => e
         Rails.logger.error("[TodayController] fetch_wc_from_db_for_date failed: #{e.message}")
         []
