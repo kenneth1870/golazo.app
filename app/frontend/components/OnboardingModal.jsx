@@ -31,7 +31,7 @@ const WC_TEAMS = [
   { id: 771, name: "Netherlands",  flag: "https://crests.football-data.org/784.svg" },
   { id: 772, name: "South Korea",  flag: "https://crests.football-data.org/772.png" },
   { id: 298, name: "Morocco",      flag: "https://crests.football-data.org/morocco.svg" },
-  { id: 773, name: "USA",          flag: "https://crests.football-data.org/usa.svg" },
+  { id: 773, name: "United States", flag: "https://crests.football-data.org/usa.svg" },
   { id: 774, name: "Colombia",     flag: "https://crests.football-data.org/775.svg" },
   { id: 311, name: "Canada",       flag: "https://crests.football-data.org/canada.svg" },
   { id: 799, name: "Japan",        flag: "https://crests.football-data.org/799.svg" },

@@ -18,12 +18,11 @@ class PushSubscription < ApplicationRecord
   def self.for_teams(names)
     names = Array(names).map(&:to_s).reject(&:blank?)
     return none if names.blank?
-    # Include subscriptions that match one of the team names OR subscriptions
-    # with no team filter (team_ids = '[]') which means "all WC matches".
-    # Blank team names are stripped above so empty strings never match the
-    # all-WC bucket and produce garbled "⏰  vs " notifications.
+    # Global subscribers: team_ids is empty array, NULL, or the JSON string 'null'
+    # (older rows may have NULL from before the column default was set).
+    # Team-specific: team_ids JSONB array contains one of the match team names.
     where(
-      "team_ids = '[]' OR team_ids::jsonb ??| array[:names]",
+      "team_ids IS NULL OR team_ids IN ('[]', 'null') OR team_ids::jsonb ??| array[:names]",
       names: names
     )
   end
