@@ -444,14 +444,24 @@ class WorldCupSync
     match = find_match_by_teams(home_name, away_name)
     return false unless match
 
-    was_live = match.status == "live"
+    was_live   = match.status == "live"
+    old_home   = match.home_score.to_i
+    old_away   = match.away_score.to_i
 
     attrs = { status: status }
     attrs[:home_score] = home_score unless status == "scheduled"
     attrs[:away_score] = away_score unless status == "scheduled"
 
     match.update!(attrs)
-    broadcast_score(match, m[:minute], notify: false) if status == "live"
+
+    if status == "live"
+      # Fire a goal notification when the score increases — covers matches that
+      # come through the today-sync path rather than the live-feed path (e.g.
+      # server restart mid-match or match absent from the live API feed).
+      scored = match.competition&.code == "WC" &&
+               (home_score.to_i + away_score.to_i) > (old_home + old_away)
+      broadcast_score(match, m[:minute], notify: scored)
+    end
 
     # Full-time: WC match just finished — notify subscribers.
     # Covers both was_live (normal path) and scheduled→finished direct transition
