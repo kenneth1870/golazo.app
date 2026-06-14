@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { useMatches } from "../../hooks/useMatches"
 import MatchRow from "../../components/MatchRow"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 
 const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
@@ -68,15 +69,18 @@ export default function GroupStagePage() {
     (m.status === "finished" && m.kickoff_at && new Date() - new Date(m.kickoff_at) < 3 * 60 * 60 * 1000)
   )
 
+  const loadStandings = () => fetch("/api/v1/standings?competition=WC")
+    .then(r => r.json())
+    .then(setStandings)
+    .catch(() => {})
+
   useEffect(() => {
-    const load = () => fetch("/api/v1/standings?competition=WC")
-      .then(r => r.json())
-      .then(setStandings)
-      .catch(() => {})
-    load()
-    const iv = setInterval(load, hasLiveOrRecent ? 30_000 : 60_000)
+    loadStandings()
+    const iv = setInterval(loadStandings, hasLiveOrRecent ? 30_000 : 60_000)
     return () => clearInterval(iv)
   }, [hasLiveOrRecent])
+
+  useStandingsChannel(loadStandings)
 
   const groupMatches = matches.filter(m => m.group_stage)
   const byGroup = GROUPS.reduce((acc, g) => {

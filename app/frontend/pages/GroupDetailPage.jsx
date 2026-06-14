@@ -5,6 +5,7 @@ import { useMatches } from "../hooks/useMatches"
 import MatchRow from "../components/MatchRow"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { translateTeam } from "../i18n/teamNames"
+import { useStandingsChannel } from "../hooks/useStandingsChannel"
 
 // ─── Qualification scenario logic ─────────────────────
 // WC 2026: top 2 from each group advance automatically.
@@ -115,6 +116,7 @@ export default function GroupDetailPage() {
       .then(data => setStandings((Array.isArray(data) ? data.filter(s => s.group_name === group) : data[group]) || []))
 
   useEffect(() => { loadStandings() }, [group]) // eslint-disable-line
+  useStandingsChannel(loadStandings)
 
   // Auto-refresh standings every 30s when group has a live match
   const hasLiveInGroup = matches.some(m =>

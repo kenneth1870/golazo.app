@@ -31,6 +31,7 @@ class RecalculateStandingsJob < ApplicationJob
     WorldCupKnockout.rebuild!
     Rails.cache.delete("standings_WC")
     Rails.cache.write("standings_last_recalculated_at", Time.current.iso8601, expires_in: 2.days)
+    ActionCable.server.broadcast("standings_updates", { type: "standings_updated", competition: "WC" })
   ensure
     Rails.cache.delete(lock_key)
   end

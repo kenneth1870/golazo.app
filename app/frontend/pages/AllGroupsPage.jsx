@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam } from "../i18n/teamNames"
 import { usePageMeta } from "../hooks/usePageMeta"
+import { useStandingsChannel } from "../hooks/useStandingsChannel"
 
 // WC 2026: pos 0-1 qualify directly, pos 2 potentially (best 8 of 12 third-place), pos 3 eliminated
 function rowQualStyle(rank, rows) {
@@ -106,6 +107,7 @@ export default function AllGroupsPage() {
   }
 
   useEffect(() => { load() }, [])
+  useStandingsChannel(load)
 
   const groups = GROUP_LETTERS.filter(g => grouped[g]?.length > 0)
   const displayGroups = groups.length > 0 ? groups : GROUP_LETTERS
