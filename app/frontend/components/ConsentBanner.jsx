@@ -26,7 +26,7 @@ export default function ConsentBanner() {
 
   return (
     <div style={{
-      position: "fixed", bottom: 56, left: 0, right: 0, zIndex: 950,
+      position: "fixed", bottom: "calc(56px + env(safe-area-inset-bottom))", left: 0, right: 0, zIndex: 950,
       background: "#111827",
       borderTop: "1px solid rgba(255,255,255,.1)",
       padding: "14px 16px",

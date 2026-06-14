@@ -113,6 +113,11 @@ export default function SearchBar({ onClose }) {
           </svg>
           <input
             ref={inputRef}
+            type="search"
+            inputMode="search"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck="false"
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder={t("search.placeholder")}

@@ -26,6 +26,7 @@ function StandingsTable({ group, rows, onNavigate, t, i18n }) {
         <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#ee1e46" }}>{t("standings.matchesLink")}</span>
       </div>
       <div className="widget-body p-0" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div className="bracket-scroll-hint" style={{ marginBottom: 4 }}>{t("bracket.swipeHint")}</div>
         <table className="table custom-table mb-0" style={{ fontSize: "0.8rem", minWidth: 380 }}>
           <thead>
             <tr>

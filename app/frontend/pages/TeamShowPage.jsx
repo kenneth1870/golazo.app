@@ -340,7 +340,7 @@ export default function TeamShowPage() {
                       {p.photo ? (
                         <img src={p.photo} alt={p.name}
                           style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
-                          onError={e => (e.target.style.display = "none")} loading="eager" />
+                          onError={e => (e.target.style.display = "none")} loading="lazy" />
                       ) : (
                         <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem", flexShrink: 0 }}>👤</div>
                       )}

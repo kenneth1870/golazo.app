@@ -156,8 +156,9 @@ async function cacheFirst(request, cacheName) {
   return response
 }
 
-const API_CACHE_MAX   = 60
+const API_CACHE_MAX   = 150
 const IMAGE_CACHE_MAX = 500  // ~500 flag/crest images before eviction
+const API_TIMEOUT_MS  = 8000
 
 async function trimApiCache(cache) {
   const keys = await cache.keys()
@@ -176,7 +177,9 @@ async function trimImageCache(cache) {
 async function networkFirstApi(request) {
   const cache = await caches.open(API_CACHE)
   try {
-    const response = await fetch(request)
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS)
+    const response = await fetch(request, { signal: controller.signal }).finally(() => clearTimeout(timer))
     if (response.ok) {
       cache.put(request, response.clone())
       trimApiCache(cache)
