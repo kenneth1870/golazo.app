@@ -20,9 +20,14 @@ class PushSubscription < ApplicationRecord
     return none if names.blank?
     # Global subscribers: team_ids is empty array, NULL, or the JSON string 'null'
     # (older rows may have NULL from before the column default was set).
-    # Team-specific: team_ids JSONB array contains one of the match team names.
+    # Team-specific: team_ids JSON array contains one of the match team names.
+    #
+    # Use jsonb_exists_any(...) rather than the `?|` operator: with named bind
+    # params ActiveRecord does NOT collapse `??` → `?`, so the operator form
+    # silently breaks (PG receives a literal `??|` and raises "operator does not
+    # exist"). The function form has no `?` to escape, so it can't regress.
     where(
-      "team_ids IS NULL OR team_ids IN ('[]', 'null') OR team_ids::jsonb ??| array[:names]",
+      "team_ids IS NULL OR team_ids IN ('[]', 'null') OR jsonb_exists_any(team_ids::jsonb, array[:names])",
       names: names
     )
   end
