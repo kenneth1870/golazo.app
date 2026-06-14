@@ -224,6 +224,8 @@
     "liveOdds": "Cuotas en Vivo",
     "noOdds": "Cuotas no disponibles para este partido",
     "injuries": "Bajas y Suspensiones",
+    "injuryOut": "Baja",
+    "injuryDoubt": "Dudoso",
     "ratingsEmpty": "Sin valoraciones aún",
     "ratingsAppear": "Las valoraciones aparecen durante o tras el partido",
     "info": "Info del Partido"

@@ -53,7 +53,7 @@ export default function BottomNav() {
         <NavLink to="/scores/today" className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}>
           <span className="bottom-nav__icon-wrap">
             <ScoresIcon />
-            {liveCount > 0 && <span className="bottom-nav__badge" />}
+            {liveCount > 0 && <span className="bottom-nav__badge" aria-label={`${liveCount} live`} />}
           </span>
           <span className="bottom-nav__label">{t("time.today", "Hoy")}</span>
         </NavLink>

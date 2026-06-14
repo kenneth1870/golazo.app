@@ -322,7 +322,7 @@ function EmptyState({ label, t }) {
   return (
     <div className="empty-state">
       <div className="empty-state__pitch" />
-      <div className="empty-state__icon">📅</div>
+      <div className="empty-state__icon" aria-hidden="true">📅</div>
       <h3>{t("time.noMatches", { date: label })}</h3>
       <p>{t("time.tryDifferent")}</p>
     </div>
@@ -623,7 +623,7 @@ export default function TodayPage() {
           </>
         ) : error ? (
           <div className="empty-state">
-            <div className="empty-state__icon">⚠️</div>
+            <div className="empty-state__icon" aria-hidden="true">⚠️</div>
             <h3>{t("error.dataUnavailable", "Data unavailable")}</h3>
             <p>{t("error.tryAgain", "Couldn't load matches. Check your connection.")}</p>
             <button className="btn btn-sm btn-outline-light mt-3" onClick={() => load(selected)}>
@@ -632,7 +632,7 @@ export default function TodayPage() {
           </div>
         ) : groups.length === 0 && filterMyTeams ? (
           <div className="empty-state">
-            <div className="empty-state__icon">⭐</div>
+            <div className="empty-state__icon" aria-hidden="true">⭐</div>
             <h3>{t("scores.myTeams")}</h3>
             <p>{t("scores.yourMatches")} — {t("time.noMatches", { date: label })}</p>
             <button

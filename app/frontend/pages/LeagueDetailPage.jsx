@@ -211,14 +211,6 @@ export default function LeagueDetailPage() {
                 )}
               </button>
             ))}
-            {standings.length > 0 && (
-              <button
-                className={`tab-link${tab === "standings" ? " tab-link--active" : ""}`}
-                onClick={() => setTab("standings")}
-              >
-                {t("groups.viewStandings").replace(" →", "")}
-              </button>
-            )}
           </div>
         </div>
       </div>

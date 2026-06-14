@@ -224,6 +224,8 @@
     "liveOdds": "Live Odds",
     "noOdds": "Odds not available for this match",
     "injuries": "Injuries & Suspensions",
+    "injuryOut": "Out",
+    "injuryDoubt": "Doubtful",
     "ratingsEmpty": "No ratings yet",
     "ratingsAppear": "Ratings appear during or after the match",
     "info": "Match Info"

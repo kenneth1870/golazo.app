@@ -34,24 +34,27 @@ export default function SearchBar({ onClose }) {
   const [loading, setLoading] = useState(false)
   const [focused, setFocused] = useState(0)
   const navigate  = useNavigate()
-  const inputRef  = useRef(null)
-  const timerRef  = useRef(null)
+  const inputRef     = useRef(null)
+  const timerRef     = useRef(null)
+  const abortRef     = useRef(null)
 
   useEffect(() => { inputRef.current?.focus() }, [])
 
-  // Debounced search
+  // Debounced search with request cancellation
   useEffect(() => {
     clearTimeout(timerRef.current)
-    if (query.length < 2) { setResults([]); return }
+    abortRef.current?.abort()
+    if (query.length < 2) { setResults([]); setLoading(false); return }
     setLoading(true)
     timerRef.current = setTimeout(() => {
-      fetch(`/api/v1/search?q=${encodeURIComponent(query)}`)
+      abortRef.current = new AbortController()
+      fetch(`/api/v1/search?q=${encodeURIComponent(query)}`, { signal: abortRef.current.signal })
         .then(r => r.json())
         .then(data => { setResults(data); setFocused(0) })
-        .catch(() => setResults([]))
+        .catch(err => { if (err.name !== "AbortError") setResults([]) })
         .finally(() => setLoading(false))
     }, 280)
-    return () => clearTimeout(timerRef.current)
+    return () => { clearTimeout(timerRef.current); abortRef.current?.abort() }
   }, [query])
 
   const go = useCallback((result) => {

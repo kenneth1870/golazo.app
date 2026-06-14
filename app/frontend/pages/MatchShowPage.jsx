@@ -996,7 +996,7 @@ function InjuriesSection({ fixtureId, homeName, awayName }) {
                   color: inj.type === "Missing Fixture" ? "#ef4444" : "#f59e0b",
                   whiteSpace: "nowrap",
                 }}>
-                  {inj.type === "Missing Fixture" ? "Baja" : "Dudoso"}
+                  {inj.type === "Missing Fixture" ? t("match.injuryOut") : t("match.injuryDoubt")}
                 </span>
               </div>
             ))}
@@ -1121,12 +1121,12 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
 
 function FirstScorerOdds({ fixtureId, t }) {
   const [scorers, setScorers] = useState(null)
-  const fetchedRef = useRef(false)
 
   useEffect(() => {
-    if (fetchedRef.current || !fixtureId) return
-    fetchedRef.current = true
-    fetch(`/api/v1/fixture_odds/${fixtureId}`)
+    if (!fixtureId) return
+    setScorers(null)
+    const controller = new AbortController()
+    fetch(`/api/v1/fixture_odds/${fixtureId}`, { signal: controller.signal })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (!d?.bets) return
@@ -1139,6 +1139,7 @@ function FirstScorerOdds({ fixtureId, t }) {
         }
       })
       .catch(() => {})
+    return () => controller.abort()
   }, [fixtureId])
 
   if (!scorers?.length) return null
@@ -1849,8 +1850,9 @@ export default function MatchShowPage() {
       ? `/api/v1/matches/${matchDbId}/ai_summary?lang=${lang}`
       : `/api/v1/match_detail/${id}/ai_summary?lang=${lang}`
 
+    const controller = new AbortController()
     setAiLoading(true)
-    fetch(summaryUrl)
+    fetch(summaryUrl, { signal: controller.signal })
       .then(r => {
         if (!r.ok) throw new Error(r.status)
         return r.json()
@@ -1859,8 +1861,9 @@ export default function MatchShowPage() {
         if (d.summary) setAiSummary(d)
         else setAiError(true)
       })
-      .catch(() => setAiError(true))
+      .catch(err => { if (err.name !== "AbortError") setAiError(true) })
       .finally(() => setAiLoading(false))
+    return () => controller.abort()
   }, [data?.fixture?.fixture?.status?.short, aiSummary, aiError]) // eslint-disable-line
 
   // Auto-select "preview" tab for pre-kickoff matches on first load
@@ -1904,16 +1907,22 @@ export default function MatchShowPage() {
   const TAB_LABELS  = { preview: t("match.preview"), summary: t("match.summary"), stats: t("match.stats"), lineups: t("match.lineups"), h2h: "H2H", ratings: "⭐ Ratings" }
   const TABS        = TAB_KEYS.map(k => ({ key: k, label: TAB_LABELS[k] ?? k }))
 
-  // Swipe between tabs
-  function handleTabSwipeStart(e) { swipeStartX.current = e.touches[0].clientX }
+  // Swipe between tabs — only on horizontal-dominant gestures
+  function handleTabSwipeStart(e) {
+    swipeStartX.current = e.touches[0].clientX
+    swipeStartX._y = e.touches[0].clientY
+  }
   function handleTabSwipeEnd(e) {
     if (swipeStartX.current === null) return
     const dx = e.changedTouches[0].clientX - swipeStartX.current
-    if (Math.abs(dx) < 60) { swipeStartX.current = null; return }
+    const dy = e.changedTouches[0].clientY - (swipeStartX._y ?? 0)
+    swipeStartX.current = null
+    // Ignore if vertical scroll is dominant (prevents page-scroll conflict)
+    if (Math.abs(dy) > Math.abs(dx)) return
+    if (Math.abs(dx) < 60) return
     const idx = TAB_KEYS.indexOf(tab)
     if (dx < 0 && idx < TAB_KEYS.length - 1) setTab(TAB_KEYS[idx + 1])
     else if (dx > 0 && idx > 0)              setTab(TAB_KEYS[idx - 1])
-    swipeStartX.current = null
   }
 
   return (
