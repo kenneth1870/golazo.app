@@ -112,11 +112,12 @@ class LiveScoresClient
 
   # Currently live matches across all leagues (senior men's only)
   def live_matches
-    # 15 s TTL so the sub-minute live-sync loop (SyncLiveScoresJob follow-ups)
-    # gets fresh scores — goal/full-time alerts then fire within ~20 s of the
-    # event instead of up to a minute. race_condition_ttl lets racing requests
-    # reuse the stale value for up to 10 s while one writer refreshes (anti-stampede).
-    Rails.cache.fetch("live_scores_live_v6", expires_in: 15.seconds, race_condition_ttl: 10.seconds) do
+    # 20 s TTL so the ~30 s live-sync loop (SyncLiveScoresJob +30s follow-up)
+    # reads fresh scores — goal/full-time alerts fire within ~30 s of the event
+    # instead of up to a minute — while still deduping any incidental concurrent
+    # calls. race_condition_ttl lets racing requests reuse the stale value for up
+    # to 10 s while one writer refreshes (anti-stampede).
+    Rails.cache.fetch("live_scores_live_v6", expires_in: 20.seconds, race_condition_ttl: 10.seconds) do
       data = get("fixtures", live: "all")
       (data.dig("response") || [])
         .filter_map { |f| normalize_fixture(f) }

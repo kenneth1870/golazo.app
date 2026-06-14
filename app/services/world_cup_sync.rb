@@ -369,6 +369,14 @@ class WorldCupSync
     new.send(:wc_matches_active?)
   end
 
+  # Narrow check: is a WC match ACTUALLY being played right now? Used to gate the
+  # sub-minute fast-poll loop so the extra API calls only happen during the ~2 h a
+  # match is live — not during the broad pre-/post-match window.
+  def self.live_now?
+    wc = Competition.find_by(code: "WC")
+    wc && Match.where(competition: wc, status: "live").exists?
+  end
+
   private
 
   # True if any WC match is currently live OR kicks off within the next 2 hours.
