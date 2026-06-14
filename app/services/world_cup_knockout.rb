@@ -184,7 +184,7 @@ class WorldCupKnockout
 
   def propagate_later_rounds
     @competition.matches.knockout.where.not(round: "Round of 32")
-                .order(:bracket_pos).find_each do |m|
+                .order(:bracket_pos).each do |m|
       next if m.status == "finished"
 
       home = team_for_feeder_slot(m.home_slot)
