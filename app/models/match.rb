@@ -12,7 +12,7 @@ class Match < ApplicationRecord
 
   scope :live,     -> { where(status: "live") }
   scope :today,    -> { where(kickoff_at: Time.current.beginning_of_day..Time.current.end_of_day) }
-  scope :upcoming, -> { where(status: "scheduled").order(:kickoff_at) }
+  scope :upcoming, -> { where(status: "scheduled").where("kickoff_at > ?", Time.current).order(:kickoff_at) }
   scope :by_competition, ->(code) { joins(:competition).where(competitions: { code: code }) }
   scope :by_group, ->(g) { where(group_stage: g) }
   scope :group_stage, -> { where.not(group_stage: nil) }

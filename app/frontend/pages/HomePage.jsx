@@ -246,7 +246,9 @@ export default function HomePage() {
     (!m.kickoff_at || new Date(m.kickoff_at).toLocaleDateString("en-CA") !== todayStr)
   )
 
-  const nextMatch = liveWC.length === 0 ? upcomingMatches[0] : null
+  const nextMatch = liveWC.length === 0
+    ? upcomingMatches.find(m => !m.kickoff_at || new Date(m.kickoff_at) > new Date())
+    : null
 
   return (
     <>
