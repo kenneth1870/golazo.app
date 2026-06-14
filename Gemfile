@@ -82,3 +82,4 @@ group :test do
 end
 
 gem "mission_control-jobs", "~> 1.1"
+gem "solid_queue_dashboard", "~> 0.2.0"

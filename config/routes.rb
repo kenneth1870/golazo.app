@@ -96,11 +96,21 @@ Rails.application.routes.draw do
   get "sitemap.xml", to: "sitemap#index", defaults: { format: :xml }
 
   # SPA catch-all — must come before engine mounts so the app root takes priority.
-  # Exclude /jobs so Mission Control Jobs requests reach the engine below.
+  # Exclude /jobs and /solid-queue so those engine requests reach the engines below.
   get "*path", to: "application#spa", constraints: ->(req) {
-    !req.xhr? && req.format.html? && !req.path.start_with?("/jobs")
+    !req.xhr? && req.format.html? && !req.path.start_with?("/jobs") && !req.path.start_with?("/solid-queue")
   }
   root "application#spa"
 
   mount MissionControl::Jobs::Engine, at: "/jobs"
+
+  solid_queue_app = if Rails.env.development?
+    SolidQueueDashboard::Engine
+  else
+    Rack::Auth::Basic.new(SolidQueueDashboard::Engine, "Solid Queue Dashboard") do |user, pass|
+      ActiveSupport::SecurityUtils.secure_compare(user, ENV.fetch("JOBS_USER", "admin")) &&
+        ActiveSupport::SecurityUtils.secure_compare(pass, ENV.fetch("JOBS_PASSWORD", "golazo-dev"))
+    end
+  end
+  mount solid_queue_app, at: "/solid-queue"
 end
