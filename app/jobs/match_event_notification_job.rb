@@ -29,7 +29,7 @@ class MatchEventNotificationJob < ApplicationJob
     copy_cache = {}
 
     subs.each do |sub|
-      locale      = %w[es en].include?(sub.locale) ? sub.locale : "es"
+      locale      = %w[es en].include?(sub.locale) ? sub.locale : "en"
       title, body = copy_cache[locale] ||=
         build_copy(locale, event_type, home_name, away_name, score_str, minute)
 

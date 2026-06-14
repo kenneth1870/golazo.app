@@ -8,13 +8,19 @@ export default function TeamsPage() {
   usePageMeta(t("mundial.teamsTitle"), "All 48 teams in the FIFA World Cup 2026 — groups, flags and match schedules.")
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
-  useEffect(() => {
+  const load = () => {
+    setError(false)
+    setLoading(true)
     fetch("/api/v1/teams?competition=WC")
       .then(r => r.json())
       .then(setTeams)
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { load() }, [])
 
   const byGroup = teams.reduce((acc, t) => {
     const g = t.group || "TBD"
@@ -24,6 +30,15 @@ export default function TeamsPage() {
   }, {})
 
   if (loading) return <div className="site-section container"><div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} /></div>
+
+  if (error) return (
+    <div className="site-section">
+      <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
+        <p style={{ color: "#888", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
+        <button className="btn btn-primary btn-sm" onClick={load}>{t("error.retry")}</button>
+      </div>
+    </div>
+  )
 
   return (
     <div className="site-section">

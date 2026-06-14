@@ -44,7 +44,7 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
       {showMeta && (
         <div className="match-row__meta">
           <span>{match.round || match.group_stage}</span>
-          {match.competition && <span className="competition-badge">{match.competition.code}</span>}
+          {match.competition?.code && <span className="competition-badge">{match.competition.code}</span>}
         </div>
       )}
     </div>

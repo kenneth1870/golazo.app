@@ -47,7 +47,7 @@ export default function BottomNav() {
 
         <NavLink to="/" end className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}>
           <HomeIcon />
-          <span className="bottom-nav__label">{t("nav.home", "Inicio")}</span>
+          <span className="bottom-nav__label">{t("nav.home", "Home")}</span>
         </NavLink>
 
         <NavLink to="/scores/today" className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}>
@@ -55,12 +55,12 @@ export default function BottomNav() {
             <ScoresIcon />
             {liveCount > 0 && <span className="bottom-nav__badge" aria-label={`${liveCount} live`} />}
           </span>
-          <span className="bottom-nav__label">{t("time.today", "Hoy")}</span>
+          <span className="bottom-nav__label">{t("time.today", "Today")}</span>
         </NavLink>
 
         <NavLink to="/news" className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}>
           <NewsIcon />
-          <span className="bottom-nav__label">{t("nav.news", "Noticias")}</span>
+          <span className="bottom-nav__label">{t("nav.news", "News")}</span>
         </NavLink>
 
         <NavLink to="/mundial" className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}>
@@ -70,7 +70,7 @@ export default function BottomNav() {
 
         <button className="bottom-nav__item bottom-nav__item--btn" onClick={() => setSearchOpen(true)} aria-label="Search">
           <SearchIcon />
-          <span className="bottom-nav__label">{t("nav.search", "Buscar")}</span>
+          <span className="bottom-nav__label">{t("nav.search", "Search")}</span>
         </button>
 
       </nav>

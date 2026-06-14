@@ -152,7 +152,7 @@ export default function OnboardingModal({ onDismiss }) {
           {LANGS.map(lang => (
             <button
               key={lang.code}
-              onClick={() => { i18n.changeLanguage(lang.code); goNext() }}
+              onClick={() => i18n.changeLanguage(lang.code).then(goNext)}
               style={{
                 display: "flex", alignItems: "center", gap: 8,
                 padding: "12px 20px", borderRadius: 12,

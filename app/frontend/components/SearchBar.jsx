@@ -58,11 +58,11 @@ export default function SearchBar({ onClose }) {
   }, [query])
 
   const go = useCallback((result) => {
+    if (!result?.id) return
     if (result.type === "team") {
       navigate(`/teams/${result.id}`)
     } else if (result.type === "match") {
-      const dest = `/matches/db-${result.id}`
-      navigate(dest)
+      navigate(`/matches/db-${result.id}`)
     }
     onClose()
   }, [navigate, onClose])
