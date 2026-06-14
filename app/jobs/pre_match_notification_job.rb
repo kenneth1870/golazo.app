@@ -14,6 +14,8 @@ class PreMatchNotificationJob < ApplicationJob
                    .where(kickoff_at: window_start..window_end)
                    .includes(:home_team, :away_team)
 
+    Rails.logger.info("[PreMatchNotification] Checked window #{window_start.utc.strftime('%H:%M')}–#{window_end.utc.strftime('%H:%M')} UTC — #{matches.size} match(es) found")
+
     matches.each do |match|
       cache_key = "prematch_notified_#{match.id}"
       next if Rails.cache.read(cache_key)

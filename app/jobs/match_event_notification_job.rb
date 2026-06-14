@@ -22,9 +22,8 @@ class MatchEventNotificationJob < ApplicationJob
     url        = match_url || "/"
 
     subs = PushSubscription.for_teams([ home_name, away_name ])
+    Rails.logger.info("[PushNotification] #{event_type} | #{home_name} vs #{away_name} | #{subs.size} subscribers found")
     return if subs.empty?
-
-    Rails.logger.info("[PushNotification] #{event_type} → #{subs.size} subscribers (#{home_name} vs #{away_name})")
 
     # Copy is localised per subscriber; memoise per locale so we build it once.
     copy_cache = {}
@@ -55,14 +54,14 @@ class MatchEventNotificationJob < ApplicationJob
         },
         ttl: 300
       )
+      Rails.logger.info("[PushNotification] Sent #{event_type} to sub #{sub.id} (#{sub.push_provider})")
     rescue WebPush::ExpiredSubscription, WebPush::InvalidSubscription => e
       Rails.logger.info("[PushNotification] Removing stale subscription #{sub.id}: #{e.message}")
       sub.destroy
     rescue WebPush::ResponseError => e
-      # Transient 5xx — log and continue; don't abort remaining subscribers
-      Rails.logger.warn("[PushNotification] Transient error for sub #{sub.id}: #{e.message}")
+      Rails.logger.warn("[PushNotification] ResponseError for sub #{sub.id}: #{e.message}")
     rescue => e
-      Rails.logger.error("[PushNotification] Unexpected error for sub #{sub.id}: #{e.message}")
+      Rails.logger.error("[PushNotification] Unexpected error for sub #{sub.id}: #{e.class}: #{e.message}")
     end
   end
 

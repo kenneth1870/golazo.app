@@ -614,6 +614,7 @@ class WorldCupSync
   end
 
   def fire_notification(match, event_type, home_score: nil, away_score: nil, minute: nil)
+    log("fire_notification: #{event_type} | #{match.home_team&.name} vs #{match.away_team&.name} | #{home_score}–#{away_score}")
     MatchEventNotificationJob.perform_later(
       event_type: event_type,
       match_id:   match.id,
