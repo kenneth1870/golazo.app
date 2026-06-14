@@ -462,14 +462,7 @@ class WorldCupSync
     team_name = entry.dig("team", "name")
     return unless team_name
 
-    team = Team.where("LOWER(name) = ?", team_name.downcase).first
-    # Fuzzy fallback: only match if ALL words in the API name appear in the DB name,
-    # which prevents "United" matching "United Arab Emirates" when we want "United States".
-    unless team
-      words = team_name.downcase.split
-      team = Team.where(words.map { "LOWER(name) LIKE ?" }.join(" AND "),
-                        *words.map { |w| "%#{w}%" }).first
-    end
+    team = find_team_by_api_name(team_name)
     return unless team
 
     all = entry["all"] || {}
