@@ -62,12 +62,20 @@ export default function GroupStagePage() {
   const navigate = useNavigate()
   const [standings, setStandings] = useState({})
 
+  const hasLiveOrRecent = matches.some(m =>
+    m.status === "live" ||
+    (m.status === "finished" && m.kickoff_at && new Date() - new Date(m.kickoff_at) < 3 * 60 * 60 * 1000)
+  )
+
   useEffect(() => {
-    fetch("/api/v1/standings?competition=WC")
+    const load = () => fetch("/api/v1/standings?competition=WC")
       .then(r => r.json())
       .then(setStandings)
       .catch(() => {})
-  }, [])
+    load()
+    const iv = setInterval(load, hasLiveOrRecent ? 30_000 : 60_000)
+    return () => clearInterval(iv)
+  }, [hasLiveOrRecent])
 
   const groupMatches = matches.filter(m => m.group_stage)
   const byGroup = GROUPS.reduce((acc, g) => {
