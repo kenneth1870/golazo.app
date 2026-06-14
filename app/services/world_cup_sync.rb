@@ -55,6 +55,7 @@ class WorldCupSync
     # within the current sync cycle, without waiting for a queued job.
     just_finished.each do |m|
       m.update!(status: "finished")
+      fire_notification(m, "fulltime", home_score: m.home_score, away_score: m.away_score)
       RecalculateStandingsJob.perform_later
       GenerateMatchSummaryJob.set(wait: 5.minutes).perform_later(match_id: m.id)
       log("Marked #{m.id} (#{m.home_team&.name} vs #{m.away_team&.name}) as finished")
@@ -323,9 +324,13 @@ class WorldCupSync
     wc = Competition.find_by(code: "WC")
     return false unless wc
 
+    # Active = currently live, OR kicking off within 2 hours, OR already
+    # kicked off within the last 3 hours but still 'scheduled' in DB (sync lag).
+    # The 3-hour lookback prevents a stuck 'scheduled' status from silencing
+    # the live-sync gate — without it, goal/fulltime notifications are never sent.
     Match.where(competition: wc, status: "live").exists? ||
       Match.where(competition: wc, status: "scheduled")
-           .where(kickoff_at: Time.current..2.hours.from_now)
+           .where(kickoff_at: 3.hours.ago..2.hours.from_now)
            .exists?
   end
 
@@ -425,8 +430,11 @@ class WorldCupSync
     match.update!(attrs)
     broadcast_score(match, m[:minute], notify: false) if status == "live"
 
-    # Full-time: WC match just finished — notify subscribers
-    if status == "finished" && was_live && match.competition&.code == "WC"
+    # Full-time: WC match just finished — notify subscribers.
+    # Covers both was_live (normal path) and scheduled→finished direct transition
+    # (sync lag: match never seen as 'live' in DB but kickoff was ≥ 60 min ago).
+    if status == "finished" && match.competition&.code == "WC" &&
+        (was_live || match.kickoff_at < 60.minutes.ago)
       fire_notification(match, "fulltime",
         home_score: home_score.to_i, away_score: away_score.to_i)
     end
