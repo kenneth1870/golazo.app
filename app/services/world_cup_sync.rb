@@ -49,16 +49,28 @@ class WorldCupSync
     just_finished = db_live.reject { |m| live_external_ids.include?(m.external_id.to_s) }
     return if just_finished.empty?
 
-    log("#{just_finished.count} WC match(es) just finished — busting cache and scheduling sync")
+    log("#{just_finished.count} WC match(es) just finished — marking finished immediately")
+
+    # Mark them finished right now so the live widget on the homepage clears
+    # within the current sync cycle, without waiting for a queued job.
+    just_finished.each do |m|
+      m.update!(status: "finished")
+      RecalculateStandingsJob.perform_later
+      GenerateMatchSummaryJob.set(wait: 5.minutes).perform_later(match_id: m.id)
+      log("Marked #{m.id} (#{m.home_team&.name} vs #{m.away_team&.name}) as finished")
+    end
 
     # Bust cached fixture lists for today and the next day (early-UTC matches
     # like 02:00 UTC are stored under tomorrow's date key in the API cache).
     [ Date.today, Date.today + 1 ].each do |d|
       Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
       Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
+      Rails.cache.delete("today_api_#{d.iso8601}")
     end
 
-    SyncTodayMatchesJob.perform_later
+    # Follow-up sync to confirm final scores from the API (scores may still
+    # be in-flight during the brief window between FT and leaving the live feed).
+    SyncTodayMatchesJob.set(wait: 30.seconds).perform_later
   end
 
   # Sync today's matches (scheduled + live + finished today).
