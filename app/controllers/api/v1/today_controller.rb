@@ -6,6 +6,21 @@ module Api
         tz   = sanitize_tz(params[:tz])
         all  = merge_matches(date, tz).sort_by { |m| m[:kickoff_at].to_s }
 
+        # Safety net: always include currently-live WC matches on today's feed
+        # regardless of date-range or cache state. A match that just kicked off
+        # might be missing if the 10-min matches_for_date cache was populated
+        # before kickoff, or if kickoff_at spans a UTC day boundary.
+        if date == Date.today
+          live_wc     = fetch_live_wc_from_db
+          existing    = all.filter_map { |m| m[:external_id]&.to_s }.to_set
+          home_away   = all.map { |m| "#{m.dig(:home_team, :name)&.downcase}|#{m.dig(:away_team, :name)&.downcase}" }.to_set
+          live_to_add = live_wc.reject do |m|
+            existing.include?(m[:external_id]&.to_s) ||
+              home_away.include?("#{m.dig(:home_team, :name)&.downcase}|#{m.dig(:away_team, :name)&.downcase}")
+          end
+          all = (all + live_to_add).sort_by { |m| m[:kickoff_at].to_s } unless live_to_add.empty?
+        end
+
         # When today has no matches, append next upcoming WC fixtures so the
         # frontend can show a teaser without a second round-trip.
         if all.empty? && date == Date.today
@@ -128,6 +143,17 @@ module Api
       # Only pull WC matches from DB — club/Copa fixtures are real-API only.
       # Seeded club league and Copa América rows have wrong/fake dates and
       # must not contaminate the live Today feed.
+      def fetch_live_wc_from_db
+        Match
+          .joins(:competition)
+          .where(competitions: { code: "WC" }, status: "live")
+          .includes(:home_team, :away_team, :competition)
+          .map { |m| normalize_db(m) }
+      rescue => e
+        Rails.logger.error("[TodayController] fetch_live_wc_from_db failed: #{e.message}")
+        []
+      end
+
       def fetch_upcoming_wc(limit = 6)
         Match
           .joins(:competition)

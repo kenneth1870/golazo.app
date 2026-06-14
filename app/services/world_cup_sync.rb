@@ -360,6 +360,13 @@ class WorldCupSync
     if match.status == "scheduled"
       match.update!(status: "live", home_score: home_score, away_score: away_score)
       broadcast_score(match, minute, event_type: "kickoff")
+      # Bust the today feed cache so the live match appears immediately on the
+      # Hoy page without waiting for the 90s outer cache or 10min inner cache.
+      [ Date.today, Date.today + 1 ].each do |d|
+        Rails.cache.delete("today_api_#{d.iso8601}")
+        Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
+        Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
+      end
       return true
     end
 
