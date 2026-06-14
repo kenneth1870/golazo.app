@@ -143,10 +143,17 @@ module Api
       # Only pull WC matches from DB — club/Copa fixtures are real-API only.
       # Seeded club league and Copa América rows have wrong/fake dates and
       # must not contaminate the live Today feed.
+      # Returns all live + today-finished WC matches from the DB so the Hoy feed
+      # always shows them regardless of API cache state or date-range timezone edge cases.
+      # Uses midnight UTC as the cutoff — any match that kicked off today UTC or later
+      # (including early next-day UTC kicks that are still "tonight" for US users) is included.
       def fetch_live_wc_from_db
+        cutoff = Date.today.beginning_of_day.utc
         Match
           .joins(:competition)
-          .where(competitions: { code: "WC" }, status: "live")
+          .where(competitions: { code: "WC" })
+          .where(status: %w[live finished])
+          .where("kickoff_at >= ?", cutoff)
           .includes(:home_team, :away_team, :competition)
           .map { |m| normalize_db(m) }
       rescue => e
