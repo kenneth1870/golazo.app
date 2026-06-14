@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { translateTeam } from "../i18n/teamNames"
 import { usePageMeta } from "../hooks/usePageMeta"
 
 // WC 2026: pos 0-1 qualify directly, pos 2 potentially (best 8 of 12 third-place), pos 3 eliminated
@@ -13,7 +14,7 @@ function rowQualStyle(rank, rows) {
   return           { background: `rgba(239,68,68,${0.05 * alpha})`,          borderLeft: "2px solid transparent" }
 }
 
-function StandingsTable({ group, rows, onNavigate, t }) {
+function StandingsTable({ group, rows, onNavigate, t, i18n }) {
   return (
     <div className="widget-next-match mb-4" style={{ cursor: "default" }}>
       <div
@@ -58,7 +59,7 @@ function StandingsTable({ group, rows, onNavigate, t }) {
                       <img src={s.team.flag_url} alt="" className="flag-xs" loading="eager"
                         onError={e => (e.target.style.display = "none")} />
                     )}
-                    <span className="text-white" style={{ fontWeight: 600 }}>{s.team?.name}</span>
+                    <span className="text-white" style={{ fontWeight: 600 }}>{translateTeam(s.team?.name, i18n.language)}</span>
                   </div>
                 </td>
                 <td style={{ textAlign: "center" }}>{s.played ?? 0}</td>
@@ -86,7 +87,7 @@ function StandingsTable({ group, rows, onNavigate, t }) {
 const GROUP_LETTERS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
 export default function AllGroupsPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   usePageMeta("Groups", "FIFA World Cup 2026 group standings — all 12 groups with points, goals and results.")
   const [grouped, setGrouped] = useState({})
   const [loading, setLoading] = useState(true)
@@ -152,6 +153,7 @@ export default function AllGroupsPage() {
                 rows={grouped[g] || []}
                 onNavigate={() => navigate(`/groups/${g}`)}
                 t={t}
+                i18n={i18n}
               />
             </div>
           ))}

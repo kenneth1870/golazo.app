@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { translateTeam } from "../i18n/teamNames"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { fetchWithTimeout } from "../utils/fetchWithTimeout"
 
@@ -78,6 +79,7 @@ function buildBracket(standings, picks) {
 }
 
 function TeamButton({ team, isWinner, isPicked, onClick, disabled }) {
+  const { i18n } = useTranslation()
   if (!team) {
     return (
       <div className="pred-team pred-team--tbd">
@@ -96,7 +98,7 @@ function TeamButton({ team, isWinner, isPicked, onClick, disabled }) {
         ? <img src={team.flag_url} alt="" className="flag-xs" loading="eager" onError={e => (e.target.style.display = "none")} />
         : <span className="pred-team__dot" />
       }
-      <span className="pred-team__name">{team.name || "?"}</span>
+      <span className="pred-team__name">{translateTeam(team.name, i18n.language) || "?"}</span>
     </button>
   )
 }

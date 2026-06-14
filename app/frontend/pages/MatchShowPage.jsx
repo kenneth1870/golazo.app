@@ -637,7 +637,7 @@ function FormPill({ result }) {
   )
 }
 
-function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t }) {
+function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t, i18n }) {
   if (!events?.length) return null
 
   const RELEVANT_TYPES = ["Goal", "Card", "subst", "Var", "injury"]
@@ -721,7 +721,7 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t }) {
               </div>
               {!isSub && !isVar && (
                 <span className="match-event__team" style={{ textAlign: isHome ? "right" : "left", fontSize: "0.68rem", color: "var(--muted)" }}>
-                  {e.team?.name}
+                  {translateTeam(e.team?.name, i18n.language)}
                 </span>
               )}
             </div>
@@ -858,7 +858,7 @@ function PlayerDot({ number, pos, name }) {
 }
 
 function LineupTeam({ team, side }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   if (!team?.start_xi?.length) return null
   const byRow = team.start_xi.reduce((acc, p) => {
     const row = p.grid?.split(":")[0] || "1"
@@ -877,7 +877,7 @@ function LineupTeam({ team, side }) {
           <img src={team.team.logo} alt="" className="logo-sm" onError={e => (e.target.style.display = "none")} />
         )}
         <div>
-          <div className="lineup-team__name">{team.team?.name}</div>
+          <div className="lineup-team__name">{translateTeam(team.team?.name, i18n.language)}</div>
           {team.formation && (
             <div className="lineup-team__formation">{team.formation}</div>
           )}
@@ -1294,9 +1294,9 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t, lang }) {
                   <div style={{ fontSize: ".65rem", color: "var(--muted)" }}>{date}</div>
                   {m.competition?.name && <div style={{ fontSize: ".58rem", color: "#555", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80 }}>{translateLeague(m.competition.name, lang)}</div>}
                 </div>
-                <span style={{ flex: 1, textAlign: "right", fontWeight: homeWon ? 800 : 500, color: homeWon ? "#fff" : "rgba(255,255,255,.5)", fontSize: ".8rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.home?.name}</span>
+                <span style={{ flex: 1, textAlign: "right", fontWeight: homeWon ? 800 : 500, color: homeWon ? "#fff" : "rgba(255,255,255,.5)", fontSize: ".8rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{translateTeam(m.home?.name, lang)}</span>
                 <span style={{ fontWeight: 900, color: "#fff", padding: "3px 12px", background: "var(--surface2)", borderRadius: 4, fontSize: ".9rem", flexShrink: 0, minWidth: 64, textAlign: "center" }}>{hs} – {as}</span>
-                <span style={{ flex: 1, fontWeight: awayWon ? 800 : 500, color: awayWon ? "#fff" : "rgba(255,255,255,.5)", fontSize: ".8rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.away?.name}</span>
+                <span style={{ flex: 1, fontWeight: awayWon ? 800 : 500, color: awayWon ? "#fff" : "rgba(255,255,255,.5)", fontSize: ".8rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{translateTeam(m.away?.name, lang)}</span>
               </div>
             )
           })}
@@ -1316,7 +1316,7 @@ const RATING_COLOR = r => {
 }
 
 function PlayerRatingsPanel({ fixtureId }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [teams, setTeams]     = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -1351,7 +1351,7 @@ function PlayerRatingsPanel({ fixtureId }) {
         <section key={ti} className="match-section" style={{ marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             {team.team?.logo && <img src={team.team.logo} alt="" style={{ width: 22, height: 22, objectFit: "contain" }} onError={e => e.target.style.display="none"} />}
-            <h3 className="match-section__title" style={{ margin: 0 }}>{team.team?.name}</h3>
+            <h3 className="match-section__title" style={{ margin: 0 }}>{translateTeam(team.team?.name, i18n.language)}</h3>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {(team.players || [])
@@ -2113,7 +2113,7 @@ export default function MatchShowPage() {
             )}
 
             {hasEvents
-              ? <EventsTimeline events={data.events} homeTeam={homeTeamRaw ?? homeName} awayTeam={awayTeamRaw ?? awayName} statusShort={statusShort} t={t} />
+              ? <EventsTimeline events={data.events} homeTeam={homeTeamRaw ?? homeName} awayTeam={awayTeamRaw ?? awayName} statusShort={statusShort} t={t} i18n={i18n} />
               : (
                 <div className="empty-state">
                   <div style={{ fontSize: "2.5rem", marginBottom: 12, opacity: .3 }}>🏟️</div>

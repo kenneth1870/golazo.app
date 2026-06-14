@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { translateTeam } from "../i18n/teamNames"
 import MatchRow from "../components/MatchRow"
 import { useFavorites } from "../hooks/useFavorites"
 import { usePageMeta } from "../hooks/usePageMeta"
 
-function StandingsTable({ standings, t }) {
+function StandingsTable({ standings, t, i18n }) {
   if (!standings || standings.length === 0) return null
 
   // Group by group_name if present
@@ -54,7 +55,7 @@ function StandingsTable({ standings, t }) {
                             onError={e => (e.target.style.display = "none")}
                           />
                         )}
-                        <strong className="text-white">{s.team?.name}</strong>
+                        <strong className="text-white">{translateTeam(s.team?.name, i18n.language)}</strong>
                       </div>
                     </td>
                     <td>{s.played}</td>
@@ -79,7 +80,7 @@ function StandingsTable({ standings, t }) {
 }
 
 export default function LeagueDetailPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { code } = useParams()
   const navigate = useNavigate()
   const { isFavorite, toggleFavorite } = useFavorites()
@@ -225,7 +226,7 @@ export default function LeagueDetailPage() {
       <div className="site-section">
         <div className="container">
           {tab === "standings" ? (
-            <StandingsTable standings={standings} t={t} />
+            <StandingsTable standings={standings} t={t} i18n={i18n} />
           ) : displayedMatches.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state__icon">📅</div>

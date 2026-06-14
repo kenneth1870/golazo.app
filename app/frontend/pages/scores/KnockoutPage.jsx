@@ -1,6 +1,7 @@
 import { useMatches } from "../../hooks/useMatches"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { translateTeam } from "../../i18n/teamNames"
 import { usePageMeta } from "../../hooks/usePageMeta"
 
 // WC 2026: R32 → R16 → QF → SF → Final (+ 3rd place)
@@ -34,6 +35,7 @@ const R32_SLOTS = [
 ]
 
 function MatchSlot({ match, onClick }) {
+  const { i18n }   = useTranslation()
   const isLive     = match?.status === "live"
   const isFinished = match?.status === "finished"
   const hasScore   = match?.home_score !== null && match?.away_score !== null
@@ -58,7 +60,7 @@ function MatchSlot({ match, onClick }) {
             onError={e => (e.target.style.display = "none")} />
         )}
         <span className={`bracket-slot__name${isFinished && match.home_score > match.away_score ? " bracket-slot__name--winner" : ""}${match.home_team?.name ? "" : " bracket-slot__name--tbd"}`}>
-          {match.home_team?.name ?? slotLabel(match.home_slot)}
+          {match.home_team?.name ? translateTeam(match.home_team.name, i18n.language) : slotLabel(match.home_slot)}
         </span>
         {hasScore && (
           <span className={`bracket-slot__score${isLive ? " bracket-slot__score--live" : ""}`}>
@@ -73,7 +75,7 @@ function MatchSlot({ match, onClick }) {
             onError={e => (e.target.style.display = "none")} />
         )}
         <span className={`bracket-slot__name${isFinished && match.away_score > match.home_score ? " bracket-slot__name--winner" : ""}${match.away_team?.name ? "" : " bracket-slot__name--tbd"}`}>
-          {match.away_team?.name ?? slotLabel(match.away_slot)}
+          {match.away_team?.name ? translateTeam(match.away_team.name, i18n.language) : slotLabel(match.away_slot)}
         </span>
         {hasScore && (
           <span className={`bracket-slot__score${isLive ? " bracket-slot__score--live" : ""}`}>

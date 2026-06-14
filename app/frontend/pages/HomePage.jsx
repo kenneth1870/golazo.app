@@ -7,6 +7,7 @@ import { useLiveCount } from "../contexts/LiveContext"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
 import { formatKickoff } from "../hooks/useLocalTime"
+import { translateTeam } from "../i18n/teamNames"
 import Hero from "../components/Hero"
 import MatchCard from "../components/MatchCard"
 import MatchRow from "../components/MatchRow"
@@ -93,7 +94,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
             {next.status === "live" ? t("home.playingNow") : t("hero.nextMatch")}
           </div>
           <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.9rem" }}>
-            {next.home_team?.name} vs {next.away_team?.name}
+            {translateTeam(next.home_team?.name, i18n.language)} vs {translateTeam(next.away_team?.name, i18n.language)}
           </div>
           <div style={{ fontSize: "0.72rem", color: "#ee1e46" }}>
             {next.status === "live"
@@ -402,7 +403,7 @@ export default function HomePage() {
                             ? <img src={nextMatch.home_team.flag_url} alt="" className="logo-md" style={{ margin: "0 auto" }} />
                             : <span style={{ fontSize: "3rem" }}>🏳️</span>
                           }
-                          <h3>{nextMatch.home_team?.name}</h3>
+                          <h3>{translateTeam(nextMatch.home_team?.name, i18n.language)}</h3>
                         </div>
                         <div><span className="vs"><span>VS</span></span></div>
                         <div className="team-2 text-center">
@@ -410,7 +411,7 @@ export default function HomePage() {
                             ? <img src={nextMatch.away_team.flag_url} alt="" className="logo-md" style={{ margin: "0 auto" }} />
                             : <span style={{ fontSize: "3rem" }}>🏳️</span>
                           }
-                          <h3>{nextMatch.away_team?.name}</h3>
+                          <h3>{translateTeam(nextMatch.away_team?.name, i18n.language)}</h3>
                         </div>
                       </div>
                     </div>
@@ -492,13 +493,13 @@ export default function HomePage() {
                       <div className="match-row__teams">
                         <div className="match-row__team match-row__team--home">
                           {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt="" className="flag-xs" onError={e => (e.target.style.display="none")} />}
-                          <span className="team-name">{m.home_team?.name}</span>
+                          <span className="team-name">{translateTeam(m.home_team?.name, i18n.language)}</span>
                         </div>
                         <div className="match-row__score">
                           <span className="score-pill score-pill--vs">vs</span>
                         </div>
                         <div className="match-row__team match-row__team--away">
-                          <span className="team-name">{m.away_team?.name}</span>
+                          <span className="team-name">{translateTeam(m.away_team?.name, i18n.language)}</span>
                           {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt="" className="flag-xs" onError={e => (e.target.style.display="none")} />}
                         </div>
                       </div>

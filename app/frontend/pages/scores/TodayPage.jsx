@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague, translateCountry } from "../../i18n/leagueNames"
+import { translateTeam } from "../../i18n/teamNames"
 import MatchRow from "../../components/MatchRow"
 import FlagImg from "../../components/FlagImg"
 import { useLocale } from "../../hooks/useLocale"
@@ -121,7 +122,7 @@ function DateStrip({ selected, onChange }) {
 
 // ─── Real-match row (API shape) ────────────────────────
 function RealMatchRow({ match, onMatchClick, flashing }) {
-  const { t }      = useTranslation()
+  const { t, i18n } = useTranslation()
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
   const hasScore   = match.home_score !== null && match.away_score !== null
@@ -147,7 +148,7 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">
           <FlagImg src={match.home_team?.flag_url} name={match.home_team?.name} size={16} className="flag-xs" />
-          <span className="team-name">{match.home_team?.name}</span>
+          <span className="team-name">{translateTeam(match.home_team?.name, i18n.language)}</span>
           {match.home_red_cards > 0 && (
             <span className="red-card-badge">🟥{match.home_red_cards > 1 ? `×${match.home_red_cards}` : ""}</span>
           )}
@@ -162,7 +163,7 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
           {match.away_red_cards > 0 && (
             <span className="red-card-badge">🟥{match.away_red_cards > 1 ? `×${match.away_red_cards}` : ""}</span>
           )}
-          <span className="team-name">{match.away_team?.name}</span>
+          <span className="team-name">{translateTeam(match.away_team?.name, i18n.language)}</span>
           <FlagImg src={match.away_team?.flag_url} name={match.away_team?.name} size={16} className="flag-xs" />
         </div>
       </div>
@@ -212,13 +213,13 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
 
 // ─── Fav team live alert ──────────────────────────────
 function FavTeamAlert({ match, onMatchClick, onDismiss }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   if (!match) return null
   const isLive = match.status === "live"
   if (!isLive) return null
 
-  const home = match.home_team?.name
-  const away = match.away_team?.name
+  const home = translateTeam(match.home_team?.name, i18n.language)
+  const away = translateTeam(match.away_team?.name, i18n.language)
   const score = match.home_score !== null && match.away_score !== null
     ? `${match.home_score}–${match.away_score}` : null
   const minute = match.minute ? `${match.minute}'` : "LIVE"

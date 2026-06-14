@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { translateTeam } from "../i18n/teamNames"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useFavorites } from "../hooks/useFavorites"
 import { getTeamColor } from "../utils/teamColors"
@@ -10,7 +11,7 @@ const POSITION_LABEL = { "Goalkeeper": "GK", "Defender": "DEF", "Midfielder": "M
 const POSITION_COLOR = { "Goalkeeper": "#f59e0b", "Defender": "#3b82f6", "Midfielder": "#10b981", "Attacker": "#ee1e46" }
 
 export default function TeamShowPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const { isFavorite, toggleFavorite } = useFavorites()
@@ -177,7 +178,7 @@ export default function TeamShowPage() {
                 onError={e => (e.target.style.display = "none")} />
             )}
             <div>
-              <h1 style={{ margin: "0 0 4px", fontSize: "1.8rem", fontWeight: 900, color: "#fff" }}>{team.name}</h1>
+              <h1 style={{ margin: "0 0 4px", fontSize: "1.8rem", fontWeight: 900, color: "#fff" }}>{translateTeam(team.name, i18n.language)}</h1>
               {team.code && <div style={{ fontSize: "0.8rem", color: "var(--muted)", letterSpacing: 2, textTransform: "uppercase" }}>{team.code}</div>}
               {team.group && <div style={{ marginTop: 6, fontSize: "0.82rem", color: "#ee1e46", fontWeight: 700 }}>{t("nav.group", { letter: team.group })}</div>}
             </div>
@@ -418,6 +419,7 @@ export default function TeamShowPage() {
 }
 
 function MatchLine({ match, teamName, navigate }) {
+  const { i18n }  = useTranslation()
   const isHome    = match.home_team?.name === teamName
   const opponent  = isHome ? match.away_team : match.home_team
   const hs = match.home_score
@@ -455,7 +457,7 @@ function MatchLine({ match, teamName, navigate }) {
         <div className="match-row__team match-row__team--home">
           {opponent?.flag_url && <img src={opponent.flag_url} alt="" className="flag-xs" onError={e => (e.target.style.display="none")} />}
           <span style={{ color: "var(--muted)", fontSize: "0.72rem", marginRight: 6 }}>{isHome ? "H" : "A"}</span>
-          <span className="team-name">{opponent?.name}</span>
+          <span className="team-name">{translateTeam(opponent?.name, i18n.language)}</span>
         </div>
         <div className="match-row__score">
           {hasScore

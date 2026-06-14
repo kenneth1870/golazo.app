@@ -1,11 +1,12 @@
 import { useState, useCallback } from "react"
 import { useTranslation } from "react-i18next"
+import { translateTeam } from "../i18n/teamNames"
 import { useMatch } from "../hooks/useMatches"
 import { useMatchChannel } from "../hooks/useMatchChannel"
 import LiveStats from "./LiveStats"
 
 export default function MatchDetail({ matchId, onBack }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { match, loading, setMatch } = useMatch(matchId)
 
   const handleMessage = useCallback((data) => {
@@ -68,7 +69,7 @@ export default function MatchDetail({ matchId, onBack }) {
                     ? <img src={match.home_team.flag_url} alt="" className="logo-lg" style={{ margin: "0 auto 8px" }} />
                     : <span style={{ fontSize: "3rem" }}>🏳️</span>
                   }
-                  <h3>{match.home_team?.name}</h3>
+                  <h3>{translateTeam(match.home_team?.name, i18n.language)}</h3>
                   <ul className="list-unstyled">
                     {homeGoals.map(g => (
                       <li key={g.id} style={{ fontSize: "0.85rem" }}>⚽ {g.player_name} {g.minute}'</li>
@@ -84,7 +85,7 @@ export default function MatchDetail({ matchId, onBack }) {
                     ? <img src={match.away_team.flag_url} alt="" className="logo-lg" style={{ margin: "0 auto 8px" }} />
                     : <span style={{ fontSize: "3rem" }}>🏳️</span>
                   }
-                  <h3>{match.away_team?.name}</h3>
+                  <h3>{translateTeam(match.away_team?.name, i18n.language)}</h3>
                   <ul className="list-unstyled">
                     {awayGoals.map(g => (
                       <li key={g.id} style={{ fontSize: "0.85rem" }}>⚽ {g.player_name} {g.minute}'</li>

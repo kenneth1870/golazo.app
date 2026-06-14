@@ -130,6 +130,8 @@ const ES = {
   "Armenia":                "Armenia",
   "Azerbaijan":             "Azerbaiyán",
   "Bosnia and Herzegovina": "Bosnia y Herzegovina",
+  "Bosnia & Herz.":         "Bosnia y Herz.",
+  "Bosnia & Herzegovina":   "Bosnia y Herzegovina",
   "North Macedonia":        "Macedonia del Norte",
   "Kosovo":                 "Kosovo",
   "Belarus":                "Bielorrusia",
