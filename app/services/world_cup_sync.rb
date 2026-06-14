@@ -399,7 +399,6 @@ class WorldCupSync
     # Kickoff: match transitions from scheduled → live feed
     if match.status == "scheduled"
       match.update!(status: "live", home_score: home_score, away_score: away_score)
-      broadcast_score(match, minute, event_type: "kickoff")
       # Bust the today feed cache so the live match appears immediately on the
       # Hoy page without waiting for the 90s outer cache or 10min inner cache.
       [ Date.today, Date.today + 1 ].each do |d|
@@ -407,14 +406,8 @@ class WorldCupSync
         Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
         Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
       end
+      broadcast_score(match, minute, notify: false)
       return true
-    end
-
-    # Half-time: status_short == "HT" — notify once per match
-    if status_short == "HT" && !Rails.cache.read("ht_notified_#{match.id}")
-      Rails.cache.write("ht_notified_#{match.id}", true, expires_in: 3.hours)
-      fire_notification(match, "halftime", minute: minute,
-        home_score: match.home_score.to_i, away_score: match.away_score.to_i)
     end
 
     return false if home_score == match.home_score && away_score == match.away_score
