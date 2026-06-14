@@ -1,4 +1,4 @@
-const CACHE_VERSION = "golazo-v9"
+const CACHE_VERSION = "golazo-v10"
 const STATIC_CACHE  = `${CACHE_VERSION}-static`
 const API_CACHE     = `${CACHE_VERSION}-api`
 const IMAGE_CACHE   = `${CACHE_VERSION}-images`
@@ -80,9 +80,10 @@ self.addEventListener("fetch", event => {
     return
   }
 
-  // Vite assets (hashed filenames): cache-first forever — they're immutable
+  // Vite assets (hashed filenames): cache-first, but 404 = new deploy →
+  // purge the stale HTML shell and reload so fresh hashes are served
   if (url.pathname.startsWith("/vite/assets/")) {
-    event.respondWith(cacheFirst(request, STATIC_CACHE))
+    event.respondWith(cacheFirstViteAsset(request))
     return
   }
 
@@ -175,6 +176,34 @@ async function cacheFirst(request, cacheName) {
     const cache = await caches.open(cacheName)
     cache.put(request, response.clone())
   }
+  return response
+}
+
+// Vite assets are content-hashed (immutable), so cache-first is safe.
+// BUT if the network returns 404 it means a new deploy shipped new hashes —
+// the cached HTML shell is now stale. Purge it and reload all windows so
+// the next navigation fetches fresh HTML with the correct asset filenames.
+async function cacheFirstViteAsset(request) {
+  const cached = await caches.match(request)
+  if (cached) return cached
+
+  let response
+  try { response = await fetch(request) } catch { return new Response("", { status: 503 }) }
+
+  if (response.ok) {
+    const cache = await caches.open(STATIC_CACHE)
+    cache.put(request, response.clone())
+    return response
+  }
+
+  if (response.status === 404) {
+    // Stale shell detected — delete it so next navigate fetches fresh HTML
+    caches.open(STATIC_CACHE).then(c => c.delete("/"))
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then(clients => clients.forEach(c => c.navigate(c.url)))
+  }
+
   return response
 }
 
