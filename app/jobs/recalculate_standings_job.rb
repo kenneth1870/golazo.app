@@ -23,7 +23,11 @@ class RecalculateStandingsJob < ApplicationJob
     end
 
     lock_key = "recalculate_standings_running"
-    return if Rails.cache.read(lock_key)
+    if Rails.cache.read(lock_key)
+      # Another instance is running — schedule a follow-up so this trigger isn't lost
+      self.class.set(wait: 35.seconds).perform_later
+      return
+    end
 
     Rails.cache.write(lock_key, true, expires_in: 30.seconds)
     sync = WorldCupSync.new(competition_code: "WC")

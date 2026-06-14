@@ -55,7 +55,11 @@ class WorldCupSync
     # within the current sync cycle, without waiting for a queued job.
     just_finished.each do |m|
       m.update!(status: "finished")
-      fire_notification(m, "fulltime", home_score: m.home_score, away_score: m.away_score)
+      dedup_key = "fulltime_notified_#{m.id}"
+      unless Rails.cache.read(dedup_key)
+        Rails.cache.write(dedup_key, true, expires_in: 3.hours)
+        fire_notification(m, "fulltime", home_score: m.home_score, away_score: m.away_score)
+      end
       RecalculateStandingsJob.perform_later
       GenerateMatchSummaryJob.set(wait: 5.minutes).perform_later(match_id: m.id)
       log("Marked #{m.id} (#{m.home_team&.name} vs #{m.away_team&.name}) as finished")
@@ -444,6 +448,11 @@ class WorldCupSync
     attrs = { status: status }
     attrs[:home_score] = home_score unless status == "scheduled"
     attrs[:away_score] = away_score unless status == "scheduled"
+    # Backfill group_stage if missing — covers matches created before fixtures import
+    if match.group_stage.nil?
+      inferred_group = match.home_team&.group.presence || match.away_team&.group.presence
+      attrs[:group_stage] = inferred_group if inferred_group
+    end
 
     match.update!(attrs)
 
@@ -459,10 +468,15 @@ class WorldCupSync
     # Full-time: WC match just finished — notify subscribers.
     # Covers both was_live (normal path) and scheduled→finished direct transition
     # (sync lag: match never seen as 'live' in DB but kickoff was ≥ 60 min ago).
+    # Dedup key prevents double-send when both live-feed and today-sync paths fire.
     if status == "finished" && match.competition&.code == "WC" &&
         (was_live || match.kickoff_at < 60.minutes.ago)
-      fire_notification(match, "fulltime",
-        home_score: home_score.to_i, away_score: away_score.to_i)
+      dedup_key = "fulltime_notified_#{match.id}"
+      unless Rails.cache.read(dedup_key)
+        Rails.cache.write(dedup_key, true, expires_in: 3.hours)
+        fire_notification(match, "fulltime",
+          home_score: home_score.to_i, away_score: away_score.to_i)
+      end
     end
 
     # Recalculate group standings after a WC match finishes
