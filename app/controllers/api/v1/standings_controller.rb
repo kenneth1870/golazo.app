@@ -13,6 +13,11 @@ module Api
                           .where.not(group_name: [ nil, "" ])
                           .order(:group_name, :rank)
 
+          # Build a skeleton of all WC teams keyed by group so we can fill gaps.
+          wc_teams_by_group = Team.where.not(group: [ nil, "" ])
+                                  .order(:group, :name)
+                                  .group_by(&:group)
+
           if scope.exists?
             flat = scope.map { |s|
               {
@@ -30,11 +35,31 @@ module Api
                 points:        s.points
               }
             }
-            flat.group_by { |s| s[:group_name] }
+            grouped = flat.group_by { |s| s[:group_name] }
+
+            # Pad any group that has fewer rows than expected with zero-stat entries
+            # for teams not yet in the DB standings (e.g. match result not synced yet).
+            wc_teams_by_group.each do |group_letter, teams|
+              existing_team_ids = (grouped[group_letter] || []).map { |s| s[:team][:id] }.to_set
+              missing = teams.reject { |t| existing_team_ids.include?(t.id) }
+              next if missing.empty?
+
+              next_rank = (grouped[group_letter]&.length || 0) + 1
+              missing.each_with_index do |t, i|
+                (grouped[group_letter] ||= []) << {
+                  rank: next_rank + i,
+                  group_name: group_letter,
+                  team: { id: t.id, name: t.name, code: t.code, flag_url: t.flag_url },
+                  played: 0, won: 0, drawn: 0, lost: 0,
+                  goals_for: 0, goals_against: 0, goal_diff: 0, points: 0
+                }
+              end
+            end
+
+            grouped
           else
             # Before tournament begins: build standings skeleton from seeded WC teams
-            wc_teams = Team.where.not(group: [ nil, "" ]).order(:group, :name)
-            wc_teams.group_by(&:group).transform_values.with_index do |teams, _|
+            wc_teams_by_group.transform_values.with_index do |teams, _|
               teams.each_with_index.map do |t, i|
                 {
                   rank:          i + 1,
