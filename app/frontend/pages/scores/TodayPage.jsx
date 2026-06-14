@@ -10,6 +10,7 @@ import { usePageMeta } from "../../hooks/usePageMeta"
 import { useFavorites } from "../../hooks/useFavorites"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 import { useStandingsChannel } from "../../hooks/useStandingsChannel"
+import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
 
 // ─── Helpers ──────────────────────────────────────────
 function toISO(date) {
@@ -428,16 +429,40 @@ export default function TodayPage() {
     return () => window.removeEventListener("keydown", onKey)
   }, [])
 
-  // Auto-refresh only for today — 30s when matches are live, 60s otherwise
+  // Safety-net poll only for today. Live score changes now arrive instantly via
+  // the live_scores WebSocket, so this just backstops a dropped connection:
+  // 90s when something is live, 5min otherwise.
   useEffect(() => {
     const iso   = toISO(selected)
     const today = toISO(new Date())
     if (iso !== today) return
     const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "BT", "P", "LIVE"])
     const hasLive = matches.some(m => LIVE_STATUSES.has(m.status?.short ?? m.status))
-    const iv = setInterval(() => load(selected), hasLive ? 30000 : 60000)
+    const iv = setInterval(() => load(selected), hasLive ? 90000 : 300000)
     return () => clearInterval(iv)
   }, [selected, load, matches])
+
+  // Patch a single row in-place from a live_scores push — no re-fetch.
+  const applyLiveScore = useCallback((d) => {
+    setMatches(prev => {
+      let touched = false
+      const next = prev.map(m => {
+        const hit = (d.external_id != null && m.external_id === d.external_id) ||
+                    (d.match_id != null && m.id === d.match_id)
+        if (!hit) return m
+        if (m.home_score === d.home_score && m.away_score === d.away_score && m.status === d.status) return m
+        touched = true
+        return { ...m, home_score: d.home_score, away_score: d.away_score, status: d.status, minute: d.minute }
+      })
+      if (touched) {
+        const id = d.external_id ?? d.match_id
+        setFlashIds(new Set([id]))
+        setTimeout(() => setFlashIds(new Set()), 2000)
+      }
+      return touched ? next : prev
+    })
+  }, [])
+  useLiveScoresChannel(applyLiveScore)
 
   // Instant refresh when a WC match finishes (standings broadcast fires after FT)
   useStandingsChannel(() => load(selected))

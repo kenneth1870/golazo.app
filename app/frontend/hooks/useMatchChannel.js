@@ -1,8 +1,7 @@
 import { useEffect, useRef } from "react"
-import { createConsumer } from "@rails/actioncable"
+import { getConsumer } from "../utils/cable"
 
 export function useMatchChannel(matchId, onMessage) {
-  const cableRef = useRef(null)
   const subRef = useRef(null)
   const cbRef  = useRef(onMessage)
 
@@ -12,15 +11,11 @@ export function useMatchChannel(matchId, onMessage) {
   useEffect(() => {
     if (!matchId) return
 
-    cableRef.current = createConsumer("/cable")
-    subRef.current = cableRef.current.subscriptions.create(
+    subRef.current = getConsumer().subscriptions.create(
       { channel: "MatchChannel", match_id: matchId },
       { received: (data) => cbRef.current?.(data) }
     )
 
-    return () => {
-      subRef.current?.unsubscribe()
-      cableRef.current?.disconnect()
-    }
+    return () => { subRef.current?.unsubscribe() }
   }, [matchId])
 }

@@ -47,11 +47,11 @@ function subscribe(key, filter, opts, setState) {
     const onVisible = () => {
       if (document.hidden) return
       const cached = cache.get(key)
-      if (!cached?.ts || Date.now() - cached.ts > 25_000) fetchKey(key, filter, opts)
+      if (!cached?.ts || Date.now() - cached.ts > 55_000) fetchKey(key, filter, opts)
     }
 
     document.addEventListener("visibilitychange", onVisible)
-    const interval = setInterval(poll, 30_000)
+    const interval = setInterval(poll, 60_000)
     timers.set(key, { interval, onVisible })
   } else {
     const cached = cache.get(key)

@@ -13,6 +13,7 @@ import MatchCard from "../components/MatchCard"
 import MatchRow from "../components/MatchRow"
 import FavoriteTeamPicker from "../components/FavoriteTeamPicker"
 import { useStandingsChannel } from "../hooks/useStandingsChannel"
+import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
 
 function useTodayWC() {
   const [matches, setMatches] = useState([])
@@ -43,14 +44,32 @@ function useTodayWC() {
     load()
     const onVisible = () => { if (!document.hidden) loadRef.current?.() }
     document.addEventListener("visibilitychange", onVisible)
-    const iv = setInterval(() => loadRef.current?.(), 30_000)
+    // Safety-net poll only — live changes arrive via the live_scores WebSocket.
+    const iv = setInterval(() => loadRef.current?.(), 300_000)
     return () => {
       clearInterval(iv)
       document.removeEventListener("visibilitychange", onVisible)
     }
   }, [load])
 
-  // Instant refresh when a WC match finishes
+  // Patch a row in-place from a live_scores push — no re-fetch.
+  const applyLiveScore = useCallback((d) => {
+    setMatches(prev => {
+      let touched = false
+      const next = prev.map(m => {
+        const hit = (d.external_id != null && m.external_id === d.external_id) ||
+                    (d.match_id != null && m.id === d.match_id)
+        if (!hit) return m
+        if (m.home_score === d.home_score && m.away_score === d.away_score && m.status === d.status) return m
+        touched = true
+        return { ...m, home_score: d.home_score, away_score: d.away_score, status: d.status, minute: d.minute }
+      })
+      return touched ? next : prev
+    })
+  }, [])
+  useLiveScoresChannel(applyLiveScore)
+
+  // Instant refresh when a WC match finishes (final scores + status settle)
   useStandingsChannel(load)
 
   return matches
