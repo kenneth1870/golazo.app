@@ -478,5 +478,11 @@
     "tapShare": "Toca Compartir abajo",
     "gotIt": "¡Entendido!",
     "later": "Recordármelo después"
+  },
+  "consent": {
+    "title": "Valoramos tu privacidad",
+    "message": "Usamos analíticas anónimas para entender cómo se usa la app y mejorarla. No recopilamos datos personales.",
+    "accept": "Aceptar",
+    "decline": "Rechazar"
   }
 }

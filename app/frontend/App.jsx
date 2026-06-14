@@ -11,6 +11,7 @@ import ErrorBoundary from "./components/ErrorBoundary"
 import OnboardingModal, { useOnboarding } from "./components/OnboardingModal"
 import PushPrompt from "./components/PushPrompt"
 import IosInstallGuide from "./components/IosInstallGuide"
+import ConsentBanner from "./components/ConsentBanner"
 import RequireAdmin from "./components/RequireAdmin"
 import LoginPage from "./pages/LoginPage"
 import { useFavorites } from "./hooks/useFavorites"
@@ -160,6 +161,7 @@ export default function App() {
       </main>
 
       <Footer />
+      <ConsentBanner />
       <BottomNav />
       <InstallPrompt />
     </div>
