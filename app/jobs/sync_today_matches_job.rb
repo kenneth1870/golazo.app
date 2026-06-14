@@ -8,10 +8,13 @@ class SyncTodayMatchesJob < ApplicationJob
       return
     end
     # Bust the date cache before syncing so fresh scores are always fetched.
-    # The inner cache has a 24h TTL for past dates; without busting it,
-    # matches that finished after the cache was first populated would stay
-    # 'scheduled' until the cache naturally expires.
-    [ Date.today, Date.today - 1 ].each do |d|
+    # Past dates are included so stale past matches (still 'scheduled' in DB)
+    # are re-fetched from the API rather than served from cache.
+    stale_dates = Match.where(status: %w[scheduled live])
+                       .where(kickoff_at: 7.days.ago..115.minutes.ago)
+                       .pluck(Arel.sql("DATE(kickoff_at AT TIME ZONE 'UTC')"))
+                       .uniq
+    ([ Date.today, Date.today - 1 ] + stale_dates.map { |d| d.is_a?(Date) ? d : Date.parse(d.to_s) }).uniq.each do |d|
       Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
       Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
     end

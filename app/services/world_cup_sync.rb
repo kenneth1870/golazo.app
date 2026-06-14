@@ -95,6 +95,29 @@ class WorldCupSync
     updated = 0
     matches.each { |m| updated += 1 if sync_match_from_normalized(m) }
     log("Updated #{updated} matches")
+
+    sync_stale_past_matches(seen)
+  end
+
+  # Catch-up: re-sync any DB matches still scheduled/live whose kickoff was
+  # long enough ago that they should be finished. Prevents matches from getting
+  # stuck in 'scheduled' if the server was down or the sync window was missed.
+  def sync_stale_past_matches(already_synced_ids = Set.new)
+    stale = Match.where(status: %w[scheduled live])
+                 .where(kickoff_at: 7.days.ago..115.minutes.ago)
+                 .where.not(external_id: nil)
+
+    return unless stale.exists?
+
+    stale_dates = stale.pluck(Arel.sql("DATE(kickoff_at AT TIME ZONE 'UTC')")).uniq
+    log("Catch-up: #{stale.count} stale match(es) across #{stale_dates.length} date(s)")
+
+    stale_dates.each do |d|
+      past_matches = @api.matches_for_date(d)
+      past_matches
+        .reject { |m| already_synced_ids.include?(m[:external_id]) }
+        .each   { |m| sync_match_from_normalized(m) }
+    end
   end
 
   # Sync standings for the WC competition.
