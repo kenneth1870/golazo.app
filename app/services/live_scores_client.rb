@@ -132,7 +132,13 @@ class LiveScoresClient
   def matches_for_date(date, timezone: "UTC")
     date   = date.to_date
     tz_key = timezone.gsub(/[^A-Za-z0-9_]/, "_").downcase
-    ttl = date < Date.today ? 24.hours : 10.minutes
+    # Past dates: data never changes, cache for 24h.
+    # Today: matches go live/finish frequently — keep in sync with the 1-min sync job.
+    # Future: schedule rarely changes, 10 min is fine.
+    ttl = if date < Date.today then 24.hours
+          elsif date == Date.today then 60.seconds
+          else 10.minutes
+          end
     Rails.cache.fetch("live_scores_date_v15_#{date.iso8601}_#{tz_key}", expires_in: ttl, race_condition_ttl: 30.seconds) do
       data = get("fixtures", date: date.iso8601, timezone: timezone)
       (data.dig("response") || [])
