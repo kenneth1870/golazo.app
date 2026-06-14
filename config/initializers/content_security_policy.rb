@@ -36,7 +36,10 @@ Rails.application.configure do
                          "ws://localhost:*",
                          "wss://localhost:*"
     else
-      policy.script_src :self
+      # Allow inline scripts on admin-only engine pages (solid-queue dashboard
+      # uses Alpine.js + chartkick inline scripts; those routes are basic-auth
+      # protected so end-user XSS risk is unchanged).
+      policy.script_src :self, :unsafe_inline
       policy.connect_src :self, :https,
                          "wss://www.golazoapp.live",
                          "wss://golazoapp.live"
