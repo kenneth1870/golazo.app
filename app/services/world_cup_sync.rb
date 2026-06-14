@@ -376,10 +376,19 @@ class WorldCupSync
     # kicked off within the last 3 hours but still 'scheduled' in DB (sync lag).
     # The 3-hour lookback prevents a stuck 'scheduled' status from silencing
     # the live-sync gate — without it, goal/fulltime notifications are never sent.
-    Match.where(competition: wc, status: "live").exists? ||
-      Match.where(competition: wc, status: "scheduled")
-           .where(kickoff_at: 3.hours.ago..2.hours.from_now)
-           .exists?
+    return true if Match.where(competition: wc, status: "live").exists?
+    return true if Match.where(competition: wc, status: "scheduled")
+                        .where(kickoff_at: 3.hours.ago..2.hours.from_now)
+                        .exists?
+
+    # Keep the 1-min live sync running for matches marked 'finished' whose kickoff
+    # was recent enough that they could still be in progress (≤ 2.5 h, covering
+    # extra time + penalties). Without this, a match wrongly flipped to 'finished'
+    # silences the live gate, so goals only get picked up by the 10-min today-sync
+    # (a 10-minute notification delay) and the live-path self-heal never runs.
+    Match.where(competition: wc, status: "finished")
+         .where(kickoff_at: 2.5.hours.ago..Time.current)
+         .exists?
   end
 
   # Updates a DB match from a normalized match hash (from live_matches).
