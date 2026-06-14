@@ -6,10 +6,12 @@ class BackfillGroupStageFromTeamGroup < ActiveRecord::Migration[8.0]
     execute <<~SQL
       UPDATE matches
       SET group_stage = home_teams.group
-      FROM teams AS home_teams
-      JOIN teams AS away_teams ON away_teams.id = matches.away_team_id
-      JOIN competitions ON competitions.id = matches.competition_id
+      FROM teams AS home_teams,
+           teams AS away_teams,
+           competitions
       WHERE matches.home_team_id = home_teams.id
+        AND matches.away_team_id = away_teams.id
+        AND matches.competition_id = competitions.id
         AND matches.group_stage IS NULL
         AND competitions.code = 'WC'
         AND home_teams.group IS NOT NULL
