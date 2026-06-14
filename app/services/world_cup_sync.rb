@@ -363,6 +363,12 @@ class WorldCupSync
     imported
   end
 
+  # Public wrapper so jobs can decide whether to run the sub-minute live loop
+  # without burning quota when there's no active WC action.
+  def self.live_window_active?
+    new.send(:wc_matches_active?)
+  end
+
   private
 
   # True if any WC match is currently live OR kicks off within the next 2 hours.
