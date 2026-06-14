@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useMatches } from "../hooks/useMatches"
@@ -12,37 +12,47 @@ import Hero from "../components/Hero"
 import MatchCard from "../components/MatchCard"
 import MatchRow from "../components/MatchRow"
 import FavoriteTeamPicker from "../components/FavoriteTeamPicker"
+import { useStandingsChannel } from "../hooks/useStandingsChannel"
 
 function useTodayWC() {
   const [matches, setMatches] = useState([])
-  useEffect(() => {
+  const loadRef = useRef(null)
+
+  const load = useCallback(() => {
+    if (document.hidden) return
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-    const load = () => {
-      if (document.hidden) return
-      fetch(`/api/v1/today?tz=${encodeURIComponent(tz)}`)
-        .then(r => r.json())
-        .then(all => {
-          const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: tz })
-          setMatches(
-            all.filter(m => {
-              if (m.competition?.code !== "WC") return false
-              const ko = m.kickoff_at || m.kickoff
-              if (!ko) return false
-              return new Date(ko).toLocaleDateString("en-CA", { timeZone: tz }) === todayStr
-            })
-          )
-        })
-        .catch(() => {})
-    }
-    const onVisible = () => { if (!document.hidden) load() }
+    fetch(`/api/v1/today?tz=${encodeURIComponent(tz)}`)
+      .then(r => r.json())
+      .then(all => {
+        const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: tz })
+        setMatches(
+          all.filter(m => {
+            if (m.competition?.code !== "WC") return false
+            const ko = m.kickoff_at || m.kickoff
+            if (!ko) return false
+            return new Date(ko).toLocaleDateString("en-CA", { timeZone: tz }) === todayStr
+          })
+        )
+      })
+      .catch(() => {})
+  }, [])
+
+  loadRef.current = load
+
+  useEffect(() => {
     load()
+    const onVisible = () => { if (!document.hidden) loadRef.current?.() }
     document.addEventListener("visibilitychange", onVisible)
-    const iv = setInterval(load, 30_000)
+    const iv = setInterval(() => loadRef.current?.(), 30_000)
     return () => {
       clearInterval(iv)
       document.removeEventListener("visibilitychange", onVisible)
     }
-  }, [])
+  }, [load])
+
+  // Instant refresh when a WC match finishes
+  useStandingsChannel(load)
+
   return matches
 }
 

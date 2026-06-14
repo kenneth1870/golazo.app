@@ -9,6 +9,7 @@ import { useLocale } from "../../hooks/useLocale"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useFavorites } from "../../hooks/useFavorites"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
+import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 
 // ─── Helpers ──────────────────────────────────────────
 function toISO(date) {
@@ -437,6 +438,9 @@ export default function TodayPage() {
     const iv = setInterval(() => load(selected), hasLive ? 30000 : 60000)
     return () => clearInterval(iv)
   }, [selected, load, matches])
+
+  // Instant refresh when a WC match finishes (standings broadcast fires after FT)
+  useStandingsChannel(() => load(selected))
 
   // Pull-to-refresh touch handlers
   function onPTRStart(e) {
