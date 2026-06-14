@@ -54,9 +54,15 @@ class WorldCupStandings
       @competition.matches
                   .where(status: "finished")
                   .where.not(home_score: nil, away_score: nil)
-                  .where.not(group_stage: nil)
                   .includes(:home_team, :away_team)
-                  .select { |m| m.home_team && m.away_team }
+                  .select { |m|
+                    next false unless m.home_team && m.away_team
+                    # Accept matches with an explicit group_stage, OR where both teams
+                    # share a known group (handles matches finalized via live-sync path
+                    # that never had group_stage backfilled).
+                    m.group_stage.present? ||
+                      (m.home_team.group.present? && m.home_team.group == m.away_team.group)
+                  }
   end
 
   def compute_groups

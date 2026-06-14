@@ -54,7 +54,12 @@ class WorldCupSync
     # Mark them finished right now so the live widget on the homepage clears
     # within the current sync cycle, without waiting for a queued job.
     just_finished.each do |m|
-      m.update!(status: "finished")
+      finish_attrs = { status: "finished" }
+      if m.group_stage.blank?
+        group = m.home_team&.group.presence || m.away_team&.group.presence
+        finish_attrs[:group_stage] = group if group
+      end
+      m.update!(finish_attrs)
       dedup_key = "fulltime_notified_#{m.id}"
       unless Rails.cache.read(dedup_key)
         Rails.cache.write(dedup_key, true, expires_in: 3.hours)
@@ -384,10 +389,19 @@ class WorldCupSync
     finished_shorts = %w[FT AET PEN AWD WO]
     if finished_shorts.include?(status_short)
       was_live = match.status == "live"
-      match.update!(status: "finished", home_score: home_score, away_score: away_score)
+      finish_attrs = { status: "finished", home_score: home_score, away_score: away_score }
+      if match.group_stage.blank?
+        group = match.home_team&.group.presence || match.away_team&.group.presence
+        finish_attrs[:group_stage] = group if group
+      end
+      match.update!(finish_attrs)
       if was_live && match.competition&.code == "WC"
-        fire_notification(match, "fulltime",
-          home_score: home_score.to_i, away_score: away_score.to_i)
+        dedup_key = "fulltime_notified_#{match.id}"
+        unless Rails.cache.read(dedup_key)
+          Rails.cache.write(dedup_key, true, expires_in: 3.hours)
+          fire_notification(match, "fulltime",
+            home_score: home_score.to_i, away_score: away_score.to_i)
+        end
         RecalculateStandingsJob.perform_later
       end
       if match.external_id.present? && home_score && away_score
@@ -621,6 +635,14 @@ class WorldCupSync
     if match.external_id
       ActionCable.server.broadcast("external_match_#{match.external_id}", payload.merge(type: "match_update"))
     end
+
+    # Shared stream for list views (Today, Home) — carries enough identity to
+    # update the right row without a full re-fetch.
+    ActionCable.server.broadcast("live_scores", payload.merge(
+      type:        "live_score_update",
+      match_id:    match.id,
+      external_id: match.external_id
+    ))
 
     return unless notify
     fire_notification(match, event_type, minute: minute,
