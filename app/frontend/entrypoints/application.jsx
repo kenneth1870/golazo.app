@@ -12,6 +12,15 @@ import "../styles/application.css"
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => {})
+
+    // When a new SW activates and takes control, reload once so the page
+    // runs the fresh JS bundle instead of staying on the old cached version.
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!window.__swReloading) {
+        window.__swReloading = true
+        window.location.reload()
+      }
+    })
   })
 }
 

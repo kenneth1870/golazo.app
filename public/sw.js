@@ -5,11 +5,18 @@ const IMAGE_CACHE   = `${CACHE_VERSION}-images`
 
 // CDN domains to cache (team flags, crests)
 const CDN_IMAGE_HOSTS = [
+  "flagcdn.com",
   "crests.football-data.org",
   "media.api-sports.io",
   "media-1.api-sports.io",
   "media-2.api-sports.io",
   "media-3.api-sports.io",
+]
+
+// Font CDNs — stale-while-revalidate so the app looks correct offline
+const FONT_HOSTS = [
+  "fonts.googleapis.com",
+  "fonts.gstatic.com",
 ]
 
 // Static assets to pre-cache on install
@@ -51,6 +58,12 @@ self.addEventListener("fetch", event => {
   // Cross-origin CDN images (team flags): cache-first, never expire
   if (CDN_IMAGE_HOSTS.includes(url.hostname)) {
     event.respondWith(cacheFirstImage(request))
+    return
+  }
+
+  // Google Fonts: stale-while-revalidate so app looks correct offline
+  if (FONT_HOSTS.includes(url.hostname)) {
+    event.respondWith(cacheFirst(request, STATIC_CACHE))
     return
   }
 
