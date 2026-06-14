@@ -1,6 +1,16 @@
-const CACHE_VERSION = "golazo-v7"
+const CACHE_VERSION = "golazo-v8"
 const STATIC_CACHE  = `${CACHE_VERSION}-static`
 const API_CACHE     = `${CACHE_VERSION}-api`
+const IMAGE_CACHE   = `${CACHE_VERSION}-images`
+
+// CDN domains to cache (team flags, crests)
+const CDN_IMAGE_HOSTS = [
+  "crests.football-data.org",
+  "media.api-sports.io",
+  "media-1.api-sports.io",
+  "media-2.api-sports.io",
+  "media-3.api-sports.io",
+]
 
 // Static assets to pre-cache on install
 const PRECACHE_URLS = [
@@ -23,7 +33,7 @@ self.addEventListener("activate", event => {
     caches.keys().then(keys =>
       Promise.all(
         keys
-          .filter(k => k.startsWith("golazo-") && k !== STATIC_CACHE && k !== API_CACHE)
+          .filter(k => k.startsWith("golazo-") && k !== STATIC_CACHE && k !== API_CACHE && k !== IMAGE_CACHE)
           .map(k => caches.delete(k))
       )
     ).then(() => self.clients.claim())
@@ -35,31 +45,93 @@ self.addEventListener("fetch", event => {
   const { request } = event
   const url = new URL(request.url)
 
-  // Only handle same-origin GET requests
-  if (request.method !== "GET" || url.origin !== self.location.origin) return
+  // Only handle GET requests
+  if (request.method !== "GET") return
 
-  // API routes: network-first, fall back to cache for up to 5 min
+  // Cross-origin CDN images (team flags): cache-first, never expire
+  if (CDN_IMAGE_HOSTS.includes(url.hostname)) {
+    event.respondWith(cacheFirstImage(request))
+    return
+  }
+
+  // Only handle same-origin beyond this point
+  if (url.origin !== self.location.origin) return
+
+  // API routes: network-first, fall back to cache
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(networkFirstApi(request))
     return
   }
 
-  // Static assets (JS, CSS, fonts, images): cache-first
+  // Vite assets (hashed filenames): cache-first forever — they're immutable
+  if (url.pathname.startsWith("/vite/assets/")) {
+    event.respondWith(cacheFirst(request, STATIC_CACHE))
+    return
+  }
+
+  // Other static assets (fonts, images, CSS, JS): cache-first
   if (isStaticAsset(url.pathname)) {
     event.respondWith(cacheFirst(request, STATIC_CACHE))
     return
   }
 
-  // Navigation requests (HTML): network-first, offline fallback
+  // Navigation requests (HTML): serve app shell from cache instantly,
+  // revalidate in background — eliminates gray/blank screen on open
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request).catch(() => caches.match("/offline.html"))
-    )
+    event.respondWith(shellFirst(request))
     return
   }
 })
 
 // ── Strategies ────────────────────────────────────────
+
+// Serve shell from cache immediately; update in background (stale-while-revalidate).
+// Eliminates the gray screen on slow networks — the cached shell loads instantly.
+async function shellFirst(request) {
+  const cache  = await caches.open(STATIC_CACHE)
+  const cached = await cache.match("/")
+
+  if (cached) {
+    // Background revalidation — refresh the shell silently
+    fetch(request).then(response => {
+      if (response.ok) cache.put("/", response)
+    }).catch(() => {})
+    return cached
+  }
+
+  // First-ever load: must go to network
+  try {
+    const response = await fetch(request)
+    if (response.ok) cache.put("/", response.clone())
+    return response
+  } catch {
+    return caches.match("/offline.html")
+  }
+}
+
+// Cache-first for CDN images (flags). Uses opaque response fallback
+// so images still display even if CORS headers are missing.
+async function cacheFirstImage(request) {
+  const cached = await caches.match(request)
+  if (cached) return cached
+
+  try {
+    // Try CORS first for a proper cacheable response
+    const response = await fetch(request, { mode: "cors" })
+    if (response.ok) {
+      const cache = await caches.open(IMAGE_CACHE)
+      await trimImageCache(cache)
+      cache.put(request, response.clone())
+    }
+    return response
+  } catch {
+    // Fallback: opaque no-cors fetch (won't be cached but will load)
+    return fetch(request, { mode: "no-cors" }).catch(() =>
+      new Response("", { status: 408, statusText: "Offline" })
+    )
+  }
+}
+
 async function cacheFirst(request, cacheName) {
   const cached = await caches.match(request)
   if (cached) return cached
@@ -71,12 +143,20 @@ async function cacheFirst(request, cacheName) {
   return response
 }
 
-const API_CACHE_MAX = 60
+const API_CACHE_MAX   = 60
+const IMAGE_CACHE_MAX = 500  // ~500 flag/crest images before eviction
 
 async function trimApiCache(cache) {
   const keys = await cache.keys()
   if (keys.length > API_CACHE_MAX) {
     await Promise.all(keys.slice(0, keys.length - API_CACHE_MAX).map(k => cache.delete(k)))
+  }
+}
+
+async function trimImageCache(cache) {
+  const keys = await cache.keys()
+  if (keys.length > IMAGE_CACHE_MAX) {
+    await Promise.all(keys.slice(0, keys.length - IMAGE_CACHE_MAX).map(k => cache.delete(k)))
   }
 }
 
@@ -92,7 +172,6 @@ async function networkFirstApi(request) {
   } catch {
     const cached = await cache.match(request)
     if (cached) {
-      // Return stale with a header so the app can show "offline" state
       const headers = new Headers(cached.headers)
       headers.set("X-SW-Cache", "stale")
       return new Response(cached.body, { status: cached.status, headers })
@@ -136,7 +215,6 @@ self.addEventListener("notificationclick", event => {
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(clients => {
-      // Focus existing window if open
       const existing = clients.find(c => c.url.includes(self.location.origin))
       if (existing) {
         existing.focus()
