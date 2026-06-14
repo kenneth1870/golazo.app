@@ -16,10 +16,12 @@ module Api
         # kicked off after a cache was populated.
         wc_db     = fetch_wc_from_db_for_date(date, tz)
         existing  = all.filter_map { |m| m[:external_id]&.to_s }.to_set
-        home_away = all.map { |m| "#{m.dig(:home_team, :name)&.downcase}|#{m.dig(:away_team, :name)&.downcase}" }.to_set
+        home_away = all.map { |m|
+          "#{normalize_team_name(m.dig(:home_team, :name))}|#{normalize_team_name(m.dig(:away_team, :name))}"
+        }.to_set
         to_add    = wc_db.reject do |m|
           existing.include?(m[:external_id]&.to_s) ||
-            home_away.include?("#{m.dig(:home_team, :name)&.downcase}|#{m.dig(:away_team, :name)&.downcase}")
+            home_away.include?("#{normalize_team_name(m.dig(:home_team, :name))}|#{normalize_team_name(m.dig(:away_team, :name))}")
         end
         all = (all + to_add).sort_by { |m| m[:kickoff_at].to_s } unless to_add.empty?
 
