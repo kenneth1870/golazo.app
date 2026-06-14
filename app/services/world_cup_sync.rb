@@ -334,6 +334,28 @@ class WorldCupSync
 
     match.lock!
 
+    # API sometimes returns FT/AET/PEN while the fixture is still briefly in the
+    # live feed. Treat any finished status_short as a finalisation event so the
+    # match doesn't stay stuck as "live" waiting for check_wc_matches_just_finished.
+    finished_shorts = %w[FT AET PEN AWD WO]
+    if finished_shorts.include?(status_short)
+      was_live = match.status == "live"
+      match.update!(status: "finished", home_score: home_score, away_score: away_score)
+      if was_live && match.competition&.code == "WC"
+        fire_notification(match, "fulltime",
+          home_score: home_score.to_i, away_score: away_score.to_i)
+        RecalculateStandingsJob.perform_later
+      end
+      if match.external_id.present? && home_score && away_score
+        ScorePrediction.grade!(
+          match_external_id: match.external_id.to_s,
+          home_score: home_score.to_i, away_score: away_score.to_i
+        )
+      end
+      GenerateMatchSummaryJob.set(wait: 5.minutes).perform_later(match_id: match.id) if match.id.present?
+      return true
+    end
+
     # Kickoff: match transitions from scheduled → live feed
     if match.status == "scheduled"
       match.update!(status: "live", home_score: home_score, away_score: away_score)
