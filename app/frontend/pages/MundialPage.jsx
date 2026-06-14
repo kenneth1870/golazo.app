@@ -10,10 +10,12 @@ export default function MundialPage() {
   )
 
   const TABS = [
-    { path: "/mundial/teams",   label: t("nav.teams") },
-    { path: "/mundial/schedule",label: t("nav.schedule") },
-    { path: "/mundial/venues",  label: t("nav.venues") },
-    { path: "/mundial/scorers", label: t("nav.topScorers") },
+    { path: "/mundial/teams",    label: t("nav.teams") },
+    { path: "/mundial/schedule", label: t("nav.schedule") },
+    { path: "/mundial/venues",   label: t("nav.venues") },
+    { path: "/mundial/scorers",  label: t("nav.topScorers") },
+    { path: "/scores/groups",    label: t("scores.groupStage"), external: true },
+    { path: "/scores/knockout",  label: t("scores.knockout"),   external: true },
   ]
 
   return (
@@ -32,7 +34,12 @@ export default function MundialPage() {
         <div className="container">
           <div className="tab-bar__inner">
             {TABS.map(tab => (
-              <NavLink key={tab.path} to={tab.path} className={({ isActive }) => `tab-link${isActive ? " tab-link--active" : ""}`}>
+              <NavLink
+                key={tab.path}
+                to={tab.path}
+                end={!tab.external}
+                className={({ isActive }) => `tab-link${isActive && !tab.external ? " tab-link--active" : ""}`}
+              >
                 {tab.label}
               </NavLink>
             ))}

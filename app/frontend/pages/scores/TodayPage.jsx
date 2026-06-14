@@ -375,7 +375,10 @@ export default function TodayPage() {
     else setLoading(true)
     const iso    = toISO(date)
     const today  = toISO(new Date())
-    const url    = iso === today ? "/api/v1/today" : `/api/v1/today?date=${iso}`
+    const tz     = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+    const url    = iso === today
+      ? `/api/v1/today?tz=${encodeURIComponent(tz)}`
+      : `/api/v1/today?date=${iso}&tz=${encodeURIComponent(tz)}`
     setError(false)
     fetchWithTimeout(url)
       .then(r => r.json())
