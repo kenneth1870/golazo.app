@@ -283,11 +283,15 @@ module Api
           return render json: { error: "match_not_finished" }, status: :unprocessable_entity
         end
 
-        result = AiMatchSummaryExternalService.new(data, lang: lang).call
+        cache_key = "ai_summary_ext_#{external_id}_#{lang}"
+        result = Rails.cache.fetch(cache_key, expires_in: 24.hours) do
+          AiMatchSummaryExternalService.new(data, lang: lang).call
+        end
 
         if result
           render json: result
         else
+          Rails.cache.delete(cache_key)
           render json: { error: "generation_failed" }, status: :service_unavailable
         end
       rescue => e
