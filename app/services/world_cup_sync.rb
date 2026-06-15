@@ -419,9 +419,13 @@ class WorldCupSync
       if was_live && match.competition&.code == "WC"
         dedup_key = "fulltime_notified_#{match.id}"
         unless Rails.cache.read(dedup_key)
-          Rails.cache.write(dedup_key, true, expires_in: 3.hours)
-          fire_notification(match, "fulltime",
+          # Only mark as notified if the alert actually went out (the early-FT
+          # guard in fire_notification may suppress it), so a real full-time can
+          # still fire later.
+          if fire_notification(match, "fulltime",
             home_score: home_score.to_i, away_score: away_score.to_i)
+            Rails.cache.write(dedup_key, true, expires_in: 3.hours)
+          end
         end
         RecalculateStandingsJob.perform_later
       end
@@ -538,9 +542,12 @@ class WorldCupSync
         (was_live || match.kickoff_at < 60.minutes.ago)
       dedup_key = "fulltime_notified_#{match.id}"
       unless Rails.cache.read(dedup_key)
-        Rails.cache.write(dedup_key, true, expires_in: 3.hours)
-        fire_notification(match, "fulltime",
+        # Mark notified only if the alert actually fired (early-FT guard may
+        # suppress it), so a genuine full-time can still notify later.
+        if fire_notification(match, "fulltime",
           home_score: home_score.to_i, away_score: away_score.to_i)
+          Rails.cache.write(dedup_key, true, expires_in: 3.hours)
+        end
       end
     end
 
@@ -708,6 +715,17 @@ class WorldCupSync
   end
 
   def fire_notification(match, event_type, home_score: nil, away_score: nil, minute: nil)
+    # Defense-in-depth: a full-time alert must never go out before a match could
+    # plausibly be over. A 90' match runs ≥ ~100 min after kickoff (45 + half-time
+    # + 45 + stoppage); extra time ends even later. So suppress "fulltime" if
+    # kickoff was < 100 min ago, regardless of what any feed/heuristic claims —
+    # this blocks premature "match ended" pushes from bad data or feed flaps.
+    if event_type.to_s == "fulltime" && match.kickoff_at.present? &&
+        match.kickoff_at > 100.minutes.ago
+      log("Suppressed early fulltime for #{match.id} (#{match.home_team&.name} vs #{match.away_team&.name}) — only #{((Time.current - match.kickoff_at) / 60).round} min since kickoff")
+      return false
+    end
+
     log("fire_notification: #{event_type} | #{match.home_team&.name} vs #{match.away_team&.name} | #{home_score}–#{away_score}")
     MatchEventNotificationJob.perform_later(
       event_type: event_type,
@@ -719,6 +737,7 @@ class WorldCupSync
       minute:     minute,
       match_url:  "/matches/#{match.external_id || "db-#{match.id}"}"
     )
+    true
   end
 
   def log(msg)
