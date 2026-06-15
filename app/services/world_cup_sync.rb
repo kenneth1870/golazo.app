@@ -35,68 +35,50 @@ class WorldCupSync
     check_wc_matches_just_finished(matches)
   end
 
-  # If any DB-live WC match is missing from the current live feed, it just ended.
-  # Clear the today-cache and schedule an immediate today-sync so the match gets
-  # marked "finished" and standings are recalculated within the next few seconds.
+  # A DB-live WC match missing from the live feed MIGHT have ended — but absence
+  # is NOT a reliable end signal. The feed can drop a match for a cycle mid-game,
+  # between regular and extra time, etc. Marking it finished here fired full-time
+  # alerts ~10 min before the real end (the feed flapping around the 80th minute),
+  # and it couldn't know whether extra time was still coming.
+  #
+  # So we no longer finish/notify on absence. Instead we bust the date caches and
+  # trigger an authoritative date-feed re-sync. sync_match_from_normalized then
+  # marks the match finished and fires full-time ONLY when the API reports a
+  # terminal status (FT/AET/PEN) — i.e. just after the game truly ends, extra
+  # time and penalties included. If it's only a flap, the date feed still says
+  # "live" and nothing happens.
   def check_wc_matches_just_finished(live_matches)
     wc = Competition.find_by(code: "WC")
     return unless wc
 
     # An empty feed almost always means a transient API error (live_matches
-    # rescues to []), NOT that every live match ended at once. Treating absence
-    # as "finished" here would fire false full-time alerts, so bail out.
-    if live_matches.blank?
-      log("Live feed empty — skipping just-finished check (likely API hiccup)")
-      return
-    end
+    # rescues to []), not that every live match vanished — ignore it.
+    return if live_matches.blank?
 
     db_live = Match.where(status: "live", competition: wc)
     return unless db_live.exists?
 
     live_external_ids = live_matches.filter_map { |m| m[:external_id]&.to_s }
-    just_finished = db_live
-      .reject { |m| live_external_ids.include?(m.external_id.to_s) }
-      # A real match can't be over until well after kickoff (90' + half-time +
-      # stoppage ≈ 105'+). Requiring ≥95 min since kickoff prevents a single
-      # feed flap right after kickoff from finishing a match that just started.
-      # Genuine early finishes still come through the feed's FT/AET/PEN status
-      # (handled in sync_match_from_live), and truly-stuck matches are caught by
-      # sync_stale_past_matches.
-      .select  { |m| m.kickoff_at.present? && m.kickoff_at < 95.minutes.ago }
-    return if just_finished.empty?
+    missing = db_live.reject { |m| live_external_ids.include?(m.external_id.to_s) }
+    return if missing.empty?
 
-    log("#{just_finished.count} WC match(es) just finished — marking finished immediately")
+    # Debounce: at most one verification sync per minute, so a persistent feed
+    # gap (or the fast 30s live loop) can't hammer the date endpoint.
+    return if Rails.cache.read("verify_finish_sync_recent")
+    Rails.cache.write("verify_finish_sync_recent", true, expires_in: 60.seconds)
 
-    # Mark them finished right now so the live widget on the homepage clears
-    # within the current sync cycle, without waiting for a queued job.
-    just_finished.each do |m|
-      finish_attrs = { status: "finished" }
-      if m.group_stage.blank?
-        group = m.home_team&.group.presence || m.away_team&.group.presence
-        finish_attrs[:group_stage] = group if group
-      end
-      m.update!(finish_attrs)
-      dedup_key = "fulltime_notified_#{m.id}"
-      unless Rails.cache.read(dedup_key)
-        Rails.cache.write(dedup_key, true, expires_in: 3.hours)
-        fire_notification(m, "fulltime", home_score: m.home_score, away_score: m.away_score)
-      end
-      RecalculateStandingsJob.perform_later
-      GenerateMatchSummaryJob.set(wait: 5.minutes).perform_later(match_id: m.id)
-      log("Marked #{m.id} (#{m.home_team&.name} vs #{m.away_team&.name}) as finished")
-    end
+    log("#{missing.count} WC match(es) missing from live feed — verifying via date sync")
 
     # Bust cached fixture lists for today and the next day (early-UTC matches
-    # like 02:00 UTC are stored under tomorrow's date key in the API cache).
+    # like 02:00 UTC are stored under tomorrow's date key in the API cache) so
+    # the verification re-sync reads fresh, authoritative status.
     [ Date.today, Date.today + 1 ].each do |d|
       Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
       Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
       Rails.cache.delete("today_api_#{d.iso8601}")
     end
 
-    # Follow-up sync to confirm final scores from the API (scores may still
-    # be in-flight during the brief window between FT and leaving the live feed).
-    SyncTodayMatchesJob.set(wait: 30.seconds).perform_later
+    SyncTodayMatchesJob.perform_later
   end
 
   # Sync today's matches (scheduled + live + finished today).
