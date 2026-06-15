@@ -18,6 +18,23 @@ class MatchEventNotificationJob < ApplicationJob
 
   def perform(event_type:, match_id:, home_name:, away_name:, home_score: nil, away_score: nil, match_url: nil, minute: nil)
     event_type = event_type.to_s
+
+    # Final delivery-time gate for full-time. Re-check the LIVE DB state at the
+    # moment of sending, so a "match ended" push can never go out while the game
+    # is still on — regardless of how the job was enqueued (premature trigger,
+    # stale/retried job from an earlier outage, or any upstream bug). The match
+    # must actually be 'finished' in the DB and have run long enough to plausibly
+    # be over (≥100 min since kickoff: 45 + half-time + 45 + stoppage; extra time
+    # is later still).
+    if event_type == "fulltime"
+      match = Match.find_by(id: match_id)
+      if match.nil? || match.status != "finished" ||
+          (match.kickoff_at.present? && match.kickoff_at > 100.minutes.ago)
+        Rails.logger.info("[PushNotification] Skipping fulltime for match #{match_id}: status=#{match&.status.inspect} kickoff=#{match&.kickoff_at}")
+        return
+      end
+    end
+
     score_str  = "#{home_score}–#{away_score}" if home_score && away_score
     url        = match_url || "/"
 
