@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useMatches } from "../hooks/useMatches"
 import MatchCard from "./MatchCard"
 import UpcomingMatchWidget from "./UpcomingMatchWidget"
@@ -18,10 +18,10 @@ export default function ScoreBoard({ onMatchSelect, competition = "WC" }) {
 
   const { matches, loading, error } = useMatches(filter, { competition, group })
 
-  const liveCount     = matches.filter(m => m.status === "live").length
-  const finishedMatches  = matches.filter(m => m.status === "finished")
-  const liveMatches      = matches.filter(m => m.status === "live")
-  const upcomingMatches  = matches.filter(m => m.status === "scheduled")
+  const liveMatches     = useMemo(() => matches.filter(m => m.status === "live"),     [matches])
+  const finishedMatches = useMemo(() => matches.filter(m => m.status === "finished"), [matches])
+  const upcomingMatches = useMemo(() => matches.filter(m => m.status === "scheduled"),[matches])
+  const liveCount       = liveMatches.length
 
   return (
     <>

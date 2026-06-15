@@ -88,6 +88,8 @@ module Api
         when %r{/venues|/top_scorers|/competitions} then 15.minutes
         else                                             1.minute
         end
+        etag = Digest::SHA1.hexdigest(response.body)[0, 16]
+        response.set_header("ETag", %("#{etag}"))
         response.set_header("Cache-Control", "public, max-age=#{ttl.to_i}, stale-while-revalidate=#{(ttl * 2).to_i}")
       end
     end

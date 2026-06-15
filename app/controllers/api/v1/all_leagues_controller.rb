@@ -2,19 +2,18 @@ module Api
   module V1
     class AllLeaguesController < BaseController
       def index
-        client = LiveScoresClient.new
-        leagues = client.leagues
-        render json: leagues
+        render json: client.leagues
       end
 
       def live
-        client = LiveScoresClient.new
         live = client.live_matches
+        render json: { count: live.length, matches: live.first(50) }
+      end
 
-        render json: {
-          count: live.length,
-          matches: live
-        }
+      private
+
+      def client
+        @client ||= LiveScoresClient.new
       end
     end
   end
