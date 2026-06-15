@@ -167,6 +167,32 @@ class WorldCupSync
     log("Done")
   end
 
+  # Re-sync ALL finished WC match dates from the API, regardless of age.
+  # Corrects any scores that were finalized incorrectly (e.g. early-UTC matches
+  # that fell outside the 4h stale-match window before the bug was fixed).
+  # Safe to call repeatedly — sync_match_from_normalized is idempotent.
+  def resync_all_wc_match_dates
+    wc = Competition.find_by(code: @code)
+    return log("Competition #{@code} not found") unless wc
+
+    dates = Match.where(competition: wc, status: "finished")
+                 .where.not(external_id: nil)
+                 .pluck(:kickoff_at)
+                 .map { |t| t.utc.to_date }
+                 .uniq
+                 .sort
+
+    log("resync_all_wc_match_dates: #{dates.size} date(s) — #{dates.join(', ')}")
+
+    dates.each do |d|
+      past_matches = @api.matches_for_date(d)
+      log("  #{d}: #{past_matches.size} API matches")
+      past_matches.each { |m| sync_match_from_normalized(m) }
+    end
+
+    log("resync_all_wc_match_dates complete")
+  end
+
   # Sync all WC 2026 fixture IDs (and team logos) from API-Football v3.
   # This replaces the old football-data.org sync: once external_ids are API-Football
   # fixture IDs, match_detail_controller can call the API directly to get lineups,
