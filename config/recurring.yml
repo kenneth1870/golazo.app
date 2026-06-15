@@ -32,3 +32,8 @@ production:
     class: PreMatchNotificationJob
     schedule: "every 2 minutes"
     queue: default
+
+  prune_solid_cache:
+    class: PruneSolidCacheJob
+    schedule: "every day at 3am"
+    queue: default

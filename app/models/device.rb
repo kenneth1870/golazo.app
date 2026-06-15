@@ -11,9 +11,12 @@ class Device < ApplicationRecord
 
   # Records a heartbeat from the client and accumulates engagement.
   # Returns the device.
+  DEVICE_ID_FORMAT = /\A[\w\-]{8,64}\z/
+
   def self.track!(device_id:, user_agent: nil, locale: nil, path: nil)
     device_id = device_id.to_s.strip
     return nil if device_id.blank?
+    return nil unless device_id.match?(DEVICE_ID_FORMAT)
 
     now = Time.current
     dev = find_or_initialize_by(device_id: device_id)

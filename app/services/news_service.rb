@@ -57,6 +57,20 @@ class NewsService
   USER_AGENT        = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
   MOBILE_USER_AGENT = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1".freeze
 
+  # RFC-1918 / loopback / link-local / IPv6 private ranges.
+  # Block any URL whose host resolves to one of these to prevent SSRF via
+  # DNS rebinding (e.g. an attacker-controlled RSS feed pointing to 169.254.169.254).
+  PRIVATE_IP_RANGES = [
+    IPAddr.new("10.0.0.0/8"),
+    IPAddr.new("172.16.0.0/12"),
+    IPAddr.new("192.168.0.0/16"),
+    IPAddr.new("127.0.0.0/8"),
+    IPAddr.new("169.254.0.0/16"),
+    IPAddr.new("::1/128"),
+    IPAddr.new("fc00::/7"),
+    IPAddr.new("fe80::/10")
+  ].freeze
+
   # Only fetch article content from known publisher domains.
   # Prevents a compromised RSS feed from making the server issue requests to
   # internal metadata endpoints or arbitrary hosts.
@@ -138,6 +152,11 @@ class NewsService
       end
       unless allowed
         Rails.logger.warn("[NewsService] Blocked fetch to disallowed host: #{host} (#{url})")
+        return nil
+      end
+
+      unless ssrf_safe?(host)
+        Rails.logger.warn("[NewsService] Blocked fetch to private/reserved IP for host: #{host}")
         return nil
       end
     rescue URI::InvalidURIError
@@ -447,6 +466,13 @@ class NewsService
     return url if url.blank?
     url.gsub(%r{/ace/standard/\d+/}, "/ace/standard/2048/")
        .gsub(%r{/ace/ws/\d+/},       "/ace/ws/2048/")
+  end
+
+  def ssrf_safe?(host)
+    ip = IPAddr.new(Resolv.getaddress(host))
+    PRIVATE_IP_RANGES.none? { |range| range.include?(ip) }
+  rescue
+    false
   end
 
   def parse_item(item, source)

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, memo, useCallback } from "react"
 import { Link, NavLink, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import LanguageSwitcher from "./LanguageSwitcher"
@@ -15,7 +15,7 @@ const SearchIcon = () => (
 )
 
 // ─── Mega-menu: Mundial 2026 ──────────────────────────
-function MundialMegaMenu({ t }) {
+const MundialMegaMenu = memo(function MundialMegaMenu({ t }) {
   return (
     <div className="mega-menu">
       <div className="mega-menu__col">
@@ -62,10 +62,9 @@ function MundialMegaMenu({ t }) {
       </div>
     </div>
   )
-}
+})
 
-
-function LeaguesDropdown({ t }) {
+const LeaguesDropdown = memo(function LeaguesDropdown({ t }) {
   return (
     <div className="dropdown-menu-custom">
       <NavLink to="/leagues" className={({ isActive }) => `dropdown-item-custom${isActive ? " active" : ""}`}>
@@ -87,10 +86,10 @@ function LeaguesDropdown({ t }) {
       ))}
     </div>
   )
-}
+})
 
 // ─── Mobile group grid ────────────────────────────────
-function MobileGroupGrid() {
+const MobileGroupGrid = memo(function MobileGroupGrid() {
   const { t } = useTranslation()
   return (
     <div style={{ padding: "10px 16px 14px" }}>
@@ -116,7 +115,24 @@ function MobileGroupGrid() {
       </NavLink>
     </div>
   )
-}
+})
+
+// ─── Mobile accordion section ─────────────────────────
+const MobileSection = memo(function MobileSection({ label, sectionKey, expanded, onToggle, children, badge }) {
+  const isOpen = expanded[sectionKey]
+  return (
+    <div className="mobile-nav-item">
+      <button className="mobile-nav-parent" onClick={() => onToggle(sectionKey)}>
+        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {label}
+          {badge > 0 && <span className="live-dot" />}
+        </span>
+        <span className={`mobile-arrow${isOpen ? " open" : ""}`}>▼</span>
+      </button>
+      {isOpen && <div className="mobile-nav-children">{children}</div>}
+    </div>
+  )
+})
 
 // ─── Main Navbar ──────────────────────────────────────
 export default function Navbar() {
@@ -146,7 +162,7 @@ export default function Navbar() {
     return () => window.removeEventListener("keydown", onKey)
   }, [])
 
-  const toggle = (key) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }))
+  const toggle = useCallback((key) => setExpanded(prev => ({ ...prev, [key]: !prev[key] })), [])
 
   // Mobile sections
   const MOBILE_MUNDIAL = [
@@ -165,22 +181,6 @@ export default function Navbar() {
     { label: "Champions League",  path: "/leagues/UCL" },
     { label: "MLS",               path: "/leagues/MLS" },
   ]
-
-  function MobileSection({ label, sectionKey, children, badge }) {
-    const isOpen = expanded[sectionKey]
-    return (
-      <div className="mobile-nav-item">
-        <button className="mobile-nav-parent" onClick={() => toggle(sectionKey)}>
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            {label}
-            {badge > 0 && <span className="live-dot" />}
-          </span>
-          <span className={`mobile-arrow${isOpen ? " open" : ""}`}>▼</span>
-        </button>
-        {isOpen && <div className="mobile-nav-children">{children}</div>}
-      </div>
-    )
-  }
 
   return (
     <>
