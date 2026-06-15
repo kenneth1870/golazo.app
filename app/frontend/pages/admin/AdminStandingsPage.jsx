@@ -123,7 +123,7 @@ export default function AdminStandingsPage() {
       {loading ? (
         <div style={{ color: "rgba(255,255,255,.4)" }}>Loading…</div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(460px, 1fr))", gap: 20 }}>
           {Object.entries(filtered).sort(([a],[b]) => a.localeCompare(b)).map(([group, rows]) => (
             <div key={group} style={{ background: "#161b22", border: "1px solid rgba(255,255,255,.07)", borderRadius: 12, overflow: "hidden" }}>
               <div style={{ padding: "12px 16px", background: "rgba(238,30,70,.08)", borderBottom: "1px solid rgba(238,30,70,.15)", display: "flex", alignItems: "center", gap: 8 }}>
@@ -131,32 +131,35 @@ export default function AdminStandingsPage() {
                   GROUP {group}
                 </span>
               </div>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>
-                    <th style={{ padding: "6px 12px", color: "rgba(255,255,255,.35)", fontSize: "0.68rem", textAlign: "left", textTransform: "uppercase", letterSpacing: ".04em" }}>#</th>
-                    <th style={{ padding: "6px 12px", color: "rgba(255,255,255,.35)", fontSize: "0.68rem", textAlign: "left", textTransform: "uppercase", letterSpacing: ".04em" }}>Team</th>
-                    {th("P")} {th("W")} {th("D")} {th("L")} {th("GF")} {th("GA")} {th("GD")} {th("Pts")}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r, i) => (
-                    <tr key={r.team.id} style={{ borderTop: "1px solid rgba(255,255,255,.04)", background: i < 2 ? "rgba(16,185,129,.03)" : "transparent" }}>
-                      <td style={{ padding: "8px 12px", color: i < 2 ? "#10b981" : "rgba(255,255,255,.3)", fontSize: "0.8rem", fontWeight: 700 }}>{i + 1}</td>
-                      <td style={{ padding: "8px 12px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          {r.team.flag_url && <img src={r.team.flag_url} alt="" style={{ width: 20, height: 14, objectFit: "cover", borderRadius: 2 }} onError={e => e.target.style.display="none"} />}
-                          <span style={{ color: "#fff", fontSize: "0.82rem", fontWeight: 600 }}>{r.team.name}</span>
-                        </div>
-                      </td>
-                      {[r.played, r.won, r.drawn, r.lost, r.goals_for, r.goals_against, r.goal_diff].map((v, j) => (
-                        <td key={j} style={{ padding: "8px 10px", color: "rgba(255,255,255,.5)", fontSize: "0.8rem", textAlign: "right" }}>{v}</td>
-                      ))}
-                      <td style={{ padding: "8px 12px", color: "#fff", fontSize: "0.85rem", fontWeight: 800, textAlign: "right" }}>{r.points}</td>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 420 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ padding: "6px 8px 6px 12px", color: "rgba(255,255,255,.35)", fontSize: "0.68rem", textAlign: "left", textTransform: "uppercase", letterSpacing: ".04em" }}>#</th>
+                      <th style={{ padding: "6px 8px", color: "rgba(255,255,255,.35)", fontSize: "0.68rem", textAlign: "left", textTransform: "uppercase", letterSpacing: ".04em" }}>Team</th>
+                      {th("P")} {th("W")} {th("D")} {th("L")} {th("GF")} {th("GA")} {th("GD")}
+                      <th style={{ padding: "6px 12px 6px 8px", color: "#ee1e46", fontSize: "0.68rem", textAlign: "right", textTransform: "uppercase", letterSpacing: ".04em", whiteSpace: "nowrap" }}>Pts</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {rows.map((r, i) => (
+                      <tr key={r.team.id} style={{ borderTop: "1px solid rgba(255,255,255,.04)", background: i < 2 ? "rgba(16,185,129,.03)" : "transparent" }}>
+                        <td style={{ padding: "7px 8px 7px 12px", color: i < 2 ? "#10b981" : "rgba(255,255,255,.3)", fontSize: "0.8rem", fontWeight: 700 }}>{i + 1}</td>
+                        <td style={{ padding: "7px 8px", minWidth: 110 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            {r.team.flag_url && <img src={r.team.flag_url} alt="" style={{ width: 20, height: 14, objectFit: "cover", borderRadius: 2, flexShrink: 0 }} onError={e => e.target.style.display="none"} />}
+                            <span style={{ color: "#fff", fontSize: "0.8rem", fontWeight: 600, whiteSpace: "nowrap" }}>{r.team.name}</span>
+                          </div>
+                        </td>
+                        {[r.played, r.won, r.drawn, r.lost, r.goals_for, r.goals_against, r.goal_diff].map((v, j) => (
+                          <td key={j} style={{ padding: "7px 8px", color: j === 6 ? (v > 0 ? "#10b981" : v < 0 ? "#ee1e46" : "rgba(255,255,255,.5)") : "rgba(255,255,255,.5)", fontSize: "0.8rem", textAlign: "right", fontWeight: j === 6 ? 700 : 400 }}>{v > 0 && j === 6 ? `+${v}` : v}</td>
+                        ))}
+                        <td style={{ padding: "7px 12px 7px 8px", color: "#fff", fontSize: "0.9rem", fontWeight: 900, textAlign: "right" }}>{r.points}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ))}
         </div>
