@@ -26,8 +26,8 @@ module Api
 
         calc = WorldCupStandings.new(wc)
 
-        calc.groups.transform_values.with_index do |ranked, _|
-          ranked.map.with_index do |s, idx|
+        calc.groups.transform_values do |ranked|
+          ranked.each_with_index.map do |s, idx|
             {
               rank:          idx + 1,
               group_name:    s.team.group,
