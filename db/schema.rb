@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_14_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_15_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -23,6 +23,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_14_000000) do
     t.string "logo"
     t.string "name"
     t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_competitions_on_code", unique: true
   end
 
   create_table "devices", force: :cascade do |t|
@@ -308,6 +309,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_14_000000) do
     t.bigint "team_id", null: false
     t.datetime "updated_at", null: false
     t.integer "won"
+    t.index ["competition_id", "team_id"], name: "index_standings_on_competition_id_and_team_id", unique: true
     t.index ["competition_id"], name: "index_standings_on_competition_id"
     t.index ["team_id"], name: "index_standings_on_team_id"
   end
@@ -321,6 +323,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_14_000000) do
     t.string "group"
     t.string "name"
     t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_teams_on_code"
     t.index ["external_id"], name: "index_teams_on_external_id", unique: true
   end
 

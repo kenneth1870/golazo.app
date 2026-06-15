@@ -401,26 +401,31 @@ class WorldCupSync
   # Used to gate sync_live so we don't burn API quota during the ~23 h/day with
   # no active WC action.
   def wc_matches_active?
-    wc = Competition.find_by(code: "WC")
-    return false unless wc
+    # Cache for 90 s so the per-minute sync job doesn't run 3 DB queries on
+    # every tick between tournaments. During live play the cache is busted
+    # immediately when a match transitions to/from live (see sync_match_from_live).
+    Rails.cache.fetch("wc_matches_active_v1", expires_in: 90.seconds) do
+      wc = Competition.find_by(code: "WC")
+      next false unless wc
 
-    # Active = currently live, OR kicking off within 2 hours, OR already
-    # kicked off within the last 3 hours but still 'scheduled' in DB (sync lag).
-    # The 3-hour lookback prevents a stuck 'scheduled' status from silencing
-    # the live-sync gate — without it, goal/fulltime notifications are never sent.
-    return true if Match.where(competition: wc, status: "live").exists?
-    return true if Match.where(competition: wc, status: "scheduled")
-                        .where(kickoff_at: 3.hours.ago..2.hours.from_now)
-                        .exists?
+      # Active = currently live, OR kicking off within 2 hours, OR already
+      # kicked off within the last 3 hours but still 'scheduled' in DB (sync lag).
+      # The 3-hour lookback prevents a stuck 'scheduled' status from silencing
+      # the live-sync gate — without it, goal/fulltime notifications are never sent.
+      next true if Match.where(competition: wc, status: "live").exists?
+      next true if Match.where(competition: wc, status: "scheduled")
+                          .where(kickoff_at: 3.hours.ago..2.hours.from_now)
+                          .exists?
 
-    # Keep the 1-min live sync running for matches marked 'finished' whose kickoff
-    # was recent enough that they could still be in progress (≤ 2.5 h, covering
-    # extra time + penalties). Without this, a match wrongly flipped to 'finished'
-    # silences the live gate, so goals only get picked up by the 10-min today-sync
-    # (a 10-minute notification delay) and the live-path self-heal never runs.
-    Match.where(competition: wc, status: "finished")
-         .where(kickoff_at: 2.5.hours.ago..Time.current)
-         .exists?
+      # Keep the 1-min live sync running for matches marked 'finished' whose kickoff
+      # was recent enough that they could still be in progress (≤ 2.5 h, covering
+      # extra time + penalties). Without this, a match wrongly flipped to 'finished'
+      # silences the live gate, so goals only get picked up by the 10-min today-sync
+      # (a 10-minute notification delay) and the live-path self-heal never runs.
+      Match.where(competition: wc, status: "finished")
+           .where(kickoff_at: 2.5.hours.ago..Time.current)
+           .exists?
+    end
   end
 
   # Updates a DB match from a normalized match hash (from live_matches).
@@ -492,6 +497,9 @@ class WorldCupSync
     # Kickoff: match transitions from scheduled → live feed
     if match.status == "scheduled"
       match.update!(status: "live", home_score: home_score, away_score: away_score)
+      # Bust the active-match gate cache so the live sync loop starts immediately
+      # rather than waiting up to 90 s for the TTL to expire.
+      Rails.cache.delete("wc_matches_active_v1")
       # Bust the today feed cache so the live match appears immediately on the
       # Hoy page without waiting for the 90s outer cache or 10min inner cache.
       [ Date.today, Date.today + 1 ].each do |d|

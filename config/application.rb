@@ -42,6 +42,8 @@ module GolazoApp
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
+    config.middleware.insert_after ActionDispatch::Static, Rack::Deflater
+
     config.time_zone = "UTC"
     config.api_only  = false
     config.active_job.queue_adapter = :solid_queue

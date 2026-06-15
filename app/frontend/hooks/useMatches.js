@@ -6,6 +6,18 @@ const cache  = new Map()  // key → { data, ts, promise }
 const subs   = new Map()  // key → Set of setState callbacks
 const timers = new Map()  // key → { interval, onVisible }
 
+const MAX_CACHE_ENTRIES = 15
+function evictLRU() {
+  if (cache.size <= MAX_CACHE_ENTRIES) return
+  // Only evict keys that have no active subscribers
+  let oldest = null, oldestTs = Infinity
+  for (const [key, entry] of cache) {
+    if (subs.has(key)) continue
+    if ((entry.ts || 0) < oldestTs) { oldestTs = entry.ts || 0; oldest = key }
+  }
+  if (oldest) cache.delete(oldest)
+}
+
 function cacheKey(filter, { competition, group, tz } = {}) {
   return `${filter}|${competition || ""}|${group || ""}|${tz || ""}`
 }
@@ -25,6 +37,7 @@ async function fetchKey(key, filter, opts) {
     if (!res.ok) throw new Error("fetch failed")
     const data = await res.json()
     cache.set(key, { data, ts: Date.now(), error: null })
+    evictLRU()
     notify(key, { data, loading: false, error: null })
     return data
   } catch (e) {

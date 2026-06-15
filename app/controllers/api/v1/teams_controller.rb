@@ -9,7 +9,9 @@ module Api
 
       def show
         team = Team.find(params[:id])
-        matches = team.matches.includes(:home_team, :away_team).order(:kickoff_at)
+        matches = Match.where("home_team_id = ? OR away_team_id = ?", team.id, team.id)
+                       .includes(:home_team, :away_team, :competition)
+                       .order(:kickoff_at)
 
         # Tournament goal scorers from our own DB (no external API needed)
         scorers = team.goals
@@ -29,24 +31,26 @@ module Api
                       .select { |s| s[:goals] > 0 }
                       .sort_by { |s| -s[:goals] }
 
-        # Tournament summary stats
-        finished_matches = matches.select { |m| m.status == "finished" }
-        home_fin = finished_matches.select { |m| m.home_team_id == team.id }
-        away_fin = finished_matches.select { |m| m.away_team_id == team.id }
-
-        goals_scored   = home_fin.sum { |m| m.home_score.to_i } + away_fin.sum { |m| m.away_score.to_i }
-        goals_conceded = home_fin.sum { |m| m.away_score.to_i } + away_fin.sum { |m| m.home_score.to_i }
-        clean_sheets   = home_fin.count { |m| m.away_score.to_i == 0 } + away_fin.count { |m| m.home_score.to_i == 0 }
+        # Tournament summary stats pushed to SQL — no Ruby iteration over match rows
+        finished = Match.where("home_team_id = ? OR away_team_id = ?", team.id, team.id)
+                        .where(status: "finished")
+        played = finished.count
+        row = finished.pick(
+          Arel.sql("SUM(CASE WHEN home_team_id = #{team.id} THEN home_score ELSE away_score END)"),
+          Arel.sql("SUM(CASE WHEN home_team_id = #{team.id} THEN away_score ELSE home_score END)"),
+          Arel.sql("SUM(CASE WHEN home_team_id = #{team.id} AND away_score = 0 THEN 1 WHEN away_team_id = #{team.id} AND home_score = 0 THEN 1 ELSE 0 END)")
+        )
+        goals_scored, goals_conceded, clean_sheets = row&.map(&:to_i) || [0, 0, 0]
 
         tournament_stats = {
-          played:        finished_matches.count,
-          goals_scored:  goals_scored,
+          played:         played,
+          goals_scored:   goals_scored,
           goals_conceded: goals_conceded,
-          clean_sheets:  clean_sheets,
-          goal_diff:     goals_scored - goals_conceded
+          clean_sheets:   clean_sheets,
+          goal_diff:      goals_scored - goals_conceded
         }
 
-        render json: team.as_json.merge(
+        render json: team.as_json(only: %i[id name code flag_url group confederation external_id]).merge(
           matches: matches,
           scorers: scorers,
           tournament_stats: tournament_stats
