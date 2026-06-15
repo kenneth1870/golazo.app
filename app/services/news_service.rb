@@ -54,8 +54,19 @@ class NewsService
     ]
   }.freeze
 
-  USER_AGENT        = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36".freeze
-  MOBILE_USER_AGENT = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1".freeze
+  USER_AGENTS = [
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Safari/605.1.15",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0",
+  ].freeze
+
+  MOBILE_USER_AGENTS = [
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 18_3_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.3.2 Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.6943.53 Mobile Safari/537.36",
+  ].freeze
 
   # RFC-1918 / loopback / link-local / IPv6 private ranges.
   # Block any URL whose host resolves to one of these to prevent SSRF via
@@ -88,6 +99,15 @@ class NewsService
     www.uefa.com
     www.fifa.com
   ].freeze
+
+  # Direct article lookup by id — O(1) via per-article cache populated during
+  # feed fetch. Falls back to scanning the full feed so show/content never 404
+  # on a cold cache.
+  def find_article(id:, lang:)
+    Rails.cache.fetch("news_article_#{lang}_#{id}", expires_in: 35.minutes) do
+      latest(limit: 200, lang: lang).find { |a| a[:id] == id }
+    end
+  end
 
   def latest(limit: 20, lang: "en")
     feeds     = FEEDS[lang] || FEEDS["en"]
@@ -125,7 +145,14 @@ class NewsService
       end
 
       merged
-    end.tap { |items| Rails.cache.write("news_feed_stale_#{lang}", items, expires_in: 4.hours) if items.any? }
+    end.tap do |items|
+      Rails.cache.write("news_feed_stale_#{lang}", items, expires_in: 4.hours) if items.any?
+      items.each do |a|
+        next unless a[:id].present?
+        key = "news_article_#{lang}_#{a[:id]}"
+        Rails.cache.write(key, a, expires_in: 35.minutes) unless Rails.cache.exist?(key)
+      end
+    end
 
     all_items.first(limit)
   rescue => e
@@ -172,7 +199,7 @@ class NewsService
       response = Faraday.get(url) do |req|
         req.options.timeout      = 8
         req.options.open_timeout = 5
-        req.headers["User-Agent"] = USER_AGENT
+        req.headers["User-Agent"] = USER_AGENTS.sample
         req.headers["Accept"]     = "text/html"
       end
 
@@ -204,7 +231,7 @@ class NewsService
     response = Faraday.get(url) do |req|
       req.options.timeout      = 6
       req.options.open_timeout = 4
-      req.headers["User-Agent"] = USER_AGENT
+      req.headers["User-Agent"] = USER_AGENTS.sample
       req.headers["Accept"]     = "application/json"
     end
 
@@ -271,7 +298,7 @@ class NewsService
           resp = Faraday.get(original_url) do |req|
             req.options.timeout      = 10
             req.options.open_timeout = 5
-            req.headers["User-Agent"]      = MOBILE_USER_AGENT
+            req.headers["User-Agent"]      = MOBILE_USER_AGENTS.sample
             req.headers["Accept"]          = "text/html,application/xhtml+xml"
             req.headers["Accept-Language"] = "es-MX,es;q=0.9,en;q=0.8"
             req.headers["Referer"]         = "https://espndeportes.espn.com/"
@@ -431,7 +458,7 @@ class NewsService
       resp = Faraday.get(url) do |req|
         req.options.timeout      = 6
         req.options.open_timeout = 4
-        req.headers["User-Agent"]      = MOBILE_USER_AGENT
+        req.headers["User-Agent"]      = MOBILE_USER_AGENTS.sample
         req.headers["Accept"]          = "text/html,application/xhtml+xml"
         req.headers["Accept-Language"] = "es-MX,es;q=0.9,en;q=0.8"
         req.headers["Referer"]         = "https://espndeportes.espn.com/"

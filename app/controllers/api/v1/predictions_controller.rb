@@ -7,9 +7,13 @@ module Api
       end
 
       def vote
-        # Rate-limit: one vote per IP per match per 24 hours
-        ip_key = "vote_ip_#{request.remote_ip}_#{params[:match_id]}"
-        if Rails.cache.read(ip_key)
+        # Rate-limit: one vote per device+IP per match per 24 hours.
+        # Include device_id alongside IP so X-Forwarded-For spoofing on shared
+        # proxies can't bypass the limit — both keys must be fresh to block.
+        device_id = params[:device_id].to_s.strip.first(64).presence || "anon"
+        ip_key     = "vote_ip_#{request.remote_ip}_#{params[:match_id]}"
+        device_key = "vote_dev_#{device_id}_#{params[:match_id]}"
+        if Rails.cache.read(ip_key) || Rails.cache.read(device_key)
           return render json: { error: "already_voted" }, status: :unprocessable_entity
         end
 
@@ -27,7 +31,8 @@ module Api
         if result[:error]
           render json: result, status: :unprocessable_entity
         else
-          Rails.cache.write(ip_key, true, expires_in: 24.hours)
+          Rails.cache.write(ip_key,     true, expires_in: 24.hours)
+          Rails.cache.write(device_key, true, expires_in: 24.hours)
           render json: result
         end
       rescue => e

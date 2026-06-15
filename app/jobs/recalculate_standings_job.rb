@@ -7,19 +7,22 @@ class RecalculateStandingsJob < ApplicationJob
 
   def perform
     wc = Competition.find_by(code: "WC")
-    if wc
-      active = Match.where(competition: wc)
-                    .where(
-                      "(status IN ('live','finished') AND kickoff_at > ?) OR " \
-                      "(status = 'scheduled' AND kickoff_at BETWEEN ? AND ?)",
-                      12.hours.ago,
-                      12.hours.ago, 2.hours.from_now
-                    )
-                    .exists?
-      unless active
-        Rails.logger.info("[RecalculateStandingsJob] No active WC matches — skipping")
-        return
-      end
+    unless wc
+      Rails.logger.info("[RecalculateStandingsJob] WC competition not found — skipping")
+      return
+    end
+
+    active = Match.where(competition: wc)
+                  .where(
+                    "(status IN ('live','finished') AND kickoff_at > ?) OR " \
+                    "(status = 'scheduled' AND kickoff_at BETWEEN ? AND ?)",
+                    12.hours.ago,
+                    12.hours.ago, 2.hours.from_now
+                  )
+                  .exists?
+    unless active
+      Rails.logger.info("[RecalculateStandingsJob] No active WC matches — skipping")
+      return
     end
 
     lock_key = "recalculate_standings_running"

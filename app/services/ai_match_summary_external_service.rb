@@ -45,29 +45,33 @@ class AiMatchSummaryExternalService
     prompt = build_prompt(fixture)
     return nil if prompt.blank?
 
-    resp = anthropic_client.post("/v1/messages") do |req|
-      req.headers["Content-Type"]      = "application/json"
-      req.headers["x-api-key"]         = ENV["ANTHROPIC_API_KEY"]
-      req.headers["anthropic-version"] = "2023-06-01"
-      req.body = {
-        model:      MODEL,
-        max_tokens: MAX_TOKENS,
-        system:     system_prompt,
-        messages:   [ { role: "user", content: prompt } ]
-      }.to_json
+    attempt = 0
+    begin
+      attempt += 1
+      resp = anthropic_client.post("/v1/messages") do |req|
+        req.headers["Content-Type"]      = "application/json"
+        req.headers["x-api-key"]         = ENV["ANTHROPIC_API_KEY"]
+        req.headers["anthropic-version"] = "2023-06-01"
+        req.body = {
+          model:      MODEL,
+          max_tokens: MAX_TOKENS,
+          system:     system_prompt,
+          messages:   [ { role: "user", content: prompt } ]
+        }.to_json
+      end
+
+      return nil unless resp.success?
+
+      body = JSON.parse(resp.body)
+      text = body.dig("content", 0, "text").to_s.strip
+      return nil if text.blank?
+
+      { summary: text, generated_at: Time.current.iso8601, model: MODEL }
+    rescue Faraday::TimeoutError, Faraday::ConnectionFailed => e
+      raise if attempt >= 3
+      sleep(attempt * 2)
+      retry
     end
-
-    return nil unless resp.success?
-
-    body = JSON.parse(resp.body)
-    text = body.dig("content", 0, "text").to_s.strip
-    return nil if text.blank?
-
-    {
-      summary:      text,
-      generated_at: Time.current.iso8601,
-      model:        MODEL
-    }
   end
 
   def build_prompt(fixture)

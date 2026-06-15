@@ -108,8 +108,8 @@ Rails.application.routes.draw do
     SolidQueueDashboard::Engine
   else
     Rack::Auth::Basic.new(SolidQueueDashboard::Engine, "Solid Queue Dashboard") do |user, pass|
-      ActiveSupport::SecurityUtils.secure_compare(user, ENV.fetch("JOBS_USER", "admin")) &&
-        ActiveSupport::SecurityUtils.secure_compare(pass, ENV.fetch("JOBS_PASSWORD", "golazo-dev"))
+      ActiveSupport::SecurityUtils.secure_compare(user, ENV.fetch("JOBS_USER")) &&
+        ActiveSupport::SecurityUtils.secure_compare(pass, ENV.fetch("JOBS_PASSWORD"))
     end
   end
   mount solid_queue_app, at: "/solid-queue"

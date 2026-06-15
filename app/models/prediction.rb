@@ -1,14 +1,17 @@
 class Prediction < ApplicationRecord
   validates :match_external_id, presence: true, uniqueness: true
 
+  # voter_tokens is stored as a JSON hash: { token => 1, ... }
+  # Old array format is migrated on first read so no DB migration is needed.
   def tokens
-    JSON.parse(voter_tokens)
+    raw = JSON.parse(voter_tokens)
+    raw.is_a?(Hash) ? raw : raw.each_with_object({}) { |v, h| h[v] = 1 }
   rescue
-    []
+    {}
   end
 
   def voted?(token)
-    token.present? && tokens.include?(token)
+    token.present? && tokens.key?(token)
   end
 
   def vote!(choice, token)
@@ -22,7 +25,7 @@ class Prediction < ApplicationRecord
         raise ActiveRecord::Rollback
       end
       locked.increment!("#{choice}_votes")
-      locked.update_column(:voter_tokens, (locked.tokens + [ token ]).last(1_000).to_json) if token.present?
+      locked.update_column(:voter_tokens, locked.tokens.merge(token => 1).to_json) if token.present?
       result = locked.as_json_result
     end
     result

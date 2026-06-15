@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback, useRef } from "react"
 
 // Module-level cache so every component sharing the same filter/params
 // reuses one in-flight request and one polling interval.
-const cache  = new Map()  // key → { data, ts, promise }
-const subs   = new Map()  // key → Set of setState callbacks
-const timers = new Map()  // key → { interval, onVisible }
+const cache       = new Map()  // key → { data, ts, error }
+const subs        = new Map()  // key → Set of setState callbacks
+const timers      = new Map()  // key → { interval, onVisible }
+const controllers = new Map()  // key → AbortController (current in-flight fetch)
 
 const MAX_CACHE_ENTRIES = 15
 function evictLRU() {
@@ -32,8 +33,11 @@ async function fetchKey(key, filter, opts) {
   if (opts.group)       params.set("group",       opts.group)
   if (opts.tz)          params.set("tz",          opts.tz)
 
+  const controller = new AbortController()
+  controllers.set(key, controller)
+
   try {
-    const res  = await fetch(`/api/v1/matches?${params}`)
+    const res  = await fetch(`/api/v1/matches?${params}`, { signal: controller.signal })
     if (!res.ok) throw new Error("fetch failed")
     const data = await res.json()
     cache.set(key, { data, ts: Date.now(), error: null })
@@ -41,9 +45,12 @@ async function fetchKey(key, filter, opts) {
     notify(key, { data, loading: false, error: null })
     return data
   } catch (e) {
+    if (e.name === "AbortError") return  // cancelled when last subscriber left — no notify
     const prev = cache.get(key)
     cache.set(key, { ...(prev || {}), error: e.message })
     notify(key, { data: prev?.data || [], loading: false, error: e.message })
+  } finally {
+    if (controllers.get(key) === controller) controllers.delete(key)
   }
 }
 
@@ -84,6 +91,8 @@ function unsubscribe(key, setState) {
     }
     timers.delete(key)
     subs.delete(key)
+    controllers.get(key)?.abort()
+    controllers.delete(key)
   }
 }
 
