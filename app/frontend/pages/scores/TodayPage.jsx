@@ -429,16 +429,16 @@ export default function TodayPage() {
     return () => window.removeEventListener("keydown", onKey)
   }, [])
 
-  // Safety-net poll only for today. Live score changes now arrive instantly via
-  // the live_scores WebSocket, so this just backstops a dropped connection:
-  // 90s when something is live, 5min otherwise.
+  // Safety-net poll only for today. Live score changes arrive instantly via
+  // the live_scores WebSocket; this backstops a dropped connection.
+  // 30s when a match is live (matches the server's live-sync cadence so we
+  // never lag more than one extra cycle), 5min when nothing is on.
   useEffect(() => {
     const iso   = toISO(selected)
     const today = toISO(new Date())
     if (iso !== today) return
-    const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "BT", "P", "LIVE"])
-    const hasLive = matches.some(m => LIVE_STATUSES.has(m.status?.short ?? m.status))
-    const iv = setInterval(() => load(selected), hasLive ? 90000 : 300000)
+    const hasLive = matches.some(m => m.status === "live")
+    const iv = setInterval(() => load(selected), hasLive ? 30000 : 300000)
     return () => clearInterval(iv)
   }, [selected, load, matches])
 

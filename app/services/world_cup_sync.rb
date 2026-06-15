@@ -742,6 +742,15 @@ class WorldCupSync
       ActionCable.server.broadcast("external_match_#{match.external_id}", payload.merge(type: "match_update"))
     end
 
+    # Bust the today-api cache so that any safety-net poll immediately after a
+    # goal or status change sees fresh data rather than the 90s stale snapshot.
+    kickoff_date = match.kickoff_at&.utc&.to_date
+    if kickoff_date
+      [ kickoff_date, kickoff_date + 1, kickoff_date - 1 ].each do |d|
+        Rails.cache.delete("today_api_#{d.iso8601}")
+      end
+    end
+
     # Shared stream for list views (Today, Home) — carries enough identity to
     # update the right row without a full re-fetch.
     ActionCable.server.broadcast("live_scores", payload.merge(
