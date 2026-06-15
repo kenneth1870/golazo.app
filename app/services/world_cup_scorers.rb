@@ -83,22 +83,24 @@ class WorldCupScorers
     sorted.sort_by { |r| -r[:value].to_i }
   end
 
+  def self.client
+    @client ||= LiveScoresClient.new
+  end
+
   def self.fetch_events(fixture_id)
     Rails.cache.fetch("wc_fixture_events_v1_#{fixture_id}", expires_in: FIXTURE_EVENTS_TTL) do
-      key = ENV["APISPORTS_KEY"].presence
-      return [] if key.blank?
+      detail = client.match_detail(fixture_id)
+      next [] unless detail
 
-      conn = Faraday.new(url: "https://v3.football.api-sports.io") do |f|
-        f.headers["x-apisports-key"] = key
-        f.options.timeout      = 10
-        f.options.open_timeout = 6
-      end
-
-      resp = conn.get("fixtures/events", fixture: fixture_id)
-      return [] unless resp.success?
-
-      data = JSON.parse(resp.body)
-      data.dig("response") || []
+      detail[:events]&.map do |e|
+        {
+          "type"   => e[:type],
+          "detail" => e[:detail],
+          "team"   => { "name" => e.dig(:team, :name), "logo" => e.dig(:team, :logo) },
+          "player" => { "name" => e[:player] },
+          "assist" => { "name" => e[:assist] }
+        }
+      end || []
     rescue => e
       Rails.logger.error("[WorldCupScorers] events for #{fixture_id}: #{e.message}")
       []

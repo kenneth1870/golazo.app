@@ -177,6 +177,8 @@ class LiveScoresClient
       rescue => e
         Rails.logger.warn("[LiveScoresClient] thread #{k}: #{e.message}")
         results[k] = {}
+      ensure
+        t.kill if t.alive?
       end
 
       fx = results[:fixture].dig("response", 0)

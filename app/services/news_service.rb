@@ -90,8 +90,8 @@ class NewsService
       # ESPN articles stay findable even after they age out of the API window.
       rss_threads  = feeds.map { |feed| Thread.new { fetch_feed(feed[:url], feed[:source]) } }
 
-      espn_items = espn_threads.flat_map { |t| t.join(8)&.value || [] }
-      rss_items  = rss_threads.flat_map  { |t| t.join(8)&.value || [] }
+      espn_items = espn_threads.flat_map { |t| result = t.join(8)&.value || []; t.kill if t.alive?; result }
+      rss_items  = rss_threads.flat_map  { |t| result = t.join(8)&.value || []; t.kill if t.alive?; result }
 
       merged = (espn_items + rss_items)
         .uniq { |a| a[:link] }
@@ -107,7 +107,7 @@ class NewsService
             article[:image] = img if img.present?
           end
         end
-        backfill_threads.each { |t| t.join(5) }
+        backfill_threads.each { |t| t.join(5); t.kill if t.alive? }
       end
 
       merged

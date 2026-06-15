@@ -712,14 +712,14 @@ class WorldCupSync
       .joins("INNER JOIN teams home_teams ON home_teams.id = matches.home_team_id")
       .joins("INNER JOIN teams away_teams ON away_teams.id = matches.away_team_id")
       # scheduled/live always, plus finished matches within 8 hours of kickoff.
-      # 8h covers: 2h extra-time/penalties + late live-feed flaps + the
-      # SyncTodayMatchesJob 10-min poll window. Without the 8h window, a match
-      # finalised with a wrong score (e.g. 0-0 before a late goal was captured)
-      # becomes unreachable by sync_match_from_normalized after 3h and stays wrong.
+      # 48h covers same-day reschedules and early-UTC matches (e.g. 01:00 UTC)
+      # that got wrong scores and need correcting via ResyncAllWcMatchesJob later
+      # in the day. The anti-spam guard (just_finished check) prevents duplicate
+      # notifications when re-syncing already-finished matches.
       .where(
         "matches.status IN ('scheduled','live') OR " \
         "(matches.status = 'finished' AND matches.kickoff_at > ?)",
-        8.hours.ago
+        48.hours.ago
       )
       .find_by(
         "LOWER(home_teams.name) = ? AND LOWER(away_teams.name) = ?",
