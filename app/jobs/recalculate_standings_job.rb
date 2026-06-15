@@ -30,6 +30,7 @@ class RecalculateStandingsJob < ApplicationJob
     end
 
     Rails.cache.write(lock_key, true, expires_in: 30.seconds)
+    backfill_group_stage_for_wc(wc) if wc
     sync = WorldCupSync.new(competition_code: "WC")
     sync.recalculate_standings_from_results
     WorldCupKnockout.rebuild!
@@ -38,5 +39,22 @@ class RecalculateStandingsJob < ApplicationJob
     ActionCable.server.broadcast("standings_updates", { type: "standings_updated", competition: "WC" })
   ensure
     Rails.cache.delete(lock_key)
+  end
+
+  private
+
+  # Backfill group_stage for any finished WC group match that was finalized
+  # before the live-sync path started writing it. Reads from team.group as the
+  # authoritative source (set during seeding).
+  def backfill_group_stage_for_wc(wc)
+    Match.where(competition: wc, status: "finished", group_stage: nil)
+         .includes(:home_team, :away_team)
+         .find_each do |m|
+      group = m.home_team&.group.presence || m.away_team&.group.presence
+      next unless group
+      # Only backfill if both teams are in the same group (true group-stage match)
+      next unless m.home_team&.group == m.away_team&.group
+      m.update_columns(group_stage: group)
+    end
   end
 end
