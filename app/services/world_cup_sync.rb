@@ -109,15 +109,25 @@ class WorldCupSync
   # Catch-up: re-sync any DB matches still scheduled/live whose kickoff was
   # long enough ago that they should be finished. Prevents matches from getting
   # stuck in 'scheduled' if the server was down or the sync window was missed.
+  # Also re-syncs matches that finished within the last 4 hours: if the live
+  # feed finalized a match early (e.g. at 0-0 before a late goal), the date
+  # endpoint will return the authoritative final score and overwrite it.
   def sync_stale_past_matches(already_synced_ids = Set.new)
     stale = Match.where(status: %w[scheduled live])
                  .where(kickoff_at: 7.days.ago..115.minutes.ago)
                  .where.not(external_id: nil)
 
-    return unless stale.exists?
+    recent_finished = Match.where(status: "finished")
+                           .where(kickoff_at: 4.hours.ago..Time.current)
+                           .where.not(external_id: nil)
 
-    stale_dates = stale.pluck(Arel.sql("DATE(kickoff_at AT TIME ZONE 'UTC')")).uniq
-    log("Catch-up: #{stale.count} stale match(es) across #{stale_dates.length} date(s)")
+    return unless stale.exists? || recent_finished.exists?
+
+    stale_dates = (stale + recent_finished)
+                    .map { |m| m.kickoff_at.utc.to_date }
+                    .uniq
+
+    log("Catch-up: #{stale.count} stale + #{recent_finished.count} recent-finished match(es) across #{stale_dates.length} date(s)")
 
     stale_dates.each do |d|
       past_matches = @api.matches_for_date(d)
@@ -670,13 +680,15 @@ class WorldCupSync
     Match
       .joins("INNER JOIN teams home_teams ON home_teams.id = matches.home_team_id")
       .joins("INNER JOIN teams away_teams ON away_teams.id = matches.away_team_id")
-      # scheduled/live as usual, plus recently-finished matches (kickoff < 3h ago)
-      # so a match wrongly marked finished by a feed flap can be reached and
-      # reverted to live by the next live sync (self-heal).
+      # scheduled/live always, plus finished matches within 8 hours of kickoff.
+      # 8h covers: 2h extra-time/penalties + late live-feed flaps + the
+      # SyncTodayMatchesJob 10-min poll window. Without the 8h window, a match
+      # finalised with a wrong score (e.g. 0-0 before a late goal was captured)
+      # becomes unreachable by sync_match_from_normalized after 3h and stays wrong.
       .where(
         "matches.status IN ('scheduled','live') OR " \
         "(matches.status = 'finished' AND matches.kickoff_at > ?)",
-        3.hours.ago
+        8.hours.ago
       )
       .find_by(
         "LOWER(home_teams.name) = ? AND LOWER(away_teams.name) = ?",
