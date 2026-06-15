@@ -228,7 +228,22 @@
     "injuryDoubt": "Doubtful",
     "ratingsEmpty": "No ratings yet",
     "ratingsAppear": "Ratings appear during or after the match",
-    "info": "Match Info"
+    "info": "Match Info",
+    "statStatsSnapshot": "Stats",
+    "statBallPossession": "Ball Possession",
+    "statShots": "Shots",
+    "statTotalShots": "Total Shots",
+    "statShotsOnTarget": "Shots on Target",
+    "statShotsOnGoal": "Shots on Goal",
+    "statShotsOffGoal": "Shots off Goal",
+    "statBlockedShots": "Blocked Shots",
+    "statCornerKicks": "Corner Kicks",
+    "statFouls": "Fouls",
+    "statYellowCards": "Yellow Cards",
+    "statRedCards": "Red Cards",
+    "statOffsides": "Offsides",
+    "statGoalkeeperSaves": "Goalkeeper Saves",
+    "statPassesAccuracy": "Pass Accuracy"
   },
   "error": {
     "dataUnavailable": "Data temporarily unavailable",

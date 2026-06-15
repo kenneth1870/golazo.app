@@ -411,7 +411,23 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
   const awayName = translateTeam(away?.name, i18n.language)
   const homeRaw  = home?.name   // raw API name for event comparison
   const teamColor = getMatchColor(home?.name, away?.name)
-  const goals  = fixture?.goals
+  const apiGoals = fixture?.goals
+
+  // Derive score from events as a safety net: when the goals tally from the
+  // fixture API lags behind the events feed (common in stoppage-time goals),
+  // counting confirmed goals from events ensures the scoreboard is never stale.
+  // Own goals count for the OPPOSING team (API-Football: `team` = OG scorer's team).
+  let hFromEvents = 0, aFromEvents = 0
+  ;(events ?? []).filter(e => e.type === "Goal" && e.detail !== "Missed Penalty").forEach(e => {
+    const scoredByHome = e.team?.name === homeRaw
+    const isOG = e.detail === "Own Goal"
+    if (scoredByHome !== isOG) hFromEvents++
+    else aFromEvents++
+  })
+  const goals = {
+    home: Math.max(apiGoals?.home ?? 0, hFromEvents),
+    away: Math.max(apiGoals?.away ?? 0, aFromEvents),
+  }
   const status = fixture?.fixture?.status
   const isNS   = status?.short === "NS"
   const isFT   = status?.short === "FT" || status?.short === "AET" || status?.short === "PEN"

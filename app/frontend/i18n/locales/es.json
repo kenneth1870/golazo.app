@@ -228,7 +228,22 @@
     "injuryDoubt": "Dudoso",
     "ratingsEmpty": "Sin valoraciones aún",
     "ratingsAppear": "Las valoraciones aparecen durante o tras el partido",
-    "info": "Info del Partido"
+    "info": "Info del Partido",
+    "statStatsSnapshot": "Stats",
+    "statBallPossession": "Posesión del Balón",
+    "statShots": "Tiros",
+    "statTotalShots": "Tiros Totales",
+    "statShotsOnTarget": "Tiros a Puerta",
+    "statShotsOnGoal": "Tiros a Puerta",
+    "statShotsOffGoal": "Tiros Fuera",
+    "statBlockedShots": "Tiros Bloqueados",
+    "statCornerKicks": "Tiros de Esquina",
+    "statFouls": "Faltas",
+    "statYellowCards": "Tarjetas Amarillas",
+    "statRedCards": "Tarjetas Rojas",
+    "statOffsides": "Fuera de Juego",
+    "statGoalkeeperSaves": "Paradas del Portero",
+    "statPassesAccuracy": "Precisión de Pases"
   },
   "error": {
     "dataUnavailable": "Datos temporalmente no disponibles",
