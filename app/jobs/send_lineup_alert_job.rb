@@ -7,8 +7,10 @@ class SendLineupAlertJob < ApplicationJob
   # Sends a push to all subscribers following either team.
   def perform(match_id:, home_name:, away_name:, kickoff_at: nil, match_url: nil)
     time_str = kickoff_at ? Time.parse(kickoff_at.to_s).strftime("%-H:%M") : nil
+    home_es  = TeamNameTranslator.translate(home_name, "es")
+    away_es  = TeamNameTranslator.translate(away_name, "es")
     title = "📋 Alineaciones publicadas"
-    body  = [ home_name, "vs", away_name, time_str ? "· #{time_str}" : nil ].compact.join(" ")
+    body  = [ home_es, "vs", away_es, time_str ? "· #{time_str}" : nil ].compact.join(" ")
     url   = match_url || "/"
 
     subs = PushSubscription.for_teams([ home_name, away_name ])

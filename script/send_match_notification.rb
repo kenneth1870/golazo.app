@@ -44,8 +44,8 @@ home_sc = args.shift
 away_sc = args.shift
 minute  = args.shift
 
-home = match.home_team&.name.to_s
-away = match.away_team&.name.to_s
+home = TeamNameTranslator.translate(match.home_team&.name.to_s, "es")
+away = TeamNameTranslator.translate(match.away_team&.name.to_s, "es")
 score = (home_sc && away_sc) ? "#{home_sc}–#{away_sc}" : nil
 url   = "/matches/#{match.external_id || "db-#{match.id}"}"
 

@@ -42,13 +42,18 @@ class MatchEventNotificationJob < ApplicationJob
     Rails.logger.info("[PushNotification] #{event_type} | #{home_name} vs #{away_name} | #{subs.size} subscribers found")
     return if subs.empty?
 
-    # Copy is localised per subscriber; memoise per locale so we build it once.
+    # Copy + team names are localised per subscriber; memoise per locale so we
+    # build it once. Spanish is the default for subscribers with no explicit
+    # locale (the app's primary audience).
     copy_cache = {}
 
     subs.each do |sub|
-      locale      = %w[es en].include?(sub.locale) ? sub.locale : "en"
-      title, body = copy_cache[locale] ||=
-        build_copy(locale, event_type, home_name, away_name, score_str, minute)
+      locale      = %w[es en].include?(sub.locale) ? sub.locale : "es"
+      title, body = copy_cache[locale] ||= begin
+        home_t = TeamNameTranslator.translate(home_name, locale)
+        away_t = TeamNameTranslator.translate(away_name, locale)
+        build_copy(locale, event_type, home_t, away_t, score_str, minute)
+      end
 
       payload = {
         title:    title,
