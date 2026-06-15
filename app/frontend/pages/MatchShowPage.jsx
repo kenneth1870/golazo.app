@@ -387,7 +387,7 @@ function addToCalendar(fixture) {
 }
 
 
-function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, notifEnabled, notifSupported, events }) {
+function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, onNotif, notifEnabled, notifSupported, events }) {
   const { t, i18n } = useTranslation()
   const [copied, setCopied] = useState(false)
   const [venueImg, setVenueImg] = useState(null)
@@ -522,7 +522,7 @@ function Scoreboard({ fixture, isLive, liveMinute, matchId, onShare, onNotif, no
               fontSize: ".72rem", fontWeight: 800, color: "#ee1e46", letterSpacing: ".06em",
             }}>
               <span className="live-dot" />
-              {liveMinute ? `${liveMinute}'` : "LIVE"}
+              {liveMinute ? `${liveMinute}${liveExtra ? `+${liveExtra}` : ""}'` : "LIVE"}
               {isHT && t("match.halfTimeShort")}
             </div>
           ) : isFT ? (
@@ -1673,6 +1673,7 @@ export default function MatchShowPage() {
   const statusShort = data?.fixture?.fixture?.status?.short
   const isLive      = ["1H", "2H", "HT", "ET", "BT", "P", "INT"].includes(statusShort)
   const apiMinute   = data?.fixture?.fixture?.status?.elapsed
+  const apiExtra    = data?.fixture?.fixture?.status?.extra
   const liveMinute  = useLiveMinute(apiMinute, isLive)
 
   const homeTeamRaw = data?.fixture?.teams?.home?.name  // raw API name for event comparisons
@@ -2000,6 +2001,7 @@ export default function MatchShowPage() {
             fixture={data.fixture}
             isLive={isLive}
             liveMinute={liveMinute}
+            liveExtra={apiExtra}
             matchId={id}
             notifEnabled={notifSupported && Notification.permission === "granted"}
             notifSupported={notifSupported}

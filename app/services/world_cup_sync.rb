@@ -430,10 +430,11 @@ class WorldCupSync
     away_name    = raw.dig(:away, :name)
     return false unless home_name && away_name
 
-    home_score   = raw.dig(:home, :score)
-    away_score   = raw.dig(:away, :score)
-    minute       = raw[:minute]
-    status_short = raw[:status_short]
+    home_score    = raw.dig(:home, :score)
+    away_score    = raw.dig(:away, :score)
+    minute        = raw[:minute]
+    minute_extra  = raw[:minute_extra]
+    status_short  = raw[:status_short]
 
     match = find_match_by_teams(home_name, away_name)
     return false unless match
@@ -484,7 +485,7 @@ class WorldCupSync
     if match.status == "finished"
       match.update!(status: "live", home_score: home_score, away_score: away_score)
       log("Reverted falsely-finished #{match.id} (#{home_name} vs #{away_name}) back to live")
-      broadcast_score(match, minute, notify: false)
+      broadcast_score(match, minute, minute_extra: minute_extra, notify: false)
       return true
     end
 
@@ -498,11 +499,12 @@ class WorldCupSync
         Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
         Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
       end
-      broadcast_score(match, minute, notify: false)
+      broadcast_score(match, minute, minute_extra: minute_extra, notify: false)
       return true
     end
 
-    return false if home_score == match.home_score && away_score == match.away_score
+    return false if home_score == match.home_score && away_score == match.away_score &&
+                    minute == match.minute
 
     old_total = match.home_score.to_i + match.away_score.to_i
     new_total = home_score.to_i + away_score.to_i
@@ -517,8 +519,8 @@ class WorldCupSync
     # Only push a "goal" alert when the total score actually increased.
     scored = new_total > old_total
 
-    match.update!(status: "live", home_score: home_score, away_score: away_score)
-    broadcast_score(match, minute, notify: scored)
+    match.update!(status: "live", home_score: home_score, away_score: away_score, minute: minute)
+    broadcast_score(match, minute, minute_extra: minute_extra, notify: scored)
     true
   rescue => e
     log("Live sync error for #{home_name} v #{away_name}: #{e.message}")
@@ -728,13 +730,14 @@ class WorldCupSync
     nil
   end
 
-  def broadcast_score(match, minute = nil, event_type: "goal", notify: true)
+  def broadcast_score(match, minute = nil, minute_extra: nil, event_type: "goal", notify: true)
     payload = {
-      type:       "score_update",
-      home_score: match.home_score,
-      away_score: match.away_score,
-      status:     match.status,
-      minute:     minute
+      type:         "score_update",
+      home_score:   match.home_score,
+      away_score:   match.away_score,
+      status:       match.status,
+      minute:       minute,
+      minute_extra: minute_extra
     }
     ActionCable.server.broadcast("match_#{match.id}", payload)
 
@@ -754,9 +757,10 @@ class WorldCupSync
     # Shared stream for list views (Today, Home) — carries enough identity to
     # update the right row without a full re-fetch.
     ActionCable.server.broadcast("live_scores", payload.merge(
-      type:        "live_score_update",
-      match_id:    match.id,
-      external_id: match.external_id
+      type:         "live_score_update",
+      match_id:     match.id,
+      external_id:  match.external_id,
+      minute_extra: minute_extra
     ))
 
     return unless notify

@@ -575,6 +575,7 @@ class LiveScoresClient
       status:         status,
       status_short:   short,
       minute:         f.dig("fixture", "status", "elapsed"),
+      minute_extra:   f.dig("fixture", "status", "extra"),
       venue:          f.dig("fixture", "venue", "name"),
       home: {
         name:      f.dig("teams", "home", "name"),
@@ -600,7 +601,8 @@ class LiveScoresClient
         "status" => {
           "short"   => fx.dig("fixture", "status", "short"),
           "long"    => fx.dig("fixture", "status", "long"),
-          "elapsed" => fx.dig("fixture", "status", "elapsed")
+          "elapsed" => fx.dig("fixture", "status", "elapsed"),
+          "extra"   => fx.dig("fixture", "status", "extra")
         },
         "venue" => {
           "id"   => fx.dig("fixture", "venue", "id"),

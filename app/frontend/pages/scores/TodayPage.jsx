@@ -141,7 +141,7 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
     >
       <div className="match-row__status">
         {isLive
-          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'` : t("status.live")}</span>
+          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}${match.minute_extra ? `+${match.minute_extra}` : ""}'` : t("status.live")}</span>
           : isFinished
           ? <span className="match-status-ft">{t("status.ft")}</span>
           : <span className="match-status-time">{kickoffTime}</span>
@@ -450,9 +450,11 @@ export default function TodayPage() {
         const hit = (d.external_id != null && m.external_id === d.external_id) ||
                     (d.match_id != null && m.id === d.match_id)
         if (!hit) return m
-        if (m.home_score === d.home_score && m.away_score === d.away_score && m.status === d.status) return m
+        if (m.home_score === d.home_score && m.away_score === d.away_score &&
+            m.status === d.status && m.minute === d.minute) return m
         touched = true
-        return { ...m, home_score: d.home_score, away_score: d.away_score, status: d.status, minute: d.minute }
+        return { ...m, home_score: d.home_score, away_score: d.away_score,
+                 status: d.status, minute: d.minute, minute_extra: d.minute_extra }
       })
       if (touched) {
         const id = d.external_id ?? d.match_id
