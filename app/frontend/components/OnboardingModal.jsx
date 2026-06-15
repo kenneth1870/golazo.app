@@ -12,6 +12,11 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { storageGet, storageSet } from "../utils/safeStorage"
+
+function persistLanguage(code) {
+  storageSet("golazo_lang", code)
+  storageSet("golazo_lang_manual", "1")
+}
 import { useFavorites } from "../hooks/useFavorites"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 import { isIosSafari, isStandalone } from "../utils/platform"
@@ -152,7 +157,7 @@ export default function OnboardingModal({ onDismiss }) {
           {LANGS.map(lang => (
             <button
               key={lang.code}
-              onClick={() => i18n.changeLanguage(lang.code).then(goNext)}
+              onClick={() => { persistLanguage(lang.code); i18n.changeLanguage(lang.code).then(goNext) }}
               style={{
                 display: "flex", alignItems: "center", gap: 8,
                 padding: "12px 20px", borderRadius: 12,
