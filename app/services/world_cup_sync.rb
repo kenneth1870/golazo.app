@@ -538,9 +538,10 @@ class WorldCupSync
     match = find_match_by_teams(home_name, away_name)
     return false unless match
 
-    was_live   = match.status == "live"
-    old_home   = match.home_score.to_i
-    old_away   = match.away_score.to_i
+    was_live     = match.status == "live"
+    was_finished = match.status == "finished"
+    old_home     = match.home_score.to_i
+    old_away     = match.away_score.to_i
 
     # Anti-spam flap guard: during live play, don't persist a downward total —
     # a one-cycle dip + recovery would otherwise look like a fresh goal and fire
@@ -570,12 +571,13 @@ class WorldCupSync
       broadcast_score(match, m[:minute], notify: scored)
     end
 
-    # Full-time: WC match just finished — notify subscribers.
-    # Covers both was_live (normal path) and scheduled→finished direct transition
-    # (sync lag: match never seen as 'live' in DB but kickoff was ≥ 60 min ago).
-    # Dedup key prevents double-send when both live-feed and today-sync paths fire.
-    if status == "finished" && match.competition&.code == "WC" &&
-        (was_live || match.kickoff_at < 60.minutes.ago)
+    # Full-time: fire ONLY on the actual transition to finished (the match was
+    # NOT already finished in the DB). This is critical: sync_stale_past_matches
+    # re-syncs recently-finished matches every 10 min, and without this guard the
+    # block would re-enter on every pass and re-notify — spamming "Final" alerts
+    # for a match that ended an hour ago. The dedup key is a secondary safety net.
+    just_finished = status == "finished" && !was_finished
+    if just_finished && match.competition&.code == "WC"
       dedup_key = "fulltime_notified_#{match.id}"
       unless Rails.cache.read(dedup_key)
         # Mark notified only if the alert actually fired (early-FT guard may
@@ -587,8 +589,9 @@ class WorldCupSync
       end
     end
 
-    # Recalculate group standings after a WC match finishes
-    if status == "finished" && match.competition&.code == "WC"
+    # Recalculate standings only on the finish transition, not on every re-sync
+    # of an already-finished match.
+    if just_finished && match.competition&.code == "WC"
       RecalculateStandingsJob.perform_later
     end
 
