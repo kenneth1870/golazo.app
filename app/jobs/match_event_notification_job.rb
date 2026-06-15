@@ -45,6 +45,10 @@ class MatchEventNotificationJob < ApplicationJob
     # Copy + team names are localised per subscriber; memoise per locale so we
     # build it once. Spanish is the default for subscribers with no explicit
     # locale (the app's primary audience).
+    scorer = if event_type == "goal"
+      Goal.where(match_id: match_id).order(created_at: :desc).first&.player_name.presence
+    end
+
     copy_cache = {}
 
     subs.each do |sub|
@@ -52,7 +56,7 @@ class MatchEventNotificationJob < ApplicationJob
       title, body = copy_cache[locale] ||= begin
         home_t = TeamNameTranslator.translate(home_name, locale)
         away_t = TeamNameTranslator.translate(away_name, locale)
-        build_copy(locale, event_type, home_t, away_t, score_str, minute)
+        build_copy(locale, event_type, home_t, away_t, score_str, minute, scorer)
       end
 
       payload = {
@@ -82,6 +86,14 @@ class MatchEventNotificationJob < ApplicationJob
       sub.destroy
     rescue WebPush::ResponseError => e
       Rails.logger.warn("[PushNotification] ResponseError for sub #{sub.id}: #{e.message}")
+      fail_key = "push_fail_#{sub.id}"
+      count    = (Rails.cache.read(fail_key) || 0) + 1
+      if count >= 5
+        Rails.logger.info("[PushNotification] Removing subscription #{sub.id} after #{count} consecutive failures")
+        sub.destroy
+      else
+        Rails.cache.write(fail_key, count, expires_in: 7.days)
+      end
     rescue => e
       Rails.logger.error("[PushNotification] Unexpected error for sub #{sub.id}: #{e.class}: #{e.message}")
     end
@@ -89,16 +101,17 @@ class MatchEventNotificationJob < ApplicationJob
 
   private
 
-  def build_copy(locale, event_type, home, away, score, minute)
-    locale == "en" ? build_copy_en(event_type, home, away, score, minute)
-                   : build_copy_es(event_type, home, away, score, minute)
+  def build_copy(locale, event_type, home, away, score, minute, scorer = nil)
+    locale == "en" ? build_copy_en(event_type, home, away, score, minute, scorer)
+                   : build_copy_es(event_type, home, away, score, minute, scorer)
   end
 
   # Spanish copy — the app's default audience.
-  def build_copy_es(event_type, home, away, score, minute)
+  def build_copy_es(event_type, home, away, score, minute, scorer = nil)
     case event_type
     when "goal"
-      [ "⚽ #{home} #{score} #{away}", "¡GOL! · EN VIVO" ]
+      body = scorer ? "¡GOL de #{scorer}! · EN VIVO" : "¡GOL! · EN VIVO"
+      [ "⚽ #{home} #{score} #{away}", body ]
     when "kickoff"
       min_str = minute ? " · #{minute}'" : ""
       [ "🏁 #{home} vs #{away}#{min_str}", "¡Comenzó el partido!" ]
@@ -115,10 +128,11 @@ class MatchEventNotificationJob < ApplicationJob
     end
   end
 
-  def build_copy_en(event_type, home, away, score, minute)
+  def build_copy_en(event_type, home, away, score, minute, scorer = nil)
     case event_type
     when "goal"
-      [ "⚽ #{home} #{score} #{away}", "LIVE · Goal scored!" ]
+      body = scorer ? "#{scorer} · LIVE" : "LIVE · Goal scored!"
+      [ "⚽ #{home} #{score} #{away}", body ]
     when "kickoff"
       min_str = minute ? " · #{minute}'" : ""
       [ "🏁 #{home} vs #{away}#{min_str}", "Kick-off — the match has started!" ]

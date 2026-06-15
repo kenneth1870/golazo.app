@@ -44,6 +44,14 @@ class SendLineupAlertJob < ApplicationJob
       sub.destroy
     rescue => e
       Rails.logger.error("[LineupAlert] sub #{sub.id}: #{e.message}")
+      fail_key = "push_fail_#{sub.id}"
+      count    = (Rails.cache.read(fail_key) || 0) + 1
+      if count >= 5
+        Rails.logger.info("[LineupAlert] Removing subscription #{sub.id} after #{count} consecutive failures")
+        sub.destroy
+      else
+        Rails.cache.write(fail_key, count, expires_in: 7.days)
+      end
     end
   end
 end

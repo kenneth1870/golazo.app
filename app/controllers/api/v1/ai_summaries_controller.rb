@@ -10,8 +10,9 @@ module Api
         return render json: { error: "match_not_finished" }, status: :unprocessable_entity unless match.status == "finished"
         return render json: { error: "ai_unavailable" }, status: :service_unavailable unless ENV["ANTHROPIC_API_KEY"].present?
 
-        lang      = params[:lang].to_s.presence || "en"
-        cache_key = "ai_match_summary_v3_#{match.id}_#{lang[0, 2].downcase}"
+        lang      = params[:lang].to_s.split("-").first&.downcase
+        lang      = %w[en es pt fr de ar ja ko].include?(lang) ? lang : "en"
+        cache_key = "ai_match_summary_v3_#{match.id}_#{lang}"
         result    = Rails.cache.read(cache_key)
 
         result ||= AiMatchSummaryService.new(match, lang: lang).call

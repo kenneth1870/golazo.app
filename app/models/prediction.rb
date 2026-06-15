@@ -1,6 +1,24 @@
 class Prediction < ApplicationRecord
   validates :match_external_id, presence: true, uniqueness: true
 
+  private
+
+  # Largest-remainder method: floors all three, then awards the remaining
+  # integer points to whichever buckets have the largest fractional parts,
+  # guaranteeing the three values always sum to exactly 100 (or 0).
+  def percentages(total)
+    return [0, 0, 0] if total.zero?
+    counts = [home_votes, draw_votes, away_votes]
+    raw    = counts.map { |c| c * 100.0 / total }
+    floors = raw.map(&:floor)
+    rem    = 100 - floors.sum
+    fracs  = raw.each_with_index.sort_by { |v, _| -(v - v.floor) }
+    fracs.first(rem).each { |_, i| floors[i] += 1 }
+    floors
+  end
+
+  public
+
   # voter_tokens is stored as a JSON hash: { token => 1, ... }
   # Old array format is migrated on first read so no DB migration is needed.
   def tokens
@@ -33,15 +51,16 @@ class Prediction < ApplicationRecord
 
   def as_json_result
     total = home_votes + draw_votes + away_votes
+    home_pct, draw_pct, away_pct = percentages(total)
     {
       match_external_id: match_external_id,
-      home_votes:  home_votes,
-      draw_votes:  draw_votes,
-      away_votes:  away_votes,
-      total:       total,
-      home_pct:    total > 0 ? (home_votes * 100.0 / total).round : 0,
-      draw_pct:    total > 0 ? (draw_votes * 100.0 / total).round : 0,
-      away_pct:    total > 0 ? (away_votes * 100.0 / total).round : 0
+      home_votes: home_votes,
+      draw_votes: draw_votes,
+      away_votes: away_votes,
+      total:      total,
+      home_pct:   home_pct,
+      draw_pct:   draw_pct,
+      away_pct:   away_pct
     }
   end
 end
