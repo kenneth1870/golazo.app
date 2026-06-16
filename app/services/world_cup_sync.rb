@@ -451,14 +451,14 @@ class WorldCupSync
     # match doesn't stay stuck as "live" waiting for check_wc_matches_just_finished.
     finished_shorts = %w[FT AET PEN AWD WO]
     if finished_shorts.include?(status_short)
-      was_live = match.status == "live"
+      was_not_finished = match.status != "finished"
       finish_attrs = { status: "finished", home_score: home_score, away_score: away_score }
       if match.group_stage.blank?
         group = match.home_team&.group.presence || match.away_team&.group.presence
         finish_attrs[:group_stage] = group if group
       end
       match.update!(finish_attrs)
-      if was_live && match.competition&.code == "WC"
+      if was_not_finished && match.competition&.code == "WC"
         dedup_key = "fulltime_notified_#{match.id}"
         unless Rails.cache.read(dedup_key)
           # Only mark as notified if the alert actually went out (the early-FT
