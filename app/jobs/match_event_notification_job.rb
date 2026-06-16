@@ -131,6 +131,14 @@ class MatchEventNotificationJob < ApplicationJob
         "¿Ya tienes los snacks listos? Empieza pronto.",
         "¡El momento se acerca! ¿Listo para el partido?",
         "¡Atención! El partido está por comenzar.",
+        "¡Deja lo que estás haciendo, esto es más importante! 😄",
+        "El profe ya está dando las instrucciones. ¿Te apuntas?",
+        "¡Silencio en la cancha! Partido en unos minutos.",
+        "¿Quién crees que gana? Pronto lo sabremos 👀",
+        "¡Los jugadores ya están en el túnel!",
+        "Momento de concentración. ¡Arranca el partido!",
+        "¡La pelota está por rodar! No te lo pierdas.",
+        "Dale, que ya están saliendo al campo ⚡",
       ]
       [ "⏰ #{home} vs #{away}", bodies.sample ]
     else
@@ -162,6 +170,14 @@ class MatchEventNotificationJob < ApplicationJob
         "Time to focus — the match is nearly on!",
         "Settle in, it's almost kick-off time! ⚽",
         "The wait is almost over. Let's go!",
+        "Drop what you're doing — this is more important 😄",
+        "The tunnel walk is happening. Time to watch!",
+        "Who do you think wins this one? Find out soon 👀",
+        "Players are on the pitch. It's nearly time!",
+        "Clear your schedule — football is on.",
+        "The referee's about to blow the whistle. You in?",
+        "This is the one. Don't miss kick-off ⚽",
+        "Grab a seat — it's almost showtime!",
       ]
       [ "⏰ #{home} vs #{away}", bodies.sample ]
     else
