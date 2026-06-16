@@ -132,7 +132,6 @@ class MatchEventNotificationJob < ApplicationJob
         "¡El momento se acerca! ¿Listo para el partido?",
         "¡Atención! El partido está por comenzar.",
         "¡Deja lo que estás haciendo, esto es más importante! 😄",
-        "El profe ya está dando las instrucciones. ¿Te apuntas?",
         "¡Silencio en la cancha! Partido en unos minutos.",
         "¿Quién crees que gana? Pronto lo sabremos 👀",
         "¡Los jugadores ya están en el túnel!",
