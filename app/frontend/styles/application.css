@@ -112,9 +112,10 @@ a:hover{color:var(--accent);opacity:.85}
   backdrop-filter:blur(12px);
   border-bottom:1px solid var(--border);
   padding:12px 0!important;
+  padding-top:calc(12px + env(safe-area-inset-top))!important;
   transition:.3s;
 }
-.site-navbar.shrink{padding:8px 0!important}
+.site-navbar.shrink{padding:8px 0!important;padding-top:calc(8px + env(safe-area-inset-top))!important}
 .golazo-logo{
   font-size:1.3rem;font-weight:900;letter-spacing:2px;color:#fff;
   display:flex;align-items:center;gap:6px;
