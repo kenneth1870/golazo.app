@@ -110,7 +110,30 @@ class MatchEventNotificationJob < ApplicationJob
   def build_copy_es(event_type, home, away, score, minute, scorer = nil)
     case event_type
     when "goal"
-      body = scorer ? "¡GOL de #{scorer}! · EN VIVO" : "¡GOL! · EN VIVO"
+      min_tag = minute ? " #{minute}'" : ""
+      body = if scorer && minute
+        [
+          "¡GOLAZO de #{scorer} al #{minute}'! 🔥",
+          "#{scorer} la manda al fondo en el #{minute}' 💥",
+          "¡#{scorer} marca en el #{minute}'! ⚽",
+          "GOL de #{scorer} · #{minute}' · ¡QUÉ GOLAZO! 🎯",
+          "#{minute}' · ¡Que golazo de #{scorer}! 😱",
+          "¡Ahí está! #{scorer} anota al #{minute}' 🔥",
+          "#{scorer} no perdona en el #{minute}'! ⚡",
+          "#{minute}' — #{scorer} con todo 💥",
+        ].sample
+      elsif scorer
+        [
+          "¡GOLAZO de #{scorer}! 🔥",
+          "#{scorer} anota · EN VIVO ⚽",
+          "¡#{scorer} la manda adentro! 💥",
+          "GOL de #{scorer}#{min_tag} · ¡EN VIVO! 🎯",
+        ].sample
+      elsif minute
+        "¡GOL al #{minute}'! · EN VIVO 🔥"
+      else
+        "¡GOL! · EN VIVO ⚽"
+      end
       [ "⚽ #{home} #{score} #{away}", body ]
     when "kickoff"
       min_str = minute ? " · #{minute}'" : ""
@@ -148,7 +171,30 @@ class MatchEventNotificationJob < ApplicationJob
   def build_copy_en(event_type, home, away, score, minute, scorer = nil)
     case event_type
     when "goal"
-      body = scorer ? "#{scorer} · LIVE" : "LIVE · Goal scored!"
+      min_tag = minute ? " #{minute}'" : ""
+      body = if scorer && minute
+        [
+          "GOAL! #{scorer} in the #{minute}' 🔥",
+          "#{scorer} finds the net — #{minute}' ⚽",
+          "What a goal from #{scorer}! #{minute}' 💥",
+          "#{scorer} puts it away · #{minute}' 🎯",
+          "#{minute}' · #{scorer} scores! 😱",
+          "#{scorer} doesn't miss — #{minute}' ⚡",
+          "#{minute}' — #{scorer} with the finish! 🔥",
+          "Golazo! #{scorer} · #{minute}' 💥",
+        ].sample
+      elsif scorer
+        [
+          "GOAL from #{scorer}! 🔥",
+          "#{scorer} scores#{min_tag} · LIVE ⚽",
+          "#{scorer} puts it in the net! 💥",
+          "Golazo! #{scorer}#{min_tag} 🎯",
+        ].sample
+      elsif minute
+        "GOAL in the #{minute}'! · LIVE 🔥"
+      else
+        "GOAL! · LIVE ⚽"
+      end
       [ "⚽ #{home} #{score} #{away}", body ]
     when "kickoff"
       min_str = minute ? " · #{minute}'" : ""
