@@ -121,13 +121,16 @@ class WorldCupSync
                            .where(kickoff_at: 4.hours.ago..Time.current)
                            .where.not(external_id: nil)
 
-    return unless stale.exists? || recent_finished.exists?
+    stale_count    = stale.count
+    finished_count = recent_finished.count
+    return if stale_count.zero? && finished_count.zero?
 
-    stale_dates = (stale + recent_finished)
-                    .map { |m| m.kickoff_at.utc.to_date }
-                    .uniq
+    stale_dates = Match.where(id: stale).or(Match.where(id: recent_finished))
+                       .pluck(Arel.sql("DATE(kickoff_at AT TIME ZONE 'UTC')"))
+                       .map { |d| d.is_a?(Date) ? d : Date.parse(d.to_s) }
+                       .uniq
 
-    log("Catch-up: #{stale.count} stale + #{recent_finished.count} recent-finished match(es) across #{stale_dates.length} date(s)")
+    log("Catch-up: #{stale_count} stale + #{finished_count} recent-finished match(es) across #{stale_dates.length} date(s)")
 
     stale_dates.each do |d|
       past_matches = @api.matches_for_date(d)

@@ -21,11 +21,16 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Set production environment variables and enable jemalloc for reduced memory usage and latency.
+# GC tuning: shrink heap growth rate (default 1.8) so Ruby doesn't balloon
+# between syncs, and compact after each GC cycle to return pages to the OS.
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT="development" \
-    LD_PRELOAD="/usr/local/lib/libjemalloc.so"
+    LD_PRELOAD="/usr/local/lib/libjemalloc.so" \
+    RUBY_GC_HEAP_GROWTH_FACTOR="1.1" \
+    RUBY_GC_HEAP_FREE_SLOTS_MAX_RATIO="0.3" \
+    RUBY_GC_MALLOC_LIMIT_MAX="67108864"
 
 # Throw-away build stage to reduce size of final image
 FROM base AS build
