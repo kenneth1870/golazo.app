@@ -1,3 +1,7 @@
+// Deploy: <%= ENV["RENDER_GIT_COMMIT"]&.first(8) || "dev" %> — injected by Rails so every deploy changes this file,
+// causing the browser to detect a new Service Worker version and trigger skipWaiting → reload.
+const BUILD_REVISION = "<%= ENV["RENDER_GIT_COMMIT"]&.first(8) || "dev" %>";
+
 const CACHE_VERSION = "golazo-v11"
 const STATIC_CACHE  = `${CACHE_VERSION}-static`
 const API_CACHE     = `${CACHE_VERSION}-api`

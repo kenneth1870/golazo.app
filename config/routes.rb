@@ -96,6 +96,10 @@ Rails.application.routes.draw do
   # Sitemap
   get "sitemap.xml", to: "sitemap#index", defaults: { format: :xml }
 
+  # Service worker — served dynamically so Rails injects RENDER_GIT_COMMIT,
+  # making the file content change on every deploy and triggering SW updates.
+  get "/sw.js", to: "pwa#service_worker"
+
   # SPA catch-all — must come before engine mounts so the app root takes priority.
   # Exclude /jobs and /solid-queue so those engine requests reach the engines below.
   get "*path", to: "application#spa", constraints: ->(req) {
