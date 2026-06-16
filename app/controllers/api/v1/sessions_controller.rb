@@ -55,6 +55,10 @@ module Api
           return render json: { error: "token audience mismatch" }, status: :unauthorized
         end
 
+        unless payload["email_verified"].to_s == "true"
+          return render json: { error: "email not verified" }, status: :unauthorized
+        end
+
         email = payload["email"].to_s.downcase.strip
         name  = payload["name"].to_s.strip.presence || email.split("@").first
         return render json: { error: "no email in token" }, status: :unprocessable_entity if email.blank?

@@ -1,6 +1,8 @@
 module Api
   module V1
     class PushSubscriptionsController < BaseController
+      before_action :require_admin!, only: :test_push
+
       # POST /api/v1/push_subscriptions
       # Body: { endpoint, p256dh, auth, device_id, team_ids: [] }
       def create

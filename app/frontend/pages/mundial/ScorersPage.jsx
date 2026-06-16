@@ -207,7 +207,7 @@ export default function ScorersPage() {
             <LeaderHero player={leader} tab={tab} lang={i18n.language} />
             <div className="widget-next-match" style={{ overflow: "hidden" }}>
               {rest.map((p, i) => (
-                <PlayerRow key={i} player={p} rank={i + 1} maxValue={maxValue} tab={tab} lang={i18n.language} />
+                <PlayerRow key={p.player?.id ?? i} player={p} rank={i + 1} maxValue={maxValue} tab={tab} lang={i18n.language} />
               ))}
             </div>
           </>
