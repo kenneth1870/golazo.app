@@ -1,4 +1,4 @@
-const CACHE_VERSION = "golazo-v10"
+const CACHE_VERSION = "golazo-v11"
 const STATIC_CACHE  = `${CACHE_VERSION}-static`
 const API_CACHE     = `${CACHE_VERSION}-api`
 const IMAGE_CACHE   = `${CACHE_VERSION}-images`
