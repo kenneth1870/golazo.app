@@ -85,7 +85,9 @@
     "yourTeamLive": "Your team is playing!",
     "wcSubtitle": "FIFA World Cup 2026 · Live scores, results & fixtures",
     "filterAll": "All",
-    "myTeams": "My Teams"
+    "myTeams": "My Teams",
+    "groupStage": "Group Stage",
+    "knockout": "Knockout Rounds"
   },
   "groups": {
     "title": "Groups",

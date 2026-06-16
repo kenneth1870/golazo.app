@@ -85,7 +85,9 @@
     "yourTeamLive": "¡Tu equipo está jugando!",
     "wcSubtitle": "Copa Mundial FIFA 2026 · Marcadores, resultados y próximos partidos",
     "filterAll": "Todos",
-    "myTeams": "Mis Equipos"
+    "myTeams": "Mis Equipos",
+    "groupStage": "Fase de Grupos",
+    "knockout": "Eliminatorias"
   },
   "groups": {
     "title": "Grupos",
