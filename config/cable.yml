@@ -12,5 +12,5 @@ test:
 # No `connects_to:` key → Solid Cable uses the primary database (single-DB app).
 production:
   adapter: solid_cable
-  polling_interval: 0.5.seconds
-  message_retention: 1.hour
+  polling_interval: 2.seconds
+  message_retention: 30.minutes
