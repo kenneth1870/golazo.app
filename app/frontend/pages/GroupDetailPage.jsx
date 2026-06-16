@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from "react-router-dom"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { useMatches } from "../hooks/useMatches"
 import MatchRow from "../components/MatchRow"
@@ -108,15 +108,20 @@ export default function GroupDetailPage() {
   const [standings, setStandings] = useState([])
   const [activeTab, setActiveTab] = useState("standings")
 
-  const { matches, loading } = useMatches("all", { competition: "WC", group })
+  const { matches, loading, refetch: refetchMatches } = useMatches("all", { competition: "WC", group })
 
   const loadStandings = () =>
     fetch("/api/v1/standings?competition=WC")
       .then(r => r.json())
       .then(data => setStandings((Array.isArray(data) ? data.filter(s => s.group_name === group) : data[group]) || []))
 
+  const onStandingsUpdate = useCallback(() => {
+    loadStandings()
+    refetchMatches()
+  }, [refetchMatches]) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => { loadStandings() }, [group]) // eslint-disable-line
-  useStandingsChannel(loadStandings)
+  useStandingsChannel(onStandingsUpdate)
 
   // Auto-refresh standings every 30s when group has a live match
   const hasLiveInGroup = matches.some(m =>
