@@ -214,8 +214,10 @@ module Api
             "round"   => round_label
           },
           "teams" => {
-            "home" => { "id" => home.external_id || home.id, "name" => home.name, "logo" => home.flag_url, "winner" => home_wins },
-            "away" => { "id" => away.external_id || away.id, "name" => away.name, "logo" => away.flag_url, "winner" => away_wins }
+            "home" => home ? { "id" => home.external_id || home.id, "name" => home.name, "logo" => home.flag_url, "winner" => home_wins }
+                           : { "id" => nil, "name" => "TBD", "logo" => nil, "winner" => false },
+            "away" => away ? { "id" => away.external_id || away.id, "name" => away.name, "logo" => away.flag_url, "winner" => away_wins }
+                           : { "id" => nil, "name" => "TBD", "logo" => nil, "winner" => false }
           },
           "goals" => { "home" => match.home_score, "away" => match.away_score }
         }

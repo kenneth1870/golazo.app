@@ -7,7 +7,8 @@ class PushSubscription < ApplicationRecord
   # team_ids is stored as a JSON string array, e.g. '["Argentina","Brazil"]'
   def team_names
     JSON.parse(team_ids || "[]")
-  rescue JSON::ParserError
+  rescue JSON::ParserError => e
+    Rails.logger.warn("[PushSubscription##{id}] Invalid team_ids JSON: #{e.message}")
     []
   end
 

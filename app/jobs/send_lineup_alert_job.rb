@@ -6,7 +6,7 @@ class SendLineupAlertJob < ApplicationJob
   # Fired when lineups are published for an upcoming match (~1 hour before kickoff).
   # Sends a push to all subscribers following either team.
   def perform(match_id:, home_name:, away_name:, kickoff_at: nil, match_url: nil)
-    time_str = kickoff_at ? Time.parse(kickoff_at.to_s).strftime("%-H:%M") : nil
+    time_str = kickoff_at ? (Time.parse(kickoff_at.to_s).strftime("%-H:%M") rescue nil) : nil
     home_es  = TeamNameTranslator.translate(home_name, "es")
     away_es  = TeamNameTranslator.translate(away_name, "es")
     title = "📋 Alineaciones publicadas"

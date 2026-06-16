@@ -216,7 +216,7 @@ export default function GroupDetailPage() {
                         const teamName  = translateTeam(s.team?.name, i18n.language)
                         const gd        = s.goal_diff ?? (s.goals_for != null ? s.goals_for - (s.goals_against ?? 0) : null)
                         return (
-                          <tr key={s.team.id} style={{ background: bg }}>
+                          <tr key={s.team?.id ?? i} style={{ background: bg }}>
                             <td style={{ color: rankColor, fontWeight: 700 }}>{s.rank ?? i + 1}</td>
                             <td>
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
