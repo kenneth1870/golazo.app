@@ -14,7 +14,8 @@ class RecalculateStandingsJob < ApplicationJob
 
     active = Match.where(competition: wc)
                   .where(
-                    "(status IN ('live','finished') AND kickoff_at > ?) OR " \
+                    "(status = 'live') OR " \
+                    "(status = 'finished' AND kickoff_at > ?) OR " \
                     "(status = 'scheduled' AND kickoff_at BETWEEN ? AND ?)",
                     12.hours.ago,
                     12.hours.ago, 2.hours.from_now

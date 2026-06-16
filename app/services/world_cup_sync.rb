@@ -133,6 +133,11 @@ class WorldCupSync
     log("Catch-up: #{stale_count} stale + #{finished_count} recent-finished match(es) across #{stale_dates.length} date(s)")
 
     stale_dates.each do |d|
+      # Bust the past-date cache before re-fetching. Past dates are cached for
+      # 24 h, so if the cache was primed while the match was still "2H" the
+      # re-sync would write "live" back to the DB and leave standings broken.
+      Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
+      Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
       past_matches = @api.matches_for_date(d)
       past_matches
         .reject { |m| already_synced_ids.include?(m[:external_id]) }
@@ -555,6 +560,11 @@ class WorldCupSync
     was_finished = match.status == "finished"
     old_home     = match.home_score.to_i
     old_away     = match.away_score.to_i
+
+    # Don't downgrade a finished match back to live — the date endpoint lags
+    # 1-3 minutes after the final whistle and still returns "2H". Trusting the
+    # date feed here would unfinish matches and wipe points from the standings.
+    return false if was_finished && status == "live"
 
     # Anti-spam flap guard: during live play, don't persist a downward total —
     # a one-cycle dip + recovery would otherwise look like a fresh goal and fire
