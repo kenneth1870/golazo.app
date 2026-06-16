@@ -707,7 +707,7 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t, i18n }) {
           const varCancelled = isVar && (e.detail?.toLowerCase().includes("cancel") || e.detail?.toLowerCase().includes("disallow"))
 
           return (
-            <div key={i}
+            <div key={`${e.minute}-${e.type}-${e.player ?? ""}-${i}`}
               className={`match-event${isGoal ? " match-event--goal" : ""}${isSub ? " match-event--sub" : ""}${isVar ? " match-event--var" : ""}${isMissed ? " match-event--missed" : ""}`}
               style={{ flexDirection: isHome ? "row" : "row-reverse", opacity: varCancelled ? 0.65 : 1 }}
             >
@@ -919,7 +919,7 @@ function LineupTeam({ team, side }) {
           {team.subs.map((p, i) => {
             const ps = posStyle(p.pos)
             return (
-              <div key={i} className="lineup-sub-row">
+              <div key={p.number ?? p.name ?? i} className="lineup-sub-row">
                 <span className="lineup-sub-row__num" style={{ background: ps.bg }}>{p.number}</span>
                 <span className="lineup-sub-row__name">{p.name}</span>
                 <span className="lineup-sub-row__pos" style={{ color: ps.bg }}>{ps.label}</span>
@@ -994,7 +994,7 @@ function InjuriesSection({ fixtureId, homeName, awayName }) {
           <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: ".08em" }}>{teamName}</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {list.map((inj, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px", background: "var(--surface2)", borderRadius: 8 }}>
+              <div key={inj.player?.name ? `${inj.player.name}-${i}` : i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px", background: "var(--surface2)", borderRadius: 8 }}>
                 {inj.player?.photo && (
                   <img src={inj.player.photo} alt="" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
                     onError={e => e.target.style.display="none"} />
@@ -1302,7 +1302,7 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t, lang }) {
             const homeWon = Number(hs) > Number(as)
             const awayWon = Number(as) > Number(hs)
             return (
-              <div key={i} style={{
+              <div key={m.kickoff_at ?? i} style={{
                 display: "flex", alignItems: "center", gap: 8, padding: "9px 12px",
                 background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,.02)",
                 borderRadius: 6, fontSize: "0.8rem",
@@ -1964,7 +1964,7 @@ export default function MatchShowPage() {
                   }}
                   title={`${prevMatchNav.home_team?.name} vs ${prevMatchNav.away_team?.name}`}
                 >
-                  ← {translateTeam(prevMatchNav.home_team?.name, i18n.language)?.split(" ")[0]}
+                  ← {translateTeam(prevMatchNav.home_team?.name, i18n.language)?.split(" ")?.[0]}
                 </button>
               )}
               {nextMatchNav && (
@@ -1977,7 +1977,7 @@ export default function MatchShowPage() {
                   }}
                   title={`${nextMatchNav.home_team?.name} vs ${nextMatchNav.away_team?.name}`}
                 >
-                  {translateTeam(nextMatchNav.home_team?.name, i18n.language)?.split(" ")[0]} →
+                  {translateTeam(nextMatchNav.home_team?.name, i18n.language)?.split(" ")?.[0]} →
                 </button>
               )}
             </div>

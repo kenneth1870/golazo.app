@@ -54,7 +54,7 @@ export default function NewsShowPage() {
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, lang])
 
   // Hooks must be unconditional — pass null when article not loaded yet
   const heroImageEarly = content?.hero_image || article?.image

@@ -330,7 +330,7 @@ export default function HomePage() {
           )}
           <div className="row no-gutters">
             {(latestNews.length > 0 ? latestNews : newsError ? [] : [null, null, null]).map((post, i) => (
-              <NewsCard key={i} post={post} index={i} />
+              <NewsCard key={post?.id ?? i} post={post} index={i} />
             ))}
           </div>
         </div>
