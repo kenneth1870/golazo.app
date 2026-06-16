@@ -136,10 +136,12 @@ class LiveScoresClient
     date   = date.to_date
     tz_key = timezone.gsub(/[^A-Za-z0-9_]/, "_").downcase
     # Past dates: data never changes, cache for 24h.
-    # Today: matches go live/finish frequently — keep in sync with the 1-min sync job.
+    # Today: live scores arrive via ActionCable/live-sync, not this endpoint —
+    #   5 min TTL is plenty; manual cache busting on score/status changes still
+    #   ensures SyncTodayMatchesJob gets fresh data when something happens.
     # Future: schedule rarely changes, 10 min is fine.
     ttl = if date < Date.today then 24.hours
-          elsif date == Date.today then 60.seconds
+          elsif date == Date.today then 5.minutes
           else 10.minutes
           end
     Rails.cache.fetch("live_scores_date_v15_#{date.iso8601}_#{tz_key}", expires_in: ttl, race_condition_ttl: 30.seconds) do
@@ -156,15 +158,18 @@ class LiveScoresClient
   # Full match detail: fixture + events + lineups + stats + h2h in parallel.
   #
   # TTL strategy:
-  #   Live / pre-match  → 60 s  (doubled from 30 s — halves quota at negligible UX cost)
+  #   Live / pre-match  → 5 min  (SyncPreMatchDataJob runs every 5 min, so this
+  #                                matches its interval and pre-warms the cache;
+  #                                live scores come via ActionCable, not here)
   #   Finished (FT/AET/PEN) → 24 h  (data never changes after full-time)
+  #   h2h → 24 h in its own key  (historical, never changes mid-tournament)
   # race_condition_ttl prevents multiple concurrent cache misses each spawning 5
   # upstream threads (thundering herd) — stale value is served for up to 10 s
   # while one writer refreshes.
   def match_detail(fixture_id)
     cache_key = "live_scores_detail_v5_#{fixture_id}"
 
-    result = Rails.cache.fetch(cache_key, expires_in: 60.seconds, race_condition_ttl: 10.seconds) do
+    result = Rails.cache.fetch(cache_key, expires_in: 5.minutes, race_condition_ttl: 10.seconds) do
       results = {}
       threads = {
         fixture: Thread.new { get("fixtures",            id:      fixture_id) },
@@ -188,7 +193,9 @@ class LiveScoresClient
       away_id = fx.dig("teams", "away", "id")
 
       h2h_raw = if home_id && away_id
-        get("fixtures/headtohead", h2h: "#{home_id}-#{away_id}", last: 10).dig("response") || []
+        Rails.cache.fetch("live_scores_h2h_v1_#{home_id}_#{away_id}", expires_in: 24.hours) do
+          get("fixtures/headtohead", h2h: "#{home_id}-#{away_id}", last: 10).dig("response") || []
+        end
       else
         []
       end
