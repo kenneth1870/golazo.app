@@ -1667,6 +1667,7 @@ export default function MatchShowPage() {
   const toastQueue    = useRef([])   // queue so rapid goals don't cut each other short
   const toastTimer    = useRef(null)
   const swipeStartX   = useRef(null)
+  const swipeStartY   = useRef(null)
   const dataFetchedAt = useRef(0)    // timestamp of the most recent data update (poll or WS)
 
   // Detect if live
@@ -1926,12 +1927,12 @@ export default function MatchShowPage() {
   // Swipe between tabs — only on horizontal-dominant gestures
   function handleTabSwipeStart(e) {
     swipeStartX.current = e.touches[0].clientX
-    swipeStartX._y = e.touches[0].clientY
+    swipeStartY.current = e.touches[0].clientY
   }
   function handleTabSwipeEnd(e) {
     if (swipeStartX.current === null) return
     const dx = e.changedTouches[0].clientX - swipeStartX.current
-    const dy = e.changedTouches[0].clientY - (swipeStartX._y ?? 0)
+    const dy = e.changedTouches[0].clientY - (swipeStartY.current ?? 0)
     swipeStartX.current = null
     // Ignore if vertical scroll is dominant (prevents page-scroll conflict)
     if (Math.abs(dy) > Math.abs(dx)) return

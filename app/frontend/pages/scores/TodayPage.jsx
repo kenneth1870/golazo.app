@@ -433,14 +433,14 @@ export default function TodayPage() {
   // the live_scores WebSocket; this backstops a dropped connection.
   // 30s when a match is live (matches the server's live-sync cadence so we
   // never lag more than one extra cycle), 5min when nothing is on.
+  const hasLive = matches.some(m => m.status === "live")
   useEffect(() => {
     const iso   = toISO(selected)
     const today = toISO(new Date())
     if (iso !== today) return
-    const hasLive = matches.some(m => m.status === "live")
     const iv = setInterval(() => load(selected), hasLive ? 30000 : 300000)
     return () => clearInterval(iv)
-  }, [selected, load, matches])
+  }, [selected, load, hasLive])
 
   // Patch a single row in-place from a live_scores push — no re-fetch.
   const applyLiveScore = useCallback((d) => {
