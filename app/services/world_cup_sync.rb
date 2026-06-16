@@ -559,6 +559,7 @@ class WorldCupSync
     downward_live = status == "live" &&
                     (home_score.to_i + away_score.to_i) < (old_home + old_away)
 
+    api_ext_id = m[:external_id]
     attrs = { status: status }
     unless status == "scheduled" || downward_live
       attrs[:home_score] = home_score
@@ -568,6 +569,11 @@ class WorldCupSync
     if match.group_stage.nil?
       inferred_group = match.home_team&.group.presence || match.away_team&.group.presence
       attrs[:group_stage] = inferred_group if inferred_group
+    end
+    # Self-heal: update external_id when the DB has a stale one (e.g. seeded
+    # from a different API source) so broadcasts and grade! use the right ID.
+    if api_ext_id.present? && match.external_id.to_s != api_ext_id.to_s
+      attrs[:external_id] = api_ext_id
     end
 
     match.update!(attrs)
@@ -678,6 +684,7 @@ class WorldCupSync
     "czech republic"               => "czechia",
     # Cape Verde
     "cabo verde"                   => "cape verde",
+    "cape verde islands"           => "cape verde",
     # Curacao
     "curaçao"                      => "curacao",
     "curacao"                      => "curacao",
