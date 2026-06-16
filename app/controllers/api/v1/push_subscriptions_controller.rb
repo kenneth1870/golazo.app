@@ -29,6 +29,38 @@ module Api
         end
       end
 
+      # POST /api/v1/push_subscriptions/refresh
+      # Called by the SW pushsubscriptionchange handler when Android Chrome rotates
+      # the FCM token. Migrates team preferences from old → new endpoint so the
+      # user keeps their notification settings without having to re-subscribe.
+      def refresh
+        old_endpoint = params[:old_endpoint].to_s.strip
+        new_endpoint = params[:endpoint].to_s.strip
+
+        return render json: { error: "Missing endpoint" }, status: :unprocessable_entity if new_endpoint.blank?
+        return render json: { error: "Invalid endpoint" }, status: :unprocessable_entity unless new_endpoint.start_with?("https://")
+
+        old_sub = old_endpoint.present? ? PushSubscription.find_by(endpoint: old_endpoint) : nil
+
+        new_sub = PushSubscription.find_or_initialize_by(endpoint: new_endpoint)
+        new_sub.assign_attributes(
+          p256dh:       params[:p256dh].to_s,
+          auth:         params[:auth].to_s,
+          team_ids:     old_sub&.team_ids || "[]",
+          locale:       old_sub&.locale || "es",
+          device_id:    old_sub&.device_id || params[:device_id].to_s.presence,
+          user_agent:   request.user_agent.to_s.first(500),
+          last_seen_at: Time.current,
+        )
+
+        if new_sub.save
+          old_sub.destroy if old_sub && old_endpoint != new_endpoint
+          render json: { ok: true }
+        else
+          render json: { error: new_sub.errors.full_messages.to_sentence }, status: :unprocessable_entity
+        end
+      end
+
       # PUT /api/v1/push_subscriptions/:id/teams
       # Updates the team_ids list for a subscription
       def update_teams

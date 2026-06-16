@@ -256,23 +256,54 @@ function isStaticAsset(pathname) {
 
 // ── Push Notifications ────────────────────────────────
 self.addEventListener("push", event => {
-  if (!event.data) return
-
   let payload = {}
-  try { payload = JSON.parse(event.data.text()) } catch {}
+  if (event.data) {
+    try { payload = JSON.parse(event.data.text()) } catch {}
+  }
 
   const title   = payload.title  || "Golazo ⚽"
   const options = {
-    body:    payload.body  || "",
-    icon:    payload.icon  || "/images/apple-touch-icon.png?v=2",
-    badge:   payload.badge || "/images/badge-72.png",
-    tag:     payload.match_id ? `match-${payload.match_id}` : `golazo-${Date.now()}`,
+    // body must be non-empty on Android — an empty string causes Chrome to
+    // silently drop the notification or substitute a generic system message.
+    body:     payload.body  || "Actualización en vivo",
+    icon:     payload.icon  || "/images/icon-192.png",
+    badge:    payload.badge || "/images/badge-72.png",
+    tag:      payload.match_id ? `match-${payload.match_id}` : `golazo-${Date.now()}`,
     renotify: true,
-    data:    { url: payload.url || "/" },
-    vibrate: [200, 100, 200],
+    data:     { url: payload.url || "/" },
+    vibrate:  [200, 100, 200],
   }
 
+  // event.waitUntil MUST be called with a showNotification promise — if the
+  // push handler returns without showing anything, Chrome on Android shows a
+  // generic "site updated in background" notification instead.
   event.waitUntil(self.registration.showNotification(title, options))
+})
+
+// ── Push subscription rotation (Android Chrome / FCM token refresh) ───────
+// Chrome on Android periodically rotates the FCM push token. When it does,
+// the old subscription endpoint becomes invalid and pushes silently fail.
+// This handler re-subscribes with the new token and syncs it to the server
+// so the user keeps receiving notifications without having to re-enable them.
+self.addEventListener("pushsubscriptionchange", event => {
+  event.waitUntil(
+    self.registration.pushManager
+      .subscribe(event.oldSubscription?.options || { userVisibleOnly: true })
+      .then(newSub => {
+        const data = newSub.toJSON()
+        return fetch("/api/v1/push_subscriptions/refresh", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({
+            old_endpoint: event.oldSubscription?.endpoint,
+            endpoint:     data.endpoint,
+            p256dh:       data.keys?.p256dh,
+            auth:         data.keys?.auth,
+          }),
+        })
+      })
+      .catch(() => {}) // best-effort — don't crash the SW
+  )
 })
 
 // ── Notification click → open / focus app ────────────

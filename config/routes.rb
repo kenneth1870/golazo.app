@@ -55,9 +55,10 @@ Rails.application.routes.draw do
       get "all_leagues",  to: "all_leagues#index"
       get "all_leagues/live", to: "all_leagues#live"
       get  "vapid_public_key",         to: "push_subscriptions#vapid_key"
-      post "push_subscriptions",       to: "push_subscriptions#create"
-      put  "push_subscriptions/teams", to: "push_subscriptions#update_teams"
-      delete "push_subscriptions",     to: "push_subscriptions#destroy"
+      post "push_subscriptions",         to: "push_subscriptions#create"
+      post "push_subscriptions/refresh", to: "push_subscriptions#refresh"
+      put  "push_subscriptions/teams",   to: "push_subscriptions#update_teams"
+      delete "push_subscriptions",       to: "push_subscriptions#destroy"
       post "push_test",                to: "push_subscriptions#test_push"
       post "track",                    to: "tracking#ping"
       resources :teams, only: [ :index, :show ] do
