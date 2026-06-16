@@ -122,7 +122,17 @@ class MatchEventNotificationJob < ApplicationJob
     when "red_card"
       [ "🟥 ¡Tarjeta roja! #{home} vs #{away}", minute ? "#{minute}' · ¡Tarjeta roja!" : "¡Tarjeta roja mostrada!" ]
     when "prematch"
-      [ "⏰ #{home} vs #{away}", "Comienza en 10 minutos — ¡prepárate!" ]
+      bodies = [
+        "¡Ya falta poco! ¿Estás listo?",
+        "¡Calentando motores! El partido arranca pronto ⚡",
+        "¡Ponte cómodo, que ya empieza! 👀",
+        "¡Que no te agarre desprevenido! Arranca en nada.",
+        "¡Hora de ponerse el uniforme! ⚽",
+        "¿Ya tienes los snacks listos? Empieza pronto.",
+        "¡El momento se acerca! ¿Listo para el partido?",
+        "¡Atención! El partido está por comenzar.",
+      ]
+      [ "⏰ #{home} vs #{away}", bodies.sample ]
     else
       [ "#{home} vs #{away}", "" ]
     end
@@ -143,7 +153,17 @@ class MatchEventNotificationJob < ApplicationJob
     when "red_card"
       [ "🟥 Red card! #{home} vs #{away}", minute ? "#{minute}' · Red card shown!" : "Red card shown!" ]
     when "prematch"
-      [ "⏰ #{home} vs #{away}", "Kicks off in 10 minutes — get ready!" ]
+      bodies = [
+        "Almost time — are you ready? ⚡",
+        "Get your game face on! Kick-off is near.",
+        "Warming up! The match is about to start.",
+        "Don't miss it — kick-off is almost here!",
+        "Got your snacks ready? It starts soon 👀",
+        "Time to focus — the match is nearly on!",
+        "Settle in, it's almost kick-off time! ⚽",
+        "The wait is almost over. Let's go!",
+      ]
+      [ "⏰ #{home} vs #{away}", bodies.sample ]
     else
       [ "#{home} vs #{away}", "" ]
     end
