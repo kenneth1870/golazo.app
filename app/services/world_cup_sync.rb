@@ -506,7 +506,7 @@ class WorldCupSync
           end
         end
         RecalculateStandingsJob.perform_later
-        bust_scorers_cache
+        bust_scorers_cache(match)
       end
       if match.external_id.present? && home_score && away_score
         ScorePrediction.grade!(
@@ -667,7 +667,7 @@ class WorldCupSync
         end
       end
       RecalculateStandingsJob.perform_later
-      bust_scorers_cache
+      bust_scorers_cache(match)
     end
 
     # Grade score predictions after match finishes
@@ -889,20 +889,24 @@ class WorldCupSync
 
   # Bust all top-scorers / assists / cards caches for the WC so that the
   # next request reflects the just-finished match immediately.
-  WC_LEAGUE_ID_FOR_CACHE = 1
-  WC_SEASON_ID_FOR_CACHE = 2026
-
-  def bust_scorers_cache
-    [
-      "live_scores_scorers_v2_#{WC_LEAGUE_ID_FOR_CACHE}_#{WC_SEASON_ID_FOR_CACHE}",
-      "live_scores_assists_v1_#{WC_LEAGUE_ID_FOR_CACHE}_#{WC_SEASON_ID_FOR_CACHE}",
-      "live_scores_yellowcards_v1_#{WC_LEAGUE_ID_FOR_CACHE}_#{WC_SEASON_ID_FOR_CACHE}",
-      "live_scores_redcards_v1_#{WC_LEAGUE_ID_FOR_CACHE}_#{WC_SEASON_ID_FOR_CACHE}",
+  # Also clears the per-fixture event cache so WorldCupScorers.fetch_events
+  # gets fresh events for this match (not a stale mid-match snapshot).
+  def bust_scorers_cache(match = nil)
+    keys = [
+      "live_scores_scorers_v2_#{WC_LEAGUE_ID}_#{WC_SEASON_ID}",
+      "live_scores_assists_v1_#{WC_LEAGUE_ID}_#{WC_SEASON_ID}",
+      "live_scores_yellowcards_v1_#{WC_LEAGUE_ID}_#{WC_SEASON_ID}",
+      "live_scores_redcards_v1_#{WC_LEAGUE_ID}_#{WC_SEASON_ID}",
       "wc_scorers_v1_WC",
       "wc_assists_v1_WC",
       "wc_yellow_cards_v1_WC",
       "wc_red_cards_v1_WC",
-    ].each { |k| Rails.cache.delete(k) }
+    ]
+    if match&.external_id.present?
+      keys << "wc_fixture_events_v1_#{match.external_id}"
+      keys << "live_scores_detail_v5_#{match.external_id}"
+    end
+    keys.each { |k| Rails.cache.delete(k) }
     log("Busted scorers/assists/cards caches after match finish")
   end
 
