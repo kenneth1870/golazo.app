@@ -7,6 +7,34 @@ import { useLiveCount } from "../contexts/LiveContext"
 
 const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
+// ─── Theme toggle ─────────────────────────────────────
+function ThemeToggle() {
+  const [light, setLight] = useState(() => {
+    try { return localStorage.getItem("golazo_theme") === "light" } catch { return false }
+  })
+  useEffect(() => {
+    document.body.classList.toggle("light-mode", light)
+    try { localStorage.setItem("golazo_theme", light ? "light" : "dark") } catch {}
+  }, [light])
+  return (
+    <button
+      onClick={() => setLight(v => !v)}
+      title={light ? "Switch to dark mode" : "Switch to light mode"}
+      style={{
+        background: "none", border: "1px solid var(--border)",
+        borderRadius: 8, width: 32, height: 32,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        cursor: "pointer", fontSize: "0.9rem", color: "var(--muted)",
+        transition: "border-color .2s, color .2s", flexShrink: 0,
+      }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.25)"; e.currentTarget.style.color = "#fff" }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)" }}
+    >
+      {light ? "🌙" : "☀️"}
+    </button>
+  )
+}
+
 // ─── Icons ────────────────────────────────────────────
 const SearchIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -266,7 +294,8 @@ export default function Navbar() {
           <div style={{ height: 80 }} />
         </nav>
 
-        <div className="mobile-drawer-footer">
+        <div className="mobile-drawer-footer" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <ThemeToggle />
           <LanguageSwitcher />
         </div>
       </div>
@@ -322,7 +351,8 @@ export default function Navbar() {
                 <kbd className="nav-search-kbd">⌘K</kbd>
               </button>
 
-              <div style={{ marginLeft: 4 }}>
+              <div style={{ marginLeft: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                <ThemeToggle />
                 <LanguageSwitcher />
               </div>
             </nav>

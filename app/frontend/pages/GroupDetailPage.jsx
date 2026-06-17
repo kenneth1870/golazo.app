@@ -97,6 +97,134 @@ function QualificationPanel({ standings, t, lang }) {
   )
 }
 
+// ─── Scenario builder: simulate remaining results ─────
+function WhatIfPanel({ matches, standings, lang, t }) {
+  const remaining = matches.filter(m => m.status === "scheduled" || m.status === "ns" || m.status === "NS")
+
+  // overrides: { matchId: "home" | "away" | "draw" }
+  const [overrides, setOverrides] = useState({})
+
+  if (!standings?.length) return (
+    <div className="empty-state" style={{ paddingTop: 40 }}>
+      <div className="empty-state__icon">🔮</div>
+      <h3>Standings not available yet</h3>
+    </div>
+  )
+  if (!remaining.length) return (
+    <div className="empty-state" style={{ paddingTop: 40 }}>
+      <div className="empty-state__icon">✅</div>
+      <h3>All group matches completed</h3>
+      <p style={{ color: "var(--muted)", fontSize: "0.82rem" }}>No upcoming matches to simulate.</p>
+    </div>
+  )
+
+  // Simulate standings with overrides applied
+  const simStandings = standings.map(s => ({
+    ...s,
+    pts: s.points ?? 0, gf: s.goals_for ?? 0, ga: s.goals_against ?? 0,
+    gd: (s.goals_for ?? 0) - (s.goals_against ?? 0),
+  }))
+  const byName = Object.fromEntries(simStandings.map(s => [s.team?.name, s]))
+
+  remaining.forEach(m => {
+    const result = overrides[m.id]
+    if (!result) return
+    const home = byName[m.home_team?.name]
+    const away = byName[m.away_team?.name]
+    if (!home || !away) return
+    if (result === "home") {
+      home.pts += 3; home.gf += 1; away.ga += 1
+      home.gd++; away.gd--
+    } else if (result === "away") {
+      away.pts += 3; away.gf += 1; home.ga += 1
+      away.gd++; home.gd--
+    } else {
+      home.pts += 1; away.pts += 1
+      home.gf += 1; away.gf += 1; home.ga += 1; away.ga += 1
+    }
+  })
+
+  const sorted = [...simStandings].sort((a, b) => b.pts - a.pts || b.gd - a.gd || b.gf - a.gf)
+  const allSet  = remaining.every(m => overrides[m.id])
+
+  return (
+    <div>
+      <div style={{ marginBottom: 16, fontSize: "0.78rem", color: "var(--muted)" }}>
+        Pick results for remaining matches to see the projected standings.
+      </div>
+
+      {/* Match result pickers */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+        {remaining.map(m => {
+          const sel = overrides[m.id]
+          const btn = (label, val) => (
+            <button
+              key={val}
+              onClick={() => setOverrides(o => ({ ...o, [m.id]: val }))}
+              style={{
+                flex: 1, padding: "6px 4px", fontSize: "0.72rem", fontWeight: 700,
+                borderRadius: 6, border: `1px solid ${sel === val ? "#ee1e46" : "var(--border)"}`,
+                background: sel === val ? "rgba(238,30,70,.15)" : "var(--surface2)",
+                color: sel === val ? "#ee1e46" : "var(--muted)", cursor: "pointer",
+              }}
+            >{label}</button>
+          )
+          return (
+            <div key={m.id} style={{ background: "var(--surface)", borderRadius: 10, padding: "10px 14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, fontSize: "0.8rem", fontWeight: 700, color: "#fff", justifyContent: "space-between" }}>
+                <span style={{ flex: 1, textAlign: "right" }}>{translateTeam(m.home_team?.name, lang)}</span>
+                <span style={{ fontSize: "0.65rem", color: "var(--muted)", flexShrink: 0 }}>vs</span>
+                <span style={{ flex: 1, textAlign: "left" }}>{translateTeam(m.away_team?.name, lang)}</span>
+              </div>
+              <div style={{ display: "flex", gap: 4 }}>
+                {btn(translateTeam(m.home_team?.name, lang)?.split(" ")?.[0] + " Win", "home")}
+                {btn("Draw", "draw")}
+                {btn(translateTeam(m.away_team?.name, lang)?.split(" ")?.[0] + " Win", "away")}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Projected standings */}
+      {allSet && (
+        <div>
+          <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 10 }}>
+            Projected Standings
+          </div>
+          {sorted.map((s, i) => (
+            <div key={s.team?.id ?? i} style={{
+              display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+              background: i < 2 ? "rgba(16,185,129,.08)" : i === 2 ? "rgba(245,158,11,.06)" : "rgba(239,68,68,.05)",
+              borderRadius: 8, marginBottom: 4,
+              borderLeft: `3px solid ${i < 2 ? "#10b981" : i === 2 ? "#f59e0b" : "#ef4444"}`,
+            }}>
+              <span style={{ width: 20, fontWeight: 900, fontSize: "0.8rem", color: i < 2 ? "#10b981" : i === 2 ? "#f59e0b" : "#ef4444" }}>#{i + 1}</span>
+              {s.team?.flag_url && <img src={s.team.flag_url} alt="" style={{ width: 22, height: 22, objectFit: "contain" }} />}
+              <span style={{ flex: 1, fontWeight: 700, fontSize: "0.85rem", color: "#fff" }}>{translateTeam(s.team?.name, lang)}</span>
+              <span style={{ fontWeight: 900, fontSize: "0.9rem", color: "#fff" }}>{s.pts}</span>
+              <span style={{ fontSize: "0.65rem", color: "var(--muted)", marginLeft: 2 }}>pts</span>
+              <span style={{ fontSize: "0.72rem", color: s.gd > 0 ? "#10b981" : s.gd < 0 ? "#ef4444" : "var(--muted)", marginLeft: 8, minWidth: 28, textAlign: "right" }}>
+                {s.gd > 0 ? `+${s.gd}` : s.gd} GD
+              </span>
+            </div>
+          ))}
+          <button
+            onClick={() => setOverrides({})}
+            style={{
+              marginTop: 12, display: "block", width: "100%", padding: "8px", fontSize: "0.75rem",
+              background: "none", border: "1px solid var(--border)", borderRadius: 8,
+              color: "var(--muted)", cursor: "pointer",
+            }}
+          >
+            Reset
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function GroupDetailPage() {
   const { t, i18n } = useTranslation()
   const { group }   = useParams()
@@ -147,6 +275,7 @@ export default function GroupDetailPage() {
   const TABS = [
     { key: "standings", label: t("groups.standings", { letter: group }) },
     { key: "schedule",  label: t("groups.schedule") },
+    { key: "whatif",    label: "What If?" },
   ]
 
   return (
@@ -171,8 +300,8 @@ export default function GroupDetailPage() {
         </div>
 
         <div className="row">
-          {/* Standings + Qualification — hidden on mobile when schedule tab active */}
-          <div className={`col-lg-5 mb-4${activeTab === "schedule" ? " d-none d-lg-block" : ""}`}>
+          {/* Standings + Qualification — hidden on mobile when schedule or whatif tab active */}
+          <div className={`col-lg-5 mb-4${activeTab === "schedule" || activeTab === "whatif" ? " d-none d-lg-block" : ""}${activeTab === "whatif" ? " d-none" : ""}`}>
             <div className="widget-next-match">
               <div className="widget-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <h3 style={{ margin: 0 }}>{t("groups.standings", { letter: group })}</h3>
@@ -248,7 +377,19 @@ export default function GroupDetailPage() {
           </div>
 
           {/* Schedule — hidden on mobile when standings tab active */}
-          <div className={`col-lg-7${activeTab === "standings" ? " d-none d-lg-block" : ""}`}>
+          {/* What If tab — full width */}
+          {activeTab === "whatif" && (
+            <div className="col-12">
+              <div className="widget-next-match">
+                <div className="widget-title"><h3>🔮 What If?</h3></div>
+                <div className="widget-body" style={{ padding: "16px" }}>
+                  <WhatIfPanel matches={matches} standings={standings} lang={i18n.language} t={t} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className={`col-lg-7${activeTab === "standings" ? " d-none d-lg-block" : ""}${activeTab === "whatif" ? " d-none" : ""}`}>
             <div className="widget-next-match">
               <div className="widget-title"><h3>{t("groups.schedule")}</h3></div>
               <div className="widget-body p-0">

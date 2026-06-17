@@ -434,21 +434,34 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
   const isHT   = status?.short === "HT"
 
   function share() {
-    const hs   = goals?.home ?? "?"
-    const as   = goals?.away ?? "?"
-    let text   = isLive
-      ? `🔴 LIVE: ${homeName} ${hs}–${as} ${awayName}`
-      : `${homeName} ${hs}–${as} ${awayName}`
+    const hs = goals?.home ?? "?"
+    const as = goals?.away ?? "?"
+    const lines = []
 
-    // Append goal scorers for richer shares
+    // Header line
+    if (isLive) {
+      lines.push(`🔴 LIVE · ${homeName} ${hs}–${as} ${awayName}`)
+    } else if (isFT) {
+      const winner = hs > as ? homeName : as > hs ? awayName : null
+      lines.push(`⚽ FT · ${homeName} ${hs}–${as} ${awayName}${winner ? ` · ${winner} win` : " · Draw"}`)
+    } else {
+      lines.push(`${homeName} vs ${awayName}`)
+    }
+
+    // Round/competition
+    if (fixture?.league?.round) lines.push(`📅 ${fixture.league.round}`)
+
+    // Goal scorers
     const goalEvents = (events ?? []).filter(e => e.type === "Goal" && e.detail !== "Missed Penalty")
     if (goalEvents.length > 0) {
       const homeGoals = goalEvents.filter(e => e.team?.name === homeRaw).map(e => `${e.player} ${e.minute}'`).join(", ")
       const awayGoals = goalEvents.filter(e => e.team?.name !== homeRaw).map(e => `${e.player} ${e.minute}'`).join(", ")
-      const scorerLine = [homeGoals, awayGoals].filter(Boolean).join(" | ")
-      if (scorerLine) text += `\n⚽ ${scorerLine}`
+      if (homeGoals) lines.push(`  ${homeName}: ${homeGoals}`)
+      if (awayGoals) lines.push(`  ${awayName}: ${awayGoals}`)
     }
-    text += `\n${window.location.href}`
+
+    lines.push(window.location.href)
+    const text = lines.join("\n")
 
     const fallback = () => {
       try {
@@ -460,9 +473,8 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
       } catch {}
       setCopied(true); setTimeout(() => setCopied(false), 2000)
     }
-    if (navigator.share && !navigator.userAgentData?.mobile) {
-      // Use native share on mobile
-      navigator.share({ title: `${homeName} vs ${awayName}`, text, url: window.location.href }).catch(() => {})
+    if (navigator.share) {
+      navigator.share({ title: `${homeName} vs ${awayName}`, text, url: window.location.href }).catch(fallback)
     } else if (navigator.clipboard) {
       navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }).catch(fallback)
     } else { fallback() }
@@ -590,15 +602,22 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
           </div>
         </div>
 
-        {/* Footer: venue + share + notif */}
+        {/* Footer: venue + referee + share + notif */}
         <div className="scoreboard__footer">
-          {fixture?.fixture?.venue?.name && (
-            <span className="scoreboard__venue">
-              📍 {fixture.fixture.venue.name}
-              {fixture.fixture.venue.city ? `, ${fixture.fixture.venue.city}` : ""}
-              {venueCap ? <span style={{ opacity: .5, marginLeft: 6 }}>· 🏟️ {venueCap.toLocaleString()}</span> : null}
-            </span>
-          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {fixture?.fixture?.venue?.name && (
+              <span className="scoreboard__venue">
+                📍 {fixture.fixture.venue.name}
+                {fixture.fixture.venue.city ? `, ${fixture.fixture.venue.city}` : ""}
+                {venueCap ? <span style={{ opacity: .5, marginLeft: 6 }}>· 🏟️ {venueCap.toLocaleString()}</span> : null}
+              </span>
+            )}
+            {fixture?.fixture?.referee && (
+              <span className="scoreboard__venue" style={{ fontSize: ".68rem" }}>
+                ⚖️ {fixture.fixture.referee.replace(/ \(.*?\)$/, "")}
+              </span>
+            )}
+          </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {isLive && notifSupported && (
               <button
@@ -669,12 +688,25 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t, i18n }) {
   let htInserted  = false
   let etInserted  = false
   let et2Inserted = false
+  let htHomeGoals = 0, htAwayGoals = 0, htHomeCards = 0, htAwayCards = 0
 
   regularEvents.forEach(e => {
     const min = e.minute ?? 0
     if (!htInserted && min > 45) {
       items.push({ _divider: t("match.htDivider") })
+      items.push({ _htSummary: { homeGoals: htHomeGoals, awayGoals: htAwayGoals, homeCards: htHomeCards, awayCards: htAwayCards } })
       htInserted = true
+    }
+    // Track first-half stats before HT divider
+    if (!htInserted) {
+      if (e.type === "Goal" && e.detail !== "Missed Penalty") {
+        const isHome = e.team?.name === homeTeam
+        const isOG   = e.detail === "Own Goal"
+        if (isHome !== isOG) htHomeGoals++; else htAwayGoals++
+      }
+      if (e.type === "Card") {
+        if (e.team?.name === homeTeam) htHomeCards++; else htAwayCards++
+      }
     }
     if (!etInserted && min > 90) {
       items.push({ _divider: t("match.etDivider") })
@@ -696,6 +728,30 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t, i18n }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
         {items.map((e, i) => {
           if (e._divider) return <PeriodDivider key={`d${i}`} label={e._divider} />
+          if (e._htSummary) {
+            const s = e._htSummary
+            const hasActivity = s.homeGoals + s.awayGoals + s.homeCards + s.awayCards > 0
+            if (!hasActivity) return null
+            return (
+              <div key={`ht-sum${i}`} style={{
+                background: "rgba(255,255,255,.04)", borderRadius: 8, padding: "10px 14px",
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                fontSize: "0.76rem", color: "var(--muted)", margin: "4px 0 8px",
+              }}>
+                <div style={{ textAlign: "left" }}>
+                  {s.homeGoals > 0 && <div>⚽ ×{s.homeGoals}</div>}
+                  {s.homeCards > 0 && <div>🟨 ×{s.homeCards}</div>}
+                </div>
+                <div style={{ textAlign: "center", fontWeight: 700, fontSize: "0.68rem", letterSpacing: ".06em", color: "rgba(255,255,255,.35)", textTransform: "uppercase" }}>
+                  1st half
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  {s.awayGoals > 0 && <div>⚽ ×{s.awayGoals}</div>}
+                  {s.awayCards > 0 && <div>🟨 ×{s.awayCards}</div>}
+                </div>
+              </div>
+            )
+          }
 
           const isHome    = e.team?.name === homeTeam
           const isGoal    = e.type === "Goal" && e.detail !== "Missed Penalty"
@@ -1346,6 +1402,18 @@ function PlayerRatingsPanel({ fixtureId }) {
       .finally(() => setLoading(false))
   }, [fixtureId])
 
+  // Find MOTM: highest-rated player across both teams
+  const motmKey = teams ? (() => {
+    let best = null, bestVal = -1
+    teams.forEach(team => {
+      ;(team.players || []).forEach(p => {
+        const v = parseFloat(p.rating)
+        if (!isNaN(v) && v > bestVal) { bestVal = v; best = `${team.team?.id}-${p.name}` }
+      })
+    })
+    return best
+  })() : null
+
   if (loading) return (
     <div style={{ paddingTop: 16 }}>
       {[...Array(6)].map((_, i) => (
@@ -1374,21 +1442,24 @@ function PlayerRatingsPanel({ fixtureId }) {
             {(team.players || [])
               .sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0))
               .map((p, pi) => {
-                const rating = parseFloat(p.rating)
-                const color  = RATING_COLOR(p.rating)
+                const rating  = parseFloat(p.rating)
+                const color   = RATING_COLOR(p.rating)
+                const isMotm  = motmKey === `${team.team?.id}-${p.name}`
                 return (
                   <div key={pi} style={{
                     display: "grid", gridTemplateColumns: "22px 1fr 80px 44px",
                     gap: 8, alignItems: "center",
                     padding: "8px 12px",
-                    background: pi % 2 === 0 ? "transparent" : "rgba(255,255,255,.02)",
+                    background: isMotm ? "rgba(245,158,11,.07)" : pi % 2 === 0 ? "transparent" : "rgba(255,255,255,.02)",
                     borderRadius: 6,
+                    border: isMotm ? "1px solid rgba(245,158,11,.25)" : "1px solid transparent",
                   }}>
                     <span style={{ fontSize: "0.72rem", color: "var(--muted)", textAlign: "center", fontWeight: 700 }}>
                       {p.number ?? ""}
                     </span>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {isMotm && <span style={{ marginRight: 4 }} title="Man of the Match">👑</span>}
                         {p.captain ? "©" : ""}{p.name}
                       </div>
                       <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>
@@ -1430,6 +1501,63 @@ function PlayerRatingsPanel({ fixtureId }) {
   )
 }
 
+// ─── Live event feed / commentary ─────────────────────
+function LiveCommentaryPanel({ events, homeTeamRaw, homeName, awayName }) {
+  const feedItems = [...(events ?? [])]
+    .filter(e => e.comments || e.type === "Goal" || e.type === "Card" || e.type === "Var")
+    .reverse()
+
+  if (!feedItems.length) return (
+    <div className="empty-state" style={{ paddingTop: 40 }}>
+      <div className="empty-state__icon">📝</div>
+      <h3>No commentary yet</h3>
+    </div>
+  )
+
+  const iconFor = (type, detail) => {
+    if (type === "Goal")  return detail === "Own Goal" ? "🔴 OG" : "⚽"
+    if (type === "Card")  return detail?.includes("Yellow") ? "🟨" : "🟥"
+    if (type === "Var")   return "🖥️ VAR"
+    if (type === "subst") return "🔄"
+    return "📢"
+  }
+
+  return (
+    <section className="match-section">
+      <h3 className="match-section__title" style={{ marginBottom: 12 }}>📝 Match Feed</h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {feedItems.map((e, i) => {
+          const isHome = e.team?.name === homeTeamRaw
+          const min    = `${e.minute ?? ""}${e.extra ? `+${e.extra}` : ""}'`
+          return (
+            <div key={i} style={{
+              display: "flex", gap: 10, padding: "10px 14px",
+              background: "var(--surface2)", borderRadius: 8,
+              borderLeft: `3px solid ${e.type === "Goal" ? "#ee1e46" : e.type === "Card" ? "#f59e0b" : "var(--border)"}`,
+            }}>
+              <div style={{ flexShrink: 0, textAlign: "center", minWidth: 36 }}>
+                <div style={{ fontSize: "0.65rem", fontWeight: 800, color: "var(--muted)" }}>{min}</div>
+                <div style={{ fontSize: "0.9rem", marginTop: 2 }}>{iconFor(e.type, e.detail)}</div>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: "0.82rem", color: "#fff" }}>
+                  {e.player || e.type} · <span style={{ color: "var(--muted)", fontWeight: 400 }}>{isHome ? homeName : awayName}</span>
+                </div>
+                {e.comments && (
+                  <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,.6)", marginTop: 3, lineHeight: 1.5 }}>{e.comments}</div>
+                )}
+                {e.detail && e.detail !== e.type && (
+                  <div style={{ fontSize: "0.68rem", color: "var(--muted)", marginTop: 2 }}>{e.detail}</div>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 // ─── Goal flash toast ──────────────────────────────────
 function GoalToast({ text, visible, onDismiss }) {
   if (!visible) return null
@@ -1451,6 +1579,60 @@ function GoalToast({ text, visible, onDismiss }) {
       <span style={{ fontSize: "1.1rem" }}>⚽</span>
       <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{text}</span>
       <span style={{ opacity: .6, fontSize: ".75rem", marginLeft: 4 }}>✕</span>
+    </div>
+  )
+}
+
+// ─── Notification event-type preferences ─────────────
+const NOTIF_PREF_KEY = "golazo_notif_prefs"
+const DEFAULT_PREFS  = { goal: true, card: false, subst: false, halftime: true, fulltime: true }
+
+function getNotifPrefs() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(NOTIF_PREF_KEY) || "{}")
+    return { ...DEFAULT_PREFS, ...stored }
+  } catch { return { ...DEFAULT_PREFS } }
+}
+function saveNotifPrefs(prefs) {
+  try { localStorage.setItem(NOTIF_PREF_KEY, JSON.stringify(prefs)) } catch {}
+}
+
+function NotifPrefsPanel() {
+  const [prefs, setPrefs] = useState(getNotifPrefs)
+  const toggle = key => {
+    const next = { ...prefs, [key]: !prefs[key] }
+    setPrefs(next)
+    saveNotifPrefs(next)
+  }
+  const opts = [
+    { key: "goal",     label: "⚽ Goals" },
+    { key: "card",     label: "🟨 Cards" },
+    { key: "subst",    label: "🔄 Substitutions" },
+    { key: "halftime", label: "⏸ Half-time" },
+    { key: "fulltime", label: "🏁 Full-time" },
+  ]
+  return (
+    <div style={{
+      background: "var(--surface2)", border: "1px solid var(--border)",
+      borderRadius: 10, padding: "12px 16px", marginBottom: 16,
+    }}>
+      <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 10 }}>
+        🔔 In-app alert preferences
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {opts.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => toggle(key)}
+            style={{
+              padding: "5px 12px", borderRadius: 20, fontSize: "0.72rem", fontWeight: 700, cursor: "pointer",
+              border: `1px solid ${prefs[key] ? "rgba(16,185,129,.4)" : "var(--border)"}`,
+              background: prefs[key] ? "rgba(16,185,129,.12)" : "var(--surface)",
+              color: prefs[key] ? "#10b981" : "var(--muted)",
+            }}
+          >{label}</button>
+        ))}
+      </div>
     </div>
   )
 }
@@ -1912,7 +2094,8 @@ export default function MatchShowPage() {
   const goalCount   = data?.events?.filter(e => e.type === "Goal").length ?? 0
   const isNS        = statusShort === "NS" || statusShort === "TBD"
   const isFinished  = ["FT", "AET", "PEN"].includes(statusShort)
-  // Dynamic tab list — "preview" prepended for pre-kickoff; "ratings" for live/finished
+  const hasCommentary = (data?.events ?? []).some(e => e.comments)
+  // Dynamic tab list — "preview" prepended for pre-kickoff; "ratings"/"feed" for live/finished
   const TAB_KEYS    = [
     ...(isNS ? ["preview"] : []),
     "summary",
@@ -1920,8 +2103,9 @@ export default function MatchShowPage() {
     "lineups",
     "h2h",
     ...((isLive || isFinished) ? ["ratings"] : []),
+    ...((isLive || isFinished) && hasCommentary ? ["feed"] : []),
   ]
-  const TAB_LABELS  = { preview: t("match.preview"), summary: t("match.summary"), stats: t("match.stats"), lineups: t("match.lineups"), h2h: "H2H", ratings: "⭐ Ratings" }
+  const TAB_LABELS  = { preview: t("match.preview"), summary: t("match.summary"), stats: t("match.stats"), lineups: t("match.lineups"), h2h: "H2H", ratings: "⭐ Ratings", feed: "📝 Feed" }
   const TABS        = TAB_KEYS.map(k => ({ key: k, label: TAB_LABELS[k] ?? k }))
 
   // Swipe between tabs — only on horizontal-dominant gestures
@@ -2069,6 +2253,9 @@ export default function MatchShowPage() {
             onDismiss={() => setShowNotifBanner(false)}
           />
         )}
+        {isLive && notifSupported && Notification.permission === "granted" && (
+          <NotifPrefsPanel />
+        )}
 
         {/* Score timeline — replaces goal banner with visual progression */}
         {goalCount > 0 && (
@@ -2085,12 +2272,17 @@ export default function MatchShowPage() {
         <div onTouchStart={handleTabSwipeStart} onTouchEnd={handleTabSwipeEnd}>
 
         {tab === "preview" && (
-          <MatchPreviewPanel
-            fixtureId={id}
-            homeName={homeName}
-            awayName={awayName}
-            t={t}
-          />
+          <>
+            {hasFixture && isNS && (
+              <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} kickoffAt={kickoffAt} t={t} />
+            )}
+            <MatchPreviewPanel
+              fixtureId={id}
+              homeName={homeName}
+              awayName={awayName}
+              t={t}
+            />
+          </>
         )}
 
         {tab === "summary" && (
@@ -2166,6 +2358,10 @@ export default function MatchShowPage() {
 
         {tab === "ratings" && (
           <PlayerRatingsPanel fixtureId={id} />
+        )}
+
+        {tab === "feed" && (
+          <LiveCommentaryPanel events={data?.events} homeTeamRaw={homeTeamRaw} homeName={homeName} awayName={awayName} />
         )}
 
         {/* Related News — shown on every tab when fixture is loaded */}

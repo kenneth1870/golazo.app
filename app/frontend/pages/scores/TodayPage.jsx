@@ -169,7 +169,19 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
           <FlagImg src={match.away_team?.flag_url} name={match.away_team?.name} size={16} className="flag-xs" />
         </div>
       </div>
-      <div className="match-row__meta">
+      <div className="match-row__meta" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+        {!isLive && !isFinished && clickable && (
+          <span
+            onClick={e => { e.stopPropagation(); onMatchClick(match.external_id, match) }}
+            style={{
+              fontSize: "0.6rem", fontWeight: 700, padding: "2px 7px",
+              background: "rgba(238,30,70,.12)", border: "1px solid rgba(238,30,70,.25)",
+              borderRadius: 10, color: "#ee1e46", cursor: "pointer", whiteSpace: "nowrap",
+            }}
+          >
+            🎯
+          </span>
+        )}
         {clickable && <span style={{ fontSize: "0.65rem", color: "var(--muted)" }}>›</span>}
       </div>
     </div>

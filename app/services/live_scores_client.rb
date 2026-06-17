@@ -605,8 +605,9 @@ class LiveScoresClient
   def build_fixture(fx)
     {
       "fixture" => {
-        "id"     => fx.dig("fixture", "id"),
-        "date"   => fx.dig("fixture", "date"),
+        "id"       => fx.dig("fixture", "id"),
+        "date"     => fx.dig("fixture", "date"),
+        "referee"  => fx.dig("fixture", "referee"),
         "status" => {
           "short"   => fx.dig("fixture", "status", "short"),
           "long"    => fx.dig("fixture", "status", "long"),

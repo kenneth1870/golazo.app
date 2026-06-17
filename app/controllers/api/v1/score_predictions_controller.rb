@@ -61,6 +61,20 @@ module Api
         }
       end
 
+      # PATCH /api/v1/score_predictions/update_name
+      # Body: { device_id, display_name }
+      def update_name
+        device_id    = params[:device_id].to_s.first(64)
+        display_name = params[:display_name].to_s.strip.first(32)
+        return render json: { error: "device_id required" }, status: :bad_request if device_id.blank?
+
+        updated = ScorePrediction
+          .where(device_id: device_id)
+          .update_all(display_name: display_name.presence)
+
+        render json: { updated: updated, display_name: display_name }
+      end
+
       # GET /api/v1/score_predictions/by_device?device_id=xxx
       # Returns all graded predictions for a device (for comparison page)
       def by_device

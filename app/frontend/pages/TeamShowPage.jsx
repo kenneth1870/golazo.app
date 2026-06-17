@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam } from "../i18n/teamNames"
@@ -115,6 +115,26 @@ export default function TeamShowPage() {
   const upcoming   = matches.filter(m => m.status === "scheduled").sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
   const finished   = matches.filter(m => m.status === "finished").sort((a, b) => new Date(b.kickoff_at) - new Date(a.kickoff_at))
   const live       = matches.filter(m => m.status === "live")
+  const nextMatch  = upcoming[0] ?? null
+
+  // Countdown to next match
+  const [countdown, setCountdown] = useState("")
+  const countdownRef = useRef(null)
+  useEffect(() => {
+    if (!nextMatch?.kickoff_at) { setCountdown(""); return }
+    const tick = () => {
+      const diff = new Date(nextMatch.kickoff_at).getTime() - Date.now()
+      if (diff <= 0) { setCountdown(""); return }
+      const d  = Math.floor(diff / 86400000)
+      const h  = Math.floor((diff % 86400000) / 3600000)
+      const m  = Math.floor((diff % 3600000) / 60000)
+      const s  = Math.floor((diff % 60000) / 1000)
+      setCountdown(d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m ${s}s`)
+    }
+    tick()
+    countdownRef.current = setInterval(tick, 1000)
+    return () => clearInterval(countdownRef.current)
+  }, [nextMatch?.kickoff_at])
   const scorers    = team.scorers || []
   const tstats     = team.tournament_stats || {}
 
@@ -152,18 +172,29 @@ export default function TeamShowPage() {
         <div className="container" style={{ maxWidth: 700, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back")}</button>
           {team && (
-            <button
-              onClick={() => toggleFavorite({ type: "team", id: team.id, name: team.name, flag_url: team.flag_url, group: team.group })}
-              title={isFavorite("team", team.id) ? "Unfollow team" : "Follow team"}
-              style={{
-                background: isFavorite("team", team.id) ? "rgba(238,30,70,.15)" : "rgba(255,255,255,.06)",
-                border: isFavorite("team", team.id) ? "1px solid rgba(238,30,70,.4)" : "1px solid rgba(255,255,255,.12)",
-                borderRadius: 20, padding: "5px 14px", color: isFavorite("team", team.id) ? "#ee1e46" : "rgba(255,255,255,.4)",
-                fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", transition: ".2s",
-              }}
-            >
-              {isFavorite("team", team.id) ? t("team.following") : t("team.follow")}
-            </button>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <Link
+                to={`/compare/teams?home=${team.id}`}
+                style={{
+                  background: "rgba(99,102,241,.1)", border: "1px solid rgba(99,102,241,.25)",
+                  borderRadius: 20, padding: "5px 12px", color: "#818cf8",
+                  fontSize: "0.72rem", fontWeight: 700, textDecoration: "none",
+                }}
+                title="Compare with another team"
+              >⚔️ Compare</Link>
+              <button
+                onClick={() => toggleFavorite({ type: "team", id: team.id, name: team.name, flag_url: team.flag_url, group: team.group })}
+                title={isFavorite("team", team.id) ? "Unfollow team" : "Follow team"}
+                style={{
+                  background: isFavorite("team", team.id) ? "rgba(238,30,70,.15)" : "rgba(255,255,255,.06)",
+                  border: isFavorite("team", team.id) ? "1px solid rgba(238,30,70,.4)" : "1px solid rgba(255,255,255,.12)",
+                  borderRadius: 20, padding: "5px 14px", color: isFavorite("team", team.id) ? "#ee1e46" : "rgba(255,255,255,.4)",
+                  fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", transition: ".2s",
+                }}
+              >
+                {isFavorite("team", team.id) ? t("team.following") : t("team.follow")}
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -249,6 +280,37 @@ export default function TeamShowPage() {
 
         {/* ── Overview tab ── */}
         {activeTab === "overview" && <>
+          {/* Next match countdown */}
+          {countdown && nextMatch && (
+            <div
+              onClick={() => nextMatch.external_id && navigate(`/matches/${nextMatch.external_id}`)}
+              style={{
+                background: "linear-gradient(135deg, rgba(238,30,70,.12) 0%, rgba(99,102,241,.08) 100%)",
+                border: "1px solid rgba(238,30,70,.25)", borderRadius: 12, padding: "14px 18px",
+                marginBottom: 16, cursor: nextMatch.external_id ? "pointer" : "default",
+                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 4 }}>
+                  {t("scores.upcomingFixtures", "Next Match")}
+                </div>
+                <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#fff" }}>
+                  {translateTeam(nextMatch.home_team?.name, i18n.language)} vs {translateTeam(nextMatch.away_team?.name, i18n.language)}
+                </div>
+                <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginTop: 3 }}>
+                  {nextMatch.kickoff_at ? new Date(nextMatch.kickoff_at).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}
+                </div>
+              </div>
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "#ee1e46", fontVariantNumeric: "tabular-nums", letterSpacing: "-.02em" }}>
+                  {countdown}
+                </div>
+                <div style={{ fontSize: "0.6rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>away</div>
+              </div>
+            </div>
+          )}
+
           {/* Live match */}
           {live.length > 0 && (
             <section className="match-section" style={{ borderColor: "rgba(238,30,70,.4)" }}>

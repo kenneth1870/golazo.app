@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam } from "../../i18n/teamNames"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { useState, useEffect, useRef } from "react"
 
 // WC 2026: R32 → R16 → QF → SF → Final (+ 3rd place)
 const ROUNDS = [
@@ -35,10 +36,22 @@ const R32_SLOTS = [
 ]
 
 function MatchSlot({ match, onClick }) {
-  const { i18n }   = useTranslation()
-  const isLive     = match?.status === "live"
-  const isFinished = match?.status === "finished"
-  const hasScore   = match?.home_score !== null && match?.away_score !== null
+  const { i18n }    = useTranslation()
+  const isLive      = match?.status === "live"
+  const isFinished  = match?.status === "finished"
+  const hasScore    = match?.home_score !== null && match?.away_score !== null
+  const [flash, setFlash] = useState(false)
+  const prevScore   = useRef({ h: match?.home_score, a: match?.away_score })
+
+  useEffect(() => {
+    if (!match) return
+    const { h, a } = prevScore.current
+    if ((h !== null && match.home_score !== h) || (a !== null && match.away_score !== a)) {
+      setFlash(true)
+      setTimeout(() => setFlash(false), 900)
+    }
+    prevScore.current = { h: match.home_score, a: match.away_score }
+  }, [match?.home_score, match?.away_score]) // eslint-disable-line
 
   if (!match) {
     return (
@@ -50,7 +63,7 @@ function MatchSlot({ match, onClick }) {
 
   return (
     <div
-      className={`bracket-slot${isLive ? " bracket-slot--live" : ""}${isFinished ? " bracket-slot--finished" : ""}`}
+      className={`bracket-slot${isLive ? " bracket-slot--live" : ""}${isFinished ? " bracket-slot--finished" : ""}${flash ? " bracket-slot--score-updated" : ""}`}
       onClick={match.external_id ? onClick : undefined}
       style={{ cursor: match.external_id ? "pointer" : "default" }}
     >

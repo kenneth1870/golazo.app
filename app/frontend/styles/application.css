@@ -28,6 +28,22 @@
   --shadow:    0 8px 32px rgba(0,0,0,0.4);
 }
 
+/* ─── Light Mode ─────────────────────────────────────── */
+body.light-mode {
+  --bg:       #f4f6f9;
+  --surface:  #ffffff;
+  --surface2: #edf0f4;
+  --border:   rgba(0,0,0,0.10);
+  --text:     #1a1f2e;
+  --muted:    #6b7280;
+  --shadow:   0 8px 32px rgba(0,0,0,0.12);
+}
+body.light-mode .scoreboard { background: linear-gradient(135deg,#1a1f2e 0%,#0d1117 100%) !important; }
+body.light-mode .match-section { background: var(--surface); border-color: var(--border); }
+body.light-mode .loading-shimmer { background: linear-gradient(90deg,#e2e5ea 25%,#f0f2f5 50%,#e2e5ea 75%); background-size: 200% 100%; }
+body.light-mode .widget-next-match { background: var(--surface); border-color: var(--border); }
+body.light-mode .custom-table td, body.light-mode .custom-table th { color: var(--text); }
+
 /* ─── Base ───────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -1267,9 +1283,12 @@ a:hover{color:var(--accent);opacity:.85}
   pointer-events:none;
 }
 
-.bracket-slot{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;position:relative;transition:.15s}
+@keyframes bracketLivePulse{0%,100%{box-shadow:0 0 0 0 rgba(238,30,70,0)}50%{box-shadow:0 0 0 4px rgba(238,30,70,.25)}}
+@keyframes bracketScoreUpdate{0%{background:rgba(16,185,129,.3)}100%{background:transparent}}
+.bracket-slot{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;position:relative;transition:border-color .3s,background .3s}
 .bracket-slot:hover{border-color:rgba(238,30,70,.4);background:var(--surface2)}
-.bracket-slot--live{border-color:rgba(238,30,70,.5)}
+.bracket-slot--live{border-color:rgba(238,30,70,.5);animation:bracketLivePulse 2s ease-in-out infinite}
+.bracket-slot--score-updated{animation:bracketScoreUpdate .8s ease-out}
 .bracket-slot--finished{opacity:.9}
 .bracket-slot--empty{background:var(--surface);border:1px dashed rgba(255,255,255,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;min-height:68px}
 .bracket-slot__tbd{font-size:.65rem;color:#444;font-style:italic}
