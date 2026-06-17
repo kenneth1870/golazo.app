@@ -39,6 +39,12 @@ class RecalculateStandingsJob < ApplicationJob
     sync.recalculate_standings_from_results
     WorldCupKnockout.rebuild!
     Rails.cache.delete("standings_WC")
+    # Bust top-scorers/assists/cards caches so the stats page shows fresh data
+    # after a match finishes without waiting for the 5-minute API cache to expire.
+    Rails.cache.delete("live_scores_scorers_v2_1_2026")
+    Rails.cache.delete("live_scores_assists_v1_1_2026")
+    Rails.cache.delete("live_scores_yellowcards_v1_1_2026")
+    Rails.cache.delete("live_scores_redcards_v1_1_2026")
     Rails.cache.write("standings_last_recalculated_at", Time.current.iso8601, expires_in: 2.days)
     ActionCable.server.broadcast("standings_updates", { type: "standings_updated", competition: "WC" })
   ensure

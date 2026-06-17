@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 import { translateTeam } from "../../i18n/teamNames"
 
 const MEDALS = ["🥇", "🥈", "🥉"]
@@ -141,21 +142,33 @@ export default function ScorersPage() {
   const TABS = TAB_DEFS.map(d => ({ ...d, label: t(d.labelKey), unit: t(d.unitKey) }))
   const tab = TABS.find(tab => tab.key === activeTab)
 
+  const fetchTab = useCallback((tabKey) => {
+    const t = TABS.find(t => t.key === tabKey)
+    if (!t) return
+    setLoading(true)
+    fetch(t.endpoint)
+      .then(r => r.json())
+      .then(rows => {
+        cache[tabKey] = { rows, ts: Date.now() }
+        setData(prev => ({ ...prev, [tabKey]: rows }))
+      })
+      .finally(() => setLoading(false))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     const cached = cache[activeTab]
     if (cached && Date.now() - cached.ts < CACHE_TTL) {
       setData(prev => ({ ...prev, [activeTab]: cached.rows }))
       return
     }
-    setLoading(true)
-    fetch(tab.endpoint)
-      .then(r => r.json())
-      .then(rows => {
-        cache[activeTab] = { rows, ts: Date.now() }
-        setData(prev => ({ ...prev, [activeTab]: rows }))
-      })
-      .finally(() => setLoading(false))
-  }, [activeTab])
+    fetchTab(activeTab)
+  }, [activeTab, fetchTab])
+
+  // Refresh when a match finishes (standings_updated fires from RecalculateStandingsJob)
+  useStandingsChannel(() => {
+    Object.keys(cache).forEach(k => delete cache[k])
+    fetchTab(activeTab)
+  })
 
   const rows     = (data[activeTab] || []).filter(p => (p[tab.valueKey] ?? 0) > 0)
   const leader   = rows[0]
