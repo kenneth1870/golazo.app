@@ -213,6 +213,18 @@ class WorldCupSync
       end
     end
 
+    # Bust scorer/assists/cards caches so the next request reflects all changes.
+    bust_scorers_cache
+    # Also bust per-fixture event caches so WorldCupScorers re-aggregates freshly.
+    wc = Competition.find_by(code: @code)
+    if wc
+      Match.where(competition: wc, status: "finished").where.not(external_id: nil)
+           .pluck(:external_id).each do |fid|
+        Rails.cache.delete("wc_fixture_events_v1_#{fid}")
+        Rails.cache.delete("live_scores_detail_v5_#{fid}")
+      end
+    end
+
     log("heal_all complete — #{fixed} match(es) updated")
     fixed
   end
