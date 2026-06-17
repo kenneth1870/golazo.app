@@ -167,6 +167,11 @@ module Api
 
         score_changed = prev.present? && (prev[:h] != current[:h] || prev[:a] != current[:a])
 
+        # Also consider the score stale when API differs from DB — catches the case
+        # where no one has viewed the detail page since the goal, so prev is nil.
+        db_stale = local_match && current[:h] && current[:a] &&
+                   (local_match.home_score != current[:h] || local_match.away_score != current[:a])
+
         if prev.nil? || score_changed || prev[:events] != current[:events]
           ActionCable.server.broadcast("external_match_#{fixture_id}", {
             type:    "match_update",
@@ -179,7 +184,8 @@ module Api
 
         # When the API shows a new score, sync it immediately to the list view
         # (TodayPage/HomePage) without waiting for the next WorldCupSync cycle.
-        if score_changed && local_match && current[:h] && current[:a]
+        # Triggers on score_changed (subsequent loads) OR db_stale (first load after a goal).
+        if (score_changed || db_stale) && local_match && current[:h] && current[:a]
           minute = data.dig(:fixture, "fixture", "status", "elapsed")
           ActionCable.server.broadcast("live_scores", {
             type:        "live_score_update",
@@ -200,9 +206,10 @@ module Api
           if local_match.competition&.code == "WC"
             dedup = "goal_notified_#{local_match.id}_#{current[:h]}_#{current[:a]}"
             if Rails.cache.write(dedup, true, expires_in: 5.minutes, unless_exist: true)
+              # Events use symbol keys from LiveScoresClient#normalize_events
               scorer_name = data[:events]
-                &.select { |e| e["type"] == "Goal" && e.dig("detail") != "Own Goal" }
-                &.last&.dig("player", "name").presence
+                &.select { |e| (e[:type] || e["type"]) == "Goal" && (e[:detail] || e["detail"]) != "Own Goal" }
+                &.last&.then { |e| e[:player] || e.dig("player", "name") }.presence
               MatchEventNotificationJob.perform_later(
                 event_type: "goal",
                 match_id:   local_match.id,
