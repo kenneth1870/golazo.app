@@ -162,9 +162,20 @@ class MatchEventNotificationJob < ApplicationJob
           "GOL de #{scorer}#{min_tag} · ¡EN VIVO! 🎯",
         ].sample
       elsif minute
-        "¡GOL al #{minute}'! · EN VIVO 🔥"
+        [
+          "¡GOL al #{minute}'! · EN VIVO 🔥",
+          "¡Gol en el #{minute}'! ⚽ EN VIVO",
+          "#{minute}' · ¡GOOOL! 😱",
+          "¡Se armó! Gol al #{minute}' 💥",
+          "#{minute}' — ¡Gol en el partido! 🔥",
+        ].sample
       else
-        "¡GOL! · EN VIVO ⚽"
+        [
+          "¡GOL! · EN VIVO ⚽",
+          "¡Goool! 🔥 EN VIVO",
+          "¡Se abrió el marcador! ⚽",
+          "¡Llegó el gol! 💥",
+        ].sample
       end
       [ "⚽ #{home} #{score} #{away}", body ]
     when "kickoff"
@@ -223,9 +234,20 @@ class MatchEventNotificationJob < ApplicationJob
           "Golazo! #{scorer}#{min_tag} 🎯",
         ].sample
       elsif minute
-        "GOAL in the #{minute}'! · LIVE 🔥"
+        [
+          "GOAL in the #{minute}'! · LIVE 🔥",
+          "It's in! #{minute}' · LIVE ⚽",
+          "#{minute}' — GOAL! 😱",
+          "Net bulges at #{minute}'! 💥",
+          "#{minute}' · They've scored! 🔥",
+        ].sample
       else
-        "GOAL! · LIVE ⚽"
+        [
+          "GOAL! · LIVE ⚽",
+          "They've scored! 🔥 LIVE",
+          "It's in the net! ⚽",
+          "GOOOAL! 💥",
+        ].sample
       end
       [ "⚽ #{home} #{score} #{away}", body ]
     when "kickoff"
