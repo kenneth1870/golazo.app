@@ -14,6 +14,7 @@ Rails.application.routes.draw do
       namespace :admin do
         get "/",           to: "dashboard#index"
         resources :matches, only: %i[index show update]
+        post "matches/heal", to: "matches#heal"
         resources :users,   only: %i[index show update destroy]
         resources :news,    only: %i[index]
         resources :teams,   only: %i[index update]

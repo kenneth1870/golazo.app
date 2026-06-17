@@ -25,6 +25,14 @@ module Api
           end
         end
 
+        # Enqueues a full data heal: busts all date caches, re-fetches every WC
+        # match from the API bypassing the flap guard, fixes scores/statuses,
+        # and recalculates standings. Safe to trigger at any time.
+        def heal
+          ResyncAllWcMatchesJob.perform_later
+          render json: { ok: true, message: "Heal job enqueued — check logs for progress" }
+        end
+
         private
 
         def find_match

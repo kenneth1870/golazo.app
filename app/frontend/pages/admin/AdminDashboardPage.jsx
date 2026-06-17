@@ -17,8 +17,10 @@ function Stat({ icon, label, value, color = "#ee1e46" }) {
 
 export default function AdminDashboardPage() {
   const { authFetch } = useAuthContext()
-  const [data, setData]       = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [data, setData]         = useState(null)
+  const [loading, setLoading]   = useState(true)
+  const [healing, setHealing]   = useState(false)
+  const [healMsg, setHealMsg]   = useState(null)
 
   useEffect(() => {
     authFetch("/api/v1/admin")
@@ -28,6 +30,20 @@ export default function AdminDashboardPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  async function triggerHeal() {
+    setHealing(true)
+    setHealMsg(null)
+    try {
+      const res = await authFetch("/api/v1/admin/matches/heal", { method: "POST" })
+      const json = await res.json()
+      setHealMsg(json.message || "Heal job enqueued")
+    } catch {
+      setHealMsg("Error — check server logs")
+    } finally {
+      setHealing(false)
+    }
+  }
+
   if (loading) return <div style={{ color: "rgba(255,255,255,.4)" }}>Loading…</div>
 
   return (
@@ -36,6 +52,25 @@ export default function AdminDashboardPage() {
       <p style={{ color: "rgba(255,255,255,.35)", marginBottom: 28, fontSize: "0.85rem" }}>
         Golazo app overview
       </p>
+
+      {/* Heal button */}
+      <div style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 12 }}>
+        <button
+          onClick={triggerHeal}
+          disabled={healing}
+          style={{
+            background: healing ? "rgba(238,30,70,.4)" : "#ee1e46",
+            border: "none", borderRadius: 8, padding: "10px 20px",
+            color: "#fff", fontWeight: 700, fontSize: "0.85rem",
+            cursor: healing ? "not-allowed" : "pointer", letterSpacing: ".03em",
+          }}
+        >
+          {healing ? "⏳ Healing…" : "🔧 Heal All Match Data"}
+        </button>
+        {healMsg && (
+          <span style={{ color: "#10b981", fontSize: "0.8rem" }}>{healMsg}</span>
+        )}
+      </div>
 
       {/* Stats grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 16, marginBottom: 32 }}>
