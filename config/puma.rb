@@ -31,20 +31,6 @@ threads threads_count, threads_count
 # Specifies the `port` that Puma will listen on to receive requests; default is 3000.
 port ENV.fetch("PORT", 3000)
 
-# Cluster mode + worker recycling (production only).
-# In development, single mode is fine — no long-running process to leak memory.
-# In production: one lightweight master + one worker (WEB_CONCURRENCY=1 in render.yaml).
-# Workers are recycled after 500–600 requests so Ruby's GC heap never grows unbounded.
-# The solid_queue plugin runs in the master, so SolidQueue survives worker restarts.
-if ENV["RAILS_ENV"] == "production"
-  workers ENV.fetch("WEB_CONCURRENCY", 1)
-  max_requests 500, 600
-
-  on_worker_boot do
-    ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
-  end
-end
-
 # Allow puma to be restarted by `bin/rails restart` command.
 plugin :tmp_restart
 
