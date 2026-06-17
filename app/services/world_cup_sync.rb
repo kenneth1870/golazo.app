@@ -475,7 +475,7 @@ class WorldCupSync
           # still fire later.
           if fire_notification(match, "fulltime",
             home_score: home_score.to_i, away_score: away_score.to_i)
-            Rails.cache.write(dedup_key, true, expires_in: 3.hours)
+            Rails.cache.write(dedup_key, true, expires_in: 24.hours)
           end
         end
         RecalculateStandingsJob.perform_later
@@ -620,7 +620,7 @@ class WorldCupSync
         # suppress it), so a genuine full-time can still notify later.
         if fire_notification(match, "fulltime",
           home_score: home_score.to_i, away_score: away_score.to_i)
-          Rails.cache.write(dedup_key, true, expires_in: 3.hours)
+          Rails.cache.write(dedup_key, true, expires_in: 24.hours)
         end
       end
     end
@@ -813,6 +813,23 @@ class WorldCupSync
         match.kickoff_at > 100.minutes.ago
       log("Suppressed early fulltime for #{match.id} (#{match.home_team&.name} vs #{match.away_team&.name}) — only #{((Time.current - match.kickoff_at) / 60).round} min since kickoff")
       return false
+    end
+
+    if match.kickoff_at.present?
+      # Never notify for a match that kicked off on a previous calendar day.
+      if match.kickoff_at.utc.to_date < Date.current.utc
+        log("Suppressed notification (#{event_type}) for #{match.id} (#{match.home_team&.name} vs #{match.away_team&.name}) — kickoff was #{match.kickoff_at.utc.to_date}, today is #{Date.current.utc}")
+        return false
+      end
+
+      # Never notify more than 10 minutes past the maximum possible match length
+      # (90' + HT + 30' ET + ET break + stoppage ≈ 200 min). Anything later is a
+      # stuck/manual correction syncing late, not a live event.
+      if Time.current > match.kickoff_at + 210.minutes
+        elapsed = ((Time.current - match.kickoff_at) / 60).round
+        log("Suppressed late notification (#{event_type}) for #{match.id} (#{match.home_team&.name} vs #{match.away_team&.name}) — #{elapsed} min since kickoff, outside notification window")
+        return false
+      end
     end
 
     log("fire_notification: #{event_type} | #{match.home_team&.name} vs #{match.away_team&.name} | #{home_score}–#{away_score}")
