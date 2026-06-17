@@ -28,6 +28,7 @@ ENV RAILS_ENV="production" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT="development" \
     LD_PRELOAD="/usr/local/lib/libjemalloc.so" \
+    MALLOC_CONF="dirty_decay_ms:1000,muzzy_decay_ms:0" \
     RUBY_GC_HEAP_GROWTH_FACTOR="1.1" \
     RUBY_GC_HEAP_FREE_SLOTS_MAX_RATIO="0.3" \
     RUBY_GC_MALLOC_LIMIT_MAX="67108864"
