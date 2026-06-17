@@ -62,7 +62,7 @@ module Api
               if resolved&.dig(:fixture, "teams").present?
                 sync_db_from_resolved(local_match, resolved)
                 resolved[:fixture]["fixture"]["db_id"] = local_match.id
-                broadcast_if_changed(external_id, resolved)
+                broadcast_if_changed(external_id, resolved, local_match: local_match)
                 return render json: resolved
               end
             end
@@ -93,7 +93,7 @@ module Api
           data[:fixture]["fixture"]["db_id"] = local_match.id
         end
 
-        broadcast_if_changed(external_id, data)
+        broadcast_if_changed(external_id, data, local_match: local_match)
         render json: data
       rescue => e
         Rails.logger.error("[MatchDetailController] #{e.message}")
@@ -149,7 +149,7 @@ module Api
         Rails.logger.warn("[MatchDetail#sync_db] #{e.message}")
       end
 
-      def broadcast_if_changed(fixture_id, data)
+      def broadcast_if_changed(fixture_id, data, local_match: nil)
         return unless data[:fixture]
         # data[:fixture] is a string-keyed hash from LiveScoresClient/build_fixture
         status = data.dig(:fixture, "fixture", "status", "short")
@@ -165,7 +165,9 @@ module Api
           events: data[:events]&.length.to_i
         }
 
-        if prev.nil? || prev[:h] != current[:h] || prev[:a] != current[:a] || prev[:events] != current[:events]
+        score_changed = prev.present? && (prev[:h] != current[:h] || prev[:a] != current[:a])
+
+        if prev.nil? || score_changed || prev[:events] != current[:events]
           ActionCable.server.broadcast("external_match_#{fixture_id}", {
             type:    "match_update",
             fixture: data[:fixture],
@@ -173,6 +175,23 @@ module Api
             stats:   data[:stats],
             lineups: data[:lineups]
           })
+        end
+
+        # When the API shows a new score, sync it immediately to the list view
+        # (TodayPage/HomePage) without waiting for the next WorldCupSync cycle.
+        if score_changed && local_match && current[:h] && current[:a]
+          minute = data.dig(:fixture, "fixture", "status", "elapsed")
+          ActionCable.server.broadcast("live_scores", {
+            type:        "live_score_update",
+            match_id:    local_match.id,
+            external_id: fixture_id,
+            home_score:  current[:h],
+            away_score:  current[:a],
+            status:      "live",
+            minute:      minute
+          })
+          local_match.update_columns(home_score: current[:h], away_score: current[:a])
+          Rails.logger.info("[MatchDetail] patched DB + list for #{fixture_id}: #{current[:h]}–#{current[:a]}")
         end
 
         Rails.cache.write(cache_key, current, expires_in: 30.seconds)
