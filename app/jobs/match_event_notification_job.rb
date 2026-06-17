@@ -110,18 +110,24 @@ class MatchEventNotificationJob < ApplicationJob
     match = Match.find_by(id: match_id)
     return nil unless match&.external_id.present?
 
-    detail     = LiveScoresClient.new.match_detail(match.external_id)
-    events     = detail&.dig(:events) || []
-    goal_evts  = events.select { |e| e["type"] == "Goal" }
+    # Bust the 5-minute match_detail cache: the goal was just detected so the
+    # cached snapshot may predate the goal event. Force a fresh API fetch.
+    Rails.cache.delete("live_scores_detail_v5_#{match.external_id}")
+
+    detail    = LiveScoresClient.new.match_detail(match.external_id)
+    events    = detail&.dig(:events) || []
+    # normalize_events returns symbol-keyed hashes — :type, :player, :minute
+    goal_evts = events.select { |e| e[:type] == "Goal" }
     return nil if goal_evts.empty?
 
     target = if minute
-      goal_evts.min_by { |e| (e.dig("time", "elapsed").to_i - minute.to_i).abs }
+      goal_evts.min_by { |e| (e[:minute].to_i - minute.to_i).abs }
     else
       goal_evts.last
     end
 
-    target&.dig("player", "name").presence
+    # :player is already the name string (normalize_events does e.dig("player","name"))
+    target&.[](:player).presence
   rescue => e
     Rails.logger.warn("[PushNotification] scorer API lookup failed: #{e.message}")
     nil
