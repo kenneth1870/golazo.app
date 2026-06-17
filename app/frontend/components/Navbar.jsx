@@ -30,7 +30,7 @@ function ThemeToggle() {
       onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.25)"; e.currentTarget.style.color = "#fff" }}
       onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)" }}
     >
-      {light ? "🌙" : "☀️"}
+      {light ? "☀️" : "🌙"}
     </button>
   )
 }
