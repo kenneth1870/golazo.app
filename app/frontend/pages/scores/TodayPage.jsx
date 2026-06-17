@@ -450,7 +450,7 @@ export default function TodayPage() {
     const iso   = toISO(selected)
     const today = toISO(new Date())
     if (iso !== today) return
-    const iv = setInterval(() => load(selected), hasLive ? 30000 : 300000)
+    const iv = setInterval(() => load(selected), hasLive ? 15000 : 300000)
     return () => clearInterval(iv)
   }, [selected, load, hasLive])
 

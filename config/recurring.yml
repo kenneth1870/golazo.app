@@ -5,7 +5,7 @@
 production:
   sync_live_scores:
     class: SyncLiveScoresJob
-    schedule: "every 1 minute"
+    schedule: "every 30 seconds"
     queue: default
 
   sync_today_matches:
