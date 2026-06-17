@@ -38,11 +38,75 @@ body.light-mode {
   --muted:    #6b7280;
   --shadow:   0 8px 32px rgba(0,0,0,0.12);
 }
+/* Scoreboard always stays dark */
 body.light-mode .scoreboard { background: linear-gradient(135deg,#1a1f2e 0%,#0d1117 100%) !important; }
-body.light-mode .match-section { background: var(--surface); border-color: var(--border); }
+/* Shimmer adapts */
 body.light-mode .loading-shimmer { background: linear-gradient(90deg,#e2e5ea 25%,#f0f2f5 50%,#e2e5ea 75%); background-size: 200% 100%; }
+/* Card surfaces */
+body.light-mode .match-section { background: var(--surface); border-color: var(--border); }
 body.light-mode .widget-next-match { background: var(--surface); border-color: var(--border); }
+body.light-mode .match-card { background: var(--surface); border-color: var(--border); }
+/* Tables */
 body.light-mode .custom-table td, body.light-mode .custom-table th { color: var(--text); }
+body.light-mode .custom-table { border-color: var(--border); }
+body.light-mode .custom-table tr:nth-child(even) { background: var(--surface2); }
+/* Match rows */
+body.light-mode .match-row { border-color: var(--border); }
+body.light-mode .match-row__team-name { color: var(--text) !important; }
+body.light-mode .match-row__score { color: var(--text) !important; }
+body.light-mode .match-row--live { background: rgba(238,30,70,.05); }
+body.light-mode .match-row:hover { background: var(--surface2) !important; }
+/* Widget */
+body.light-mode .widget-title h3 { color: var(--text); }
+body.light-mode .widget-body { background: var(--surface); }
+/* Headings */
+body.light-mode .title-section .heading { color: var(--text) !important; }
+body.light-mode .heading { color: var(--text) !important; }
+/* News */
+body.light-mode .latest-news { background: var(--surface2); }
+/* Nav text */
+body.light-mode .nav-link { color: var(--muted) !important; }
+body.light-mode .nav-link:hover, body.light-mode .nav-link.active { color: var(--text) !important; background: var(--surface2); }
+/* Mega menu */
+body.light-mode .mega-menu { background: var(--surface); border-color: var(--border); box-shadow: 0 12px 40px rgba(0,0,0,.12); }
+body.light-mode .mega-menu__link { color: var(--muted) !important; }
+body.light-mode .mega-menu__link:hover { background: var(--surface2); color: var(--text) !important; }
+body.light-mode .mega-menu__section-label { color: var(--muted); }
+body.light-mode .mega-menu__divider { border-color: var(--border); }
+/* Dropdown */
+body.light-mode .dropdown-menu-custom { background: var(--surface); border-color: var(--border); box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+body.light-mode .dropdown-item-custom { color: var(--muted) !important; }
+body.light-mode .dropdown-item-custom:hover { background: var(--surface2); color: var(--text) !important; }
+/* Mobile nav */
+body.light-mode .site-mobile-menu { background: var(--surface); border-color: var(--border); }
+body.light-mode .site-mobile-menu-header { border-color: var(--border); }
+body.light-mode .mobile-drawer-link { color: var(--text) !important; }
+body.light-mode .mobile-drawer-link:hover { background: var(--surface2); }
+body.light-mode .mobile-drawer-divider { color: var(--muted); border-color: var(--border); }
+body.light-mode .mobile-quick-item { color: var(--muted); }
+body.light-mode .mobile-nav-parent { color: var(--text); }
+body.light-mode .mobile-group-pill { color: var(--muted); border-color: var(--border); }
+/* Match back bar */
+body.light-mode .match-back-bar { background: var(--surface2); border-color: var(--border); }
+body.light-mode .btn-back { color: var(--muted) !important; }
+/* Search */
+body.light-mode .search-overlay { background: rgba(240,242,245,.96); }
+body.light-mode .search-input { background: var(--surface); border-color: var(--border); color: var(--text); }
+body.light-mode .search-result-item { color: var(--text); }
+body.light-mode .search-result-item:hover { background: var(--surface2); }
+/* Group pills */
+body.light-mode .mega-menu__group-pill { background: var(--surface2); color: var(--muted); border-color: var(--border); }
+body.light-mode .mega-menu__group-pill:hover, body.light-mode .mega-menu__group-pill.active { background: rgba(238,30,70,.1); color: var(--accent); }
+/* Sticky tabs */
+body.light-mode .sticky-tabs { background: var(--surface); border-color: var(--border); }
+body.light-mode .sticky-tab { color: var(--muted) !important; }
+body.light-mode .sticky-tab--active { color: var(--accent) !important; }
+/* Footer */
+body.light-mode .site-footer { background: #1a1f2e; }
+/* Back bar on match pages */
+body.light-mode .match-back-bar { background: var(--bg); }
+/* Navbar always stays dark */
+body.light-mode .site-navbar { background: rgba(13,17,23,0.97) !important; }
 
 /* ─── Base ───────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box}

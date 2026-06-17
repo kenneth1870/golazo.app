@@ -357,7 +357,7 @@ export default function Navbar() {
               </div>
             </nav>
 
-            {/* Mobile: search + hamburger */}
+            {/* Mobile: search + theme toggle + hamburger */}
             <div className="mobile-header-actions ml-auto">
               <button
                 onClick={() => setSearchOpen(true)}
@@ -366,6 +366,7 @@ export default function Navbar() {
               >
                 <SearchIcon />
               </button>
+              <ThemeToggle />
               <button className="mobile-toggle" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
                 ☰
               </button>
