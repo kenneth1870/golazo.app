@@ -20,10 +20,20 @@ module Api
         # The API date endpoint can lag several minutes behind the live endpoint;
         # the DB is updated in real-time by sync_match_from_live. This prevents
         # the 30s safety-net poll from reverting a just-scored goal back to 0-0.
+        # Match by external_id first; fall back to home|away team name because
+        # some DB records carry old football-data.org IDs that differ from API-Football.
         db_live = wc_db.select { |m| %w[live finished].include?(m[:status].to_s) }
-        db_by_ext = db_live.each_with_object({}) { |m, h| h[m[:external_id]&.to_s] = m }
+        db_by_ext   = db_live.each_with_object({}) { |m, h| h[m[:external_id]&.to_s] = m if m[:external_id] }
+        db_by_teams = db_live.each_with_object({}) do |m, h|
+          key = "#{normalize_team_name(m.dig(:home_team, :name))}|#{normalize_team_name(m.dig(:away_team, :name))}"
+          h[key] = m
+        end
         all = all.map do |m|
           db_m = db_by_ext[m[:external_id]&.to_s]
+          unless db_m
+            key  = "#{normalize_team_name(m.dig(:home_team, :name))}|#{normalize_team_name(m.dig(:away_team, :name))}"
+            db_m = db_by_teams[key]
+          end
           next m unless db_m
           m.merge(home_score: db_m[:home_score], away_score: db_m[:away_score],
                   status: db_m[:status])
