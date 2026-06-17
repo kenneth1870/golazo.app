@@ -519,8 +519,7 @@ class WorldCupSync
       return true
     end
 
-    return false if home_score == match.home_score && away_score == match.away_score &&
-                    minute == match.minute
+    return false if home_score == match.home_score && away_score == match.away_score
 
     old_total = match.home_score.to_i + match.away_score.to_i
     new_total = home_score.to_i + away_score.to_i
