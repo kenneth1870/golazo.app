@@ -413,20 +413,24 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
   const teamColor = getMatchColor(home?.name, away?.name)
   const apiGoals = fixture?.goals
 
-  // Derive score from events as a safety net: when the goals tally from the
-  // fixture API lags behind the events feed (common in stoppage-time goals),
-  // counting confirmed goals from events ensures the scoreboard is never stale.
+  // Derive score from events. Events are authoritative over the fixture goals
+  // tally because VAR/offside corrections remove the event first — the fixture
+  // goals counter can briefly lag and show a disallowed goal. When events have
+  // at least one goal recorded we use their count; otherwise fall back to the
+  // fixture API tally (handles the very start of a match before events load).
   // Own goals count for the OPPOSING team (API-Football: `team` = OG scorer's team).
   let hFromEvents = 0, aFromEvents = 0
-  ;(events ?? []).filter(e => e.type === "Goal" && e.detail !== "Missed Penalty").forEach(e => {
+  const goalEvents = (events ?? []).filter(e => e.type === "Goal" && e.detail !== "Missed Penalty")
+  goalEvents.forEach(e => {
     const scoredByHome = e.team?.name === homeRaw
     const isOG = e.detail === "Own Goal"
     if (scoredByHome !== isOG) hFromEvents++
     else aFromEvents++
   })
+  const hasGoalEvents = goalEvents.length > 0 || (apiGoals?.home === 0 && apiGoals?.away === 0)
   const goals = {
-    home: Math.max(apiGoals?.home ?? 0, hFromEvents),
-    away: Math.max(apiGoals?.away ?? 0, aFromEvents),
+    home: hasGoalEvents ? hFromEvents : (apiGoals?.home ?? 0),
+    away: hasGoalEvents ? aFromEvents : (apiGoals?.away ?? 0),
   }
   const status = fixture?.fixture?.status
   const isNS   = status?.short === "NS"
