@@ -571,23 +571,23 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
         <div className="scoreboard__teams">
           <div className="scoreboard__team">
             <FlagOrInitials name={home?.name} src={home?.logo} size={76} />
-            <div className={`scoreboard__team-name${home?.winner ? " scoreboard__team-name--winner" : ""}`}>
+            <div className={`scoreboard__team-name${isFT && home?.winner ? " scoreboard__team-name--winner" : ""}`}>
               {homeName}
             </div>
           </div>
 
           <div className="scoreboard__score-block">
             <div className="scoreboard__score" style={{ gap: 12 }}>
-              <span style={{ color: home?.winner ? "#10b981" : "#fff" }}>{goals?.home ?? (isNS ? "–" : "0")}</span>
+              <span style={{ color: isFT && home?.winner ? "#10b981" : "#fff" }}>{goals?.home ?? (isNS ? "–" : "0")}</span>
               <span className="scoreboard__score-sep">:</span>
-              <span style={{ color: away?.winner ? "#10b981" : "#fff" }}>{goals?.away ?? (isNS ? "–" : "0")}</span>
+              <span style={{ color: isFT && away?.winner ? "#10b981" : "#fff" }}>{goals?.away ?? (isNS ? "–" : "0")}</span>
             </div>
-            {home?.winner && (
+            {isFT && home?.winner && (
               <div style={{ textAlign: "center", marginTop: 8, fontSize: ".6rem", fontWeight: 800, letterSpacing: ".1em", color: "#10b981" }}>
                 {homeName} WIN
               </div>
             )}
-            {away?.winner && (
+            {isFT && away?.winner && (
               <div style={{ textAlign: "center", marginTop: 8, fontSize: ".6rem", fontWeight: 800, letterSpacing: ".1em", color: "#10b981" }}>
                 {awayName} WIN
               </div>
@@ -596,7 +596,7 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
 
           <div className="scoreboard__team scoreboard__team--away">
             <FlagOrInitials name={away?.name} src={away?.logo} size={76} />
-            <div className={`scoreboard__team-name${away?.winner ? " scoreboard__team-name--winner" : ""}`}>
+            <div className={`scoreboard__team-name${isFT && away?.winner ? " scoreboard__team-name--winner" : ""}`}>
               {awayName}
             </div>
           </div>

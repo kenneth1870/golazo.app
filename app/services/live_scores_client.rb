@@ -209,10 +209,17 @@ class LiveScoresClient
       }
     end
 
-    # Promote finished matches to a 24-hour TTL so we never hit the API again.
+    # Adjust TTL based on match status:
+    # - Finished: 24 h — never needs to be fetched again
+    # - Live (1H/2H/HT/ET/BT/P): 60 s — VAR/offside corrections need to propagate within ~1 min
+    # - Everything else: keep the default 5-minute TTL written by cache.fetch above
     if result
       status = result.dig(:fixture, "fixture", "status", "short")
-      Rails.cache.write(cache_key, result, expires_in: 24.hours) if %w[FT AET PEN].include?(status)
+      if %w[FT AET PEN].include?(status)
+        Rails.cache.write(cache_key, result, expires_in: 24.hours)
+      elsif %w[1H 2H HT ET BT P].include?(status)
+        Rails.cache.write(cache_key, result, expires_in: 60.seconds)
+      end
     end
 
     result
