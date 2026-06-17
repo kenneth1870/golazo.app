@@ -1,7 +1,7 @@
 require "web-push"
 
 class MatchEventNotificationJob < ApplicationJob
-  queue_as :default
+  queue_as :critical
 
   # Subscription errors are handled inline (per-sub rescue) so the job never
   # raises them — discard_on is a safety net for unexpected propagation only.
@@ -46,11 +46,11 @@ class MatchEventNotificationJob < ApplicationJob
     # build it once. Spanish is the default for subscribers with no explicit
     # locale (the app's primary audience).
     scorer = if event_type == "goal"
-      # Use scorer passed directly from the live feed (no extra API call).
-      # Fall back to DB goals table (populated post-match) or a fresh API lookup.
+      # Use scorer passed directly (from live feed events or match detail controller).
+      # Fall back to DB goals table only — skip the extra live-API round-trip so the
+      # notification goes out immediately rather than waiting 1-2s for a fetch.
       scorer.presence ||
-        Goal.where(match_id: match_id).order(created_at: :desc).first&.player_name.presence ||
-        fetch_scorer_from_live_api(match_id, minute)
+        Goal.where(match_id: match_id).order(created_at: :desc).first&.player_name.presence
     end
 
     copy_cache = {}
@@ -104,35 +104,6 @@ class MatchEventNotificationJob < ApplicationJob
   end
 
   private
-
-  # Look up the scorer from the live API events when the goals table is empty
-  # (which is always the case during live play — goals are only stored post-match).
-  def fetch_scorer_from_live_api(match_id, minute)
-    match = Match.find_by(id: match_id)
-    return nil unless match&.external_id.present?
-
-    # Bust the 5-minute match_detail cache: the goal was just detected so the
-    # cached snapshot may predate the goal event. Force a fresh API fetch.
-    Rails.cache.delete("live_scores_detail_v5_#{match.external_id}")
-
-    detail    = LiveScoresClient.new.match_detail(match.external_id)
-    events    = detail&.dig(:events) || []
-    # normalize_events returns symbol-keyed hashes — :type, :player, :minute
-    goal_evts = events.select { |e| e[:type] == "Goal" }
-    return nil if goal_evts.empty?
-
-    target = if minute
-      goal_evts.min_by { |e| (e[:minute].to_i - minute.to_i).abs }
-    else
-      goal_evts.last
-    end
-
-    # :player is already the name string (normalize_events does e.dig("player","name"))
-    target&.[](:player).presence
-  rescue => e
-    Rails.logger.warn("[PushNotification] scorer API lookup failed: #{e.message}")
-    nil
-  end
 
   def build_copy(locale, event_type, home, away, score, minute, scorer = nil)
     locale == "en" ? build_copy_en(event_type, home, away, score, minute, scorer)
