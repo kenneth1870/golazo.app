@@ -817,8 +817,8 @@ class WorldCupSync
 
     if match.kickoff_at.present?
       # Never notify for a match that kicked off on a previous calendar day.
-      if match.kickoff_at.utc.to_date < Date.current.utc
-        log("Suppressed notification (#{event_type}) for #{match.id} (#{match.home_team&.name} vs #{match.away_team&.name}) — kickoff was #{match.kickoff_at.utc.to_date}, today is #{Date.current.utc}")
+      if match.kickoff_at.utc.to_date < Time.current.utc.to_date
+        log("Suppressed notification (#{event_type}) for #{match.id} (#{match.home_team&.name} vs #{match.away_team&.name}) — kickoff was #{match.kickoff_at.utc.to_date}, today is #{Time.current.utc.to_date}")
         return false
       end
 
