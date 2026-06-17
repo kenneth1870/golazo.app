@@ -72,6 +72,10 @@ export function usePushNotifications() {
       })
 
       setSubscribed(true)
+      // Persist the subscribed teams locally so addTeams can accumulate later
+      const existing = JSON.parse(localStorage.getItem("push_sub_teams") || "[]")
+      const merged = [...new Set([...existing, ...teamNames.filter(Boolean)])]
+      localStorage.setItem("push_sub_teams", JSON.stringify(merged))
       return { ok: true }
     } catch (err) {
       // swallow — error returned to caller via { error: err.message }
@@ -124,6 +128,19 @@ export function usePushNotifications() {
     }
   }, [])
 
+  // Add teams to the existing subscription without replacing others.
+  // Persists the cumulative team list in localStorage so it survives page loads.
+  const addTeams = useCallback(async (newTeams) => {
+    try {
+      const existing = JSON.parse(localStorage.getItem("push_sub_teams") || "[]")
+      const merged = [...new Set([...existing, ...newTeams.filter(Boolean)])]
+      localStorage.setItem("push_sub_teams", JSON.stringify(merged))
+      await updateTeams(merged)
+    } catch (err) {
+      // swallow
+    }
+  }, [updateTeams])
+
   const supported = typeof window !== "undefined" &&
     "serviceWorker" in navigator &&
     "PushManager" in window &&
@@ -133,5 +150,13 @@ export function usePushNotifications() {
   const isIosPwa = iosSafari && isStandalone()
   const needsIosInstall = iosSafari && !isIosPwa
 
-  return { supported, permission, subscribed, loading, subscribe, unsubscribe, updateTeams, needsIosInstall }
+  // Whether the given team names are covered by the current subscription
+  const teamsSubscribed = useCallback((teamNames) => {
+    if (!subscribed) return false
+    const saved = JSON.parse(localStorage.getItem("push_sub_teams") || "[]")
+    if (saved.length === 0) return true  // global subscription
+    return teamNames.some(n => saved.includes(n))
+  }, [subscribed])
+
+  return { supported, permission, subscribed, loading, subscribe, unsubscribe, updateTeams, addTeams, teamsSubscribed, needsIosInstall }
 }

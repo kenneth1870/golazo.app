@@ -15,6 +15,20 @@ module Api
         # from hiding completed matches. For today, also catches matches that
         # kicked off after a cache was populated.
         wc_db     = fetch_wc_from_db_for_date(date, tz)
+
+        # Overlay DB scores onto API matches for live/finished WC matches.
+        # The API date endpoint can lag several minutes behind the live endpoint;
+        # the DB is updated in real-time by sync_match_from_live. This prevents
+        # the 30s safety-net poll from reverting a just-scored goal back to 0-0.
+        db_live = wc_db.select { |m| %w[live finished].include?(m[:status].to_s) }
+        db_by_ext = db_live.each_with_object({}) { |m, h| h[m[:external_id]&.to_s] = m }
+        all = all.map do |m|
+          db_m = db_by_ext[m[:external_id]&.to_s]
+          next m unless db_m
+          m.merge(home_score: db_m[:home_score], away_score: db_m[:away_score],
+                  status: db_m[:status])
+        end
+
         existing  = all.filter_map { |m| m[:external_id]&.to_s }.to_set
         home_away = all.map { |m|
           "#{normalize_team_name(m.dig(:home_team, :name))}|#{normalize_team_name(m.dig(:away_team, :name))}"

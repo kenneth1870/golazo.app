@@ -2086,6 +2086,8 @@ export default function MatchShowPage() {
   const eventCount  = data?.events?.filter(e => ["Goal","Card","subst","Var","injury"].includes(e.type)).length ?? 0
 
   const notifSupported = typeof Notification !== "undefined"
+  const { subscribed: pushSubscribed, addTeams, teamsSubscribed } = usePushNotifications()
+  const matchTeamsNotified = teamsSubscribed([homeTeamRaw, awayTeamRaw].filter(Boolean))
 
   const hasStats    = data?.stats?.length > 0
   const hasLineups  = data?.lineups?.some(l => l?.start_xi?.length > 0)
@@ -2188,9 +2190,9 @@ export default function MatchShowPage() {
             liveMinute={liveMinute}
             liveExtra={apiExtra}
             matchId={id}
-            notifEnabled={notifSupported && Notification.permission === "granted"}
+            notifEnabled={notifSupported && pushSubscribed && matchTeamsNotified}
             notifSupported={notifSupported}
-            onNotif={() => {}}
+            onNotif={() => pushSubscribed && addTeams([homeTeamRaw, awayTeamRaw].filter(Boolean))}
             events={data.events}
           />
         ) : (
