@@ -69,7 +69,7 @@ export default function GroupStagePage() {
     (m.status === "finished" && m.kickoff_at && new Date() - new Date(m.kickoff_at) < 3 * 60 * 60 * 1000)
   )
 
-  const loadStandings = () => fetch("/api/v1/standings?competition=WC")
+  const loadStandings = () => fetch("/api/v1/standings?competition=WC", { cache: "no-store" })
     .then(r => r.json())
     .then(setStandings)
     .catch(() => {})

@@ -79,7 +79,8 @@ module Api
         return if request.path.include?("/search") ||
                   request.path.include?("/predictions") ||
                   request.path.include?("/locale") ||
-                  request.path.include?("/admin")
+                  request.path.include?("/admin") ||
+                  request.path.include?("/standings")
         ttl = case request.path
         when %r{/today|/live_scores|/match_detail}  then 30.seconds
         when %r{/matches|/fixtures|/results}        then 2.minutes

@@ -239,7 +239,7 @@ export default function GroupDetailPage() {
   const { matches, loading, refetch: refetchMatches } = useMatches("all", { competition: "WC", group })
 
   const loadStandings = () =>
-    fetch("/api/v1/standings?competition=WC")
+    fetch("/api/v1/standings?competition=WC", { cache: "no-store" })
       .then(r => r.json())
       .then(data => setStandings((Array.isArray(data) ? data.filter(s => s.group_name === group) : data[group]) || []))
 
