@@ -16,7 +16,7 @@ class MatchEventNotificationJob < ApplicationJob
     "prematch"  => "⏰"
   }.freeze
 
-  def perform(event_type:, match_id:, home_name:, away_name:, home_score: nil, away_score: nil, match_url: nil, minute: nil)
+  def perform(event_type:, match_id:, home_name:, away_name:, home_score: nil, away_score: nil, match_url: nil, minute: nil, scorer: nil)
     event_type = event_type.to_s
 
     # Final delivery-time gate for full-time. Re-check the LIVE DB state at the
@@ -46,9 +46,10 @@ class MatchEventNotificationJob < ApplicationJob
     # build it once. Spanish is the default for subscribers with no explicit
     # locale (the app's primary audience).
     scorer = if event_type == "goal"
-      # Goals table is only populated post-match; during live play fall back to
-      # the live API events so the scorer name always appears in the notification.
-      Goal.where(match_id: match_id).order(created_at: :desc).first&.player_name.presence ||
+      # Use scorer passed directly from the live feed (no extra API call).
+      # Fall back to DB goals table (populated post-match) or a fresh API lookup.
+      scorer.presence ||
+        Goal.where(match_id: match_id).order(created_at: :desc).first&.player_name.presence ||
         fetch_scorer_from_live_api(match_id, minute)
     end
 

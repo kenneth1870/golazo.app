@@ -597,7 +597,12 @@ class LiveScoresClient
         logo:      f.dig("teams", "away", "logo"),
         score:     f.dig("goals", "away"),
         red_cards: nil
-      }
+      },
+      last_scorer: begin
+        evts = f["events"] || []
+        goal = evts.select { |e| e["type"] == "Goal" && e.dig("detail") != "Own Goal" }.last
+        goal&.dig("player", "name").presence
+      end
     }
   end
 

@@ -547,7 +547,8 @@ class WorldCupSync
     scored = new_total > old_total
 
     match.update!(status: "live", home_score: home_score, away_score: away_score, minute: minute)
-    broadcast_score(match, minute, minute_extra: minute_extra, notify: scored)
+    broadcast_score(match, minute, minute_extra: minute_extra, notify: scored,
+      scorer: scored ? raw[:last_scorer] : nil)
     true
   rescue => e
     log("Live sync error for #{home_name} v #{away_name}: #{e.message}")
@@ -769,7 +770,7 @@ class WorldCupSync
     nil
   end
 
-  def broadcast_score(match, minute = nil, minute_extra: nil, event_type: "goal", notify: true)
+  def broadcast_score(match, minute = nil, minute_extra: nil, event_type: "goal", notify: true, scorer: nil)
     payload = {
       type:         "score_update",
       home_score:   match.home_score,
@@ -804,10 +805,11 @@ class WorldCupSync
 
     return unless notify
     fire_notification(match, event_type, minute: minute,
-      home_score: match.home_score.to_i, away_score: match.away_score.to_i)
+      home_score: match.home_score.to_i, away_score: match.away_score.to_i,
+      scorer: scorer)
   end
 
-  def fire_notification(match, event_type, home_score: nil, away_score: nil, minute: nil)
+  def fire_notification(match, event_type, home_score: nil, away_score: nil, minute: nil, scorer: nil)
     # Defense-in-depth: a full-time alert must never go out before a match could
     # plausibly be over. A 90' match runs ≥ ~100 min after kickoff (45 + half-time
     # + 45 + stoppage); extra time ends even later. So suppress "fulltime" if
@@ -836,7 +838,7 @@ class WorldCupSync
       end
     end
 
-    log("fire_notification: #{event_type} | #{match.home_team&.name} vs #{match.away_team&.name} | #{home_score}–#{away_score}")
+    log("fire_notification: #{event_type} | #{match.home_team&.name} vs #{match.away_team&.name} | #{home_score}–#{away_score} | scorer=#{scorer.inspect}")
     MatchEventNotificationJob.perform_later(
       event_type: event_type,
       match_id:   match.id,
@@ -845,6 +847,7 @@ class WorldCupSync
       home_score: home_score,
       away_score: away_score,
       minute:     minute,
+      scorer:     scorer,
       match_url:  "/matches/#{match.external_id || "db-#{match.id}"}"
     )
     true
