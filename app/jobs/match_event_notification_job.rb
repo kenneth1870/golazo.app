@@ -46,7 +46,10 @@ class MatchEventNotificationJob < ApplicationJob
     # build it once. Spanish is the default for subscribers with no explicit
     # locale (the app's primary audience).
     scorer = if event_type == "goal"
-      Goal.where(match_id: match_id).order(created_at: :desc).first&.player_name.presence
+      # Goals table is only populated post-match; during live play fall back to
+      # the live API events so the scorer name always appears in the notification.
+      Goal.where(match_id: match_id).order(created_at: :desc).first&.player_name.presence ||
+        fetch_scorer_from_live_api(match_id, minute)
     end
 
     copy_cache = {}
@@ -100,6 +103,29 @@ class MatchEventNotificationJob < ApplicationJob
   end
 
   private
+
+  # Look up the scorer from the live API events when the goals table is empty
+  # (which is always the case during live play — goals are only stored post-match).
+  def fetch_scorer_from_live_api(match_id, minute)
+    match = Match.find_by(id: match_id)
+    return nil unless match&.external_id.present?
+
+    detail     = LiveScoresClient.new.match_detail(match.external_id)
+    events     = detail&.dig(:events) || []
+    goal_evts  = events.select { |e| e["type"] == "Goal" }
+    return nil if goal_evts.empty?
+
+    target = if minute
+      goal_evts.min_by { |e| (e.dig("time", "elapsed").to_i - minute.to_i).abs }
+    else
+      goal_evts.last
+    end
+
+    target&.dig("player", "name").presence
+  rescue => e
+    Rails.logger.warn("[PushNotification] scorer API lookup failed: #{e.message}")
+    nil
+  end
 
   def build_copy(locale, event_type, home, away, score, minute, scorer = nil)
     locale == "en" ? build_copy_en(event_type, home, away, score, minute, scorer)

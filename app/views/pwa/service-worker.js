@@ -1,4 +1,4 @@
-const CACHE_NAME = "golazo-v1"
+const CACHE_NAME = "golazo-v2"
 const TODAY_API  = "/api/v1/today"
 const OFFLINE_URLS = ["/", TODAY_API]
 
@@ -53,20 +53,33 @@ self.addEventListener("fetch", (event) => {
 })
 
 // ── Push notifications ───────────────────────────────────
-self.addEventListener("push", async (event) => {
-  const { title, options } = await event.data.json()
-  event.waitUntil(self.registration.showNotification(title, options))
+self.addEventListener("push", (event) => {
+  const d = event.data.json()
+  event.waitUntil(
+    self.registration.showNotification(d.title, {
+      body:     d.body    || "",
+      icon:     d.icon    || "/images/icon-192.png",
+      badge:    d.badge   || "/images/badge-72.png",
+      tag:      `match-${d.match_id || "golazo"}`,
+      renotify: true,
+      data:     { path: d.url, match_id: d.match_id },
+    })
+  )
 })
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close()
+  const path = event.notification.data?.path || "/"
   event.waitUntil(
-    clients.matchAll({ type: "window" }).then((clientList) => {
-      const path = event.notification.data?.path
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
-        if ((new URL(client.url)).pathname === path && "focus" in client) return client.focus()
+        if ("focus" in client) {
+          client.focus()
+          if (client.navigate) client.navigate(path)
+          return
+        }
       }
-      if (clients.openWindow && path) return clients.openWindow(path)
+      if (clients.openWindow) return clients.openWindow(path)
     })
   )
 })
