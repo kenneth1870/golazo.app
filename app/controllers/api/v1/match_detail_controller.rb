@@ -192,6 +192,30 @@ module Api
           })
           local_match.update_columns(home_score: current[:h], away_score: current[:a])
           Rails.logger.info("[MatchDetail] patched DB + list for #{fixture_id}: #{current[:h]}–#{current[:a]}")
+
+          # Fire push notification here because update_columns above means
+          # sync_match_from_live will see score_unchanged=true and skip it.
+          # Use an atomic dedup key shared with the sync job — whichever sees
+          # the score change first fires the notification, the other skips.
+          if local_match.competition&.code == "WC"
+            dedup = "goal_notified_#{local_match.id}_#{current[:h]}_#{current[:a]}"
+            if Rails.cache.write(dedup, true, expires_in: 5.minutes, unless_exist: true)
+              scorer_name = data[:events]
+                &.select { |e| e["type"] == "Goal" && e.dig("detail") != "Own Goal" }
+                &.last&.dig("player", "name").presence
+              MatchEventNotificationJob.perform_later(
+                event_type: "goal",
+                match_id:   local_match.id,
+                home_name:  local_match.home_team&.name.to_s,
+                away_name:  local_match.away_team&.name.to_s,
+                home_score: current[:h].to_i,
+                away_score: current[:a].to_i,
+                minute:     minute,
+                scorer:     scorer_name,
+                match_url:  "/matches/#{fixture_id}"
+              )
+            end
+          end
         end
 
         Rails.cache.write(cache_key, current, expires_in: 30.seconds)

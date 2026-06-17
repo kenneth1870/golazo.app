@@ -546,6 +546,13 @@ class WorldCupSync
     # Only push a "goal" alert when the total score actually increased.
     scored = new_total > old_total
 
+    # Skip if the match_detail_controller already fired the notification when it
+    # patched the DB score (atomic write: only the first writer fires).
+    if scored
+      dedup = "goal_notified_#{match.id}_#{home_score}_#{away_score}"
+      scored = Rails.cache.write(dedup, true, expires_in: 5.minutes, unless_exist: true)
+    end
+
     match.update!(status: "live", home_score: home_score, away_score: away_score, minute: minute)
     broadcast_score(match, minute, minute_extra: minute_extra, notify: scored,
       scorer: scored ? raw[:last_scorer] : nil)
