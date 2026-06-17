@@ -180,26 +180,41 @@ class WorldCupSync
   # Corrects any scores that were finalized incorrectly (e.g. early-UTC matches
   # that fell outside the 4h stale-match window before the bug was fixed).
   # Safe to call repeatedly — sync_match_from_normalized is idempotent.
+  # Full heal: re-fetches every WC match date from the API (busting all date
+  # caches first), writes correct scores/statuses bypassing the flap guard,
+  # and broadcasts corrections to connected clients. Safe to run at any time.
   def resync_all_wc_match_dates
     wc = Competition.find_by(code: @code)
     return log("Competition #{@code} not found") unless wc
 
-    dates = Match.where(competition: wc, status: "finished")
-                 .where.not(external_id: nil)
-                 .pluck(:kickoff_at)
-                 .map { |t| t.utc.to_date }
-                 .uniq
-                 .sort
+    # All dates with ANY match (not just finished) plus today and tomorrow.
+    db_dates = Match.where(competition: wc)
+                    .pluck(:kickoff_at)
+                    .map { |t| t.utc.to_date }
+                    .uniq
 
-    log("resync_all_wc_match_dates: #{dates.size} date(s) — #{dates.join(', ')}")
+    dates = (db_dates + [Date.today, Date.today + 1]).uniq.sort
+    log("heal_all: #{dates.size} date(s) — #{dates.join(', ')}")
 
+    fixed = 0
     dates.each do |d|
-      past_matches = @api.matches_for_date(d)
-      log("  #{d}: #{past_matches.size} API matches")
-      past_matches.each { |m| sync_match_from_normalized(m) }
+      # Bust every known cache variant for this date so we never read stale data.
+      %W[
+        live_scores_date_v15_#{d.iso8601}_utc
+        live_scores_date_v15_#{d.iso8601}_
+        today_api_#{d.iso8601}
+      ].each { |k| Rails.cache.delete(k) }
+
+      api_matches = @api.matches_for_date(d)
+      log("  #{d}: #{api_matches.size} API matches")
+      api_matches.each do |m|
+        changed = sync_match_from_normalized(m, force: true)
+        fixed += 1 if changed
+      end
     end
 
-    log("resync_all_wc_match_dates complete")
+    log("heal_all complete — #{fixed} match(es) updated")
+    fixed
   end
 
   # Sync all WC 2026 fixture IDs (and team logos) from API-Football v3.
@@ -479,6 +494,7 @@ class WorldCupSync
           end
         end
         RecalculateStandingsJob.perform_later
+        bust_scorers_cache
       end
       if match.external_id.present? && home_score && away_score
         ScorePrediction.grade!(
@@ -562,8 +578,10 @@ class WorldCupSync
     false
   end
 
-  # Updates a DB match from a normalized match hash (from matches_for_date)
-  def sync_match_from_normalized(m)
+  # Updates a DB match from a normalized match hash (from matches_for_date).
+  # force: true bypasses the flap guard — used by the heal path to correct VAR
+  # score rollbacks that the guard would normally block during live play.
+  def sync_match_from_normalized(m, force: false)
     home_name = m.dig(:home, :name)
     away_name = m.dig(:away, :name)
     return false unless home_name && away_name
@@ -583,12 +601,13 @@ class WorldCupSync
     # Don't downgrade a finished match back to live — the date endpoint lags
     # 1-3 minutes after the final whistle and still returns "2H". Trusting the
     # date feed here would unfinish matches and wipe points from the standings.
-    return false if was_finished && status == "live"
+    return false if was_finished && status == "live" && !force
 
     # Anti-spam flap guard: during live play, don't persist a downward total —
     # a one-cycle dip + recovery would otherwise look like a fresh goal and fire
     # a duplicate alert. The FT path writes the authoritative final score.
-    downward_live = status == "live" &&
+    # Bypassed when force: true (heal path) to allow VAR/offside corrections.
+    downward_live = !force && status == "live" &&
                     (home_score.to_i + away_score.to_i) < (old_home + old_away)
 
     api_ext_id = m[:external_id]
@@ -635,12 +654,8 @@ class WorldCupSync
           Rails.cache.write(dedup_key, true, expires_in: 24.hours)
         end
       end
-    end
-
-    # Recalculate standings only on the finish transition, not on every re-sync
-    # of an already-finished match.
-    if just_finished && match.competition&.code == "WC"
       RecalculateStandingsJob.perform_later
+      bust_scorers_cache
     end
 
     # Grade score predictions after match finishes
@@ -858,6 +873,25 @@ class WorldCupSync
       match_url:  "/matches/#{match.external_id || "db-#{match.id}"}"
     )
     true
+  end
+
+  # Bust all top-scorers / assists / cards caches for the WC so that the
+  # next request reflects the just-finished match immediately.
+  WC_LEAGUE_ID_FOR_CACHE = 1
+  WC_SEASON_ID_FOR_CACHE = 2026
+
+  def bust_scorers_cache
+    [
+      "live_scores_scorers_v2_#{WC_LEAGUE_ID_FOR_CACHE}_#{WC_SEASON_ID_FOR_CACHE}",
+      "live_scores_assists_v1_#{WC_LEAGUE_ID_FOR_CACHE}_#{WC_SEASON_ID_FOR_CACHE}",
+      "live_scores_yellowcards_v1_#{WC_LEAGUE_ID_FOR_CACHE}_#{WC_SEASON_ID_FOR_CACHE}",
+      "live_scores_redcards_v1_#{WC_LEAGUE_ID_FOR_CACHE}_#{WC_SEASON_ID_FOR_CACHE}",
+      "wc_scorers_v1_WC",
+      "wc_assists_v1_WC",
+      "wc_yellow_cards_v1_WC",
+      "wc_red_cards_v1_WC",
+    ].each { |k| Rails.cache.delete(k) }
+    log("Busted scorers/assists/cards caches after match finish")
   end
 
   def log(msg)
