@@ -35,5 +35,5 @@ production:
 
   prune_solid_cache:
     class: PruneSolidCacheJob
-    schedule: "every 6 hours"
+    schedule: "every 30 minutes"
     queue: default
