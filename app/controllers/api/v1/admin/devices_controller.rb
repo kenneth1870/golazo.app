@@ -20,7 +20,8 @@ module Api
             total_sessions: Device.sum(:visit_count),
             avg_engaged_seconds: Device.average(:engaged_seconds).to_f.round,
             by_os:          Device.os_breakdown,
-            by_locale:      Device.where.not(locale: nil).group(:locale).count
+            by_locale:      Device.where.not(locale: nil).group(:locale).count,
+            by_country:     Device.where.not(country: nil).group(:country).count.sort_by { |_, v| -v }.first(10).to_h
           }
 
           render json: {

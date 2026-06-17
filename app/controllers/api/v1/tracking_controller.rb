@@ -15,7 +15,8 @@ module Api
           device_id:  device_id,
           user_agent: request.user_agent,
           locale:     params[:locale],
-          path:       params[:path]
+          path:       params[:path],
+          ip:         request.remote_ip
         )
         head :no_content
       rescue => e

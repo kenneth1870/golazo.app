@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_15_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_17_003652) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pg_trgm"
 
   create_table "competitions", force: :cascade do |t|
     t.string "code"
@@ -27,13 +28,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_15_000000) do
   end
 
   create_table "devices", force: :cascade do |t|
+    t.string "city"
+    t.string "country"
     t.datetime "created_at", null: false
     t.string "device_id", null: false
     t.integer "engaged_seconds", default: 0, null: false
     t.datetime "first_seen_at"
+    t.string "ip_address"
     t.string "last_path"
     t.datetime "last_seen_at"
     t.string "locale", default: "es"
+    t.string "region"
     t.datetime "updated_at", null: false
     t.string "user_agent"
     t.integer "visit_count", default: 0, null: false
@@ -170,6 +175,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_15_000000) do
     t.bigint "key_hash", null: false
     t.binary "value", null: false
     t.index ["byte_size"], name: "index_solid_cache_entries_on_byte_size"
+    t.index ["created_at"], name: "index_solid_cache_entries_on_created_at"
     t.index ["key_hash", "byte_size"], name: "index_solid_cache_entries_on_key_hash_and_byte_size"
     t.index ["key_hash"], name: "index_solid_cache_entries_on_key_hash", unique: true
   end
@@ -324,7 +330,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_15_000000) do
     t.string "name"
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_teams_on_code"
+    t.index ["code"], name: "index_teams_on_code_trgm", opclass: :gin_trgm_ops, using: :gin
     t.index ["external_id"], name: "index_teams_on_external_id", unique: true
+    t.index ["name"], name: "index_teams_on_name_trgm", opclass: :gin_trgm_ops, using: :gin
   end
 
   create_table "users", force: :cascade do |t|

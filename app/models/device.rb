@@ -13,7 +13,7 @@ class Device < ApplicationRecord
   # Returns the device.
   DEVICE_ID_FORMAT = /\A[\w\-]{8,64}\z/
 
-  def self.track!(device_id:, user_agent: nil, locale: nil, path: nil)
+  def self.track!(device_id:, user_agent: nil, locale: nil, path: nil, ip: nil)
     device_id = device_id.to_s.strip
     return nil if device_id.blank?
     return nil unless device_id.match?(DEVICE_ID_FORMAT)
@@ -34,7 +34,13 @@ class Device < ApplicationRecord
     dev.last_path    = path.to_s.first(255) if path.present?
     dev.locale       = locale.to_s.split("-").first.downcase if locale.present?
     dev.user_agent   = user_agent.to_s.first(500) if user_agent.present?
+
+    # Track IP; enqueue geo lookup when it's new or has changed
+    needs_geo = ip.present? && ip != dev.ip_address
+    dev.ip_address = ip.to_s.first(64) if ip.present?
+
     dev.save!
+    GeolocateDeviceJob.perform_later(dev.id) if needs_geo
     dev
   end
 
@@ -79,7 +85,11 @@ class Device < ApplicationRecord
       last_path:       last_path,
       push_enabled:    push_device_ids ? push_device_ids.include?(device_id) : nil,
       first_seen_at:   first_seen_at&.iso8601,
-      last_seen_at:    last_seen_at&.iso8601
+      last_seen_at:    last_seen_at&.iso8601,
+      ip_address:      ip_address,
+      city:            city,
+      region:          region,
+      country:         country,
     }
   end
 end
