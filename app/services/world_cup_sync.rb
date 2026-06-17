@@ -489,16 +489,23 @@ class WorldCupSync
       return true
     end
 
-    # Self-heal: the feed still lists this match with a live (non-finished)
-    # status, but the DB has it "finished" — it was wrongly finished by a flap.
-    # Revert the UI status to live, but DELIBERATELY keep the full-time dedup key
-    # so a flapping feed near the end can't fire a second "Final" alert. With the
-    # 95-min guard, any finish is already close to real full-time, so the alert
-    # already sent stands; re-arming it would just be spam.
+    # Self-heal: the feed lists this match with a live (non-finished) status
+    # but our DB says "finished" — it may have been wrongly finished by a feed
+    # flap. Only revert when the elapsed minute is < 85: at 85+ the match is
+    # near or past full time and the "2H" status is almost certainly API lag
+    # (the feed takes 1-3 min to flip from "2H" to "FT" after the whistle).
+    # Reverting at 90' would leave the match stuck as "live" for minutes after
+    # the game ends. Deliberately keep the full-time dedup key so a flapping
+    # feed near the end can't fire a second "Final" alert.
     if match.status == "finished"
-      match.update!(status: "live", home_score: home_score, away_score: away_score)
-      log("Reverted falsely-finished #{match.id} (#{home_name} vs #{away_name}) back to live")
-      broadcast_score(match, minute, minute_extra: minute_extra, notify: false)
+      elapsed = minute.to_i
+      if elapsed < 85
+        match.update!(status: "live", home_score: home_score, away_score: away_score)
+        log("Reverted falsely-finished #{match.id} (#{home_name} vs #{away_name}) back to live (#{elapsed}')")
+        broadcast_score(match, minute, minute_extra: minute_extra, notify: false)
+      else
+        log("Ignoring self-heal for #{match.id} (#{home_name} vs #{away_name}) at #{elapsed}' — API lag after FT")
+      end
       return true
     end
 
