@@ -41,7 +41,7 @@ class WorldCupScorers
       events.each do |e|
         next unless e["type"].in?([ "Goal", "Card" ])
 
-        if e["type"] == "Goal" && e["detail"] != "Missed Penalty"
+        if e["type"] == "Goal" && !%w[Missed\ Penalty Own\ Goal].include?(e["detail"])
           scorer = e.dig("player", "name").presence
           if scorer
             tally[scorer][:team_name] ||= e.dig("team", "name")

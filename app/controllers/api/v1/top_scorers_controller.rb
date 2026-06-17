@@ -13,36 +13,61 @@ module Api
       }.freeze
 
       def index
-        raw = LiveScoresClient.new.top_scorers(*league_season)
-        if raw.empty? && params[:competition].present?
-          render json: WorldCupScorers.scorers(params[:competition])
+        competition = params[:competition].to_s.upcase
+        if competition == "WC"
+          # WorldCupScorers aggregates from live match events — always current.
+          # API-Football topscorers lags hours after match end, so use it as a
+          # fallback when our local data is empty (early in tournament).
+          local = WorldCupScorers.scorers(competition)
+          if local.any?
+            render json: local
+          else
+            raw = LiveScoresClient.new.top_scorers(*league_season)
+            render json: normalize_players(raw)
+          end
         else
+          raw = LiveScoresClient.new.top_scorers(*league_season)
           render json: normalize_players(raw)
         end
       rescue => e
         Rails.logger.error("[TopScorersController#index] #{e.message}")
-        render json: WorldCupScorers.scorers(params[:competition].presence || "WC") rescue []
+        render json: WorldCupScorers.scorers("WC") rescue render json: []
       end
 
       def assists
-        raw = LiveScoresClient.new.top_assists(*league_season)
-        if raw.empty? && params[:competition].present?
-          render json: WorldCupScorers.assists(params[:competition])
+        competition = params[:competition].to_s.upcase
+        if competition == "WC"
+          local = WorldCupScorers.assists(competition)
+          if local.any?
+            render json: local
+          else
+            raw = LiveScoresClient.new.top_assists(*league_season)
+            render json: normalize_players(raw)
+          end
         else
+          raw = LiveScoresClient.new.top_assists(*league_season)
           render json: normalize_players(raw)
         end
       rescue => e
         Rails.logger.error("[TopScorersController#assists] #{e.message}")
-        render json: WorldCupScorers.assists(params[:competition].presence || "WC") rescue []
+        render json: WorldCupScorers.assists("WC") rescue render json: []
       end
 
       def cards
-        type = params[:type] == "red" ? :top_red_cards : :top_yellow_cards
-        raw = LiveScoresClient.new.public_send(type, *league_season)
-        if raw.empty? && params[:competition].present?
-          card_type = params[:type] == "red" ? :red : :yellow
-          render json: WorldCupScorers.cards(params[:competition], type: card_type)
+        competition = params[:competition].to_s.upcase
+        card_type   = params[:type] == "red" ? :red : :yellow
+        if competition == "WC"
+          local = WorldCupScorers.cards(competition, type: card_type)
+          if local.any?
+            render json: local
+          else
+            api_method = params[:type] == "red" ? :top_red_cards : :top_yellow_cards
+            raw = LiveScoresClient.new.public_send(api_method, *league_season)
+            render json: normalize_players(raw, stat_key: params[:type] == "red" ? :red_cards : :yellow_cards)
+          end
         else
+          api_method = params[:type] == "red" ? :top_red_cards : :top_yellow_cards
+          raw = LiveScoresClient.new.public_send(api_method, *league_season)
           render json: normalize_players(raw, stat_key: params[:type] == "red" ? :red_cards : :yellow_cards)
         end
       rescue => e
