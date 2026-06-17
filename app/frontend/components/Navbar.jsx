@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import LanguageSwitcher from "./LanguageSwitcher"
 import SearchBar from "./SearchBar"
 import { useLiveCount } from "../contexts/LiveContext"
+import { usePushNotifications } from "../hooks/usePushNotifications"
 
 const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
@@ -31,6 +32,37 @@ function ThemeToggle() {
       onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)" }}
     >
       {light ? "☀️" : "🌙"}
+    </button>
+  )
+}
+
+// ─── Notification quick-toggle (used in mobile drawer) ───────────────────────
+function NotifQuickItem() {
+  const { supported, subscribed, loading, subscribe, unsubscribe, needsIosInstall } = usePushNotifications()
+
+  if (!supported && !needsIosInstall) return null
+
+  async function handleClick() {
+    if (needsIosInstall) {
+      alert("Para recibir notificaciones, agrega Golazo a tu pantalla de inicio primero.")
+      return
+    }
+    if (subscribed) {
+      await unsubscribe()
+    } else {
+      await subscribe([])
+    }
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={loading}
+      className="mobile-quick-item"
+      style={{ background: subscribed ? "rgba(238,30,70,.12)" : undefined, borderColor: subscribed ? "var(--accent)" : undefined, color: subscribed ? "#fff" : undefined, cursor: "pointer", border: "1px solid var(--border)" }}
+    >
+      <span className="mobile-quick-icon">{subscribed ? "🔔" : "🔕"}</span>
+      <span>{subscribed ? "Notif. On" : "Notif. Off"}</span>
     </button>
   )
 }
@@ -258,6 +290,7 @@ export default function Navbar() {
               <span className="mobile-quick-icon">📰</span>
               <span>{t("nav.news", "Noticias")}</span>
             </NavLink>
+            <NotifQuickItem />
           </div>
 
           <div className="mobile-drawer-divider">{t("nav.mundial", "Mundial 2026")}</div>
