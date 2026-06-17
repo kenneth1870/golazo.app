@@ -189,13 +189,14 @@ function ScoreTimeline({ events, homeTeamRaw, homeName, awayName, t }) {
   const moments = goals.map(e => {
     const isOG      = e.detail === "Own Goal"
     const teamHome  = e.team?.name === homeTeamRaw
-    // Display in scorer's own team column; but own goals benefit the other side
-    const scoredForHome = isOG ? !teamHome : teamHome
-    if (scoredForHome) h++; else a++
+    // API-Football: for OG events `team` = the BENEFITING team (not the scorer's team).
+    // Score: team is already the benefiting side — no flip needed.
+    // Display: show OG scorer in their own team's column = opposite of benefiting team.
+    if (teamHome) h++; else a++
     return {
       min:    `${e.minute ?? ""}${e.extra ? `+${e.extra}` : ""}'`,
       player: e.player,
-      isHome: teamHome,
+      isHome: isOG ? !teamHome : teamHome,
       isOG,
       isP:    e.detail === "Penalty",
       score:  `${h}–${a}`,
@@ -421,13 +422,11 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
   // goals counter can briefly lag and show a disallowed goal. When events have
   // at least one goal recorded we use their count; otherwise fall back to the
   // fixture API tally (handles the very start of a match before events load).
-  // Own goals count for the OPPOSING team (API-Football: `team` = OG scorer's team).
+  // API-Football: for OG events `team` = the BENEFITING team — no flip needed.
   let hFromEvents = 0, aFromEvents = 0
   const goalEvents = (events ?? []).filter(e => e.type === "Goal" && e.detail !== "Missed Penalty")
   goalEvents.forEach(e => {
-    const scoredByHome = e.team?.name === homeRaw
-    const isOG = e.detail === "Own Goal"
-    if (scoredByHome !== isOG) hFromEvents++
+    if (e.team?.name === homeRaw) hFromEvents++
     else aFromEvents++
   })
   const hasGoalEvents = goalEvents.length > 0 || (apiGoals?.home === 0 && apiGoals?.away === 0)
@@ -707,9 +706,7 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t, i18n }) {
     // Track first-half stats before HT divider
     if (!htInserted) {
       if (e.type === "Goal" && e.detail !== "Missed Penalty") {
-        const isHome = e.team?.name === homeTeam
-        const isOG   = e.detail === "Own Goal"
-        if (isHome !== isOG) htHomeGoals++; else htAwayGoals++
+        if (e.team?.name === homeTeam) htHomeGoals++; else htAwayGoals++
       }
       if (e.type === "Card") {
         if (e.team?.name === homeTeam) htHomeCards++; else htAwayCards++
@@ -760,9 +757,11 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t, i18n }) {
             )
           }
 
-          const isHome    = e.team?.name === homeTeam
+          const teamHome  = e.team?.name === homeTeam
           const isGoal    = e.type === "Goal" && e.detail !== "Missed Penalty"
           const isMissed  = e.type === "Goal" && e.detail === "Missed Penalty"
+          // For OG events API returns the BENEFITING team — flip column so scorer appears on their own side.
+          const isHome    = (isGoal && e.detail === "Own Goal") ? !teamHome : teamHome
           const isSub     = e.type === "subst"
           const isVar     = e.type === "Var"
           const isCard    = e.type === "Card"
