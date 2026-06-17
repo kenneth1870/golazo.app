@@ -113,13 +113,14 @@ class WorldCupSync
   # feed finalized a match early (e.g. at 0-0 before a late goal), the date
   # endpoint will return the authoritative final score and overwrite it.
   def sync_stale_past_matches(already_synced_ids = Set.new)
+    # No external_id filter — seeded matches start without one and would be
+    # permanently skipped. sync_match_from_normalized sets external_id on first
+    # successful lookup, so they self-heal after the first stale re-sync.
     stale = Match.where(status: %w[scheduled live])
                  .where(kickoff_at: 7.days.ago..115.minutes.ago)
-                 .where.not(external_id: nil)
 
     recent_finished = Match.where(status: "finished")
                            .where(kickoff_at: 4.hours.ago..Time.current)
-                           .where.not(external_id: nil)
 
     stale_count    = stale.count
     finished_count = recent_finished.count
