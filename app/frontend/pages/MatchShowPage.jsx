@@ -187,15 +187,18 @@ function ScoreTimeline({ events, homeTeamRaw, homeName, awayName, t }) {
 
   let h = 0, a = 0
   const moments = goals.map(e => {
-    const forHome = e.team?.name === homeTeamRaw
-    if (forHome) h++; else a++
+    const isOG      = e.detail === "Own Goal"
+    const teamHome  = e.team?.name === homeTeamRaw
+    // Display in scorer's own team column; but own goals benefit the other side
+    const scoredForHome = isOG ? !teamHome : teamHome
+    if (scoredForHome) h++; else a++
     return {
-      min:     `${e.minute ?? ""}${e.extra ? `+${e.extra}` : ""}'`,
-      player:  e.player,
-      isHome:  forHome,
-      isOG:    e.detail === "Own Goal",
-      isP:     e.detail === "Penalty",
-      score:   `${h}–${a}`,
+      min:    `${e.minute ?? ""}${e.extra ? `+${e.extra}` : ""}'`,
+      player: e.player,
+      isHome: teamHome,
+      isOG,
+      isP:    e.detail === "Penalty",
+      score:  `${h}–${a}`,
     }
   })
 
