@@ -2072,6 +2072,11 @@ export default function MatchShowPage() {
     }
   }, [loading, statusShort]) // eslint-disable-line
 
+  // usePushNotifications must be called unconditionally (Rules of Hooks) — before any early return.
+  const notifSupported = typeof Notification !== "undefined"
+  const { subscribed: pushSubscribed, addTeams, teamsSubscribed } = usePushNotifications()
+  const matchTeamsNotified = teamsSubscribed([homeTeamRaw, awayTeamRaw].filter(Boolean))
+
   // Back navigation
   function goBack() {
     if (window.history.length > 1) navigate(-1)
@@ -2084,10 +2089,6 @@ export default function MatchShowPage() {
   const isApiError  = !hasFixture && data?.error === "api_error"
 
   const eventCount  = data?.events?.filter(e => ["Goal","Card","subst","Var","injury"].includes(e.type)).length ?? 0
-
-  const notifSupported = typeof Notification !== "undefined"
-  const { subscribed: pushSubscribed, addTeams, teamsSubscribed } = usePushNotifications()
-  const matchTeamsNotified = teamsSubscribed([homeTeamRaw, awayTeamRaw].filter(Boolean))
 
   const hasStats    = data?.stats?.length > 0
   const hasLineups  = data?.lineups?.some(l => l?.start_xi?.length > 0)
