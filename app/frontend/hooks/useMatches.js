@@ -96,6 +96,30 @@ function unsubscribe(key, setState) {
   }
 }
 
+// Patch a live score update directly into every cached "live" filter so the
+// home-page LIVE panel reflects goals without waiting for the 60s poll.
+export function patchLiveScore(d) {
+  for (const [key, entry] of cache) {
+    if (!key.startsWith("live|")) continue
+    if (!entry.data?.length) continue
+    let patched = false
+    const next = entry.data.map(m => {
+      const hit = (d.external_id != null && m.external_id === d.external_id) ||
+                  (d.match_id   != null && m.id            === d.match_id)
+      if (!hit) return m
+      if (m.home_score === d.home_score && m.away_score === d.away_score &&
+          m.status === d.status && m.minute === d.minute) return m
+      patched = true
+      return { ...m, home_score: d.home_score, away_score: d.away_score,
+               status: d.status, minute: d.minute, minute_extra: d.minute_extra }
+    })
+    if (patched) {
+      cache.set(key, { ...entry, data: next })
+      notify(key, { data: next, loading: false, error: null })
+    }
+  }
+}
+
 export function useMatches(filter = "all", opts = {}) {
   const key = cacheKey(filter, opts)
   const [state, setState] = useState(() => {

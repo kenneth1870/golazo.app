@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { useMatches } from "../hooks/useMatches"
+import { useMatches, patchLiveScore } from "../hooks/useMatches"
 import { useFavoriteTeam } from "../hooks/useFavoriteTeam"
 import { useLiveCount } from "../contexts/LiveContext"
 import { usePageMeta } from "../hooks/usePageMeta"
@@ -266,6 +266,7 @@ export default function HomePage() {
 
   const { matches: liveWC }         = useMatches("live",     { competition: "WC" })
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: "WC" })
+  useLiveScoresChannel(patchLiveScore)
   const todayWC                      = useTodayWC()
   const { news: latestNews, newsError, retryNews } = useLatestNews()
 
