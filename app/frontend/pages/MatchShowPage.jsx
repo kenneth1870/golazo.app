@@ -26,6 +26,7 @@ import { fetchWithTimeout } from "../utils/fetchWithTimeout"
 
 // ─── Reminder button ──────────────────────────────────
 function ReminderButton({ match }) {
+  const { t } = useTranslation()
   const { isReminded, addReminder, removeReminder } = useReminders()
   const matchId = String(match?.external_id || match?.id || "")
   if (!matchId || !match?.kickoff_at) return null
@@ -42,7 +43,7 @@ function ReminderButton({ match }) {
   return (
     <button
       onClick={toggle}
-      title={reminded ? `Recordatorio activo — ${kickoffLabel}` : `Recordarme a las ${kickoffLabel}`}
+      title={reminded ? t("match.reminderActive", { time: kickoffLabel }) : t("match.reminderSet", { time: kickoffLabel })}
       style={{
         background: reminded ? "rgba(16,185,129,.15)" : "none",
         border: reminded ? "1px solid rgba(16,185,129,.4)" : "1px solid var(--border)",
@@ -52,7 +53,7 @@ function ReminderButton({ match }) {
         padding: "5px 8px", transition: "all .2s",
       }}
     >
-      {reminded ? `🔔 ${kickoffLabel}` : "🔕 Recordar"}
+      {reminded ? `🔔 ${kickoffLabel}` : `🔕 ${t("match.remindMe")}`}
     </button>
   )
 }

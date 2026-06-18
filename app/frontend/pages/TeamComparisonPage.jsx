@@ -29,7 +29,7 @@ function StatBar({ label, homeVal, awayVal, invert = false }) {
 }
 
 function TeamPicker({ value, onChange, label }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [teams, setTeams] = useState([])
   useEffect(() => {
     fetch("/api/v1/teams?competition=WC")
@@ -50,7 +50,7 @@ function TeamPicker({ value, onChange, label }) {
           fontSize: "0.85rem", fontWeight: 700, cursor: "pointer",
         }}
       >
-        <option value="">Select team…</option>
+        <option value="">{t("teamComparison.selectTeam")}</option>
         {teams.map(t => (
           <option key={t.id} value={t.id}>{translateTeam(t.name, i18n.language) || t.name}</option>
         ))}
@@ -108,15 +108,15 @@ export default function TeamComparisonPage() {
 
         <div style={{ padding: "24px 0 16px", textAlign: "center" }}>
           <div style={{ fontSize: "2rem", marginBottom: 8 }}>⚔️</div>
-          <h1 style={{ fontSize: "1.4rem", fontWeight: 900, color: "#fff", margin: "0 0 4px" }}>Team Comparison</h1>
-          <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: 0 }}>Compare two World Cup 2026 teams side by side</p>
+          <h1 style={{ fontSize: "1.4rem", fontWeight: 900, color: "#fff", margin: "0 0 4px" }}>{t("teamComparison.title")}</h1>
+          <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: 0 }}>{t("teamComparison.subtitle")}</p>
         </div>
 
         {/* Team pickers */}
         <div style={{ display: "flex", gap: 12, alignItems: "flex-end", marginBottom: 16 }}>
-          <TeamPicker value={homeId} onChange={setHomeId} label="Home Team" />
-          <div style={{ fontSize: "1.1rem", paddingBottom: 10, color: "var(--muted)" }}>vs</div>
-          <TeamPicker value={awayId} onChange={setAwayId} label="Away Team" />
+          <TeamPicker value={homeId} onChange={setHomeId} label={t("teamComparison.homeTeam")} />
+          <div style={{ fontSize: "1.1rem", paddingBottom: 10, color: "var(--muted)" }}>{t("status.vs")}</div>
+          <TeamPicker value={awayId} onChange={setAwayId} label={t("teamComparison.awayTeam")} />
         </div>
         <button
           onClick={compare}
@@ -129,7 +129,7 @@ export default function TeamComparisonPage() {
             opacity: homeId && awayId ? 1 : 0.5,
           }}
         >
-          {loading ? "Loading…" : "Compare"}
+          {loading ? t("loading") : t("teamComparison.compare")}
         </button>
 
         {showComparison && (
@@ -139,33 +139,33 @@ export default function TeamComparisonPage() {
               <Link to={`/teams/${homeId}`} style={{ flex: 1, textDecoration: "none" }}>
                 {homeData.flag_url && <img src={homeData.flag_url} alt="" style={{ width: 48, height: 48, objectFit: "contain", display: "block", margin: "0 auto 6px" }} />}
                 <div style={{ fontWeight: 900, fontSize: "0.95rem", color: "#fff" }}>{homeName}</div>
-                {homeData.group && <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>Group {homeData.group}</div>}
+                {homeData.group && <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>{t("nav.group", { letter: homeData.group })}</div>}
               </Link>
               <div style={{ fontWeight: 900, fontSize: "1.2rem", color: "var(--muted)" }}>vs</div>
               <Link to={`/teams/${awayId}`} style={{ flex: 1, textDecoration: "none" }}>
                 {awayData.flag_url && <img src={awayData.flag_url} alt="" style={{ width: 48, height: 48, objectFit: "contain", display: "block", margin: "0 auto 6px" }} />}
                 <div style={{ fontWeight: 900, fontSize: "0.95rem", color: "#fff" }}>{awayName}</div>
-                {awayData.group && <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>Group {awayData.group}</div>}
+                {awayData.group && <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>{t("nav.group", { letter: awayData.group })}</div>}
               </Link>
             </div>
 
             {/* Tournament stats */}
             <div className="match-section" style={{ padding: "16px 20px", marginBottom: 16 }}>
-              <h3 className="match-section__title" style={{ marginBottom: 16 }}>Tournament Stats</h3>
-              <StatBar label="Goals Scored"   homeVal={hs.goals_for    ?? 0} awayVal={as.goals_for    ?? 0} />
-              <StatBar label="Goals Conceded" homeVal={hs.goals_against ?? 0} awayVal={as.goals_against ?? 0} invert />
-              <StatBar label="Wins"           homeVal={hs.won          ?? 0} awayVal={as.won          ?? 0} />
-              <StatBar label="Draws"          homeVal={hs.drawn        ?? 0} awayVal={as.drawn        ?? 0} />
-              <StatBar label="Losses"         homeVal={hs.lost         ?? 0} awayVal={as.lost         ?? 0} invert />
-              <StatBar label="Points"         homeVal={hs.points       ?? 0} awayVal={as.points       ?? 0} />
-              {hs.shots_total != null && <StatBar label="Shots" homeVal={hs.shots_total} awayVal={as.shots_total} />}
-              {hs.possession != null  && <StatBar label="Avg Possession %" homeVal={hs.possession} awayVal={as.possession} />}
+              <h3 className="match-section__title" style={{ marginBottom: 16 }}>{t("team.tournamentStats")}</h3>
+              <StatBar label={t("team.goalsScored")}   homeVal={hs.goals_for    ?? 0} awayVal={as.goals_for    ?? 0} />
+              <StatBar label={t("team.goalsConceded")} homeVal={hs.goals_against ?? 0} awayVal={as.goals_against ?? 0} invert />
+              <StatBar label={t("teamComparison.wins")}  homeVal={hs.won          ?? 0} awayVal={as.won          ?? 0} />
+              <StatBar label={t("teamComparison.draws")} homeVal={hs.drawn        ?? 0} awayVal={as.drawn        ?? 0} />
+              <StatBar label={t("teamComparison.losses")} homeVal={hs.lost        ?? 0} awayVal={as.lost         ?? 0} invert />
+              <StatBar label={t("table.points")}       homeVal={hs.points       ?? 0} awayVal={as.points       ?? 0} />
+              {hs.shots_total != null && <StatBar label={t("match.statShots")} homeVal={hs.shots_total} awayVal={as.shots_total} />}
+              {hs.possession != null  && <StatBar label={t("teamComparison.avgPossession")} homeVal={hs.possession} awayVal={as.possession} />}
             </div>
 
             {/* Top scorers */}
             {(homeData.scorers?.length > 0 || awayData.scorers?.length > 0) && (
               <div className="match-section" style={{ padding: "16px 20px", marginBottom: 16 }}>
-                <h3 className="match-section__title" style={{ marginBottom: 12 }}>Top Scorers</h3>
+                <h3 className="match-section__title" style={{ marginBottom: 12 }}>{t("team.topScorers")}</h3>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                   {[homeData, awayData].map((team, ti) => (
                     <div key={ti}>
@@ -178,7 +178,7 @@ export default function TeamComparisonPage() {
                           <span style={{ fontWeight: 900, color: "#ee1e46", fontSize: "0.85rem" }}>⚽ {s.goals}</span>
                         </div>
                       ))}
-                      {!team.scorers?.length && <div style={{ color: "var(--muted)", fontSize: "0.75rem" }}>No scorers yet</div>}
+                      {!team.scorers?.length && <div style={{ color: "var(--muted)", fontSize: "0.75rem" }}>{t("mundial.noScorers")}</div>}
                     </div>
                   ))}
                 </div>

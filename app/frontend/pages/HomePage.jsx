@@ -349,19 +349,19 @@ export default function HomePage() {
                 border: "1px solid rgba(238,30,70,.2)", borderRadius: 14, padding: "20px 24px",
               }}>
                 <div style={{ fontSize: ".62rem", fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 8 }}>
-                  FIFA World Cup 2026
+                  {t("home.wcSectionTitle")}
                 </div>
                 <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "#fff", marginBottom: 12 }}>
-                  USA · Canada · Mexico
+                  {t("home.wcHosts")}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {[
-                    { label: "📅 Schedule",  path: "/mundial/schedule" },
-                    { label: "📊 Groups",    path: "/scores/groups" },
-                    { label: "🏆 Knockout",  path: "/scores/knockout" },
-                    { label: "⭐ Scorers",   path: "/mundial/scorers" },
-                    { label: "🏟️ Venues",   path: "/mundial/venues" },
-                    { label: "👥 Teams",     path: "/mundial/teams" },
+                    { label: `📅 ${t("nav.schedule")}`,  path: "/mundial/schedule" },
+                    { label: `📊 ${t("nav.groups")}`,    path: "/scores/groups" },
+                    { label: `🏆 ${t("nav.knockout")}`,  path: "/scores/knockout" },
+                    { label: `⭐ ${t("mundial.tabGoals")}`,   path: "/mundial/scorers" },
+                    { label: `🏟️ ${t("nav.venues")}`,   path: "/mundial/venues" },
+                    { label: `👥 ${t("nav.teams")}`,     path: "/mundial/teams" },
                   ].map(({ label, path }) => (
                     <Link key={path} to={path} style={{
                       display: "inline-block",
@@ -382,10 +382,10 @@ export default function HomePage() {
                 background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "20px 24px",
               }}>
                 <div style={{ fontSize: ".62rem", fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 8 }}>
-                  Club Competitions
+                  {t("home.clubCompetitions")}
                 </div>
                 <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "#fff", marginBottom: 12 }}>
-                  Live scores worldwide
+                  {t("home.liveScoresWorldwide")}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {[

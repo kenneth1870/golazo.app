@@ -22,6 +22,7 @@ function randomBg() {
 }
 
 function Countdown({ targetDate, label }) {
+  const { t } = useTranslation()
   const [left, setLeft] = useState(getLeft(targetDate))
   useEffect(() => {
     const id = setInterval(() => setLeft(getLeft(targetDate)), 1000)
@@ -31,7 +32,7 @@ function Countdown({ targetDate, label }) {
   const isOver = Object.values(left).every(v => v === 0)
   if (isOver) return (
     <div style={{ marginBottom: 24, fontSize: ".85rem", color: "rgba(255,255,255,.7)", fontWeight: 600 }}>
-      🏆 ¡El Mundial ha comenzado!
+      {t("hero.tournamentStarted")}
     </div>
   )
 

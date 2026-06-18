@@ -40,7 +40,8 @@
     "featPlayers": "Players",
     "featAlerts": "Goal Alerts",
     "featNews": "News",
-    "liveNow": "{{count}} live now"
+    "liveNow": "{{count}} live now",
+    "tournamentStarted": "🏆 The World Cup has started!"
   },
   "home": {
     "latestNews": "Latest News",
@@ -55,7 +56,11 @@
     "liveNow_one": "{{count}} match live right now",
     "liveNow_other": "{{count}} matches live right now",
     "followTeam": "Follow a team",
-    "liveNow": "{{count}} match live right now"
+    "liveNow": "{{count}} match live right now",
+    "wcSectionTitle": "FIFA World Cup 2026",
+    "wcHosts": "USA · Canada · Mexico",
+    "clubCompetitions": "Club Competitions",
+    "liveScoresWorldwide": "Live scores worldwide"
   },
   "time": {
     "today": "Today",
@@ -247,7 +252,22 @@
     "statRedCards": "Red Cards",
     "statOffsides": "Offsides",
     "statGoalkeeperSaves": "Goalkeeper Saves",
-    "statPassesAccuracy": "Pass Accuracy"
+    "statPassesAccuracy": "Pass Accuracy",
+    "reminderActive": "Reminder set — {{time}}",
+    "reminderSet": "Remind me at {{time}}",
+    "remindMe": "Remind me"
+  },
+  "teamComparison": {
+    "title": "Team Comparison",
+    "subtitle": "Compare two World Cup 2026 teams side by side",
+    "homeTeam": "Home Team",
+    "awayTeam": "Away Team",
+    "selectTeam": "Select team…",
+    "compare": "Compare",
+    "wins": "Wins",
+    "draws": "Draws",
+    "losses": "Losses",
+    "avgPossession": "Avg Possession %"
   },
   "error": {
     "dataUnavailable": "Data temporarily unavailable",

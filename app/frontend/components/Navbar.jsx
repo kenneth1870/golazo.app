@@ -278,17 +278,17 @@ export default function Navbar() {
           <div className="mobile-quick-grid">
             <NavLink to="/" end className={({ isActive }) => `mobile-quick-item${isActive ? " active" : ""}`}>
               <span className="mobile-quick-icon">🏠</span>
-              <span>{t("nav.home", "Inicio")}</span>
+              <span>{t("nav.home")}</span>
             </NavLink>
             <NavLink to="/scores/today" className={({ isActive }) => `mobile-quick-item${isActive ? " active" : ""}`}>
               <span className="mobile-quick-icon" style={{ position: "relative", display: "inline-block" }}>
                 ⏱️{liveCount > 0 && <span className="live-dot" style={{ position: "absolute", top: -2, right: -4 }} />}
               </span>
-              <span>{t("time.today", "Hoy")}</span>
+              <span>{t("time.today")}</span>
             </NavLink>
             <NavLink to="/news" className={({ isActive }) => `mobile-quick-item${isActive ? " active" : ""}`}>
               <span className="mobile-quick-icon">📰</span>
-              <span>{t("nav.news", "Noticias")}</span>
+              <span>{t("nav.news")}</span>
             </NavLink>
             <NotifQuickItem />
           </div>
