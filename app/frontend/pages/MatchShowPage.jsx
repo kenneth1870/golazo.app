@@ -29,21 +29,22 @@ function ReminderButton({ match }) {
     if (reminded) removeReminder(matchId)
     else await addReminder(match)
   }
+  const kickoffLabel = new Date(match.kickoff_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 
   return (
     <button
       onClick={toggle}
-      title={reminded ? "Remove reminder" : "Remind me at kickoff"}
+      title={reminded ? `Recordatorio activo — ${kickoffLabel}` : `Recordarme a las ${kickoffLabel}`}
       style={{
         background: reminded ? "rgba(16,185,129,.15)" : "none",
-        border: reminded ? "1px solid rgba(16,185,129,.4)" : "none",
+        border: reminded ? "1px solid rgba(16,185,129,.4)" : "1px solid var(--border)",
         borderRadius: 6, cursor: "pointer",
         color: reminded ? "#10b981" : "var(--muted)",
         fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 4,
         padding: "5px 8px", transition: "all .2s",
       }}
     >
-      {reminded ? "🔔 Set" : "🔕 Remind"}
+      {reminded ? `🔔 ${kickoffLabel}` : "🔕 Recordar"}
     </button>
   )
 }
@@ -477,12 +478,13 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
         document.execCommand("copy")
         document.body.removeChild(ta)
       } catch {}
+      navigator.vibrate?.(50)
       setCopied(true); setTimeout(() => setCopied(false), 2000)
     }
     if (navigator.share) {
       navigator.share({ title: `${homeName} vs ${awayName}`, text, url: window.location.href }).catch(fallback)
     } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }).catch(fallback)
+      navigator.clipboard.writeText(text).then(() => { navigator.vibrate?.(50); setCopied(true); setTimeout(() => setCopied(false), 2000) }).catch(fallback)
     } else { fallback() }
     onShare?.()
   }
@@ -1120,7 +1122,7 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
     { key: "form",  label: t("match.predForm") },
     { key: "att",   label: t("match.predAttack") },
     { key: "def",   label: t("match.predDefense") },
-    { key: "h2h",   label: "H2H" },
+    { key: "h2h",   label: t("match.h2h") },
     { key: "goals", label: t("match.predGoals") },
     { key: "total", label: t("match.predTotal") },
   ]
@@ -2114,7 +2116,7 @@ export default function MatchShowPage() {
     ...((isLive || isFinished) ? ["ratings"] : []),
     ...((isLive || isFinished) && hasCommentary ? ["feed"] : []),
   ]
-  const TAB_LABELS  = { preview: t("match.preview"), summary: t("match.summary"), stats: t("match.stats"), lineups: t("match.lineups"), h2h: "H2H", ratings: "⭐ Ratings", feed: "📝 Feed" }
+  const TAB_LABELS  = { preview: t("match.preview"), summary: t("match.summary"), stats: t("match.stats"), lineups: t("match.lineups"), h2h: t("match.h2h"), ratings: "⭐ Ratings", feed: "📝 Feed" }
   const TABS        = TAB_KEYS.map(k => ({ key: k, label: TAB_LABELS[k] ?? k }))
 
   // Swipe between tabs — only on horizontal-dominant gestures

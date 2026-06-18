@@ -29,7 +29,11 @@ function Countdown({ targetDate, label }) {
   }, [targetDate])
 
   const isOver = Object.values(left).every(v => v === 0)
-  if (isOver) return null
+  if (isOver) return (
+    <div style={{ marginBottom: 24, fontSize: ".85rem", color: "rgba(255,255,255,.7)", fontWeight: 600 }}>
+      🏆 ¡El Mundial ha comenzado!
+    </div>
+  )
 
   return (
     <div style={{ marginBottom: 24 }}>

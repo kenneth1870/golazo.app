@@ -1,6 +1,24 @@
+import { useState } from "react"
 import { formatKickoff, formatMatchDate } from "../hooks/useLocalTime"
 import { useTranslation } from "react-i18next"
 import { translateTeam } from "../i18n/teamNames"
+
+function FlagOrPlaceholder({ src, name }) {
+  const [err, setErr] = useState(false)
+  if (src && !err) {
+    return <img src={src} alt={name} className="flag-xs" onError={() => setErr(true)} />
+  }
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", justifyContent: "center",
+      width: 16, height: 16, borderRadius: "50%",
+      background: "var(--surface2)", border: "1px solid var(--border)",
+      fontSize: 8, fontWeight: 800, color: "var(--muted)", flexShrink: 0,
+    }}>
+      {name?.slice(0, 1)?.toUpperCase() || "?"}
+    </span>
+  )
+}
 
 export default function MatchRow({ match, onClick, showDate = false, showMeta = true }) {
   const { i18n } = useTranslation()
@@ -24,7 +42,7 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
 
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">
-          {match.home_team?.flag_url && <img src={match.home_team.flag_url} alt={match.home_team.name} className="flag-xs" />}
+          <FlagOrPlaceholder src={match.home_team?.flag_url} name={match.home_team?.name} />
           <span className="team-name">{translateTeam(match.home_team?.name, i18n.language)}</span>
         </div>
 
@@ -37,7 +55,7 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
 
         <div className="match-row__team match-row__team--away">
           <span className="team-name">{translateTeam(match.away_team?.name, i18n.language)}</span>
-          {match.away_team?.flag_url && <img src={match.away_team.flag_url} alt={match.away_team.name} className="flag-xs" />}
+          <FlagOrPlaceholder src={match.away_team?.flag_url} name={match.away_team?.name} />
         </div>
       </div>
 

@@ -43,6 +43,8 @@ function useDateLabel(date, t) {
   return date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })
 }
 
+const WC_START = new Date("2026-06-11T00:00:00")
+
 // ─── Date strip ───────────────────────────────────────
 function DateStrip({ selected, onChange }) {
   const { i18n }    = useTranslation()
@@ -50,6 +52,7 @@ function DateStrip({ selected, onChange }) {
   const todayISO    = toISO(new Date())
   const selectedISO = toISO(selected)
   const touchStartX = useRef(null)
+  const atMinDate   = toISO(selected) <= toISO(WC_START)
 
   // 5 days centred on selected — fits comfortably on 375px
   const days = Array.from({ length: 5 }, (_, i) => addDays(selected, i - 2))
@@ -70,9 +73,10 @@ function DateStrip({ selected, onChange }) {
     >
       <button
         className="btn-nav"
-        style={{ flexShrink: 0, minWidth: 44, minHeight: 44 }}
-        onClick={() => onChange(addDays(selected, -1))}
+        style={{ flexShrink: 0, minWidth: 44, minHeight: 44, opacity: atMinDate ? 0.3 : 1 }}
+        onClick={() => !atMinDate && onChange(addDays(selected, -1))}
         aria-label="Previous day"
+        disabled={atMinDate}
       >←</button>
 
       <div style={{ display: "flex", gap: 4, flex: 1, justifyContent: "center" }}>
@@ -132,7 +136,7 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
 
   const kickoffTime = match.kickoff_at
     ? new Date(match.kickoff_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    : ""
+    : "TBD"
 
   return (
     <div

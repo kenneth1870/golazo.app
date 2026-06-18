@@ -23,7 +23,7 @@ function useTodayWC() {
     if (document.hidden) return
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     fetch(`/api/v1/today?tz=${encodeURIComponent(tz)}`)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(all => {
         const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: tz })
         setMatches(
@@ -35,7 +35,7 @@ function useTodayWC() {
           })
         )
       })
-      .catch(() => {})
+      .catch(() => { /* silently retain previous matches on network hiccup */ })
   }, [])
 
   loadRef.current = load
@@ -204,7 +204,7 @@ function NewsCard({ post, index }) {
 
   return (
     <div className="col-md-4">
-      <Link to={post?.id ? `/news/${post.id}` : "/news"} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+      <Link to={post?.id ? `/news/${post.id}` : "#"} style={{ display: "block", textDecoration: "none", color: "inherit", pointerEvents: post ? "auto" : "none" }}>
         <div className="post-entry">
           {post ? (
             post.image ? (
