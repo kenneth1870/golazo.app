@@ -55,6 +55,9 @@ self.addEventListener("fetch", (event) => {
 // ── Push notifications ───────────────────────────────────
 self.addEventListener("push", (event) => {
   const d = event.data.json()
+  // One notification slot per match — new events replace the old one for that
+  // match (same tag) and re-alert the user (renotify: true). This prevents a
+  // flood when multiple goals happen: you see the latest score, not a stack.
   event.waitUntil(
     self.registration.showNotification(d.title, {
       body:     d.body    || "",
@@ -62,6 +65,9 @@ self.addEventListener("push", (event) => {
       badge:    d.badge   || "/images/badge-72.png",
       tag:      `match-${d.match_id || "golazo"}`,
       renotify: true,
+      // Android groups all notifications sharing the same group key into a
+      // collapsible bundle in the notification drawer. iOS ignores this.
+      group:    "golazo-matches",
       data:     { path: d.url, match_id: d.match_id },
     })
   )
