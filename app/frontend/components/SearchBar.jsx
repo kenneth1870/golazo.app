@@ -102,13 +102,18 @@ export default function SearchBar({ onClose }) {
       />
 
       {/* Modal */}
-      <div style={{
-        position: "fixed", top: "10%", left: "50%", transform: "translateX(-50%)",
-        width: "min(560px, 92vw)", zIndex: 3001,
-        background: "var(--surface)", border: "1px solid var(--border)",
-        borderRadius: 14, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.7)",
-        animation: "pageIn .15s ease",
-      }}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search"
+        style={{
+          position: "fixed", top: "10%", left: "50%", transform: "translateX(-50%)",
+          width: "min(560px, 92vw)", zIndex: 3001,
+          background: "var(--surface)", border: "1px solid var(--border)",
+          borderRadius: 14, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.7)",
+          animation: "pageIn .15s ease",
+        }}
+      >
         {/* Input */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderBottom: "1px solid var(--border)" }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2.5" style={{ flexShrink: 0 }}>

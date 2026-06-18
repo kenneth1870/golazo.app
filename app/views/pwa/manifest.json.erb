@@ -1,6 +1,14 @@
 {
   "name": "Golazo",
   "short_name": "Golazo",
+  "description": "Marcadores en vivo del Mundial FIFA 2026.",
+  "categories": ["sports", "news"],
+  "orientation": "portrait",
+  "display_override": ["standalone", "minimal-ui"],
+  "shortcuts": [
+    { "name": "Partidos de Hoy", "short_name": "Hoy", "url": "/scores/today", "icons": [{ "src": "/images/apple-touch-icon.png?v=2", "sizes": "192x192" }] },
+    { "name": "Mundial 2026",    "short_name": "Mundial", "url": "/mundial",       "icons": [{ "src": "/images/apple-touch-icon.png?v=2", "sizes": "192x192" }] }
+  ],
   "icons": [
     {
       "src": "/icon.png",
@@ -17,7 +25,6 @@
   "start_url": "/",
   "display": "standalone",
   "scope": "/",
-  "description": "Marcadores en vivo del Mundial FIFA 2026.",
   "theme_color": "#ee1e46",
   "background_color": "#060810"
 }

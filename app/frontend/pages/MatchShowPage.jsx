@@ -1,4 +1,12 @@
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, memo } from "react"
+
+// Decorative logo/flag image — returns null on error instead of hiding with display:none
+// which leaves a DOM hole and can break flex layouts.
+const SafeImg = memo(function SafeImg({ src, alt, className, style }) {
+  const [err, setErr] = useState(false)
+  if (!src || err) return null
+  return <img src={src} alt={alt || ""} className={className} style={style} onError={() => setErr(true)} />
+})
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague } from "../i18n/leagueNames"
@@ -522,10 +530,7 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
 
         {/* Competition row */}
         <div className="scoreboard__competition">
-          {fixture?.league?.logo && (
-            <img src={fixture.league.logo} alt="" style={{ width: 18, height: 18, objectFit: "contain" }}
-              onError={e => (e.target.style.display = "none")} />
-          )}
+          <SafeImg src={fixture?.league?.logo} style={{ width: 18, height: 18, objectFit: "contain" }} />
           <span>{translateLeague(fixture?.league?.name, i18n.language)}</span>
           {fixture?.league?.round && (
             <span className="scoreboard__round">{fixture.league.round}</span>
@@ -907,13 +912,13 @@ function StatsPanel({ stats, home, away, t, statusShort }) {
     <section className="match-section">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {home?.logo && <img src={home.logo} alt="" className="logo-sm" onError={e => (e.target.style.display = "none")} />}
+          <SafeImg src={home?.logo} className="logo-sm" />
           <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#ee1e46" }}>{translateTeam(home?.name, i18n.language)}</span>
         </div>
         <h3 className="match-section__title" style={{ margin: 0 }}>{t("match.statistics")}</h3>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#3b82f6" }}>{translateTeam(away?.name, i18n.language)}</span>
-          {away?.logo && <img src={away.logo} alt="" className="logo-sm" onError={e => (e.target.style.display = "none")} />}
+          <SafeImg src={away?.logo} className="logo-sm" />
         </div>
       </div>
       {pairs.map(({ type, h, a }) => (
@@ -953,9 +958,7 @@ function LineupTeam({ team, side }) {
     <div className="lineup-team">
       {/* Team header */}
       <div className="lineup-team__header">
-        {team.team?.logo && (
-          <img src={team.team.logo} alt="" className="logo-sm" onError={e => (e.target.style.display = "none")} />
-        )}
+        <SafeImg src={team.team?.logo} className="logo-sm" />
         <div>
           <div className="lineup-team__name">{translateTeam(team.team?.name, i18n.language)}</div>
           {team.formation && (
@@ -1060,8 +1063,7 @@ function InjuriesSection({ fixtureId, homeName, awayName }) {
             {list.map((inj, i) => (
               <div key={inj.player?.name ? `${inj.player.name}-${i}` : i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px", background: "var(--surface2)", borderRadius: 8 }}>
                 {inj.player?.photo && (
-                  <img src={inj.player.photo} alt="" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
-                    onError={e => e.target.style.display="none"} />
+                  <SafeImg src={inj.player.photo} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -1443,7 +1445,7 @@ function PlayerRatingsPanel({ fixtureId }) {
       {teams.map((team, ti) => (
         <section key={ti} className="match-section" style={{ marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            {team.team?.logo && <img src={team.team.logo} alt="" style={{ width: 22, height: 22, objectFit: "contain" }} onError={e => e.target.style.display="none"} />}
+            <SafeImg src={team.team?.logo} style={{ width: 22, height: 22, objectFit: "contain" }} />
             <h3 className="match-section__title" style={{ margin: 0 }}>{translateTeam(team.team?.name, i18n.language)}</h3>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -2116,7 +2118,7 @@ export default function MatchShowPage() {
     ...((isLive || isFinished) ? ["ratings"] : []),
     ...((isLive || isFinished) && hasCommentary ? ["feed"] : []),
   ]
-  const TAB_LABELS  = { preview: t("match.preview"), summary: t("match.summary"), stats: t("match.stats"), lineups: t("match.lineups"), h2h: t("match.h2h"), ratings: "⭐ Ratings", feed: "📝 Feed" }
+  const TAB_LABELS  = { preview: t("match.preview"), summary: t("match.summary"), stats: t("match.stats"), lineups: t("match.lineups"), h2h: t("match.h2h"), ratings: t("match.ratings"), feed: t("match.feed") }
   const TABS        = TAB_KEYS.map(k => ({ key: k, label: TAB_LABELS[k] ?? k }))
 
   // Swipe between tabs — only on horizontal-dominant gestures
@@ -2154,8 +2156,9 @@ export default function MatchShowPage() {
                   onClick={() => navigate(`/matches/${String(prevMatchNav.external_id)}`, { state: { matchList, matchIdx: matchIdx - 1 } })}
                   style={{
                     background: "var(--surface2)", border: "1px solid var(--border)",
-                    borderRadius: 6, padding: "4px 10px", fontSize: "0.68rem",
+                    borderRadius: 6, padding: "8px 14px", fontSize: "0.68rem",
                     color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
+                    minHeight: 44,
                   }}
                   title={`${prevMatchNav.home_team?.name} vs ${prevMatchNav.away_team?.name}`}
                 >
@@ -2167,8 +2170,9 @@ export default function MatchShowPage() {
                   onClick={() => navigate(`/matches/${String(nextMatchNav.external_id)}`, { state: { matchList, matchIdx: matchIdx + 1 } })}
                   style={{
                     background: "var(--surface2)", border: "1px solid var(--border)",
-                    borderRadius: 6, padding: "4px 10px", fontSize: "0.68rem",
+                    borderRadius: 6, padding: "8px 14px", fontSize: "0.68rem",
                     color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
+                    minHeight: 44,
                   }}
                   title={`${nextMatchNav.home_team?.name} vs ${nextMatchNav.away_team?.name}`}
                 >
