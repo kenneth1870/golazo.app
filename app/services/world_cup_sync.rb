@@ -193,7 +193,7 @@ class WorldCupSync
                     .map { |t| t.utc.to_date }
                     .uniq
 
-    dates = (db_dates + [Date.today, Date.today + 1]).uniq.sort
+    dates = (db_dates + [ Date.today, Date.today + 1 ]).uniq.sort
     log("heal_all: #{dates.size} date(s) — #{dates.join(', ')}")
 
     fixed = 0
@@ -900,7 +900,7 @@ class WorldCupSync
       "wc_scorers_v1_WC",
       "wc_assists_v1_WC",
       "wc_yellow_cards_v1_WC",
-      "wc_red_cards_v1_WC",
+      "wc_red_cards_v1_WC"
     ]
     if match&.external_id.present?
       keys << "wc_fixture_events_v1_#{match.external_id}"

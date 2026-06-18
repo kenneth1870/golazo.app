@@ -141,9 +141,9 @@ class LiveScoresClient
     #   ensures SyncTodayMatchesJob gets fresh data when something happens.
     # Future: schedule rarely changes, 10 min is fine.
     ttl = if date < Date.today then 24.hours
-          elsif date == Date.today then 5.minutes
-          else 10.minutes
-          end
+    elsif date == Date.today then 5.minutes
+    else 10.minutes
+    end
     Rails.cache.fetch("live_scores_date_v15_#{date.iso8601}_#{tz_key}", expires_in: ttl, race_condition_ttl: 30.seconds) do
       data = get("fixtures", date: date.iso8601, timezone: timezone)
       (data.dig("response") || [])

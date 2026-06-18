@@ -89,7 +89,7 @@ class Device < ApplicationRecord
       ip_address:      ip_address,
       city:            city,
       region:          region,
-      country:         country,
+      country:         country
     }
   end
 end

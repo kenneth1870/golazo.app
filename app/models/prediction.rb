@@ -7,8 +7,8 @@ class Prediction < ApplicationRecord
   # integer points to whichever buckets have the largest fractional parts,
   # guaranteeing the three values always sum to exactly 100 (or 0).
   def percentages(total)
-    return [0, 0, 0] if total.zero?
-    counts = [home_votes, draw_votes, away_votes]
+    return [ 0, 0, 0 ] if total.zero?
+    counts = [ home_votes, draw_votes, away_votes ]
     raw    = counts.map { |c| c * 100.0 / total }
     floors = raw.map(&:floor)
     rem    = 100 - floors.sum

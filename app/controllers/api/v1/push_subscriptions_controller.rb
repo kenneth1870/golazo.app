@@ -99,7 +99,7 @@ module Api
             missing: [
               ENV["VAPID_PUBLIC_KEY"].blank?   ? "VAPID_PUBLIC_KEY"   : nil,
               ENV["VAPID_PRIVATE_KEY"].blank?  ? "VAPID_PRIVATE_KEY"  : nil,
-              ENV["VAPID_SUBJECT"].blank?       ? "VAPID_SUBJECT"      : nil,
+              ENV["VAPID_SUBJECT"].blank?       ? "VAPID_SUBJECT"      : nil
             ].compact
           }, status: :unprocessable_entity
         end

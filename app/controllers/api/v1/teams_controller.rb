@@ -40,7 +40,7 @@ module Api
           Arel.sql("SUM(CASE WHEN home_team_id = #{team.id} THEN away_score ELSE home_score END)"),
           Arel.sql("SUM(CASE WHEN home_team_id = #{team.id} AND away_score = 0 THEN 1 WHEN away_team_id = #{team.id} AND home_score = 0 THEN 1 ELSE 0 END)")
         )
-        goals_scored, goals_conceded, clean_sheets = row&.map(&:to_i) || [0, 0, 0]
+        goals_scored, goals_conceded, clean_sheets = row&.map(&:to_i) || [ 0, 0, 0 ]
 
         tournament_stats = {
           played:         played,

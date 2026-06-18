@@ -7,7 +7,7 @@ class GeolocateDeviceJob < ApplicationJob
     /\A192\.168\./,
     /\A172\.(1[6-9]|2\d|3[01])\./,
     /\A::1\z/,
-    /\Alocalhost\z/i,
+    /\Alocalhost\z/i
   ].freeze
 
   def perform(device_id)

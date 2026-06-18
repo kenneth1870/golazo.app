@@ -124,14 +124,14 @@ class MatchEventNotificationJob < ApplicationJob
           "#{minute}' · ¡Que golazo de #{scorer}! 😱",
           "¡Ahí está! #{scorer} anota al #{minute}' 🔥",
           "#{scorer} no perdona en el #{minute}'! ⚡",
-          "#{minute}' — #{scorer} con todo 💥",
+          "#{minute}' — #{scorer} con todo 💥"
         ].sample
       elsif scorer
         [
           "¡GOLAZO de #{scorer}! 🔥",
           "#{scorer} anota · EN VIVO ⚽",
           "¡#{scorer} la manda adentro! 💥",
-          "GOL de #{scorer}#{min_tag} · ¡EN VIVO! 🎯",
+          "GOL de #{scorer}#{min_tag} · ¡EN VIVO! 🎯"
         ].sample
       elsif minute
         [
@@ -139,14 +139,14 @@ class MatchEventNotificationJob < ApplicationJob
           "¡Gol en el #{minute}'! ⚽ EN VIVO",
           "#{minute}' · ¡GOOOL! 😱",
           "¡Se armó! Gol al #{minute}' 💥",
-          "#{minute}' — ¡Gol en el partido! 🔥",
+          "#{minute}' — ¡Gol en el partido! 🔥"
         ].sample
       else
         [
           "¡GOL! · EN VIVO ⚽",
           "¡Goool! 🔥 EN VIVO",
           "¡Se abrió el marcador! ⚽",
-          "¡Llegó el gol! 💥",
+          "¡Llegó el gol! 💥"
         ].sample
       end
       [ "⚽ #{home} #{score} #{away}", body ]
@@ -175,7 +175,7 @@ class MatchEventNotificationJob < ApplicationJob
         "¡Los jugadores ya están en el túnel!",
         "Momento de concentración. ¡Arranca el partido!",
         "¡La pelota está por rodar! No te lo pierdas.",
-        "Dale, que ya están saliendo al campo ⚡",
+        "Dale, que ya están saliendo al campo ⚡"
       ]
       [ "⏰ #{home} vs #{away}", bodies.sample ]
     else
@@ -196,14 +196,14 @@ class MatchEventNotificationJob < ApplicationJob
           "#{minute}' · #{scorer} scores! 😱",
           "#{scorer} doesn't miss — #{minute}' ⚡",
           "#{minute}' — #{scorer} with the finish! 🔥",
-          "Golazo! #{scorer} · #{minute}' 💥",
+          "Golazo! #{scorer} · #{minute}' 💥"
         ].sample
       elsif scorer
         [
           "GOAL from #{scorer}! 🔥",
           "#{scorer} scores#{min_tag} · LIVE ⚽",
           "#{scorer} puts it in the net! 💥",
-          "Golazo! #{scorer}#{min_tag} 🎯",
+          "Golazo! #{scorer}#{min_tag} 🎯"
         ].sample
       elsif minute
         [
@@ -211,14 +211,14 @@ class MatchEventNotificationJob < ApplicationJob
           "It's in! #{minute}' · LIVE ⚽",
           "#{minute}' — GOAL! 😱",
           "Net bulges at #{minute}'! 💥",
-          "#{minute}' · They've scored! 🔥",
+          "#{minute}' · They've scored! 🔥"
         ].sample
       else
         [
           "GOAL! · LIVE ⚽",
           "They've scored! 🔥 LIVE",
           "It's in the net! ⚽",
-          "GOOOAL! 💥",
+          "GOOOAL! 💥"
         ].sample
       end
       [ "⚽ #{home} #{score} #{away}", body ]
@@ -248,7 +248,7 @@ class MatchEventNotificationJob < ApplicationJob
         "Clear your schedule — football is on.",
         "The referee's about to blow the whistle. You in?",
         "This is the one. Don't miss kick-off ⚽",
-        "Grab a seat — it's almost showtime!",
+        "Grab a seat — it's almost showtime!"
       ]
       [ "⏰ #{home} vs #{away}", bodies.sample ]
     else

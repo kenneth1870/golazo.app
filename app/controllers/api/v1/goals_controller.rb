@@ -7,8 +7,8 @@ module Api
         match = Match.find(params[:match_id])
         goal = match.goals.build(goal_params)
 
-        if goal.team_id.present? && ![match.home_team_id, match.away_team_id].include?(goal.team_id)
-          return render json: { errors: { team: ["must be one of this match's teams"] } }, status: :unprocessable_entity
+        if goal.team_id.present? && ![ match.home_team_id, match.away_team_id ].include?(goal.team_id)
+          return render json: { errors: { team: [ "must be one of this match's teams" ] } }, status: :unprocessable_entity
         end
 
         if goal.save
