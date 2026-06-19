@@ -68,27 +68,12 @@ export default function VenueShowPage() {
   const [venue, setVenue]       = useState(null)
   const [loading, setLoading]   = useState(true)
   const [notFound, setNotFound] = useState(false)
-  const [venueImg, setVenueImg] = useState(null)
+  const venueImg = venue?.image_url || null
 
   useEffect(() => {
     fetch(`/api/v1/venues/${slug}`)
       .then(r => { if (!r.ok) throw new Error("not found"); return r.json() })
-      .then(data => { setVenue(data); return data })
-      .then(data => {
-        // Progressively load the stadium photo using any available match external_id
-        const sample = data.matches?.find(m => m.external_id)
-        if (!sample) return
-        fetch(`/api/v1/matches/${sample.external_id}`)
-          .then(r => r.ok ? r.json() : null)
-          .then(detail => {
-            const venueId = detail?.fixture?.fixture?.venue?.id
-            if (!venueId) return
-            return fetch(`/api/v1/venue_detail/${venueId}`)
-              .then(r => r.ok ? r.json() : null)
-              .then(d => { if (d?.image) setVenueImg(d.image) })
-          })
-          .catch(() => {})
-      })
+      .then(setVenue)
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
   }, [slug])

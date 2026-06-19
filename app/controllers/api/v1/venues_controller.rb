@@ -38,14 +38,41 @@ module Api
 
         wc = Competition.find_by(code: "WC")
         matches_by_venue = wc ? venue_matches_for(wc) : {}
+        image_url = wc ? resolve_venue_image(venue[:name], wc) : nil
 
-        render json: venue.merge(matches: serialize_venue_matches(matches_by_venue, venue[:name]))
+        render json: venue.merge(
+          matches:   serialize_venue_matches(matches_by_venue, venue[:name]),
+          image_url: image_url
+        )
       end
 
       private
 
       def slugify(name)
         name.downcase.gsub(/[^a-z0-9]+/, "-").gsub(/\A-|-\z/, "")
+      end
+
+      # Resolves the API-Football venue photo URL for a named venue.
+      # Cached 7 days — photo URLs and venue IDs are stable.
+      def resolve_venue_image(venue_name, competition)
+        Rails.cache.fetch("venue_img_v1_#{venue_name.parameterize}", expires_in: 7.days) do
+          match = Match.where(competition: competition)
+                       .where("venue LIKE ?", "#{venue_name}%")
+                       .where.not(external_id: nil)
+                       .order(Arel.sql("CASE WHEN status = 'finished' THEN 0 ELSE 1 END"), :kickoff_at)
+                       .first
+          next nil unless match
+
+          client    = LiveScoresClient.new
+          venue_id  = client.fixture_venue_id(match.external_id)
+          next nil unless venue_id
+
+          detail = client.venue_detail(venue_id)
+          detail&.dig(:image)
+        end
+      rescue => e
+        Rails.logger.warn("[VenuesController] resolve_venue_image #{venue_name}: #{e.message}")
+        nil
       end
 
       def venue_matches_for(competition)

@@ -477,6 +477,18 @@ class LiveScoresClient
 
   # ── Venue detail (photo, capacity, surface) ────────────────────────────────
 
+  # Lightweight single-fixture fetch just to resolve the venue ID.
+  # Cached 7 days — venue IDs don't change.
+  def fixture_venue_id(fixture_id)
+    Rails.cache.fetch("fixture_venue_id_v1_#{fixture_id}", expires_in: 7.days) do
+      raw = get("fixtures", id: fixture_id)
+      raw.dig("response", 0, "fixture", "venue", "id")
+    end
+  rescue => e
+    Rails.logger.warn("[LiveScoresClient] fixture_venue_id(#{fixture_id}): #{e.message}")
+    nil
+  end
+
   def venue_detail(venue_id)
     return nil unless venue_id.present?
     Rails.cache.fetch("venue_detail_v1_#{venue_id}", expires_in: 24.hours) do
