@@ -33,7 +33,14 @@ module Api
       end
 
       def show
-        venue = VENUES.find { |v| slugify(v[:name]) == params[:slug] }
+        slug = params[:slug]
+        # API-Football sometimes appends the city to the venue name (e.g. "Lumen Field, Seattle"),
+        # so the incoming slug may be longer than the VENUES constant slug. Accept any slug that
+        # starts with the canonical slug ("lumen-field-seattle" → matches "lumen-field").
+        venue = VENUES.find { |v|
+          vs = slugify(v[:name])
+          slug == vs || slug.start_with?("#{vs}-") || vs.start_with?("#{slug}-")
+        }
         return render json: { error: "Not found" }, status: :not_found unless venue
 
         wc = Competition.find_by(code: "WC")
