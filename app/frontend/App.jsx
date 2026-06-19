@@ -33,6 +33,7 @@ const MundialPage     = lazy(() => import("./pages/MundialPage"))
 const TeamsPage       = lazy(() => import("./pages/mundial/TeamsPage"))
 const SchedulePage    = lazy(() => import("./pages/mundial/SchedulePage"))
 const VenuesPage      = lazy(() => import("./pages/mundial/VenuesPage"))
+const VenueShowPage   = lazy(() => import("./pages/mundial/VenueShowPage"))
 const ScorersPage     = lazy(() => import("./pages/mundial/ScorersPage"))
 const AllLeaguesPage  = lazy(() => import("./pages/AllLeaguesPage"))
 const LeagueDetailPage = lazy(() => import("./pages/LeagueDetailPage"))
@@ -129,7 +130,10 @@ export default function App() {
                 <Route index element={<Navigate to="/mundial/teams" replace />} />
                 <Route path="teams"    element={<TeamsPage />} />
                 <Route path="schedule" element={<SchedulePage />} />
-                <Route path="venues"   element={<VenuesPage />} />
+                <Route path="venues">
+                  <Route index element={<VenuesPage />} />
+                  <Route path=":slug" element={<VenueShowPage />} />
+                </Route>
                 <Route path="scorers"  element={<ScorersPage />} />
               </Route>
 

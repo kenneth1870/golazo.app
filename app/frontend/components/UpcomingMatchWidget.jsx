@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { formatFull } from "../hooks/useLocalTime"
 
@@ -38,7 +39,15 @@ export default function UpcomingMatchWidget({ match, onClick }) {
         <h4>{match.round || match.group_stage}</h4>
         <p>
           <span className="d-block">{kickoff}</span>
-          <strong className="text-primary">{match.venue}</strong>
+          {match.venue
+            ? <Link
+                to={`/mundial/venues/${match.venue.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`}
+                style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 700 }}
+              >
+                📍 {match.venue}
+              </Link>
+            : null
+          }
         </p>
       </div>
     </div>

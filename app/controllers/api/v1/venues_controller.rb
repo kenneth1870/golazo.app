@@ -25,36 +25,56 @@ module Api
 
       def index
         wc = Competition.find_by(code: "WC")
-        matches_by_venue = if wc
-          Match.where(competition: wc)
-               .where.not(venue: [ nil, "" ])
-               .includes(:home_team, :away_team)
-               .order(:kickoff_at)
-               .group_by(&:venue)
-        else
-          {}
-        end
+        matches_by_venue = wc ? venue_matches_for(wc) : {}
 
         render json: VENUES.map { |v|
-          venue_matches = matches_by_venue.select { |k, _| k.to_s.start_with?(v[:name]) }
-                                          .values.flatten
-          v.merge(
-            matches: venue_matches.map { |m|
-              {
-                id:         m.id,
-                external_id: m.external_id,
-                kickoff_at:  m.kickoff_at,
-                status:      m.status,
-                round:       m.round,
-                group_stage: m.group_stage,
-                home_score:  m.home_score,
-                away_score:  m.away_score,
-                home_team: { name: m.home_team.name, flag_url: m.home_team.flag_url, code: m.home_team.code },
-                away_team: { name: m.away_team.name, flag_url: m.away_team.flag_url, code: m.away_team.code }
-              }
-            }
-          )
+          v.merge(matches: serialize_venue_matches(matches_by_venue, v[:name]))
         }
+      end
+
+      def show
+        venue = VENUES.find { |v| slugify(v[:name]) == params[:slug] }
+        return render json: { error: "Not found" }, status: :not_found unless venue
+
+        wc = Competition.find_by(code: "WC")
+        matches_by_venue = wc ? venue_matches_for(wc) : {}
+
+        render json: venue.merge(matches: serialize_venue_matches(matches_by_venue, venue[:name]))
+      end
+
+      private
+
+      def slugify(name)
+        name.downcase.gsub(/[^a-z0-9]+/, "-").gsub(/\A-|-\z/, "")
+      end
+
+      def venue_matches_for(competition)
+        Match.where(competition: competition)
+             .where.not(venue: [ nil, "" ])
+             .includes(:home_team, :away_team)
+             .order(:kickoff_at)
+             .group_by(&:venue)
+      end
+
+      def serialize_venue_matches(matches_by_venue, venue_name)
+        matches_by_venue
+          .select { |k, _| k.to_s.start_with?(venue_name) }
+          .values.flatten
+          .map { |m|
+            {
+              id:          m.id,
+              external_id: m.external_id,
+              kickoff_at:  m.kickoff_at,
+              status:      m.status,
+              minute:      m.minute,
+              round:       m.round,
+              group_stage: m.group_stage,
+              home_score:  m.home_score,
+              away_score:  m.away_score,
+              home_team: { name: m.home_team.name, flag_url: m.home_team.flag_url, code: m.home_team.code },
+              away_team: { name: m.away_team.name, flag_url: m.away_team.flag_url, code: m.away_team.code }
+            }
+          }
       end
     end
   end

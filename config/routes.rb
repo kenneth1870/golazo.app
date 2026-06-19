@@ -53,6 +53,7 @@ Rails.application.routes.draw do
       get "fixture_ratings/:fixture_id",  to: "fixture_ratings#show"
       get "fixture_injuries/:fixture_id", to: "fixture_injuries#show"
       get "venue_detail/:id",             to: "venue_detail#show"
+      get "venues/:slug", to: "venues#show"
       get "venues",       to: "venues#index"
       get "all_leagues",  to: "all_leagues#index"
       get "all_leagues/live", to: "all_leagues#live"

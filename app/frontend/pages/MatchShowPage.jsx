@@ -620,11 +620,15 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
         <div className="scoreboard__footer">
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {fixture?.fixture?.venue?.name && (
-              <span className="scoreboard__venue">
+              <Link
+                to={`/mundial/venues/${fixture.fixture.venue.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`}
+                className="scoreboard__venue"
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
                 📍 {fixture.fixture.venue.name}
                 {fixture.fixture.venue.city ? `, ${fixture.fixture.venue.city}` : ""}
                 {venueCap ? <span style={{ opacity: .5, marginLeft: 6 }}>· 🏟️ {venueCap.toLocaleString()}</span> : null}
-              </span>
+              </Link>
             )}
             {fixture?.fixture?.referee && (
               <span className="scoreboard__venue" style={{ fontSize: ".68rem" }}>
