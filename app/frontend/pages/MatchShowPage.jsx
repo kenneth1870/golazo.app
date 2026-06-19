@@ -633,10 +633,10 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
             )}
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            {isLive && notifSupported && (
+            {(isLive || isNS) && notifSupported && (
               <button
                 onClick={onNotif}
-                title={notifEnabled ? "Notifications on" : "Get goal alerts"}
+                title={notifEnabled ? "Desactivar alertas" : "Activar alertas de gol"}
                 style={{
                   background: notifEnabled ? "rgba(16,185,129,.15)" : "rgba(255,255,255,.08)",
                   border: notifEnabled ? "1px solid rgba(16,185,129,.4)" : "1px solid rgba(255,255,255,.15)",
@@ -645,7 +645,7 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
                   fontSize: ".72rem", fontWeight: 600, cursor: "pointer",
                 }}
               >
-                {notifEnabled ? "🔔 On" : "🔔 Alerts"}
+                {notifEnabled ? "🔔 On" : "🔕 Off"}
               </button>
             )}
             {isNS && fixture?.fixture?.date && (
@@ -2084,7 +2084,7 @@ export default function MatchShowPage() {
   }, [loading, statusShort]) // eslint-disable-line
 
   // usePushNotifications must be called unconditionally (Rules of Hooks) — before any early return.
-  const notifSupported = typeof Notification !== "undefined"
+  const notifSupported = typeof Notification !== "undefined" && "PushManager" in window
   const { subscribed: pushSubscribed, addTeams, teamsSubscribed } = usePushNotifications()
   const matchTeamsNotified = teamsSubscribed([homeTeamRaw, awayTeamRaw].filter(Boolean))
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, memo, useCallback } from "react"
+import { useEffect, useRef, useState, memo, useCallback, Fragment } from "react"
 import { Link, NavLink, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import LanguageSwitcher from "./LanguageSwitcher"
@@ -36,36 +36,93 @@ function ThemeToggle() {
   )
 }
 
-// ─── Notification quick-toggle (used in mobile drawer) ───────────────────────
-function NotifQuickItem() {
+// ─── Notification toggle — shared between mobile drawer and desktop nav ──────
+export function NotifToggle({ variant = "drawer" }) {
   const { supported, subscribed, loading, subscribe, unsubscribe, needsIosInstall } = usePushNotifications()
+  const [iosHint, setIosHint] = useState(false)
 
+  // Hide completely on browsers that can never support push (iOS Chrome, Firefox on iOS)
   if (!supported && !needsIosInstall) return null
 
   async function handleClick() {
-    if (needsIosInstall) {
-      alert("Para recibir notificaciones, agrega Golazo a tu pantalla de inicio primero.")
-      return
-    }
-    if (subscribed) {
-      await unsubscribe()
-    } else {
-      await subscribe([])
-    }
+    if (needsIosInstall) { setIosHint(true); return }
+    // Carry saved team preferences so re-subscribe keeps the same scope
+    const saved = (() => { try { return JSON.parse(localStorage.getItem("push_sub_teams") || "[]") } catch { return [] } })()
+    if (subscribed) await unsubscribe()
+    else await subscribe(saved)
+  }
+
+  if (variant === "desktop") {
+    return (
+      <>
+        <button
+          onClick={handleClick}
+          disabled={loading}
+          title={subscribed ? "Desactivar notificaciones" : needsIosInstall ? "Instala la app para recibir notificaciones" : "Activar notificaciones de goles"}
+          style={{
+            background: subscribed ? "rgba(16,185,129,.15)" : "none",
+            border: subscribed ? "1px solid rgba(16,185,129,.4)" : "1px solid var(--border)",
+            borderRadius: 8, width: 32, height: 32,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", fontSize: "0.9rem", color: subscribed ? "#10b981" : "var(--muted)",
+            transition: "border-color .2s, color .2s", flexShrink: 0, opacity: loading ? 0.5 : 1,
+          }}
+        >
+          {subscribed ? "🔔" : "🔕"}
+        </button>
+        {iosHint && <IosInstallHint onClose={() => setIosHint(false)} />}
+      </>
+    )
   }
 
   return (
-    <button
-      onClick={handleClick}
-      disabled={loading}
-      className="mobile-quick-item"
-      style={{ background: subscribed ? "rgba(238,30,70,.12)" : undefined, borderColor: subscribed ? "var(--accent)" : undefined, color: subscribed ? "#fff" : undefined, cursor: "pointer", border: "1px solid var(--border)" }}
-    >
-      <span className="mobile-quick-icon">{subscribed ? "🔔" : "🔕"}</span>
-      <span>{subscribed ? "Notif. On" : "Notif. Off"}</span>
-    </button>
+    <>
+      <button
+        onClick={handleClick}
+        disabled={loading}
+        className="mobile-quick-item"
+        style={{ background: subscribed ? "rgba(238,30,70,.12)" : undefined, borderColor: subscribed ? "var(--accent)" : undefined, color: subscribed ? "#fff" : undefined, cursor: "pointer", border: "1px solid var(--border)" }}
+      >
+        <span className="mobile-quick-icon">{subscribed ? "🔔" : "🔕"}</span>
+        <span>{subscribed ? "Notif. On" : needsIosInstall ? "Instalar app" : "Notif. Off"}</span>
+      </button>
+      {iosHint && <IosInstallHint onClose={() => setIosHint(false)} />}
+    </>
   )
 }
+
+// ─── iOS install hint modal ───────────────────────────────────────────────────
+function IosInstallHint({ onClose }) {
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", zIndex: 4000, backdropFilter: "blur(4px)" }} />
+      <div style={{
+        position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
+        width: "min(360px, 90vw)", zIndex: 4001,
+        background: "var(--surface)", border: "1px solid var(--border)",
+        borderRadius: 16, padding: "20px 20px 16px", boxShadow: "0 16px 48px rgba(0,0,0,.6)",
+      }}>
+        <div style={{ fontSize: "1.8rem", textAlign: "center", marginBottom: 10 }}>📲</div>
+        <div style={{ fontWeight: 800, color: "#fff", fontSize: "0.95rem", textAlign: "center", marginBottom: 8 }}>
+          Añade Golazo a tu inicio
+        </div>
+        <div style={{ fontSize: "0.8rem", color: "var(--muted)", textAlign: "center", lineHeight: 1.5, marginBottom: 16 }}>
+          Para recibir alertas de goles en iOS, primero instala la app:
+          toca <strong style={{ color: "#fff" }}>Compartir</strong> (□↑) y luego{" "}
+          <strong style={{ color: "#fff" }}>Añadir a pantalla de inicio</strong>.
+        </div>
+        <button
+          onClick={onClose}
+          style={{ width: "100%", background: "var(--accent)", border: "none", borderRadius: 10, padding: "10px", color: "#fff", fontWeight: 700, fontSize: "0.88rem", cursor: "pointer" }}
+        >
+          Entendido
+        </button>
+      </div>
+    </>
+  )
+}
+
+function NotifQuickItem() { return <NotifToggle variant="drawer" /> }
 
 // ─── Icons ────────────────────────────────────────────
 const SearchIcon = () => (
@@ -385,6 +442,7 @@ export default function Navbar() {
               </button>
 
               <div style={{ marginLeft: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                <NotifToggle variant="desktop" />
                 <ThemeToggle />
                 <LanguageSwitcher />
               </div>
