@@ -84,4 +84,15 @@ Rails.application.configure do
   ]
   # Allow health checks without a Host header (load-balancer / uptime probes).
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+  # Render terminates TLS at its proxy, so the WebSocket handshake Origin header
+  # arrives as https://. Without an explicit allowlist Rails' forgery-protection
+  # check can reject the upgrade and return 403, causing the browser to log
+  # "WebSocket connection failed". Allow both the www and apex variants.
+  config.action_cable.allowed_request_origins = [
+    "https://www.golazoapp.live",
+    "https://golazoapp.live",
+    /\Ahttps:\/\/golazo.*\.onrender\.com\z/
+  ]
+  config.action_cable.url = "wss://www.golazoapp.live/cable"
 end
