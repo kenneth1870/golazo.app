@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react"
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { useLocale } from "./hooks/useLocale"
 import { useAnalytics } from "./hooks/useAnalytics"
+import { useKeepAlive } from "./hooks/useKeepAlive"
 import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
 import BottomNav from "./components/BottomNav"
@@ -68,6 +69,7 @@ export default function App() {
   const location = useLocation()
   useLocale() // auto-detect language from IP / device on every session
   useAnalytics() // fire-and-forget usage heartbeat for the admin device panel
+  useKeepAlive() // ping /up every 4 min to prevent Render free-plan cold starts
   const { show: showOnboarding, dismiss: dismissOnboarding } = useOnboarding()
   const { favoriteTeams } = useFavorites()
   const favTeamName = favoriteTeams[0]?.name ?? null

@@ -702,7 +702,7 @@ export default function TodayPage() {
                   fontSize: "0.72rem", fontWeight: 800, color: "#ee1e46",
                   textTransform: "uppercase", letterSpacing: 1,
                 }}>
-                  <img src="https://crests.football-data.org/WC.png" alt="" style={{ width: 18, height: 18, objectFit: "contain" }} onError={e => (e.target.style.display = "none")} />
+                  <img src="/images/SOCCER.png" alt="" style={{ width: 18, height: 18, objectFit: "contain" }} onError={e => (e.target.style.display = "none")} />
                   FIFA World Cup 2026 — {t("home.upcomingMatches")}
                 </div>
                 <div className="widget-next-match">
