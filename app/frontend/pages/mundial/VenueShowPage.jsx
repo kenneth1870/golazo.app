@@ -68,11 +68,27 @@ export default function VenueShowPage() {
   const [venue, setVenue]       = useState(null)
   const [loading, setLoading]   = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [venueImg, setVenueImg] = useState(null)
 
   useEffect(() => {
     fetch(`/api/v1/venues/${slug}`)
       .then(r => { if (!r.ok) throw new Error("not found"); return r.json() })
-      .then(setVenue)
+      .then(data => { setVenue(data); return data })
+      .then(data => {
+        // Progressively load the stadium photo using any available match external_id
+        const sample = data.matches?.find(m => m.external_id)
+        if (!sample) return
+        fetch(`/api/v1/matches/${sample.external_id}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(detail => {
+            const venueId = detail?.fixture?.fixture?.venue?.id
+            if (!venueId) return
+            return fetch(`/api/v1/venue_detail/${venueId}`)
+              .then(r => r.ok ? r.json() : null)
+              .then(d => { if (d?.image) setVenueImg(d.image) })
+          })
+          .catch(() => {})
+      })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
   }, [slug])
@@ -108,151 +124,162 @@ export default function VenueShowPage() {
   const isFinal     = venue.group?.toLowerCase().includes("final")
   const isOpening   = venue.group?.toLowerCase().includes("opening")
 
-  return (
-    <div className="site-section">
-      <div className="container">
-        {/* Back */}
-        <div style={{ marginBottom: 20 }}>
-          <button
-            onClick={() => navigate("/mundial/venues")}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--accent)",
-              cursor: "pointer",
-              fontSize: "0.85rem",
-              padding: 0,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            ← {t("mundial.venuesTitle")}
-          </button>
-        </div>
+  const COUNTRY_GRADIENT = {
+    "USA":    "linear-gradient(160deg, #002868 0%, #1a1a2e 40%, #6b0f1a 100%)",
+    "Canada": "linear-gradient(160deg, #8b0000 0%, #1a1a2e 50%, #8b0000 100%)",
+    "Mexico": "linear-gradient(160deg, #006847 0%, #1a1a2e 50%, #8b0000 100%)",
+  }
+  const fallbackGradient = COUNTRY_GRADIENT[venue.country] || "linear-gradient(160deg, #1a1a2e 0%, #0d0d1a 100%)"
 
-        {/* Header card */}
+  return (
+    <div>
+      {/* ── Full-bleed stadium hero ── */}
+      <div style={{ position: "relative", minHeight: 300, overflow: "hidden" }}>
+        {/* Background: photo or country gradient */}
         <div
-          className="venue-card"
           style={{
-            marginBottom: 24,
-            padding: "28px 24px",
-            background: "linear-gradient(135deg, var(--card-bg) 0%, rgba(238,30,70,0.08) 100%)",
-            borderLeft: "4px solid var(--accent)",
+            position: "absolute",
+            inset: 0,
+            background: fallbackGradient,
           }}
-        >
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-            <div>
-              <div style={{ fontSize: "2rem", marginBottom: 6 }}>🏟️</div>
-              <h1 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: 4, color: "var(--text)" }}>
-                {venue.name}
-              </h1>
-              <div style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
-                {flag} {venue.city} · {venue.country}
-              </div>
-            </div>
-            {(isFinal || isOpening) && (
-              <span style={{
-                background: "var(--accent)",
+        />
+        {venueImg && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundImage: `url(${venueImg})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center 30%",
+              opacity: 1,
+              animation: "venueImgFadeIn 0.6s ease",
+            }}
+          />
+        )}
+
+        {/* Dark gradient overlay — heavier at bottom for legibility */}
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(to top, rgba(6,8,16,0.97) 0%, rgba(6,8,16,0.55) 55%, rgba(6,8,16,0.25) 100%)",
+        }} />
+
+        {/* ── Content inside hero ── */}
+        <div style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 300, padding: "20px 24px 28px" }}>
+          {/* Top row: back + badge */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <button
+              onClick={() => navigate("/mundial/venues")}
+              style={{
+                background: "rgba(255,255,255,0.12)",
+                border: "1px solid rgba(255,255,255,0.2)",
                 color: "#fff",
-                fontSize: "0.7rem",
-                fontWeight: 700,
-                padding: "4px 10px",
+                cursor: "pointer",
+                fontSize: "0.8rem",
+                padding: "6px 14px",
                 borderRadius: 20,
-                alignSelf: "flex-start",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              ← {t("mundial.venuesTitle")}
+            </button>
+            {venue.group && (
+              <span style={{
+                background: (isFinal || isOpening) ? "var(--accent)" : "rgba(255,255,255,0.15)",
+                border: "1px solid rgba(255,255,255,0.25)",
+                color: "#fff",
+                fontSize: "0.68rem",
+                fontWeight: 700,
+                padding: "5px 12px",
+                borderRadius: 20,
+                backdropFilter: "blur(8px)",
                 textTransform: "uppercase",
-                letterSpacing: "0.05em",
+                letterSpacing: "0.06em",
               }}>
                 {venue.group}
               </span>
             )}
           </div>
 
-          {/* Stats row */}
-          <div style={{ display: "flex", gap: 24, marginTop: 20, flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontSize: "0.68rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
-                {t("mundial.capacity")}
-              </div>
-              <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--text)" }}>
-                {venue.capacity?.toLocaleString()}
-              </div>
+          {/* Bottom: venue identity + stats */}
+          <div>
+            <div style={{ marginBottom: 4, fontSize: "1.5rem" }}>🏟️</div>
+            <h1 style={{ fontSize: "clamp(1.4rem, 5vw, 2.2rem)", fontWeight: 900, color: "#fff", margin: "0 0 6px", lineHeight: 1.1 }}>
+              {venue.name}
+            </h1>
+            <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.9rem", marginBottom: 20 }}>
+              {flag} {venue.city} · {venue.country}
             </div>
-            {venue.matches?.length > 0 && (
-              <div>
-                <div style={{ fontSize: "0.68rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
-                  Partidos
-                </div>
-                <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--text)" }}>
-                  {venue.matches.length}
-                </div>
-              </div>
-            )}
-            {played > 0 && (
-              <div>
-                <div style={{ fontSize: "0.68rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
-                  Jugados
-                </div>
-                <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#10b981" }}>
-                  {played}
-                </div>
-              </div>
-            )}
-            {upcoming > 0 && (
-              <div>
-                <div style={{ fontSize: "0.68rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
-                  Próximos
-                </div>
-                <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "var(--accent)" }}>
-                  {upcoming}
-                </div>
-              </div>
-            )}
-            {!isFinal && !isOpening && venue.group && (
-              <div>
-                <div style={{ fontSize: "0.68rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 2 }}>
-                  Fase
-                </div>
-                <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--text)" }}>
-                  {venue.group}
-                </div>
-              </div>
-            )}
+
+            {/* Stats chips */}
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <StatChip label={t("mundial.capacity")} value={venue.capacity?.toLocaleString()} />
+              {venue.matches?.length > 0 && <StatChip label="Partidos" value={venue.matches.length} />}
+              {played > 0 && <StatChip label="Jugados" value={played} color="#10b981" />}
+              {upcoming > 0 && <StatChip label="Próximos" value={upcoming} color="var(--accent)" />}
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Live matches first */}
-        {liveMatches.length > 0 && (
-          <div style={{ marginBottom: 24 }}>
-            <div className="title-section">
-              <h2 className="heading" style={{ fontSize: "1rem" }}>
-                <span className="match-status-live" style={{ marginRight: 8 }}><span className="live-dot" />EN VIVO</span>
-              </h2>
+      {/* ── Matches ── */}
+      <div className="site-section">
+        <div className="container">
+          {liveMatches.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <div className="title-section">
+                <h2 className="heading" style={{ fontSize: "1rem" }}>
+                  <span className="match-status-live" style={{ marginRight: 8 }}><span className="live-dot" />EN VIVO</span>
+                </h2>
+              </div>
+              <div className="match-section">
+                {liveMatches.map(m => <MatchRow key={m.id} match={m} />)}
+              </div>
             </div>
-            <div className="match-section">
-              {liveMatches.map(m => <MatchRow key={m.id} match={m} />)}
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* All matches */}
-        {venue.matches?.length > 0 ? (
-          <div>
-            <div className="title-section">
-              <h2 className="heading" style={{ fontSize: "1rem" }}>Partidos en este estadio</h2>
+          {venue.matches?.length > 0 ? (
+            <div>
+              <div className="title-section">
+                <h2 className="heading" style={{ fontSize: "1rem" }}>Partidos en este estadio</h2>
+              </div>
+              <div className="match-section">
+                {venue.matches
+                  .filter(m => m.status !== "live")
+                  .map(m => <MatchRow key={m.id} match={m} />)}
+              </div>
             </div>
-            <div className="match-section">
-              {venue.matches
-                .filter(m => m.status !== "live")
-                .map(m => <MatchRow key={m.id} match={m} />)}
+          ) : (
+            <div style={{ textAlign: "center", padding: "32px 16px", color: "var(--muted)" }}>
+              <div style={{ fontSize: "2rem", marginBottom: 8 }}>📅</div>
+              <p>No hay partidos asignados a este estadio aún.</p>
             </div>
-          </div>
-        ) : (
-          <div style={{ textAlign: "center", padding: "32px 16px", color: "var(--muted)" }}>
-            <div style={{ fontSize: "2rem", marginBottom: 8 }}>📅</div>
-            <p>No hay partidos asignados a este estadio aún.</p>
-          </div>
-        )}
+          )}
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes venueImgFadeIn { from { opacity: 0 } to { opacity: 1 } }
+      `}</style>
+    </div>
+  )
+}
+
+function StatChip({ label, value, color }) {
+  return (
+    <div style={{
+      background: "rgba(255,255,255,0.1)",
+      border: "1px solid rgba(255,255,255,0.18)",
+      backdropFilter: "blur(8px)",
+      borderRadius: 10,
+      padding: "8px 14px",
+      minWidth: 72,
+    }}>
+      <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: "1.1rem", fontWeight: 800, color: color || "#fff" }}>
+        {value}
       </div>
     </div>
   )
