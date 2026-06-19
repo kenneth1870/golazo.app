@@ -668,6 +668,29 @@ class WorldCupSync
       end
       RecalculateStandingsJob.perform_later
       bust_scorers_cache(match)
+
+      # Bust the today-api cache so the next refetch (triggered by the
+      # standings-channel broadcast above) sees the finished status, not a
+      # stale 90s snapshot that still calls the match "live".
+      kickoff_date = match.kickoff_at&.utc&.to_date
+      if kickoff_date
+        [ kickoff_date, kickoff_date + 1, kickoff_date - 1 ].each do |d|
+          Rails.cache.delete("today_api_#{d.iso8601}")
+        end
+      end
+
+      # Immediately push "finished" to the live-scores channel so the LIVE
+      # panel on the home page removes the match without waiting for the 60s poll.
+      ActionCable.server.broadcast("live_scores", {
+        type:         "live_score_update",
+        match_id:     match.id,
+        external_id:  match.external_id,
+        home_score:   home_score.to_i,
+        away_score:   away_score.to_i,
+        status:       "finished",
+        minute:       nil,
+        minute_extra: nil
+      })
     end
 
     # Grade score predictions after match finishes

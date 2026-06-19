@@ -98,15 +98,27 @@ function unsubscribe(key, setState) {
 
 // Patch a live score update directly into every cached "live" filter so the
 // home-page LIVE panel reflects goals without waiting for the 60s poll.
+// When status is "finished", the match is removed from the live list immediately.
 export function patchLiveScore(d) {
   for (const [key, entry] of cache) {
     if (!key.startsWith("live|")) continue
     if (!entry.data?.length) continue
+
+    const isHit = (m) =>
+      (d.external_id != null && m.external_id === d.external_id) ||
+      (d.match_id    != null && m.id           === d.match_id)
+
+    if (d.status === "finished") {
+      if (!entry.data.some(isHit)) continue
+      const next = entry.data.filter(m => !isHit(m))
+      cache.set(key, { ...entry, data: next })
+      notify(key, { data: next, loading: false, error: null })
+      continue
+    }
+
     let patched = false
     const next = entry.data.map(m => {
-      const hit = (d.external_id != null && m.external_id === d.external_id) ||
-                  (d.match_id   != null && m.id            === d.match_id)
-      if (!hit) return m
+      if (!isHit(m)) return m
       if (m.home_score === d.home_score && m.away_score === d.away_score &&
           m.status === d.status && m.minute === d.minute) return m
       patched = true
