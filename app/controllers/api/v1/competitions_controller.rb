@@ -9,7 +9,7 @@ module Api
       end
 
       def show
-        competition = Competition.includes(matches: [:home_team, :away_team]).find_by!(code: params[:code])
+        competition = Competition.includes(matches: [ :home_team, :away_team ]).find_by!(code: params[:code])
         render json: competition.as_json(
           only: %i[id name code logo country competition_type],
           include: {
