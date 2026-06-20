@@ -39,16 +39,16 @@ module Api
         # starts with the canonical slug ("lumen-field-seattle" → matches "lumen-field").
         venue = VENUES.find { |v|
           vs = slugify(v[:name])
-          slug == vs || slug.start_with?("#{vs}-") || vs.start_with?("#{slug}-")
+          slug == vs || slug.start_with?("#{vs}-")
         }
         return render json: { error: "Not found" }, status: :not_found unless venue
 
         wc = Competition.find_by(code: "WC")
-        matches_by_venue = wc ? venue_matches_for(wc) : {}
+        matches   = wc ? venue_matches_scoped(wc, venue[:name]) : []
         image_url = wc ? resolve_venue_image(venue[:name], wc) : nil
 
         render json: venue.merge(
-          matches:   serialize_venue_matches(matches_by_venue, venue[:name]),
+          matches:   serialize_match_list(matches),
           image_url: image_url
         )
       end
@@ -82,6 +82,7 @@ module Api
         nil
       end
 
+      # Used by #index — loads all venues' matches in one query and groups in Ruby.
       def venue_matches_for(competition)
         Match.where(competition: competition)
              .where.not(venue: [ nil, "" ])
@@ -90,25 +91,37 @@ module Api
              .group_by(&:venue)
       end
 
+      # Used by #show — SQL-filtered to just the requested venue.
+      def venue_matches_scoped(competition, venue_name)
+        Match.where(competition: competition)
+             .where("venue LIKE ?", "#{venue_name}%")
+             .includes(:home_team, :away_team)
+             .order(:kickoff_at)
+      end
+
       def serialize_venue_matches(matches_by_venue, venue_name)
         matches_by_venue
           .select { |k, _| k.to_s.start_with?(venue_name) }
           .values.flatten
-          .map { |m|
-            {
-              id:          m.id,
-              external_id: m.external_id,
-              kickoff_at:  m.kickoff_at,
-              status:      m.status,
-              minute:      m.minute,
-              round:       m.round,
-              group_stage: m.group_stage,
-              home_score:  m.home_score,
-              away_score:  m.away_score,
-              home_team: { name: m.home_team.name, flag_url: m.home_team.flag_url, code: m.home_team.code },
-              away_team: { name: m.away_team.name, flag_url: m.away_team.flag_url, code: m.away_team.code }
-            }
+          .then { |matches| serialize_match_list(matches) }
+      end
+
+      def serialize_match_list(matches)
+        matches.map { |m|
+          {
+            id:          m.id,
+            external_id: m.external_id,
+            kickoff_at:  m.kickoff_at,
+            status:      m.status,
+            minute:      m.minute,
+            round:       m.round,
+            group_stage: m.group_stage,
+            home_score:  m.home_score,
+            away_score:  m.away_score,
+            home_team: { name: m.home_team.name, flag_url: m.home_team.flag_url, code: m.home_team.code },
+            away_team: { name: m.away_team.name, flag_url: m.away_team.flag_url, code: m.away_team.code }
           }
+        }
       end
     end
   end

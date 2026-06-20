@@ -91,8 +91,7 @@ Rails.application.configure do
   # "WebSocket connection failed". Allow both the www and apex variants.
   config.action_cable.allowed_request_origins = [
     "https://www.golazoapp.live",
-    "https://golazoapp.live",
-    /\Ahttps:\/\/golazo.*\.onrender\.com\z/
+    "https://golazoapp.live"
   ]
   config.action_cable.url = "wss://www.golazoapp.live/cable"
 end

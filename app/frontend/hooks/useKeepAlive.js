@@ -8,6 +8,12 @@ export function useKeepAlive() {
   useEffect(() => {
     const ping = () => { if (!document.hidden) fetch("/up").catch(() => {}) }
     const iv = setInterval(ping, INTERVAL_MS)
-    return () => clearInterval(iv)
+    // Fire immediately when the tab comes back into focus so the server is
+    // warm if the user returns after a long backgrounded period.
+    document.addEventListener("visibilitychange", ping)
+    return () => {
+      clearInterval(iv)
+      document.removeEventListener("visibilitychange", ping)
+    }
   }, [])
 }
