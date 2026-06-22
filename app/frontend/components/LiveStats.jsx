@@ -46,7 +46,7 @@ export default function LiveStats({ stats, homeTeam, awayTeam }) {
         <div className="d-flex justify-content-between mb-3" style={{ padding: "0 8px" }}>
           <span style={{ color: "#ee1e46", fontWeight: 700 }}>{homeTeam?.code}</span>
           <span style={{ color: "gray", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: 1 }}>vs</span>
-          <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 700 }}>{awayTeam?.code}</span>
+          <span style={{ color: "var(--muted)", fontWeight: 700 }}>{awayTeam?.code}</span>
         </div>
         {STAT_LABELS.map(({ key, label, isPercent }) => (
           <StatRow

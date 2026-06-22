@@ -182,10 +182,10 @@ export default function LeagueDetailPage() {
                 onClick={() => toggleFavorite({ type: "competition", id: competition.id ?? code, name: competition.name, code: competition.code ?? code, flag_url: competition.logo })}
                 title={isFavorite("competition", competition.id ?? code) ? "Unfollow league" : "Follow league"}
                 style={{
-                  background: isFavorite("competition", competition.id ?? code) ? "rgba(238,30,70,.15)" : "rgba(255,255,255,.1)",
-                  border: isFavorite("competition", competition.id ?? code) ? "1px solid rgba(238,30,70,.4)" : "1px solid rgba(255,255,255,.2)",
+                  background: isFavorite("competition", competition.id ?? code) ? "rgba(238,30,70,.15)" : "var(--surface2)",
+                  border: isFavorite("competition", competition.id ?? code) ? "1px solid rgba(238,30,70,.4)" : "1px solid var(--border)",
                   borderRadius: 20, padding: "6px 16px",
-                  color: isFavorite("competition", competition.id ?? code) ? "#ee1e46" : "rgba(255,255,255,.6)",
+                  color: isFavorite("competition", competition.id ?? code) ? "#ee1e46" : "var(--muted)",
                   fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", flexShrink: 0,
                 }}
               >

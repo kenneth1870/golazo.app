@@ -94,7 +94,7 @@ function CompetitionGroup({ competition, matches, onMatchSelect }) {
         )}
         <h3 style={{ margin: 0 }}>{translateLeague(competition.name, i18n.language)}</h3>
         {competition.country && (
-          <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem", marginLeft: "auto" }}>
+          <span style={{ color: "var(--muted)", fontSize: "0.75rem", marginLeft: "auto" }}>
             {competition.country}
           </span>
         )}

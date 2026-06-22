@@ -118,7 +118,7 @@ export default function ComparePage() {
         {!friendDeviceId && (
           <div className="widget-next-match" style={{ marginBottom: 20 }}>
             <div className="widget-body">
-              <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,.75)", margin: "0 0 12px" }}>
+              <p style={{ fontSize: "0.85rem", color: "var(--text)", margin: "0 0 12px" }}>
                 {t("compare.sharePrompt")}
               </p>
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -158,7 +158,7 @@ export default function ComparePage() {
                 }}>
                   <div style={{ fontSize: "2rem", fontWeight: 900, color: "#ee1e46" }}>{myData?.total_points ?? 0}</div>
                   <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginTop: 4 }}>{t("compare.you")}</div>
-                  <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,.6)", marginTop: 2, fontWeight: 700 }}>
+                  <div style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 2, fontWeight: 700 }}>
                     {myData?.display_name || t("compare.you")}
                   </div>
                 </div>
@@ -169,7 +169,7 @@ export default function ComparePage() {
                   }}>
                     <div style={{ fontSize: "2rem", fontWeight: 900, color: "#818cf8" }}>{friendData.total_points ?? 0}</div>
                     <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginTop: 4 }}>{t("compare.friend")}</div>
-                    <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,.6)", marginTop: 2, fontWeight: 700 }}>
+                    <div style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 2, fontWeight: 700 }}>
                       {friendData.display_name || t("compare.friend")}
                     </div>
                   </div>

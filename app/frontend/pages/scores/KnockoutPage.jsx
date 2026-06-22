@@ -131,13 +131,13 @@ function QualifierSlot({ label }) {
     <div style={{
       display: "flex", alignItems: "center", gap: 5,
       padding: "5px 8px",
-      fontSize: "0.7rem", color: isWinner ? "rgba(255,255,255,.7)" : "rgba(255,255,255,.4)",
+      fontSize: "0.7rem", color: isWinner ? "var(--text)" : "var(--muted)",
       fontWeight: isWinner ? 700 : 400,
     }}>
       <span style={{
         width: 18, height: 18, borderRadius: "50%", flexShrink: 0,
-        background: isWinner ? "rgba(238,30,70,.2)" : "rgba(255,255,255,.06)",
-        border: `1px solid ${isWinner ? "rgba(238,30,70,.4)" : "rgba(255,255,255,.1)"}`,
+        background: isWinner ? "rgba(238,30,70,.2)" : "var(--surface2)",
+        border: `1px solid ${isWinner ? "rgba(238,30,70,.4)" : "var(--border)"}`,
         display: "inline-flex", alignItems: "center", justifyContent: "center",
         fontSize: "0.55rem", fontWeight: 800, color: isWinner ? "#ee1e46" : "#555",
       }}>
