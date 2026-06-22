@@ -6,6 +6,8 @@ class RecalculateStandingsJob < ApplicationJob
   discard_on(ActiveJob::DeserializationError)
 
   def perform
+    lock_key = "recalculate_standings_running"
+
     wc = Competition.find_by(code: "WC")
     unless wc
       Rails.logger.info("[RecalculateStandingsJob] WC competition not found — skipping")
@@ -25,8 +27,6 @@ class RecalculateStandingsJob < ApplicationJob
       Rails.logger.info("[RecalculateStandingsJob] No active WC matches — skipping")
       return
     end
-
-    lock_key = "recalculate_standings_running"
     if Rails.cache.read(lock_key)
       # Another instance is running — schedule a follow-up so this trigger isn't lost
       self.class.set(wait: 35.seconds).perform_later
