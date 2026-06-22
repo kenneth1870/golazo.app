@@ -63,6 +63,8 @@ class PageMeta
       return for_news(m[1])
     end
 
+    return for_home if path == "/" || path == ""
+
     # ── Section-level rules ─────────────────────────────────────────────
     rule  = RULES.find { |prefix, _| path == prefix || path.start_with?("#{prefix}/") }
     title = rule ? "#{rule[1]} — #{SITE}" : SITE
@@ -73,6 +75,56 @@ class PageMeta
   end
 
   # ── Entity-level helpers ──────────────────────────────────────────────
+
+  def self.for_home
+    wc_scope = Match.joins(:competition).where(competitions: { code: "WC" }).includes(:home_team, :away_team)
+
+    # Priority 1 — live matches right now
+    live = wc_scope.where(status: "live").order(:kickoff_at).limit(3).to_a
+    if live.any?
+      first = live.first
+      home  = first.home_team&.name || "TBD"
+      away  = first.away_team&.name || "TBD"
+      score = "#{first.home_score}–#{first.away_score}"
+      more  = live.size > 1 ? " +#{live.size - 1} more" : ""
+      return Meta.new(
+        title:       "🔴 LIVE: #{home} #{score} #{away}#{more} — #{SITE}",
+        description: "#{live.size} match#{"es" if live.size > 1} live now at the FIFA World Cup 2026. " \
+                     "Follow every goal in real time on Golazo.",
+        type:        "website",
+        image:       DEFAULT_IMG,
+        json_ld:     nil
+      )
+    end
+
+    # Priority 2 — today's scheduled / finished matches (UTC window ±1h for timezone tolerance)
+    window = (Time.current.beginning_of_day - 1.hour)..(Time.current.end_of_day + 1.hour)
+    today  = wc_scope.where(kickoff_at: window)
+                     .where(status: %w[scheduled finished])
+                     .order(:kickoff_at)
+                     .limit(4)
+                     .to_a
+    if today.any?
+      first = today.first
+      home  = first.home_team&.name || "TBD"
+      away  = first.away_team&.name || "TBD"
+      more  = today.size > 1 ? " +#{today.size - 1} more today" : ""
+      return Meta.new(
+        title:       "#{home} vs #{away}#{more} — #{SITE}",
+        description: "#{today.size} World Cup match#{"es" if today.size > 1} today. " \
+                     "Live scores, goals and stats on Golazo — FIFA World Cup 2026.",
+        type:        "website",
+        image:       DEFAULT_IMG,
+        json_ld:     nil
+      )
+    end
+
+    # Fallback — no matches today
+    Meta.new(title: SITE, description: DEFAULT_DESC, type: "website", image: DEFAULT_IMG, json_ld: nil)
+  rescue => e
+    Rails.logger.error("[PageMeta.for_home] #{e.message}")
+    Meta.new(title: SITE, description: DEFAULT_DESC, type: "website", image: DEFAULT_IMG, json_ld: nil)
+  end
 
   def self.for_match(raw_id)
     # /matches/db-42  → look up by internal primary key

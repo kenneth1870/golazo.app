@@ -1,9 +1,39 @@
 require "test_helper"
 
 class PageMetaTest < ActiveSupport::TestCase
-  test "root path uses the site default" do
+  test "root with no matches uses site default" do
     assert_equal PageMeta::SITE, PageMeta.for("/").title
     assert_equal "website", PageMeta.for("/").type
+  end
+
+  test "root with live matches shows LIVE in title" do
+    wc    = wc_competition
+    match = Match.create!(
+      home_team: team("LIH"), away_team: team("LIA"),
+      competition: wc, status: "live",
+      kickoff_at: 45.minutes.ago,
+      home_score: 1, away_score: 0
+    )
+    meta = PageMeta.for("/")
+    assert_match "LIVE", meta.title
+    assert_match match.home_team.name, meta.title
+    assert_match "1", meta.title
+  ensure
+    match&.destroy
+  end
+
+  test "root with today matches shows fixture in title" do
+    wc    = wc_competition
+    match = Match.create!(
+      home_team: team("TOH"), away_team: team("TOA"),
+      competition: wc, status: "scheduled",
+      kickoff_at: 3.hours.from_now
+    )
+    meta = PageMeta.for("/")
+    assert_match match.home_team.name, meta.title
+    assert_match "vs", meta.title
+  ensure
+    match&.destroy
   end
 
   test "section paths get a specific, prefixed title" do
