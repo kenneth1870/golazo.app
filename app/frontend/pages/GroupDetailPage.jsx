@@ -77,7 +77,7 @@ function QualificationPanel({ standings, t, lang }) {
               {s.team?.flag_url && (
                 <img src={s.team.flag_url} alt="" style={{ width: 22, height: 22, objectFit: "contain", borderRadius: 2, flexShrink: 0 }} />
               )}
-              <span style={{ flex: 1, fontSize: "0.82rem", fontWeight: 700, color: "#fff", minWidth: 0 }}>
+              <span style={{ flex: 1, fontSize: "0.82rem", fontWeight: 700, color: "var(--text)", minWidth: 0 }}>
                 {teamName}
               </span>
               <span style={{
@@ -171,7 +171,7 @@ function WhatIfPanel({ matches, standings, lang, t }) {
           )
           return (
             <div key={m.id} style={{ background: "var(--surface)", borderRadius: 10, padding: "10px 14px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, fontSize: "0.8rem", fontWeight: 700, color: "#fff", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, fontSize: "0.8rem", fontWeight: 700, color: "var(--text)", justifyContent: "space-between" }}>
                 <span style={{ flex: 1, textAlign: "right" }}>{translateTeam(m.home_team?.name, lang)}</span>
                 <span style={{ fontSize: "0.65rem", color: "var(--muted)", flexShrink: 0 }}>vs</span>
                 <span style={{ flex: 1, textAlign: "left" }}>{translateTeam(m.away_team?.name, lang)}</span>
@@ -201,8 +201,8 @@ function WhatIfPanel({ matches, standings, lang, t }) {
             }}>
               <span style={{ width: 20, fontWeight: 900, fontSize: "0.8rem", color: i < 2 ? "#10b981" : i === 2 ? "#f59e0b" : "#ef4444" }}>#{i + 1}</span>
               {s.team?.flag_url && <img src={s.team.flag_url} alt="" style={{ width: 22, height: 22, objectFit: "contain" }} />}
-              <span style={{ flex: 1, fontWeight: 700, fontSize: "0.85rem", color: "#fff" }}>{translateTeam(s.team?.name, lang)}</span>
-              <span style={{ fontWeight: 900, fontSize: "0.9rem", color: "#fff" }}>{s.pts}</span>
+              <span style={{ flex: 1, fontWeight: 700, fontSize: "0.85rem", color: "var(--text)" }}>{translateTeam(s.team?.name, lang)}</span>
+              <span style={{ fontWeight: 900, fontSize: "0.9rem", color: "var(--text)" }}>{s.pts}</span>
               <span style={{ fontSize: "0.65rem", color: "var(--muted)", marginLeft: 2 }}>pts</span>
               <span style={{ fontSize: "0.72rem", color: s.gd > 0 ? "#10b981" : s.gd < 0 ? "#ef4444" : "var(--muted)", marginLeft: 8, minWidth: 28, textAlign: "right" }}>
                 {s.gd > 0 ? `+${s.gd}` : s.gd} GD
@@ -350,7 +350,7 @@ export default function GroupDetailPage() {
                             <td>
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                 {s.team.flag_url && <img src={s.team.flag_url} alt="" className="flag-xs" />}
-                                <Link to={`/teams/${s.team.id}`} style={{ color: "#fff", fontWeight: 700 }}>{teamName}</Link>
+                                <Link to={`/teams/${s.team.id}`} style={{ color: "var(--text)", fontWeight: 700 }}>{teamName}</Link>
                               </div>
                             </td>
                             <td>{s.played ?? 0}</td>

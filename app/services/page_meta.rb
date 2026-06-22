@@ -77,6 +77,13 @@ class PageMeta
   # ── Entity-level helpers ──────────────────────────────────────────────
 
   def self.for_home
+    Rails.cache.fetch("page_meta_home", expires_in: 30.seconds) { build_home_meta }
+  rescue => e
+    Rails.logger.error("[PageMeta.for_home] #{e.message}")
+    Meta.new(title: SITE, description: DEFAULT_DESC, type: "website", image: DEFAULT_IMG, json_ld: nil)
+  end
+
+  def self.build_home_meta
     wc_scope = Match.joins(:competition).where(competitions: { code: "WC" }).includes(:home_team, :away_team)
 
     # Priority 1 — live matches right now
@@ -121,10 +128,8 @@ class PageMeta
 
     # Fallback — no matches today
     Meta.new(title: SITE, description: DEFAULT_DESC, type: "website", image: DEFAULT_IMG, json_ld: nil)
-  rescue => e
-    Rails.logger.error("[PageMeta.for_home] #{e.message}")
-    Meta.new(title: SITE, description: DEFAULT_DESC, type: "website", image: DEFAULT_IMG, json_ld: nil)
   end
+  private_class_method :build_home_meta
 
   def self.for_match(raw_id)
     # /matches/db-42  → look up by internal primary key

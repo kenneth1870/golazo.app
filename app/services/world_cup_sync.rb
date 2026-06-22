@@ -64,15 +64,14 @@ class WorldCupSync
 
     # Debounce: at most one verification sync per minute, so a persistent feed
     # gap (or the fast 30s live loop) can't hammer the date endpoint.
-    return if Rails.cache.read("verify_finish_sync_recent")
-    Rails.cache.write("verify_finish_sync_recent", true, expires_in: 60.seconds)
+    return unless Rails.cache.write("verify_finish_sync_recent", true, expires_in: 60.seconds, unless_exist: true)
 
     log("#{missing.count} WC match(es) missing from live feed — verifying via date sync")
 
     # Bust cached fixture lists for today and the next day (early-UTC matches
     # like 02:00 UTC are stored under tomorrow's date key in the API cache) so
     # the verification re-sync reads fresh, authoritative status.
-    [ Date.today, Date.today + 1 ].each do |d|
+    [ Time.current.utc.to_date, Time.current.utc.to_date + 1 ].each do |d|
       Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
       Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
       Rails.cache.delete("today_api_#{d.iso8601}")
@@ -625,8 +624,8 @@ class WorldCupSync
     api_ext_id = m[:external_id]
     attrs = { status: status }
     unless status == "scheduled" || downward_live
-      attrs[:home_score] = home_score
-      attrs[:away_score] = away_score
+      attrs[:home_score] = home_score unless home_score.nil?
+      attrs[:away_score] = away_score unless away_score.nil?
     end
     # Backfill group_stage if missing — covers matches created before fixtures import
     if match.group_stage.nil?
@@ -657,13 +656,20 @@ class WorldCupSync
     # for a match that ended an hour ago. The dedup key is a secondary safety net.
     just_finished = status == "finished" && !was_finished
     if just_finished && match.competition&.code == "WC"
-      dedup_key = "fulltime_notified_#{match.id}"
-      unless Rails.cache.read(dedup_key)
+      dedup_key  = "fulltime_notified_#{match.id}"
+      claim_key  = "fulltime_notifying_#{match.id}"
+      # Atomically claim the notification slot to prevent two concurrent syncs
+      # from both firing the full-time push. The claim expires in 30 s so a
+      # suppressed notification (early-FT guard) can retry on the next cycle.
+      if Rails.cache.write(claim_key, true, expires_in: 30.seconds, unless_exist: true) &&
+         !Rails.cache.read(dedup_key)
         # Mark notified only if the alert actually fired (early-FT guard may
         # suppress it), so a genuine full-time can still notify later.
         if fire_notification(match, "fulltime",
           home_score: home_score.to_i, away_score: away_score.to_i)
           Rails.cache.write(dedup_key, true, expires_in: 24.hours)
+        else
+          Rails.cache.delete(claim_key)
         end
       end
       RecalculateStandingsJob.perform_later

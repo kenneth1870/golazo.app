@@ -84,17 +84,17 @@ export default function LoginPage() {
       <div style={{
         width: "100%", maxWidth: 400,
         background: "var(--surface, #161b22)",
-        border: "1px solid rgba(255,255,255,.08)",
+        border: "1px solid var(--border)",
         borderRadius: 16, padding: "40px 32px",
         boxShadow: "0 16px 48px rgba(0,0,0,.5)",
       }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ fontSize: "2.5rem", marginBottom: 8 }}>⚽</div>
-          <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "#fff", margin: 0 }}>
+          <h1 style={{ fontSize: "1.4rem", fontWeight: 800, color: "var(--text)", margin: 0 }}>
             Golazo Admin
           </h1>
-          <p style={{ color: "rgba(255,255,255,.4)", fontSize: "0.82rem", marginTop: 4 }}>
+          <p style={{ color: "var(--muted)", fontSize: "0.82rem", marginTop: 4 }}>
             Sign in to continue
           </p>
         </div>
@@ -106,7 +106,7 @@ export default function LoginPage() {
               <div ref={googleBtnRef} />
             </div>
             {gLoading && (
-              <p style={{ textAlign: "center", color: "rgba(255,255,255,.4)", fontSize: "0.8rem", marginBottom: 8 }}>
+              <p style={{ textAlign: "center", color: "var(--muted)", fontSize: "0.8rem", marginBottom: 8 }}>
                 Signing in with Google…
               </p>
             )}
@@ -120,16 +120,16 @@ export default function LoginPage() {
               </div>
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0" }}>
-              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
-              <span style={{ color: "rgba(255,255,255,.25)", fontSize: "0.75rem" }}>or</span>
-              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,.08)" }} />
+              <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+              <span style={{ color: "var(--muted)", fontSize: "0.75rem" }}>or</span>
+              <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
             </div>
           </>
         )}
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", color: "rgba(255,255,255,.6)", fontSize: "0.78rem", marginBottom: 6, fontWeight: 600 }}>
+            <label style={{ display: "block", color: "var(--muted)", fontSize: "0.78rem", marginBottom: 6, fontWeight: 600 }}>
               EMAIL
             </label>
             <input
@@ -141,16 +141,16 @@ export default function LoginPage() {
               placeholder="you@example.com"
               style={{
                 width: "100%", boxSizing: "border-box",
-                background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)",
+                background: "var(--surface2)", border: "1px solid var(--border)",
                 borderRadius: 8, padding: "10px 14px",
-                color: "#fff", fontSize: "0.95rem",
+                color: "var(--text)", fontSize: "0.95rem",
                 outline: "none",
               }}
             />
           </div>
 
           <div style={{ marginBottom: 24 }}>
-            <label style={{ display: "block", color: "rgba(255,255,255,.6)", fontSize: "0.78rem", marginBottom: 6, fontWeight: 600 }}>
+            <label style={{ display: "block", color: "var(--muted)", fontSize: "0.78rem", marginBottom: 6, fontWeight: 600 }}>
               PASSWORD
             </label>
             <input
@@ -162,9 +162,9 @@ export default function LoginPage() {
               placeholder="••••••••"
               style={{
                 width: "100%", boxSizing: "border-box",
-                background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)",
+                background: "var(--surface2)", border: "1px solid var(--border)",
                 borderRadius: 8, padding: "10px 14px",
-                color: "#fff", fontSize: "0.95rem",
+                color: "var(--text)", fontSize: "0.95rem",
                 outline: "none",
               }}
             />

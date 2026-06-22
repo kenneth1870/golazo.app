@@ -8,7 +8,7 @@ module Api
         # db-{id} — direct DB lookup (WC matches navigated from the HOY widget)
         if raw_id.start_with?("db-")
           db_id = raw_id.sub("db-", "").to_i
-          match = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition).find_by(id: db_id)
+          match = Match.includes(:home_team, :away_team, :goals, { match_stats: :team }, :competition).find_by(id: db_id)
           return render json: { fixture: nil, error: "not_found", stats: [], events: [], lineups: [] } unless match
 
           # Try to resolve the real API-Football fixture so lineups, stats, ratings, etc. work.
@@ -32,7 +32,7 @@ module Api
 
         external_id = raw_id.sub(/\Aext-/, "").to_i
 
-        local_match = Match.includes(:home_team, :away_team, :goals, :match_stats, :competition)
+        local_match = Match.includes(:home_team, :away_team, :goals, { match_stats: :team }, :competition)
                            .find_by(external_id: external_id)
 
         data = client.match_detail(external_id)
@@ -170,7 +170,7 @@ module Api
         # Also consider the score stale when API differs from DB — catches the case
         # where no one has viewed the detail page since the goal, so prev is nil.
         db_stale = local_match && current[:h] && current[:a] &&
-                   (local_match.home_score != current[:h] || local_match.away_score != current[:a])
+                   (local_match.home_score.to_i != current[:h] || local_match.away_score.to_i != current[:a])
 
         if prev.nil? || score_changed || prev[:events] != current[:events]
           ActionCable.server.broadcast("external_match_#{fixture_id}", {
@@ -289,7 +289,7 @@ module Api
         end
 
         # Build stats from match_stats
-        stats = match.match_stats.includes(:team).map do |s|
+        stats = match.match_stats.map do |s|
           team = s.team
           {
             "team"       => { "name" => team&.name, "logo" => team&.flag_url },

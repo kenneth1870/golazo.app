@@ -11,6 +11,7 @@ export function LiveProvider({ children }) {
     let failCount     = 0
     let timer         = null
     let fetching      = false
+    let aborted       = false
 
     function schedule() {
       clearTimeout(timer)
@@ -20,14 +21,14 @@ export function LiveProvider({ children }) {
     }
 
     function tick() {
-      if (document.hidden || fetching) return
+      if (document.hidden || fetching || aborted) return
       fetching = true
       lastFetchedAt = Date.now()
       fetch("/api/v1/live_count")
         .then(r => r.json())
         .then(d => { setLiveCount(d.count ?? 0); failCount = 0 })
         .catch(() => { failCount = Math.min(failCount + 1, 4) })
-        .finally(() => { fetching = false; schedule() })
+        .finally(() => { fetching = false; if (!aborted) schedule() })
     }
 
     const onVisible = () => {
@@ -38,6 +39,7 @@ export function LiveProvider({ children }) {
     tick()
     document.addEventListener("visibilitychange", onVisible)
     return () => {
+      aborted = true
       clearTimeout(timer)
       document.removeEventListener("visibilitychange", onVisible)
     }

@@ -138,6 +138,7 @@ export default function TodayMatches({ onMatchSelect }) {
           }, {})
           setData(Object.values(grouped))
         })
+        .catch(() => {})
         .finally(() => setLoading(false))
     }
     const onVisible = () => { if (!document.hidden) fetch_() }

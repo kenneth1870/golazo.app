@@ -86,7 +86,7 @@ export default function LeaderboardPage() {
 
         <div style={{ padding: "32px 0 20px", textAlign: "center" }}>
           <div style={{ fontSize: "2.5rem", marginBottom: 8 }}>🏆</div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 900, color: "#fff", margin: "0 0 4px" }}>{t("leaderboard.title")}</h1>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 900, color: "var(--text)", margin: "0 0 4px" }}>{t("leaderboard.title")}</h1>
           <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: "0 0 16px" }}>
             {t("leaderboard.subtitle")}
           </p>
@@ -137,7 +137,7 @@ export default function LeaderboardPage() {
                 autoFocus
                 style={{
                   background: "var(--surface2)", border: "1px solid var(--border)",
-                  borderRadius: 8, padding: "7px 12px", color: "#fff", fontSize: "0.85rem",
+                  borderRadius: 8, padding: "7px 12px", color: "var(--text)", fontSize: "0.85rem",
                   fontFamily: "inherit", width: 200, outline: "none",
                 }}
               />
@@ -168,7 +168,7 @@ export default function LeaderboardPage() {
                 display: "flex", alignItems: "center", justifyContent: "space-between",
               }}
             >
-              <span style={{ fontWeight: 700, fontSize: "0.85rem", color: "#fff" }}>
+              <span style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--text)" }}>
                 🎯 {t("leaderboard.myPredictions", "My Predictions")}
               </span>
               <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>
@@ -186,7 +186,7 @@ export default function LeaderboardPage() {
                       borderBottom: i < myPreds.predictions.length - 1 ? "1px solid var(--border)" : "none",
                     }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: "0.82rem", color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {p.home_team_name} vs {p.away_team_name}
                         </div>
                         <div style={{ fontSize: "0.68rem", color: "var(--muted)", marginTop: 2 }}>

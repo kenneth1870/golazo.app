@@ -59,6 +59,14 @@ body.light-mode .match-row:hover { background: var(--surface2) !important; }
 /* Widget */
 body.light-mode .widget-title h3 { color: var(--text); }
 body.light-mode .widget-body { background: var(--surface); }
+body.light-mode .widget-vs h3 { color: var(--text); }
+body.light-mode .widget-next-match { border-color: var(--border); }
+/* Match events */
+body.light-mode .match-event__player,
+body.light-mode .match-event__player--goal { color: var(--text); }
+body.light-mode .match-event:hover { background: var(--surface2); }
+body.light-mode .match-event--goal { background: rgba(212,175,55,.04); }
+body.light-mode .match-event--var { background: rgba(99,102,241,.04) !important; }
 /* Headings */
 body.light-mode .title-section .heading { color: var(--text) !important; }
 body.light-mode .heading { color: var(--text) !important; }

@@ -110,7 +110,14 @@ Rails.application.routes.draw do
   }
   root "application#spa"
 
-  mount MissionControl::Jobs::Engine, at: "/jobs"
+  mission_control_app = Rack::Auth::Basic.new(MissionControl::Jobs::Engine, "Mission Control") do |user, pass|
+    expected_user = ENV["JOBS_USER"]
+    expected_pass = ENV["JOBS_PASSWORD"]
+    next false unless expected_user.present? && expected_pass.present?
+    ActiveSupport::SecurityUtils.secure_compare(user, expected_user) &&
+      ActiveSupport::SecurityUtils.secure_compare(pass, expected_pass)
+  end
+  mount mission_control_app, at: "/jobs"
 
   solid_queue_app = if Rails.env.development?
     SolidQueueDashboard::Engine

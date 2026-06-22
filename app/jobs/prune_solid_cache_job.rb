@@ -21,6 +21,7 @@ class PruneSolidCacheJob < ApplicationJob
                 .delete_all
       deleted += batch
       break if batch < 2000
+      sleep(0.05)
     end
     Rails.logger.info("[PruneSolidCacheJob] Deleted #{deleted} stale cache entries")
   end

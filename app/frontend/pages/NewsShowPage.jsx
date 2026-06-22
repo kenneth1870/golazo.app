@@ -181,7 +181,7 @@ export default function NewsShowPage() {
         {/* Title */}
         <h1 style={{
           fontSize: "clamp(1.45rem, 4vw, 2.1rem)", fontWeight: 900,
-          lineHeight: 1.28, color: "#fff", marginBottom: 28,
+          lineHeight: 1.28, color: "var(--text)", marginBottom: 28,
         }}>
           {article.title}
         </h1>

@@ -8,7 +8,7 @@ module Api
       def create
         endpoint = params[:endpoint].to_s.strip
         return render json: { error: "Missing endpoint" }, status: :unprocessable_entity if endpoint.blank?
-        return render json: { error: "Invalid endpoint" }, status: :unprocessable_entity unless endpoint.start_with?("https://")
+        return render json: { error: "Invalid endpoint" }, status: :unprocessable_entity unless valid_push_endpoint?(endpoint)
 
         locale = params[:locale].to_s.split("-").first.downcase
         locale = "es" unless %w[es en].include?(locale)
@@ -40,7 +40,7 @@ module Api
         new_endpoint = params[:endpoint].to_s.strip
 
         return render json: { error: "Missing endpoint" }, status: :unprocessable_entity if new_endpoint.blank?
-        return render json: { error: "Invalid endpoint" }, status: :unprocessable_entity unless new_endpoint.start_with?("https://")
+        return render json: { error: "Invalid endpoint" }, status: :unprocessable_entity unless valid_push_endpoint?(new_endpoint)
 
         old_sub = old_endpoint.present? ? PushSubscription.find_by(endpoint: old_endpoint) : nil
 
@@ -140,6 +140,24 @@ module Api
         end
 
         render json: { sent: sent, total: subs.size, failed: failed, vapid_subject: ENV["VAPID_SUBJECT"] }
+      end
+
+      private
+
+      # Restrict push endpoints to known browser push services to prevent SSRF.
+      ALLOWED_PUSH_HOSTS = %w[
+        fcm.googleapis.com
+        updates.push.services.mozilla.com
+        notify.windows.com
+        web.push.apple.com
+        push.apple.com
+      ].freeze
+
+      def valid_push_endpoint?(endpoint)
+        uri = URI.parse(endpoint)
+        uri.scheme == "https" && ALLOWED_PUSH_HOSTS.any? { |h| uri.host == h || uri.host&.end_with?(".#{h}") }
+      rescue URI::InvalidURIError
+        false
       end
     end
   end

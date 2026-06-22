@@ -181,11 +181,7 @@ module Api
           .where(competitions: { code: "WC" })
           .includes(:home_team, :away_team, :competition)
 
-        date_scope = if date == Date.today
-          ->(s) { s.where("kickoff_at >= ?", Date.today.beginning_of_day.utc) }
-        else
-          ->(s) { s.where(kickoff_at: local_day_range(date, tz)) }
-        end
+        date_scope = ->(s) { s.where(kickoff_at: local_day_range(date, tz)) }
 
         authoritative = date_scope.call(base.where(status: %w[live finished]))
         overdue       = date_scope.call(base.where(status: "scheduled").where("kickoff_at < ?", Time.current))

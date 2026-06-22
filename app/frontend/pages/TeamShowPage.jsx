@@ -295,7 +295,7 @@ export default function TeamShowPage() {
                 <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 4 }}>
                   {t("scores.upcomingFixtures", "Next Match")}
                 </div>
-                <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#fff" }}>
+                <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--text)" }}>
                   {translateTeam(nextMatch.home_team?.name, i18n.language)} vs {translateTeam(nextMatch.away_team?.name, i18n.language)}
                 </div>
                 <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginTop: 3 }}>
@@ -409,7 +409,7 @@ export default function TeamShowPage() {
                       {/* Name */}
                       <div style={{ flex: 1 }}>
                         {p.id ? (
-                          <Link to={`/players/${p.id}?league=4&season=2026`} style={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>
+                          <Link to={`/players/${p.id}?league=4&season=2026`} style={{ color: "var(--text)", fontWeight: 700, fontSize: "0.88rem" }}>
                             {p.name}
                           </Link>
                         ) : (

@@ -49,9 +49,12 @@ module Api
           return render json: { error: "invalid token issuer" }, status: :unauthorized
         end
 
-        # Validate audience when client ID is configured
+        # Validate audience — require GOOGLE_CLIENT_ID to be set; fail closed
         client_id = ENV["GOOGLE_CLIENT_ID"].to_s.strip
-        if client_id.present? && payload["aud"] != client_id
+        if client_id.blank?
+          return render json: { error: "authentication not configured" }, status: :internal_server_error
+        end
+        if payload["aud"] != client_id
           return render json: { error: "token audience mismatch" }, status: :unauthorized
         end
 

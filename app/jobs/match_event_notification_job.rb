@@ -19,6 +19,11 @@ class MatchEventNotificationJob < ApplicationJob
   def perform(event_type:, match_id:, home_name:, away_name:, home_score: nil, away_score: nil, match_url: nil, minute: nil, scorer: nil)
     event_type = event_type.to_s
 
+    if ENV["VAPID_PUBLIC_KEY"].blank? || ENV["VAPID_PRIVATE_KEY"].blank?
+      Rails.logger.error("[PushNotification] VAPID keys not configured — skipping #{event_type} notification")
+      return
+    end
+
     # Final delivery-time gate for full-time. Re-check the LIVE DB state at the
     # moment of sending, so a "match ended" push can never go out while the game
     # is still on — regardless of how the job was enqueued (premature trigger,

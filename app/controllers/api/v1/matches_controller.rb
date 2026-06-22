@@ -57,7 +57,10 @@ module Api
             away_score: match.away_score,
             status:     match.status
           })
-          RecalculateStandingsJob.perform_later if match.status == "finished" && match.competition&.code == "WC"
+          if match.status == "finished" && match.competition&.code == "WC"
+            Rails.cache.delete("standings_WC")
+            RecalculateStandingsJob.perform_later
+          end
           render json: match
         else
           render json: { errors: match.errors }, status: :unprocessable_entity

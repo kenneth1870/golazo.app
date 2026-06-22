@@ -27,13 +27,11 @@ class RecalculateStandingsJob < ApplicationJob
       Rails.logger.info("[RecalculateStandingsJob] No active WC matches — skipping")
       return
     end
-    if Rails.cache.read(lock_key)
+    unless Rails.cache.write(lock_key, true, expires_in: 30.seconds, unless_exist: true)
       # Another instance is running — schedule a follow-up so this trigger isn't lost
       self.class.set(wait: 35.seconds).perform_later
       return
     end
-
-    Rails.cache.write(lock_key, true, expires_in: 30.seconds)
     backfill_group_stage_for_wc(wc) if wc
     sync = WorldCupSync.new(competition_code: "WC")
     sync.recalculate_standings_from_results
@@ -45,6 +43,11 @@ class RecalculateStandingsJob < ApplicationJob
     Rails.cache.delete("live_scores_assists_v1_1_2026")
     Rails.cache.delete("live_scores_yellowcards_v1_1_2026")
     Rails.cache.delete("live_scores_redcards_v1_1_2026")
+    # Bust WorldCupScorers DB-aggregate caches (separate from the API-based live_scores keys)
+    Rails.cache.delete("wc_scorers_v1_WC")
+    Rails.cache.delete("wc_assists_v1_WC")
+    Rails.cache.delete("wc_yellow_cards_v1_WC")
+    Rails.cache.delete("wc_red_cards_v1_WC")
     Rails.cache.write("standings_last_recalculated_at", Time.current.iso8601, expires_in: 2.days)
     ActionCable.server.broadcast("standings_updates", { type: "standings_updated", competition: "WC" })
   ensure

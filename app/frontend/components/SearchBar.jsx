@@ -131,7 +131,7 @@ export default function SearchBar({ onClose }) {
             placeholder={t("search.placeholder")}
             style={{
               flex: 1, background: "none", border: "none", outline: "none",
-              color: "#fff", fontSize: "1rem", fontFamily: "inherit",
+              color: "var(--text)", fontSize: "1rem", fontFamily: "inherit",
             }}
           />
           {loading && <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>…</span>}
@@ -153,7 +153,7 @@ export default function SearchBar({ onClose }) {
                   display: "flex", alignItems: "center", gap: 12,
                   padding: "12px 16px", cursor: "pointer",
                   background: i === focused ? "var(--surface2)" : "transparent",
-                  borderBottom: "1px solid rgba(255,255,255,0.04)",
+                  borderBottom: "1px solid var(--border)",
                   transition: "background .1s",
                 }}
                 onMouseEnter={() => setFocused(i)}
@@ -162,7 +162,7 @@ export default function SearchBar({ onClose }) {
                   <>
                     <FlagOrInitials name={r.code || r.name} flagUrl={r.flag_url} size={32} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.9rem" }}>{r.name}</div>
+                      <div style={{ fontWeight: 700, color: "var(--text)", fontSize: "0.9rem" }}>{r.name}</div>
                       {r.group && <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{t("nav.group", { letter: r.group })}</div>}
                     </div>
                     <span style={{ fontSize: "0.68rem", color: "var(--muted)", background: "var(--surface2)", padding: "2px 7px", borderRadius: 4 }}>{t("table.team")}</span>
@@ -171,15 +171,15 @@ export default function SearchBar({ onClose }) {
                   <>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, flexWrap: "wrap" }}>
                       <FlagOrInitials name={r.home} flagUrl={r.home_flag} size={24} />
-                      <span style={{ fontWeight: 700, color: "#fff", fontSize: "0.88rem" }}>{r.home}</span>
+                      <span style={{ fontWeight: 700, color: "var(--text)", fontSize: "0.88rem" }}>{r.home}</span>
                       {r.home_score !== null && r.away_score !== null ? (
-                        <span style={{ fontWeight: 900, color: "#fff", background: "var(--surface2)", padding: "2px 8px", borderRadius: 4, fontSize: "0.85rem" }}>
+                        <span style={{ fontWeight: 900, color: "var(--text)", background: "var(--surface2)", padding: "2px 8px", borderRadius: 4, fontSize: "0.85rem" }}>
                           {r.home_score}–{r.away_score}
                         </span>
                       ) : (
                         <span style={{ color: "var(--muted)", fontSize: "0.8rem" }}>vs</span>
                       )}
-                      <span style={{ fontWeight: 700, color: "#fff", fontSize: "0.88rem" }}>{r.away}</span>
+                      <span style={{ fontWeight: 700, color: "var(--text)", fontSize: "0.88rem" }}>{r.away}</span>
                       <FlagOrInitials name={r.away} flagUrl={r.away_flag} size={24} />
                     </div>
                     {statusLabel(r)}

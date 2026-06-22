@@ -34,11 +34,12 @@ class SitemapController < ApplicationController
     @matches = Match.includes(:home_team, :away_team)
                     .where(kickoff_at: 60.days.ago..30.days.from_now)
                     .where.not(home_team_id: nil, away_team_id: nil)
+                    .select(:id, :external_id, :kickoff_at, :status, :home_team_id, :away_team_id, :updated_at)
                     .order(:kickoff_at)
                     .limit(500)
 
     # All teams
-    @teams = Team.all.order(:name)
+    @teams = Team.select(:id, :name, :updated_at).order(:name)
 
     # Recent news articles — IDs are SHA1 digests of the article link,
     # generated at parse time by NewsService. Re-use the feed cache.

@@ -60,7 +60,7 @@ export default function Footer() {
             <Link to="/" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
               <span style={{ fontSize: "1.8rem", lineHeight: 1 }}>⚽</span>
               <div>
-                <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "#fff", letterSpacing: 2, lineHeight: 1.1 }}>GOLAZO</div>
+                <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", letterSpacing: 2, lineHeight: 1.1 }}>GOLAZO</div>
                 <div style={{ fontSize: ".52rem", color: "var(--accent)", letterSpacing: 2, textTransform: "uppercase" }}>Mundial 2026</div>
               </div>
             </Link>

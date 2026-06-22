@@ -23,7 +23,14 @@ module Api
         def broadcast
           title     = params[:title].to_s.strip
           body_text = params[:body].to_s.strip
-          url       = params[:url].to_s.strip.presence || "/"
+          raw_url   = params[:url].to_s.strip
+          url       = if raw_url.start_with?("/") ||
+                         raw_url.start_with?("https://golazoapp.live") ||
+                         raw_url.start_with?("https://www.golazoapp.live")
+                        raw_url.presence || "/"
+          else
+                        "/"
+          end
           team_name = params[:team_name].to_s.strip.presence
 
           return render json: { error: "title required" }, status: :unprocessable_entity if title.blank?

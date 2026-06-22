@@ -77,7 +77,7 @@ function TrophiesTab({ playerId, t }) {
                   {trophy.place === "Winner" ? "🏆" : trophy.place === "Runner-up" ? "🥈" : "🎖️"}
                 </span>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {trophy.league}
                   </div>
                   {trophy.country && (
@@ -159,7 +159,7 @@ function InjuriesTab({ playerId, t }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "#fff" }}>{inj.type || "—"}</div>
+                    <div style={{ fontWeight: 600, fontSize: "0.85rem", color: "var(--text)" }}>{inj.type || "—"}</div>
                     <div style={{ fontSize: "0.68rem", color: "var(--muted)", marginTop: 1 }}>
                       {inj.start}
                       {inj.end_date && ` → ${inj.end_date}`}
@@ -168,7 +168,7 @@ function InjuriesTab({ playerId, t }) {
                 </div>
                 {days && (
                   <span style={{
-                    background: "rgba(255,255,255,.07)", color: "var(--muted)",
+                    background: "var(--surface2)", color: "var(--muted)",
                     borderRadius: 6, padding: "2px 8px", fontSize: "0.7rem", fontWeight: 600, flexShrink: 0,
                   }}>
                     {t("player.injuryDays", { days })}

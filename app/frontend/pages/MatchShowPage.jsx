@@ -231,7 +231,7 @@ function ScoreTimeline({ events, homeTeamRaw, homeName, awayName, t }) {
             <div style={{ textAlign: "right" }}>
               {m.isHome && (
                 <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1.3 }}>
-                  <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#fff" }}>
+                  <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--text)" }}>
                     {m.player}
                     {m.isOG && <span style={{ color: "#ef4444", fontSize: "0.65rem" }}> OG</span>}
                     {m.isP  && <span style={{ color: "#f59e0b", fontSize: "0.65rem" }}> P</span>}
@@ -242,7 +242,7 @@ function ScoreTimeline({ events, homeTeamRaw, homeName, awayName, t }) {
             </div>
             {/* Score pill */}
             <div style={{
-              textAlign: "center", fontWeight: 900, fontSize: "0.85rem", color: "#fff",
+              textAlign: "center", fontWeight: 900, fontSize: "0.85rem", color: "var(--text)",
               background: "var(--surface2)", borderRadius: 6, padding: "4px 6px",
               border: "1px solid var(--border)", flexShrink: 0,
             }}>
@@ -252,7 +252,7 @@ function ScoreTimeline({ events, homeTeamRaw, homeName, awayName, t }) {
             <div>
               {!m.isHome && (
                 <div style={{ display: "inline-flex", flexDirection: "column", lineHeight: 1.3 }}>
-                  <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "#fff" }}>
+                  <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--text)" }}>
                     {m.player}
                     {m.isOG && <span style={{ color: "#ef4444", fontSize: "0.65rem" }}> OG</span>}
                     {m.isP  && <span style={{ color: "#f59e0b", fontSize: "0.65rem" }}> P</span>}
@@ -300,9 +300,9 @@ function MiniStatsBar({ stats, homeName, awayName }) {
       {possession && (
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", marginBottom: 4 }}>
-            <span style={{ fontWeight: 700, color: "#fff" }}>{homePoss}%</span>
+            <span style={{ fontWeight: 700, color: "var(--text)" }}>{homePoss}%</span>
             <span style={{ color: "var(--muted)", fontSize: "0.65rem" }}>{t("match.statBallPossession")}</span>
-            <span style={{ fontWeight: 700, color: "#fff" }}>{awayPoss}%</span>
+            <span style={{ fontWeight: 700, color: "var(--text)" }}>{awayPoss}%</span>
           </div>
           <div style={{ display: "flex", height: 5, borderRadius: 3, overflow: "hidden" }}>
             <div style={{ width: `${homePoss}%`, background: "#ee1e46", transition: "width .4s" }} />
@@ -314,11 +314,11 @@ function MiniStatsBar({ stats, homeName, awayName }) {
       {/* Shots row */}
       {totalShots[0] !== undefined && (
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem" }}>
-          <span style={{ fontWeight: 700, color: "#fff" }}>{totalShots[0] ?? 0}</span>
+          <span style={{ fontWeight: 700, color: "var(--text)" }}>{totalShots[0] ?? 0}</span>
           <span style={{ color: "var(--muted)", fontSize: "0.65rem" }}>
             {t("match.statShots")}{onTarget[0] !== undefined ? ` (${onTarget[0] ?? 0} / ${onTarget[1] ?? 0} ${t("match.statShotsOnTarget").toLowerCase()})` : ""}
           </span>
-          <span style={{ fontWeight: 700, color: "#fff" }}>{totalShots[1] ?? 0}</span>
+          <span style={{ fontWeight: 700, color: "var(--text)" }}>{totalShots[1] ?? 0}</span>
         </div>
       )}
     </div>
@@ -766,7 +766,7 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t, i18n }) {
             if (!hasActivity) return null
             return (
               <div key={`ht-sum${i}`} style={{
-                background: "rgba(255,255,255,.04)", borderRadius: 8, padding: "10px 14px",
+                background: "var(--surface2)", borderRadius: 8, padding: "10px 14px",
                 display: "flex", justifyContent: "space-between", alignItems: "center",
                 fontSize: "0.76rem", color: "var(--muted)", margin: "4px 0 8px",
               }}>
@@ -774,7 +774,7 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t, i18n }) {
                   {s.homeGoals > 0 && <div>⚽ ×{s.homeGoals}</div>}
                   {s.homeCards > 0 && <div>🟨 ×{s.homeCards}</div>}
                 </div>
-                <div style={{ textAlign: "center", fontWeight: 700, fontSize: "0.68rem", letterSpacing: ".06em", color: "rgba(255,255,255,.35)", textTransform: "uppercase" }}>
+                <div style={{ textAlign: "center", fontWeight: 700, fontSize: "0.68rem", letterSpacing: ".06em", color: "var(--muted)", textTransform: "uppercase" }}>
                   1st half
                 </div>
                 <div style={{ textAlign: "right" }}>
@@ -854,14 +854,14 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t, i18n }) {
                     {scored ? "✅" : "❌"}
                   </span>
                   <div className="match-event__info" style={{ textAlign: isHome ? "left" : "right" }}>
-                    <span className="match-event__player" style={{ color: scored ? "#fff" : "var(--muted)" }}>
+                    <span className="match-event__player" style={{ color: scored ? "var(--text)" : "var(--muted)" }}>
                       {e.player}
                     </span>
                     <span className="match-event__assist" style={{ color: scored ? "#10b981" : "#ef4444" }}>
                       {scored ? " scored" : " missed"}
                     </span>
                   </div>
-                  <span style={{ fontSize: "0.78rem", fontWeight: 900, color: "#fff", minWidth: 36, textAlign: isHome ? "right" : "left" }}>
+                  <span style={{ fontSize: "0.78rem", fontWeight: 900, color: "var(--text)", minWidth: 36, textAlign: isHome ? "right" : "left" }}>
                     {homeGoals}–{awayGoals}
                   </span>
                 </div>
@@ -885,9 +885,9 @@ function StatBar({ label, homeVal, awayVal, isPct }) {
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: "0.8rem" }}>
-        <span style={{ fontWeight: 700, color: "#fff" }}>{fmt(homeVal)}</span>
+        <span style={{ fontWeight: 700, color: "var(--text)" }}>{fmt(homeVal)}</span>
         <span style={{ color: "var(--muted)", fontSize: "0.72rem" }}>{label}</span>
-        <span style={{ fontWeight: 700, color: "#fff" }}>{fmt(awayVal)}</span>
+        <span style={{ fontWeight: 700, color: "var(--text)" }}>{fmt(awayVal)}</span>
       </div>
       <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "var(--surface2)" }}>
         <div style={{ width: `${homePct}%`, background: "#ee1e46", transition: "width .4s" }} />
@@ -1087,7 +1087,7 @@ function InjuriesSection({ fixtureId, homeName, awayName }) {
                   <SafeImg src={inj.player.photo} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {inj.player?.name}
                   </div>
                   <div style={{ fontSize: "0.7rem", color: "var(--muted)" }}>{inj.reason}</div>
@@ -1213,7 +1213,7 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
         </div>
       )}
 
-      <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,.2)", textAlign: "center", paddingTop: 4 }}>
+      <div style={{ fontSize: "0.6rem", color: "var(--muted)", textAlign: "center", paddingTop: 4 }}>
         {t("match.predPoweredBy")}
       </div>
     </div>
@@ -1261,11 +1261,11 @@ function FirstScorerOdds({ fixtureId, t }) {
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: "0.7rem", color: "var(--muted)", width: 18, textAlign: "center" }}>{i + 1}</span>
-              <span style={{ fontWeight: i === 0 ? 700 : 500, fontSize: "0.85rem", color: "#fff" }}>{s.value}</span>
+              <span style={{ fontWeight: i === 0 ? 700 : 500, fontSize: "0.85rem", color: "var(--text)" }}>{s.value}</span>
             </div>
             <span style={{
-              background: i === 0 ? "rgba(238,30,70,.15)" : "rgba(255,255,255,.07)",
-              color: i === 0 ? "#ee1e46" : "rgba(255,255,255,.6)",
+              background: i === 0 ? "rgba(238,30,70,.15)" : "var(--surface)",
+              color: i === 0 ? "#ee1e46" : "var(--muted)",
               borderRadius: 6, padding: "3px 10px", fontSize: "0.8rem", fontWeight: 700,
             }}>{s.odd}</span>
           </div>
@@ -1361,7 +1361,7 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t, lang }) {
             <div style={{ fontSize: ".68rem", color: "var(--muted)", marginTop: 2 }}>{homeTeamName}</div>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "rgba(255,255,255,.5)" }}>{d}</div>
+            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--muted)" }}>{d}</div>
             <div style={{ fontSize: ".68rem", color: "var(--muted)", marginTop: 2 }}>{t("match.draw")}</div>
           </div>
           <div style={{ textAlign: "center" }}>
@@ -1371,7 +1371,7 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t, lang }) {
         </div>
         <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "var(--surface2)" }}>
           <div style={{ width: `${(hw/total)*100}%`, background: "#ee1e46" }} />
-          <div style={{ width: `${(d/total)*100}%`, background: "rgba(255,255,255,.2)" }} />
+          <div style={{ width: `${(d/total)*100}%`, background: "var(--border)" }} />
           <div style={{ width: `${(aw/total)*100}%`, background: "#3b82f6" }} />
         </div>
       </section>
@@ -1391,16 +1391,16 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t, lang }) {
             return (
               <div key={m.kickoff_at ?? i} style={{
                 display: "flex", alignItems: "center", gap: 8, padding: "9px 12px",
-                background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,.02)",
+                background: i % 2 === 0 ? "transparent" : "var(--surface2)",
                 borderRadius: 6, fontSize: "0.8rem",
               }}>
                 <div style={{ width: 80, flexShrink: 0 }}>
                   <div style={{ fontSize: ".65rem", color: "var(--muted)" }}>{date}</div>
                   {m.competition?.name && <div style={{ fontSize: ".58rem", color: "#555", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80 }}>{translateLeague(m.competition.name, lang)}</div>}
                 </div>
-                <span style={{ flex: 1, textAlign: "right", fontWeight: homeWon ? 800 : 500, color: homeWon ? "#fff" : "rgba(255,255,255,.5)", fontSize: ".8rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{translateTeam(m.home?.name, lang)}</span>
-                <span style={{ fontWeight: 900, color: "#fff", padding: "3px 12px", background: "var(--surface2)", borderRadius: 4, fontSize: ".9rem", flexShrink: 0, minWidth: 64, textAlign: "center" }}>{hs} – {as}</span>
-                <span style={{ flex: 1, fontWeight: awayWon ? 800 : 500, color: awayWon ? "#fff" : "rgba(255,255,255,.5)", fontSize: ".8rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{translateTeam(m.away?.name, lang)}</span>
+                <span style={{ flex: 1, textAlign: "right", fontWeight: homeWon ? 800 : 500, color: homeWon ? "var(--text)" : "var(--muted)", fontSize: ".8rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{translateTeam(m.home?.name, lang)}</span>
+                <span style={{ fontWeight: 900, color: "var(--text)", padding: "3px 12px", background: "var(--surface2)", borderRadius: 4, fontSize: ".9rem", flexShrink: 0, minWidth: 64, textAlign: "center" }}>{hs} – {as}</span>
+                <span style={{ flex: 1, fontWeight: awayWon ? 800 : 500, color: awayWon ? "var(--text)" : "var(--muted)", fontSize: ".8rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{translateTeam(m.away?.name, lang)}</span>
               </div>
             )
           })}
@@ -1481,7 +1481,7 @@ function PlayerRatingsPanel({ fixtureId }) {
                     display: "grid", gridTemplateColumns: "22px 1fr 80px 44px",
                     gap: 8, alignItems: "center",
                     padding: "8px 12px",
-                    background: isMotm ? "rgba(245,158,11,.07)" : pi % 2 === 0 ? "transparent" : "rgba(255,255,255,.02)",
+                    background: isMotm ? "rgba(245,158,11,.07)" : pi % 2 === 0 ? "transparent" : "var(--surface2)",
                     borderRadius: 6,
                     border: isMotm ? "1px solid rgba(245,158,11,.25)" : "1px solid transparent",
                   }}>
@@ -1489,7 +1489,7 @@ function PlayerRatingsPanel({ fixtureId }) {
                       {p.number ?? ""}
                     </span>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {isMotm && <span style={{ marginRight: 4 }} title="Man of the Match">👑</span>}
                         {p.captain ? "©" : ""}{p.name}
                       </div>
@@ -1571,11 +1571,11 @@ function LiveCommentaryPanel({ events, homeTeamRaw, homeName, awayName }) {
                 <div style={{ fontSize: "0.9rem", marginTop: 2 }}>{iconFor(e.type, e.detail)}</div>
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: "0.82rem", color: "#fff" }}>
+                <div style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--text)" }}>
                   {e.player || e.type} · <span style={{ color: "var(--muted)", fontWeight: 400 }}>{isHome ? homeName : awayName}</span>
                 </div>
                 {e.comments && (
-                  <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,.6)", marginTop: 3, lineHeight: 1.5 }}>{e.comments}</div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 3, lineHeight: 1.5 }}>{e.comments}</div>
                 )}
                 {e.detail && e.detail !== e.type && (
                   <div style={{ fontSize: "0.68rem", color: "var(--muted)", marginTop: 2 }}>{e.detail}</div>
@@ -2233,7 +2233,7 @@ export default function MatchShowPage() {
           <div style={{ background: "var(--surface1,#0d1117)", padding: "48px 0 36px" }}>
             <div className="container" style={{ maxWidth: 700, textAlign: "center" }}>
               <div style={{ fontSize: "2rem", marginBottom: 12, opacity: .3 }}>⚽</div>
-              <div style={{ color: "rgba(255,255,255,.4)", fontSize: "0.85rem" }}>
+              <div style={{ color: "var(--muted)", fontSize: "0.85rem" }}>
                 {isApiError ? t("error.dataUnavailable") : t("error.notFound")}
               </div>
             </div>
@@ -2345,7 +2345,7 @@ export default function MatchShowPage() {
                 )}
                 {aiSummary?.summary && (
                   <div>
-                    <p style={{ lineHeight: 1.65, color: "rgba(255,255,255,.85)", fontSize: "0.88rem", margin: "0 0 12px", whiteSpace: "pre-wrap" }}>
+                    <p style={{ lineHeight: 1.65, color: "var(--text)", fontSize: "0.88rem", margin: "0 0 12px", whiteSpace: "pre-wrap" }}>
                       {aiSummary.summary}
                     </p>
                     <div style={{ fontSize: "0.62rem", color: "var(--muted)", display: "flex", alignItems: "center", gap: 5 }}>

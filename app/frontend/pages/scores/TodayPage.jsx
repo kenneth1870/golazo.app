@@ -363,6 +363,7 @@ export default function TodayPage() {
   const [flashIds, setFlashIds] = useState(new Set())
   const [filterMyTeams, setFilterMyTeams] = useState(false)
   const prevMatchesRef = useRef([])
+  const flashTimerRef  = useRef(null)
   const pullStartY  = useRef(null)
   const isPulling   = useRef(false)
   const navigate     = useNavigate()
@@ -423,10 +424,25 @@ export default function TodayPage() {
         })
         if (changed.size > 0) {
           setFlashIds(changed)
-          setTimeout(() => setFlashIds(new Set()), 2000)
+          clearTimeout(flashTimerRef.current)
+          flashTimerRef.current = setTimeout(() => setFlashIds(new Set()), 2000)
         }
         prevMatchesRef.current = filtered
-        setMatches(filtered)
+        // Merge: if a live WebSocket update already applied a higher score than the
+        // poll snapshot, keep the fresher score — polls can lag behind WS pushes.
+        setMatches(cur => {
+          const curById = new Map(cur.map(m => [m.external_id ?? m.id, m]))
+          return filtered.map(m => {
+            const key = m.external_id ?? m.id
+            const ws  = curById.get(key)
+            if (!ws || m.status !== "live") return m
+            const pollTotal = (m.home_score ?? 0) + (m.away_score ?? 0)
+            const wsTotal   = (ws.home_score ?? 0) + (ws.away_score ?? 0)
+            return wsTotal > pollTotal
+              ? { ...m, home_score: ws.home_score, away_score: ws.away_score, minute: ws.minute }
+              : m
+          })
+        })
       })
       .catch(() => { setError(true); setMatches([]) })
       .finally(() => { setLoading(false); setTimeout(() => setRefreshing(false), 350) })
@@ -455,7 +471,10 @@ export default function TodayPage() {
     const today = toISO(new Date())
     if (iso !== today) return
     const iv = setInterval(() => load(selected), hasLive ? 15000 : 300000)
-    return () => clearInterval(iv)
+    return () => {
+      clearInterval(iv)
+      clearTimeout(flashTimerRef.current)
+    }
   }, [selected, load, hasLive])
 
   // Patch a single row in-place from a live_scores push — no re-fetch.
@@ -475,7 +494,8 @@ export default function TodayPage() {
       if (touched) {
         const id = d.external_id ?? d.match_id
         setFlashIds(new Set([id]))
-        setTimeout(() => setFlashIds(new Set()), 2000)
+        clearTimeout(flashTimerRef.current)
+        flashTimerRef.current = setTimeout(() => setFlashIds(new Set()), 2000)
       }
       return touched ? next : prev
     })

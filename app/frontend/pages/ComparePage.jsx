@@ -106,7 +106,7 @@ export default function ComparePage() {
         {/* Header */}
         <div style={{ textAlign: "center", padding: "28px 0 20px" }}>
           <div style={{ fontSize: "2rem", marginBottom: 8 }}>⚔️</div>
-          <h1 style={{ fontSize: "1.4rem", fontWeight: 900, color: "#fff", margin: "0 0 4px" }}>{t("compare.title")}</h1>
+          <h1 style={{ fontSize: "1.4rem", fontWeight: 900, color: "var(--text)", margin: "0 0 4px" }}>{t("compare.title")}</h1>
           <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: 0 }}>
             {friendData?.display_name
               ? t("compare.vsSubtitle", { name: friendData.display_name })
@@ -208,7 +208,7 @@ export default function ComparePage() {
                         padding: "10px 16px", borderBottom: "1px solid var(--border)", gap: 8,
                       }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 600, fontSize: "0.82rem", color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <div style={{ fontWeight: 600, fontSize: "0.82rem", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {matchName(matchId)}
                           </div>
                           {mine && (

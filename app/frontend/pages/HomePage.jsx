@@ -110,7 +110,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
         {fav.flag_url && <img src={fav.flag_url} alt="" className="logo-sm" onError={e => (e.target.style.display="none")} />}
         <div>
           <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>{t("home.yourTeam")}</div>
-          <div style={{ fontWeight: 800, color: "#fff", fontSize: "1rem" }}>{fav.name}</div>
+          <div style={{ fontWeight: 800, color: "var(--text)", fontSize: "1rem" }}>{fav.name}</div>
           {fav.group && <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{t("nav.group", { letter: fav.group })}</div>}
         </div>
       </div>
@@ -122,7 +122,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
           <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>
             {next.status === "live" ? t("home.playingNow") : t("hero.nextMatch")}
           </div>
-          <div style={{ fontWeight: 700, color: "#fff", fontSize: "0.9rem" }}>
+          <div style={{ fontWeight: 700, color: "var(--text)", fontSize: "0.9rem" }}>
             {translateTeam(next.home_team?.name, i18n.language)} vs {translateTeam(next.away_team?.name, i18n.language)}
           </div>
           <div style={{ fontSize: "0.72rem", color: "#ee1e46" }}>
@@ -156,8 +156,8 @@ function TodayMatchesSection({ todayMatches, navigate, t }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {liveCount > 0
-            ? <><span className="live-dot" /><span style={{ fontWeight: 800, fontSize: ".78rem", color: "#fff" }}>LIVE</span></>
-            : <span style={{ fontWeight: 800, fontSize: ".78rem", color: "#fff", textTransform: "uppercase", letterSpacing: ".06em" }}>{t("time.today", "Today")}</span>
+            ? <><span className="live-dot" /><span style={{ fontWeight: 800, fontSize: ".78rem", color: "var(--text)" }}>LIVE</span></>
+            : <span style={{ fontWeight: 800, fontSize: ".78rem", color: "var(--text)", textTransform: "uppercase", letterSpacing: ".06em" }}>{t("time.today", "Today")}</span>
           }
           <span style={{ fontSize: ".7rem", color: "var(--muted)" }}>
             · {t("scores.wcSubtitle", "FIFA World Cup 2026")}
@@ -351,7 +351,7 @@ export default function HomePage() {
                 <div style={{ fontSize: ".62rem", fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 8 }}>
                   {t("home.wcSectionTitle")}
                 </div>
-                <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "#fff", marginBottom: 12 }}>
+                <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", marginBottom: 12 }}>
                   {t("home.wcHosts")}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -365,9 +365,9 @@ export default function HomePage() {
                   ].map(({ label, path }) => (
                     <Link key={path} to={path} style={{
                       display: "inline-block",
-                      background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.12)",
+                      background: "var(--surface2)", border: "1px solid var(--border)",
                       borderRadius: 8, padding: "6px 12px",
-                      fontSize: ".7rem", fontWeight: 700, color: "#fff", textDecoration: "none",
+                      fontSize: ".7rem", fontWeight: 700, color: "var(--text)", textDecoration: "none",
                     }}>
                       {label}
                     </Link>
@@ -384,7 +384,7 @@ export default function HomePage() {
                 <div style={{ fontSize: ".62rem", fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 8 }}>
                   {t("home.clubCompetitions")}
                 </div>
-                <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "#fff", marginBottom: 12 }}>
+                <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", marginBottom: 12 }}>
                   {t("home.liveScoresWorldwide")}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -398,9 +398,9 @@ export default function HomePage() {
                   ].map(({ label, path }) => (
                     <Link key={path} to={path} style={{
                       display: "inline-block",
-                      background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.12)",
+                      background: "var(--surface2)", border: "1px solid var(--border)",
                       borderRadius: 8, padding: "6px 12px",
-                      fontSize: ".7rem", fontWeight: 700, color: "#fff", textDecoration: "none",
+                      fontSize: ".7rem", fontWeight: 700, color: "var(--text)", textDecoration: "none",
                     }}>
                       {label}
                     </Link>

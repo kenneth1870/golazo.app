@@ -18,7 +18,9 @@ class PreMatchNotificationJob < ApplicationJob
 
     matches.each do |match|
       cache_key = "prematch_notified_#{match.id}"
-      next if Rails.cache.read(cache_key)
+      next unless Rails.cache.write(cache_key, true, expires_in: 30.minutes, unless_exist: true)
+
+      next if match.status != "scheduled"
 
       MatchEventNotificationJob.perform_later(
         event_type: "prematch",
@@ -27,7 +29,6 @@ class PreMatchNotificationJob < ApplicationJob
         away_name:  match.away_team&.name.to_s,
         match_url:  "/matches/#{match.external_id || "db-#{match.id}"}"
       )
-      Rails.cache.write(cache_key, true, expires_in: 30.minutes)
 
       Rails.logger.info("[PreMatchNotification] #{match.home_team&.name} vs #{match.away_team&.name} kicks off at #{match.kickoff_at}")
     end

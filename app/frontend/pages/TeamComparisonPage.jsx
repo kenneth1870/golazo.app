@@ -108,7 +108,7 @@ export default function TeamComparisonPage() {
 
         <div style={{ padding: "24px 0 16px", textAlign: "center" }}>
           <div style={{ fontSize: "2rem", marginBottom: 8 }}>⚔️</div>
-          <h1 style={{ fontSize: "1.4rem", fontWeight: 900, color: "#fff", margin: "0 0 4px" }}>{t("teamComparison.title")}</h1>
+          <h1 style={{ fontSize: "1.4rem", fontWeight: 900, color: "var(--text)", margin: "0 0 4px" }}>{t("teamComparison.title")}</h1>
           <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: 0 }}>{t("teamComparison.subtitle")}</p>
         </div>
 
@@ -124,7 +124,7 @@ export default function TeamComparisonPage() {
           style={{
             width: "100%", padding: "10px", marginBottom: 24,
             background: homeId && awayId ? "#ee1e46" : "var(--surface2)",
-            border: "none", borderRadius: 10, color: "#fff", fontWeight: 800,
+            border: "none", borderRadius: 10, color: homeId && awayId ? "#fff" : "var(--muted)", fontWeight: 800,
             fontSize: "0.85rem", cursor: homeId && awayId ? "pointer" : "default",
             opacity: homeId && awayId ? 1 : 0.5,
           }}
@@ -138,13 +138,13 @@ export default function TeamComparisonPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, textAlign: "center" }}>
               <Link to={`/teams/${homeId}`} style={{ flex: 1, textDecoration: "none" }}>
                 {homeData.flag_url && <img src={homeData.flag_url} alt="" style={{ width: 48, height: 48, objectFit: "contain", display: "block", margin: "0 auto 6px" }} />}
-                <div style={{ fontWeight: 900, fontSize: "0.95rem", color: "#fff" }}>{homeName}</div>
+                <div style={{ fontWeight: 900, fontSize: "0.95rem", color: "var(--text)" }}>{homeName}</div>
                 {homeData.group && <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>{t("nav.group", { letter: homeData.group })}</div>}
               </Link>
               <div style={{ fontWeight: 900, fontSize: "1.2rem", color: "var(--muted)" }}>vs</div>
               <Link to={`/teams/${awayId}`} style={{ flex: 1, textDecoration: "none" }}>
                 {awayData.flag_url && <img src={awayData.flag_url} alt="" style={{ width: 48, height: 48, objectFit: "contain", display: "block", margin: "0 auto 6px" }} />}
-                <div style={{ fontWeight: 900, fontSize: "0.95rem", color: "#fff" }}>{awayName}</div>
+                <div style={{ fontWeight: 900, fontSize: "0.95rem", color: "var(--text)" }}>{awayName}</div>
                 {awayData.group && <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>{t("nav.group", { letter: awayData.group })}</div>}
               </Link>
             </div>
@@ -174,7 +174,7 @@ export default function TeamComparisonPage() {
                       </div>
                       {(team.scorers || []).slice(0, 3).map((s, i) => (
                         <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#fff", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.player_name}</span>
+                          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.player_name}</span>
                           <span style={{ fontWeight: 900, color: "#ee1e46", fontSize: "0.85rem" }}>⚽ {s.goals}</span>
                         </div>
                       ))}
