@@ -38,12 +38,17 @@ class PageMeta
     path = path.to_s
 
     # ── Dynamic entity pages ────────────────────────────────────────────
-    if (m = path.match(%r{\A/matches/(\d+)\z}))
+    # Handles /matches/1489391 (external_id) and /matches/db-42 (db primary key)
+    if (m = path.match(%r{\A/matches/((?:db-)?\d+)\z}))
       return for_match(m[1])
     end
 
     if (m = path.match(%r{\A/teams/(\d+)\z}))
       return for_team(m[1])
+    end
+
+    if (m = path.match(%r{\A/mundial/venues/([^/]+)\z}))
+      return for_venue(m[1])
     end
 
     if (m = path.match(%r{\A/players/(\d+)\z}))
@@ -69,8 +74,16 @@ class PageMeta
 
   # ── Entity-level helpers ──────────────────────────────────────────────
 
-  def self.for_match(id)
-    match = Match.includes(:home_team, :away_team, :competition).find_by(id: id)
+  def self.for_match(raw_id)
+    # /matches/db-42  → look up by internal primary key
+    # /matches/1489391 → look up by external_id (the API-Football numeric ID used in all navigation links)
+    match = if raw_id.to_s.start_with?("db-")
+      Match.includes(:home_team, :away_team, :competition).find_by(id: raw_id.sub("db-", ""))
+    else
+      Match.includes(:home_team, :away_team, :competition).find_by(external_id: raw_id) ||
+        Match.includes(:home_team, :away_team, :competition).find_by(id: raw_id)
+    end
+    id = raw_id
     return default_meta unless match
 
     home = match.home_team&.name || "TBD"
@@ -174,6 +187,40 @@ class PageMeta
     )
   rescue => e
     Rails.logger.error("[PageMeta.for_league] #{e.message}")
+    default_meta
+  end
+
+  VENUE_SLUGS = {
+    "metlife-stadium"         => { name: "MetLife Stadium",         city: "East Rutherford, NJ", country: "USA"    },
+    "at-t-stadium"            => { name: "AT&T Stadium",            city: "Arlington, TX",        country: "USA"    },
+    "arrowhead-stadium"       => { name: "Arrowhead Stadium",       city: "Kansas City, MO",      country: "USA"    },
+    "lumen-field"             => { name: "Lumen Field",             city: "Seattle, WA",          country: "USA"    },
+    "nrg-stadium"             => { name: "NRG Stadium",             city: "Houston, TX",          country: "USA"    },
+    "mercedes-benz-stadium"   => { name: "Mercedes-Benz Stadium",   city: "Atlanta, GA",          country: "USA"    },
+    "lincoln-financial-field" => { name: "Lincoln Financial Field", city: "Philadelphia, PA",     country: "USA"    },
+    "sofi-stadium"            => { name: "SoFi Stadium",            city: "Inglewood, CA",        country: "USA"    },
+    "levi-s-stadium"          => { name: "Levi's Stadium",          city: "Santa Clara, CA",      country: "USA"    },
+    "hard-rock-stadium"       => { name: "Hard Rock Stadium",       city: "Miami Gardens, FL",    country: "USA"    },
+    "gillette-stadium"        => { name: "Gillette Stadium",        city: "Foxborough, MA",       country: "USA"    },
+    "bc-place"                => { name: "BC Place",                city: "Vancouver, BC",        country: "Canada" },
+    "bmo-field"               => { name: "BMO Field",               city: "Toronto, ON",          country: "Canada" },
+    "estadio-azteca"          => { name: "Estadio Azteca",          city: "Mexico City",          country: "Mexico" },
+    "estadio-bbva"            => { name: "Estadio BBVA",            city: "Monterrey",            country: "Mexico" },
+    "estadio-akron"           => { name: "Estadio Akron",           city: "Guadalajara",          country: "Mexico" }
+  }.freeze
+
+  def self.for_venue(slug)
+    # Accept city-appended slugs (e.g. "lumen-field-seattle" → matches "lumen-field")
+    _vs, venue = VENUE_SLUGS.find { |vs, _| slug == vs || slug.start_with?("#{vs}-") }
+    return default_meta unless venue
+
+    title = "#{venue[:name]} — FIFA World Cup 2026"
+    desc  = "#{venue[:name]} in #{venue[:city]}, #{venue[:country]} hosts FIFA World Cup 2026 matches. " \
+            "Fixtures, results and venue details on Golazo."
+
+    Meta.new(title: "#{title} — #{SITE}", description: desc, type: "website", image: DEFAULT_IMG, json_ld: nil)
+  rescue => e
+    Rails.logger.error("[PageMeta.for_venue] #{e.message}")
     default_meta
   end
 
