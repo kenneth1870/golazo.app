@@ -107,7 +107,7 @@ body.light-mode .footer-section { background: var(--surface2) !important; color:
 /* Back bar on match pages */
 body.light-mode .match-back-bar { background: var(--bg); }
 /* Navbar */
-body.light-mode .site-navbar { background: rgba(244,246,249,0.97) !important; border-bottom-color: var(--border) !important; }
+body.light-mode .site-navbar { background: rgba(244,246,249,0.97) !important; border-bottom-color: var(--border) !important; box-shadow: 0 1px 8px rgba(0,0,0,0.08) !important; }
 body.light-mode .golazo-logo { color: var(--text); }
 body.light-mode .site-navbar .btn-icon { color: var(--muted); }
 body.light-mode .mobile-toggle { color: var(--text) !important; }

@@ -313,7 +313,7 @@ export default function Navbar() {
           <Link to="/" style={{ flex: 1, textDecoration: "none", display: "flex", alignItems: "center", gap: 9 }}>
             <img src="/images/icon-192.png" alt="Golazo" style={{ height: 38, width: 38, borderRadius: 9, objectFit: "cover" }} />
             <div>
-              <div style={{ fontWeight: 900, fontSize: "1rem", color: "#fff", letterSpacing: 2 }}>GOLAZO</div>
+              <div style={{ fontWeight: 900, fontSize: "1rem", color: "var(--text)", letterSpacing: 2 }}>GOLAZO</div>
               <div style={{ fontSize: ".5rem", color: "var(--accent)", letterSpacing: 2, textTransform: "uppercase" }}>Mundial 2026</div>
             </div>
           </Link>
@@ -399,7 +399,7 @@ export default function Navbar() {
             <Link to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", flexShrink: 0 }}>
               <img src="/images/icon-192.png" alt="Golazo" style={{ height: 46, width: 46, borderRadius: 12, objectFit: "cover" }} />
               <div style={{ marginLeft: 9 }}>
-                <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "#fff", letterSpacing: 2, lineHeight: 1.1 }}>GOLAZO</div>
+                <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", letterSpacing: 2, lineHeight: 1.1 }}>GOLAZO</div>
                 <div style={{ fontSize: ".5rem", color: "var(--accent)", letterSpacing: 2, textTransform: "uppercase" }}>Mundial 2026</div>
               </div>
             </Link>
