@@ -38,8 +38,8 @@ body.light-mode {
   --muted:    #6b7280;
   --shadow:   0 8px 32px rgba(0,0,0,0.12);
 }
-/* Scoreboard always stays dark */
-body.light-mode .scoreboard { background: linear-gradient(135deg,#1a1f2e 0%,#0d1117 100%) !important; }
+/* Scoreboard adapts to theme */
+body.light-mode .scoreboard { background: linear-gradient(135deg,#1e2a3a 0%,#162030 100%) !important; }
 /* Shimmer adapts */
 body.light-mode .loading-shimmer { background: linear-gradient(90deg,#e2e5ea 25%,#f0f2f5 50%,#e2e5ea 75%); background-size: 200% 100%; }
 /* Card surfaces */

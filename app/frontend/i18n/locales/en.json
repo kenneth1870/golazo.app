@@ -260,7 +260,14 @@
     "notifOn": "On",
     "notifOff": "Off",
     "notifEnable": "Enable goal alerts",
-    "notifDisable": "Disable alerts"
+    "notifDisable": "Disable alerts",
+    "roundGroupStage": "Group Stage - {{n}}",
+    "roundRegularSeason": "Matchday {{n}}",
+    "roundOf16": "Round of 16",
+    "roundQuarterFinal": "Quarter-finals",
+    "roundSemiFinal": "Semi-finals",
+    "round3rdPlace": "3rd Place",
+    "roundFinal": "Final"
   },
   "teamComparison": {
     "title": "Team Comparison",

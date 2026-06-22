@@ -401,6 +401,22 @@ function addToCalendar(fixture) {
 }
 
 
+function translateRound(round, t) {
+  if (!round) return round
+  const gs = round.match(/^Group Stage\s*-\s*(\d+)$/i)
+  if (gs) return t("match.roundGroupStage", { n: gs[1] })
+  const rs = round.match(/^Regular Season\s*-\s*(\d+)$/i)
+  if (rs) return t("match.roundRegularSeason", { n: rs[1] })
+  const keys = {
+    "Round of 16":    "match.roundOf16",
+    "Quarter-finals": "match.roundQuarterFinal",
+    "Semi-finals":    "match.roundSemiFinal",
+    "3rd Place Final":"match.round3rdPlace",
+    "Final":          "match.roundFinal",
+  }
+  return keys[round] ? t(keys[round]) : round
+}
+
 function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, onNotif, notifEnabled, notifSupported, events }) {
   const { t, i18n } = useTranslation()
   const [copied, setCopied] = useState(false)
@@ -534,7 +550,7 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
           <SafeImg src={fixture?.league?.logo} style={{ width: 18, height: 18, objectFit: "contain" }} />
           <span>{translateLeague(fixture?.league?.name, i18n.language)}</span>
           {fixture?.league?.round && (
-            <span className="scoreboard__round">{fixture.league.round}</span>
+            <span className="scoreboard__round">{translateRound(fixture.league.round, t)}</span>
           )}
         </div>
 

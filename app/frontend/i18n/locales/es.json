@@ -260,7 +260,14 @@
     "notifOn": "Activado",
     "notifOff": "Desactivado",
     "notifEnable": "Activar alertas de gol",
-    "notifDisable": "Desactivar alertas"
+    "notifDisable": "Desactivar alertas",
+    "roundGroupStage": "Fase de Grupos - {{n}}",
+    "roundRegularSeason": "Jornada {{n}}",
+    "roundOf16": "Octavos de Final",
+    "roundQuarterFinal": "Cuartos de Final",
+    "roundSemiFinal": "Semifinales",
+    "round3rdPlace": "Tercer Puesto",
+    "roundFinal": "Final"
   },
   "teamComparison": {
     "title": "Comparativa de Equipos",
