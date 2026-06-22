@@ -102,11 +102,18 @@ body.light-mode .sticky-tabs { background: var(--surface); border-color: var(--b
 body.light-mode .sticky-tab { color: var(--muted) !important; }
 body.light-mode .sticky-tab--active { color: var(--accent) !important; }
 /* Footer */
-body.light-mode .site-footer { background: #1a1f2e; }
+body.light-mode .site-footer,
+body.light-mode .footer-section { background: var(--surface2) !important; color: var(--text); }
 /* Back bar on match pages */
 body.light-mode .match-back-bar { background: var(--bg); }
-/* Navbar always stays dark */
-body.light-mode .site-navbar { background: rgba(13,17,23,0.97) !important; }
+/* Navbar */
+body.light-mode .site-navbar { background: rgba(244,246,249,0.97) !important; border-bottom-color: var(--border) !important; }
+body.light-mode .golazo-logo { color: var(--text); }
+body.light-mode .site-navbar .btn-icon { color: var(--muted); }
+body.light-mode .mobile-toggle { color: var(--text) !important; }
+body.light-mode .lang-btn { background: var(--surface2) !important; color: var(--text) !important; border-color: var(--border) !important; }
+/* Bottom nav */
+body.light-mode .bottom-nav { background: rgba(244,246,249,0.97); border-top-color: var(--border); }
 
 /* ─── Base ───────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box}
