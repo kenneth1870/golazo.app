@@ -600,7 +600,7 @@ export default function TodayPage() {
         {/* Header row */}
         <div className="d-flex align-items-center justify-content-between mb-3" style={{ flexWrap: "wrap", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{ fontWeight: 600, fontSize: "0.95rem", color: "#fff" }}>{label}</span>
+            <span style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--text)" }}>{label}</span>
             {toISO(selected) !== toISO(new Date()) && (
               <button
                 onClick={() => { setSelected(startOfDay()); setMatches([]) }}

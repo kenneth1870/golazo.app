@@ -16,9 +16,9 @@ function StatBar({ label, homeVal, awayVal, invert = false }) {
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", marginBottom: 4, fontWeight: 700 }}>
-        <span style={{ color: homeBetter ? "#10b981" : "#fff" }}>{homeVal ?? "–"}</span>
+        <span style={{ color: homeBetter ? "#10b981" : "var(--text)" }}>{homeVal ?? "–"}</span>
         <span style={{ color: "var(--muted)", fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".06em" }}>{label}</span>
-        <span style={{ color: awayBetter ? "#10b981" : "#fff" }}>{awayVal ?? "–"}</span>
+        <span style={{ color: awayBetter ? "#10b981" : "var(--text)" }}>{awayVal ?? "–"}</span>
       </div>
       <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "var(--surface2)" }}>
         <div style={{ width: `${homePct}%`, background: homeBetter ? "#10b981" : "#ee1e46", transition: "width .5s ease" }} />
@@ -46,7 +46,7 @@ function TeamPicker({ value, onChange, label }) {
         onChange={e => onChange(e.target.value)}
         style={{
           width: "100%", background: "var(--surface2)", border: "1px solid var(--border)",
-          borderRadius: 8, padding: "8px 12px", color: value ? "#fff" : "var(--muted)",
+          borderRadius: 8, padding: "8px 12px", color: value ? "var(--text)" : "var(--muted)",
           fontSize: "0.85rem", fontWeight: 700, cursor: "pointer",
         }}
       >

@@ -189,7 +189,7 @@ export default function FixturesPage() {
         </div>
 
         <div className="d-flex align-items-center justify-content-between mb-3" style={{ flexWrap: "wrap", gap: 8 }}>
-          <div style={{ fontWeight: 600, fontSize: "0.95rem", color: "#fff" }}>{label}</div>
+          <div style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--text)" }}>{label}</div>
           {!loading && (
             <span style={{ fontSize: "0.78rem", color: "#555" }}>{t("time.matchCount", { count: matches.length })}</span>
           )}

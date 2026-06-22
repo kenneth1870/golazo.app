@@ -194,7 +194,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p style={{ textAlign: "center", marginTop: 24, color: "rgba(255,255,255,.3)", fontSize: "0.75rem" }}>
+        <p style={{ textAlign: "center", marginTop: 24, color: "var(--muted)", fontSize: "0.75rem" }}>
           Golazo · Admin Panel · v2
         </p>
       </div>

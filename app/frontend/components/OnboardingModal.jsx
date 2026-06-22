@@ -164,7 +164,7 @@ export default function OnboardingModal({ onDismiss }) {
                 background: i18n.language.startsWith(lang.code)
                   ? "var(--accent, #ee1e46)" : "var(--surface2, #1a1a1a)",
                 border: "1px solid var(--border, #2a2a2a)",
-                color: "#fff", cursor: "pointer", fontSize: "1rem", fontWeight: 500,
+                color: i18n.language.startsWith(lang.code) ? "#fff" : "var(--text)", cursor: "pointer", fontSize: "1rem", fontWeight: 500,
                 transition: "all .15s",
               }}
             >
@@ -205,7 +205,7 @@ export default function OnboardingModal({ onDismiss }) {
                   onError={e => { e.target.style.display = "none" }}
                 />
                 <span style={{
-                  fontSize: "0.62rem", color: selected ? "#fff" : "var(--muted,#888)",
+                  fontSize: "0.62rem", color: selected ? "var(--accent,#ee1e46)" : "var(--muted,#888)",
                   textAlign: "center", lineHeight: 1.2, fontWeight: selected ? 600 : 400,
                 }}>
                   {team.name}
@@ -239,7 +239,7 @@ export default function OnboardingModal({ onDismiss }) {
                   padding: "10px 16px", borderRadius: 20, cursor: "pointer",
                   background: selected ? "rgba(238,30,70,.18)" : "var(--surface2,#1a1a1a)",
                   border: `1px solid ${selected ? "var(--accent,#ee1e46)" : "var(--border,#2a2a2a)"}`,
-                  color: selected ? "#fff" : "var(--muted,#888)",
+                  color: selected ? "var(--accent,#ee1e46)" : "var(--muted,#888)",
                   fontSize: "0.85rem", fontWeight: selected ? 600 : 400,
                   transition: "all .15s",
                 }}
@@ -284,18 +284,18 @@ export default function OnboardingModal({ onDismiss }) {
               background: "rgba(238,30,70,.08)", border: "1px solid rgba(238,30,70,.25)",
               borderRadius: 12, padding: "16px 14px", maxWidth: 300, margin: "0 auto",
             }}>
-              <div style={{ fontSize: ".8rem", color: "rgba(255,255,255,.7)", lineHeight: 1.6 }}>
-                <div style={{ marginBottom: 10, fontWeight: 700, color: "#fff" }}>
+              <div style={{ fontSize: ".8rem", color: "var(--muted)", lineHeight: 1.6 }}>
+                <div style={{ marginBottom: 10, fontWeight: 700, color: "var(--text)" }}>
                   📲 {t("ios.howToInstall", "How to install:")}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8, textAlign: "left" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: "1.1rem" }}>1.</span>
-                    <span>{t("ios.step1", "Tap the")} <strong style={{ color: "#fff" }}>Share</strong> {t("ios.step1b", "button")} <svg style={{ display: "inline", verticalAlign: "middle" }} width="14" height="16" viewBox="0 0 24 28" fill="currentColor"><path d="M12 0L6 6h4v12h4V6h4L12 0zM2 20v6h20v-6h-2v4H4v-4H2z"/></svg></span>
+                    <span>{t("ios.step1", "Tap the")} <strong style={{ color: "var(--text)" }}>Share</strong> {t("ios.step1b", "button")} <svg style={{ display: "inline", verticalAlign: "middle" }} width="14" height="16" viewBox="0 0 24 28" fill="currentColor"><path d="M12 0L6 6h4v12h4V6h4L12 0zM2 20v6h20v-6h-2v4H4v-4H2z"/></svg></span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: "1.1rem" }}>2.</span>
-                    <span>{t("ios.step2prefix", "Tap")} <strong style={{ color: "#fff" }}>{t("ios.step2", '"Add to Home Screen"')}</strong></span>
+                    <span>{t("ios.step2prefix", "Tap")} <strong style={{ color: "var(--text)" }}>{t("ios.step2", '"Add to Home Screen"')}</strong></span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: "1.1rem" }}>3.</span>

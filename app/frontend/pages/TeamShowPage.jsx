@@ -442,7 +442,7 @@ export default function TeamShowPage() {
                         [t("team.cleanSheets"),   tstats.clean_sheets,   false],
                       ].map(([label, val, hi]) => (
                         <div key={label} style={{ flex: "1 1 80px", minWidth: 72, textAlign: "center", background: "var(--surface2)", borderRadius: 10, padding: "14px 8px" }}>
-                          <div style={{ fontSize: "1.5rem", fontWeight: 900, color: hi ? "#ee1e46" : "#fff" }}>{val ?? "—"}</div>
+                          <div style={{ fontSize: "1.5rem", fontWeight: 900, color: hi ? "#ee1e46" : "var(--text)" }}>{val ?? "—"}</div>
                           <div style={{ fontSize: "0.6rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: .5, marginTop: 3 }}>{label}</div>
                         </div>
                       ))}

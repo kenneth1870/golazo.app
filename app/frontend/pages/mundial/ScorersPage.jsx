@@ -46,11 +46,11 @@ function LeaderHero({ player, tab, lang }) {
         <div style={{ fontSize: "0.72rem", color: "var(--muted)", marginBottom: 2 }}>{teamName}</div>
         {player.player?.id ? (
           <Link to={`/players/${player.player.id}?league=1&season=2026`}
-            style={{ color: "#fff", fontWeight: 900, fontSize: "1.2rem", textDecoration: "none", display: "block" }}>
+            style={{ color: "var(--text)", fontWeight: 900, fontSize: "1.2rem", textDecoration: "none", display: "block" }}>
             {player.player?.name}
           </Link>
         ) : (
-          <div style={{ color: "#fff", fontWeight: 900, fontSize: "1.2rem" }}>{player.player?.name}</div>
+          <div style={{ color: "var(--text)", fontWeight: 900, fontSize: "1.2rem" }}>{player.player?.name}</div>
         )}
         <div style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 2 }}>
           {player.played ?? 0} {t("mundial.matchesPlayed")}
@@ -93,11 +93,11 @@ function PlayerRow({ player, rank, maxValue, tab, lang }) {
           )}
           {player.player?.id ? (
             <Link to={`/players/${player.player.id}?league=1&season=2026`}
-              style={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem", textDecoration: "none", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              style={{ color: "var(--text)", fontWeight: 700, fontSize: "0.88rem", textDecoration: "none", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               {player.player?.name}
             </Link>
           ) : (
-            <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            <span style={{ color: "var(--text)", fontWeight: 700, fontSize: "0.88rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               {player.player?.name}
             </span>
           )}
@@ -119,7 +119,7 @@ function PlayerRow({ player, rank, maxValue, tab, lang }) {
       </div>
 
       <div style={{ textAlign: "right" }}>
-        <span style={{ fontSize: "1.25rem", fontWeight: 900, color: rank === 0 ? barColor : "#fff" }}>
+        <span style={{ fontSize: "1.25rem", fontWeight: 900, color: rank === 0 ? barColor : "var(--text)" }}>
           {value}
         </span>
         <div style={{ fontSize: "0.6rem", color: "var(--muted)" }}>{tab.unit}</div>

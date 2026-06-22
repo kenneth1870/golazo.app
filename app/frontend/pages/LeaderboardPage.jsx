@@ -234,7 +234,7 @@ export default function LeaderboardPage() {
                       {i < 3 ? MEDALS[i] : `#${i + 1}`}
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: "0.9rem", color: isMe ? "#ee1e46" : "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ fontWeight: 700, fontSize: "0.9rem", color: isMe ? "#ee1e46" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {r.display_name}{isMe && ` ${t("leaderboard.you")}`}
                       </div>
                       <div style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 2 }}>
@@ -242,7 +242,7 @@ export default function LeaderboardPage() {
                       </div>
                     </div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ fontWeight: 900, fontSize: "1.1rem", color: i === 0 ? "#f59e0b" : "#fff" }}>
+                      <div style={{ fontWeight: 900, fontSize: "1.1rem", color: i === 0 ? "#f59e0b" : "var(--text)" }}>
                         {r.total_points}
                       </div>
                       <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>{t("leaderboard.pts")}</div>

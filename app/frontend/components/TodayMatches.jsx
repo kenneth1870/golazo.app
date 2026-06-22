@@ -20,7 +20,7 @@ function MatchRow({ match, onClick }) {
       onClick={onClick}
       style={{
         cursor: "pointer",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        borderBottom: "1px solid var(--border)",
         transition: "background 0.15s",
         borderLeft: isLive ? "3px solid #ee1e46" : "3px solid transparent",
       }}
@@ -36,7 +36,7 @@ function MatchRow({ match, onClick }) {
         ) : isFinished ? (
           <span style={{ color: "gray", fontSize: "0.72rem" }}>FT</span>
         ) : (
-          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem" }}>
+          <span style={{ color: "var(--muted)", fontSize: "0.8rem" }}>
             {formatKickoff(match.kickoff_at, i18n.language)}
           </span>
         )}
@@ -44,7 +44,7 @@ function MatchRow({ match, onClick }) {
 
       {/* Home team */}
       <div className="d-flex align-items-center" style={{ flex: 1, justifyContent: "flex-end", gap: 8 }}>
-        <span style={{ color: "#fff", fontWeight: 600, fontSize: "0.9rem" }}>{match.home_team?.name}</span>
+        <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.9rem" }}>{match.home_team?.name}</span>
         {match.home_team?.flag_url && (
           <img src={match.home_team.flag_url} alt="" className="flag-xs" loading="eager" />
         )}
@@ -55,14 +55,14 @@ function MatchRow({ match, onClick }) {
         {hasScore ? (
           <span style={{
             fontWeight: 900, fontSize: "1.05rem",
-            color: isLive ? "#ee1e46" : "#fff",
-            background: "rgba(255,255,255,0.07)",
+            color: isLive ? "#ee1e46" : "var(--text)",
+            background: "var(--surface2)",
             padding: "3px 10px", borderRadius: 4
           }}>
             {match.home_score} – {match.away_score}
           </span>
         ) : (
-          <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "0.85rem" }}>vs</span>
+          <span style={{ color: "var(--muted)", fontSize: "0.85rem" }}>vs</span>
         )}
       </div>
 
@@ -71,7 +71,7 @@ function MatchRow({ match, onClick }) {
         {match.away_team?.flag_url && (
           <img src={match.away_team.flag_url} alt="" className="flag-xs" loading="eager" />
         )}
-        <span style={{ color: "#fff", fontWeight: 600, fontSize: "0.9rem" }}>{match.away_team?.name}</span>
+        <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.9rem" }}>{match.away_team?.name}</span>
       </div>
 
       {/* Round */}

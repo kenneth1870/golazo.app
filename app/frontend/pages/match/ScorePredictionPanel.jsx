@@ -134,8 +134,8 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
         }}>
           <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>{homeName}</span>
           <span style={{
-            fontWeight: 900, fontSize: "1.4rem", color: "#fff",
-            background: "rgba(255,255,255,.07)", padding: "4px 16px", borderRadius: 6,
+            fontWeight: 900, fontSize: "1.4rem", color: "var(--text)",
+            background: "var(--surface)", padding: "4px 16px", borderRadius: 6,
             letterSpacing: 2,
           }}>
             {myPred.home_guess} – {myPred.away_guess}
@@ -154,7 +154,7 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
               style={{
                 width: 52, height: 44, textAlign: "center", fontSize: "1.3rem", fontWeight: 900,
                 background: "var(--surface2)", border: "2px solid var(--border)",
-                borderRadius: 8, color: "#fff",
+                borderRadius: 8, color: "var(--text)",
               }}
             />
             <span style={{ fontWeight: 700, color: "var(--muted)" }}>–</span>
@@ -165,7 +165,7 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
               style={{
                 width: 52, height: 44, textAlign: "center", fontSize: "1.3rem", fontWeight: 900,
                 background: "var(--surface2)", border: "2px solid var(--border)",
-                borderRadius: 8, color: "#fff",
+                borderRadius: 8, color: "var(--text)",
               }}
             />
             <span style={{ fontSize: "0.82rem", color: "var(--muted)", flex: 1 }}>{awayName}</span>

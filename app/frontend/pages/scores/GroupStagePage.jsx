@@ -36,7 +36,7 @@ function MiniStandingsTable({ group, rows }) {
             <td style={{ padding: "5px 6px", display: "flex", alignItems: "center", gap: 6 }}>
               {i < 2 && <span style={{ width: 3, height: 14, borderRadius: 2, background: "#ee1e46", display: "inline-block", flexShrink: 0 }} />}
               {s.team?.flag_url && <img src={s.team.flag_url} alt="" loading="eager" style={{ width: 16, height: 11, objectFit: "cover", borderRadius: 1, flexShrink: 0 }} onError={e => (e.target.style.display = "none")} />}
-              <Link to={`/teams/${s.team?.id}`} style={{ color: "#fff", textDecoration: "none", fontWeight: i < 2 ? 700 : 400 }}>
+              <Link to={`/teams/${s.team?.id}`} style={{ color: "var(--text)", textDecoration: "none", fontWeight: i < 2 ? 700 : 400 }}>
                 {s.team?.code || s.team?.name}
               </Link>
             </td>
@@ -47,7 +47,7 @@ function MiniStandingsTable({ group, rows }) {
             <td style={{ textAlign: "center", padding: "5px 4px", color: "var(--muted)" }}>
               {(s.goal_diff ?? 0) > 0 ? `+${s.goal_diff}` : s.goal_diff ?? 0}
             </td>
-            <td style={{ textAlign: "center", padding: "5px 4px", fontWeight: 800, color: "#fff" }}>{s.points ?? 0}</td>
+            <td style={{ textAlign: "center", padding: "5px 4px", fontWeight: 800, color: "var(--text)" }}>{s.points ?? 0}</td>
           </tr>
           )
         })}

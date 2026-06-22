@@ -103,13 +103,13 @@ function IosInstallHint({ onClose }) {
         borderRadius: 16, padding: "20px 20px 16px", boxShadow: "0 16px 48px rgba(0,0,0,.6)",
       }}>
         <div style={{ fontSize: "1.8rem", textAlign: "center", marginBottom: 10 }}>📲</div>
-        <div style={{ fontWeight: 800, color: "#fff", fontSize: "0.95rem", textAlign: "center", marginBottom: 8 }}>
+        <div style={{ fontWeight: 800, color: "var(--text)", fontSize: "0.95rem", textAlign: "center", marginBottom: 8 }}>
           Añade Golazo a tu inicio
         </div>
         <div style={{ fontSize: "0.8rem", color: "var(--muted)", textAlign: "center", lineHeight: 1.5, marginBottom: 16 }}>
           Para recibir alertas de goles en iOS, primero instala la app:
-          toca <strong style={{ color: "#fff" }}>Compartir</strong> (□↑) y luego{" "}
-          <strong style={{ color: "#fff" }}>Añadir a pantalla de inicio</strong>.
+          toca <strong style={{ color: "var(--text)" }}>Compartir</strong> (□↑) y luego{" "}
+          <strong style={{ color: "var(--text)" }}>Añadir a pantalla de inicio</strong>.
         </div>
         <button
           onClick={onClose}

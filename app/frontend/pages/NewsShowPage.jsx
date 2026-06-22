@@ -188,14 +188,14 @@ export default function NewsShowPage() {
 
         {/* Article body */}
         {paragraphs.length > 0 ? (
-          <div style={{ fontSize: "clamp(1rem, 2.5vw, 1.1rem)", lineHeight: 1.85, color: "rgba(255,255,255,.84)" }}>
+          <div style={{ fontSize: "clamp(1rem, 2.5vw, 1.1rem)", lineHeight: 1.85, color: "var(--text)" }}>
             {paragraphs.map((p, i) => (
               <p key={i} style={{ marginBottom: 22 }}>{p}</p>
             ))}
           </div>
         ) : article.summary ? (
           <p style={{
-            fontSize: "clamp(1rem, 2.5vw, 1.1rem)", lineHeight: 1.85, color: "rgba(255,255,255,.78)",
+            fontSize: "clamp(1rem, 2.5vw, 1.1rem)", lineHeight: 1.85, color: "var(--text)",
             borderLeft: "3px solid var(--accent)", paddingLeft: 16, marginBottom: 28,
           }}>
             {article.summary}

@@ -9,7 +9,7 @@ function StatBox({ label, value, highlight }) {
       background: "var(--surface2)", borderRadius: 10, padding: "14px 12px",
       textAlign: "center", flex: "1 1 80px", minWidth: 72,
     }}>
-      <div style={{ fontSize: "1.4rem", fontWeight: 900, color: highlight ? "#ee1e46" : "#fff" }}>
+      <div style={{ fontSize: "1.4rem", fontWeight: 900, color: highlight ? "#ee1e46" : "var(--text)" }}>
         {value ?? "—"}
       </div>
       <div style={{ fontSize: "0.65rem", color: "var(--muted)", marginTop: 3, textTransform: "uppercase", letterSpacing: .5 }}>
