@@ -1,6 +1,8 @@
 require "test_helper"
 
 class PageMetaTest < ActiveSupport::TestCase
+  setup { Rails.cache.delete("page_meta_home") }
+
   test "root with no matches uses site default" do
     assert_equal PageMeta::SITE, PageMeta.for("/").title
     assert_equal "website", PageMeta.for("/").type
@@ -27,7 +29,7 @@ class PageMetaTest < ActiveSupport::TestCase
     match = Match.create!(
       home_team: team("TOH"), away_team: team("TOA"),
       competition: wc, status: "scheduled",
-      kickoff_at: 3.hours.from_now
+      kickoff_at: Time.current.beginning_of_day + 10.hours
     )
     meta = PageMeta.for("/")
     assert_match match.home_team.name, meta.title
