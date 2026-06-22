@@ -61,7 +61,7 @@ function StandingsTable({ group, rows, onNavigate, t, i18n }) {
                       <img src={s.team.flag_url} alt="" className="flag-xs" loading="eager"
                         onError={e => (e.target.style.display = "none")} />
                     )}
-                    <span className="text-white" style={{ fontWeight: 600 }}>{translateTeam(s.team?.name, i18n.language)}</span>
+                    <span style={{ fontWeight: 600, color: "var(--text)" }}>{translateTeam(s.team?.name, i18n.language)}</span>
                   </div>
                 </td>
                 <td style={{ textAlign: "center" }}>{s.played ?? 0}</td>
@@ -74,7 +74,7 @@ function StandingsTable({ group, rows, onNavigate, t, i18n }) {
                   {(s.goal_diff ?? 0) > 0 ? `+${s.goal_diff}` : s.goal_diff ?? 0}
                 </td>
                 <td style={{ textAlign: "center" }}>
-                  <strong className="text-white">{s.points ?? 0}</strong>
+                  <strong style={{ color: "var(--text)" }}>{s.points ?? 0}</strong>
                 </td>
               </tr>
               )

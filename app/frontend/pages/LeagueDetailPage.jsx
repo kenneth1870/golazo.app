@@ -55,7 +55,7 @@ function StandingsTable({ standings, t, i18n }) {
                             onError={e => (e.target.style.display = "none")}
                           />
                         )}
-                        <strong className="text-white">{translateTeam(s.team?.name, i18n.language)}</strong>
+                        <strong style={{ color: "var(--text)" }}>{translateTeam(s.team?.name, i18n.language)}</strong>
                       </div>
                     </td>
                     <td>{s.played}</td>
@@ -67,7 +67,7 @@ function StandingsTable({ standings, t, i18n }) {
                     <td style={{ color: s.goals_for - s.goals_against >= 0 ? "#10b981" : "#ee1e46" }}>
                       {s.goals_for - s.goals_against >= 0 ? "+" : ""}{s.goals_for - s.goals_against}
                     </td>
-                    <td><strong className="text-white">{s.points}</strong></td>
+                    <td><strong style={{ color: "var(--text)" }}>{s.points}</strong></td>
                   </tr>
                 ))}
               </tbody>

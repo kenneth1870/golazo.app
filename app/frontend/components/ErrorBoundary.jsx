@@ -45,7 +45,7 @@ export default class ErrorBoundary extends Component {
         <div className="container">
           <div className="empty-state" style={{ padding: "60px 20px" }}>
             <div className="empty-state__icon">⚠️</div>
-            <h3 style={{ color: "#fff", marginBottom: 8 }}>{i18n.t("error.somethingWrong")}</h3>
+            <h3 style={{ color: "var(--text)", marginBottom: 8 }}>{i18n.t("error.somethingWrong")}</h3>
             <p style={{ color: "var(--muted)", marginBottom: 24, fontSize: "0.85rem" }}>
               {this.state.error?.message || i18n.t("error.unexpected")}
             </p>

@@ -494,14 +494,14 @@ export default function HomePage() {
                           <td>
                             <div className="d-flex align-items-center" style={{ gap: 6 }}>
                               {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt="" className="flag-xs" />}
-                              <strong className="text-white">{m.home_team?.code}</strong>
+                              <strong style={{ color: "var(--text)" }}>{m.home_team?.code}</strong>
                             </div>
                           </td>
                           <td style={{ color: "gray", fontSize: "0.75rem" }}>vs</td>
                           <td>
                             <div className="d-flex align-items-center" style={{ gap: 6 }}>
                               {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt="" className="flag-xs" />}
-                              <strong className="text-white">{m.away_team?.code}</strong>
+                              <strong style={{ color: "var(--text)" }}>{m.away_team?.code}</strong>
                             </div>
                           </td>
                           <td style={{ color: "gray", fontSize: "0.75rem" }}>{m.group_stage}</td>

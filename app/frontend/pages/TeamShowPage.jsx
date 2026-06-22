@@ -58,6 +58,29 @@ export default function TeamShowPage() {
       .finally(() => setSquadLoading(false))
   }, [activeTab, id, squad])
 
+  // Countdown to next match — must be before any early return (React hooks rules)
+  const [countdown, setCountdown] = useState("")
+  const countdownRef = useRef(null)
+  useEffect(() => {
+    const allMatches = team?.matches || []
+    const next = allMatches
+      .filter(m => m.status === "scheduled")
+      .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))[0] ?? null
+    if (!next?.kickoff_at) { setCountdown(""); return }
+    const tick = () => {
+      const diff = new Date(next.kickoff_at).getTime() - Date.now()
+      if (diff <= 0) { setCountdown(""); return }
+      const d  = Math.floor(diff / 86400000)
+      const h  = Math.floor((diff % 86400000) / 3600000)
+      const m  = Math.floor((diff % 3600000) / 60000)
+      const s  = Math.floor((diff % 60000) / 1000)
+      setCountdown(d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m ${s}s`)
+    }
+    tick()
+    countdownRef.current = setInterval(tick, 1000)
+    return () => clearInterval(countdownRef.current)
+  }, [team]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (loading) {
     return (
       <div>
@@ -116,25 +139,6 @@ export default function TeamShowPage() {
   const finished   = matches.filter(m => m.status === "finished").sort((a, b) => new Date(b.kickoff_at) - new Date(a.kickoff_at))
   const live       = matches.filter(m => m.status === "live")
   const nextMatch  = upcoming[0] ?? null
-
-  // Countdown to next match
-  const [countdown, setCountdown] = useState("")
-  const countdownRef = useRef(null)
-  useEffect(() => {
-    if (!nextMatch?.kickoff_at) { setCountdown(""); return }
-    const tick = () => {
-      const diff = new Date(nextMatch.kickoff_at).getTime() - Date.now()
-      if (diff <= 0) { setCountdown(""); return }
-      const d  = Math.floor(diff / 86400000)
-      const h  = Math.floor((diff % 86400000) / 3600000)
-      const m  = Math.floor((diff % 3600000) / 60000)
-      const s  = Math.floor((diff % 60000) / 1000)
-      setCountdown(d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m ${s}s`)
-    }
-    tick()
-    countdownRef.current = setInterval(tick, 1000)
-    return () => clearInterval(countdownRef.current)
-  }, [nextMatch?.kickoff_at])
   const scorers    = team.scorers || []
   const tstats     = team.tournament_stats || {}
 

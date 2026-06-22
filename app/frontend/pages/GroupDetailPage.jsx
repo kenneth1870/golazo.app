@@ -362,7 +362,7 @@ export default function GroupDetailPage() {
                             <td style={{ color: gd > 0 ? "#10b981" : gd < 0 ? "#ef4444" : "inherit" }}>
                               {gd != null ? (gd > 0 ? `+${gd}` : gd) : "–"}
                             </td>
-                            <td><strong className="text-white">{s.points ?? 0}</strong></td>
+                            <td><strong style={{ color: "var(--text)" }}>{s.points ?? 0}</strong></td>
                           </tr>
                         )
                       })}
