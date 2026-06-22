@@ -640,7 +640,7 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
             {(isLive || isNS) && notifSupported && (
               <button
                 onClick={onNotif}
-                title={notifEnabled ? "Desactivar alertas" : "Activar alertas de gol"}
+                title={notifEnabled ? t("match.notifDisable") : t("match.notifEnable")}
                 style={{
                   background: notifEnabled ? "rgba(16,185,129,.15)" : "rgba(255,255,255,.08)",
                   border: notifEnabled ? "1px solid rgba(16,185,129,.4)" : "1px solid rgba(255,255,255,.15)",
@@ -649,7 +649,7 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
                   fontSize: ".72rem", fontWeight: 600, cursor: "pointer",
                 }}
               >
-                {notifEnabled ? "🔔 On" : "🔕 Off"}
+                {notifEnabled ? `🔔 ${t("match.notifOn")}` : `🔕 ${t("match.notifOff")}`}
               </button>
             )}
             {isNS && fixture?.fixture?.date && (
@@ -806,7 +806,7 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t, i18n }) {
                   </span>
                 )}
                 {isMissed && (
-                  <span className="match-event__assist" style={{ color: "#ef4444" }}> missed penalty</span>
+                  <span className="match-event__assist" style={{ color: "#ef4444" }}> {t("match.missedPenalty")}</span>
                 )}
               </div>
               {!isSub && !isVar && (

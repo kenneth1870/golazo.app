@@ -255,7 +255,12 @@
     "statPassesAccuracy": "Pass Accuracy",
     "reminderActive": "Reminder set — {{time}}",
     "reminderSet": "Remind me at {{time}}",
-    "remindMe": "Remind me"
+    "remindMe": "Remind me",
+    "missedPenalty": "missed penalty",
+    "notifOn": "On",
+    "notifOff": "Off",
+    "notifEnable": "Enable goal alerts",
+    "notifDisable": "Disable alerts"
   },
   "teamComparison": {
     "title": "Team Comparison",

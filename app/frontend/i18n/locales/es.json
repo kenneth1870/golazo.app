@@ -255,7 +255,12 @@
     "statPassesAccuracy": "Precisión de Pases",
     "reminderActive": "Recordatorio activo — {{time}}",
     "reminderSet": "Recordarme a las {{time}}",
-    "remindMe": "Recordar"
+    "remindMe": "Recordar",
+    "missedPenalty": "penalti fallado",
+    "notifOn": "Activado",
+    "notifOff": "Desactivado",
+    "notifEnable": "Activar alertas de gol",
+    "notifDisable": "Desactivar alertas"
   },
   "teamComparison": {
     "title": "Comparativa de Equipos",
