@@ -77,7 +77,7 @@ class PageMeta
   # ── Entity-level helpers ──────────────────────────────────────────────
 
   def self.for_home
-    Rails.cache.fetch("page_meta_home", expires_in: 30.seconds) { build_home_meta }
+    Rails.cache.fetch("page_meta_home", expires_in: 30.seconds, race_condition_ttl: 5.seconds) { build_home_meta }
   rescue => e
     Rails.logger.error("[PageMeta.for_home] #{e.message}")
     Meta.new(title: SITE, description: DEFAULT_DESC, type: "website", image: DEFAULT_IMG, json_ld: nil)
@@ -282,7 +282,7 @@ class PageMeta
   end
 
   def self.for_news(id)
-    article = Rails.cache.fetch("page_meta_news_#{id}", expires_in: 15.minutes) do
+    article = Rails.cache.fetch("page_meta_news_#{id}", expires_in: 15.minutes, race_condition_ttl: 30.seconds) do
       NewsService.new.latest(limit: 60, lang: "en").find { |a| a[:id].to_s == id.to_s } ||
         NewsService.new.latest(limit: 60, lang: "es").find { |a| a[:id].to_s == id.to_s }
     end

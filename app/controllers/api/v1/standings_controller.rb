@@ -5,7 +5,7 @@ module Api
         competition_code = params[:competition].presence || "WC"
         ttl = competition_code == "WC" ? 3.minutes : 30.minutes
 
-        result = Rails.cache.fetch("standings_#{competition_code}", expires_in: ttl) do
+        result = Rails.cache.fetch("standings_#{competition_code}", expires_in: ttl, race_condition_ttl: 10.seconds) do
           if competition_code == "WC"
             wc_standings_from_results
           else

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague, translateCountry } from "../../i18n/leagueNames"
@@ -364,6 +364,7 @@ export default function TodayPage() {
   const [filterMyTeams, setFilterMyTeams] = useState(false)
   const prevMatchesRef = useRef([])
   const flashTimerRef  = useRef(null)
+  useEffect(() => () => clearTimeout(flashTimerRef.current), [])
   const pullStartY  = useRef(null)
   const isPulling   = useRef(false)
   const navigate     = useNavigate()
@@ -531,20 +532,20 @@ export default function TodayPage() {
   const upcomingPreview = matches.filter(m => m.upcoming_preview)
   const todayMatches    = matches.filter(m => !m.upcoming_preview)
 
-  const byComp = todayMatches.reduce((acc, m) => {
+  const byComp = useMemo(() => todayMatches.reduce((acc, m) => {
     // Prefer competition.code so API (code="WC", id=league_id) and DB (code="WC", id=db_id)
     // always land in the same bucket instead of creating duplicate competition blocks.
     const key = m.competition?.code ?? m.competition?.id ?? "other"
     if (!acc[key]) acc[key] = []
     acc[key].push(m)
     return acc
-  }, {})
+  }, {}), [todayMatches])
 
-  const allGroups = Object.values(byComp).sort((a, b) => {
+  const allGroups = useMemo(() => Object.values(byComp).sort((a, b) => {
     const aLive = a.some(m => m.status === "live") ? 0 : 1
     const bLive = b.some(m => m.status === "live") ? 0 : 1
     return aLive - bLive || (a[0]?.competition?.name ?? "").localeCompare(b[0]?.competition?.name ?? "")
-  })
+  }), [byComp])
 
   // Exact team name matcher — avoids "Real" matching "Real Salt Lake", "Real Betis", etc.
   function teamMatches(teamName, favName) {

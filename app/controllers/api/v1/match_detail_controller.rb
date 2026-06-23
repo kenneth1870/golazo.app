@@ -95,7 +95,7 @@ module Api
 
         broadcast_if_changed(external_id, data, local_match: local_match)
         render json: data
-      rescue => e
+      rescue StandardError => e
         Rails.logger.error("[MatchDetailController] #{e.message}")
         render json: { fixture: nil, error: "api_error", stats: [], events: [], lineups: [] }
       end
@@ -123,7 +123,7 @@ module Api
         merged[:h2h]     = fallback[:h2h]     if fallback[:h2h].present?
         merged[:source]  = "api_sports_fallback"
         merged
-      rescue => e
+      rescue StandardError => e
         Rails.logger.warn("[MatchDetail] api_sports_fallback failed: #{e.message}")
         data
       end
@@ -145,7 +145,7 @@ module Api
         updates[:external_id] = api_ext_id  if api_ext_id.present?   && match.external_id != api_ext_id
 
         match.update_columns(updates) if updates.any?
-      rescue => e
+      rescue StandardError => e
         Rails.logger.warn("[MatchDetail#sync_db] #{e.message}")
       end
 
@@ -226,7 +226,7 @@ module Api
         end
 
         Rails.cache.write(cache_key, current, expires_in: 30.seconds)
-      rescue => e
+      rescue StandardError => e
         Rails.logger.warn("[MatchDetail#broadcast] #{e.message}")
       end
 
@@ -336,7 +336,7 @@ module Api
         end
 
         cache_key = "ai_summary_ext_#{external_id}_#{lang}"
-        result = Rails.cache.fetch(cache_key, expires_in: 24.hours) do
+        result = Rails.cache.fetch(cache_key, expires_in: 24.hours, race_condition_ttl: 60.seconds) do
           AiMatchSummaryExternalService.new(data, lang: lang).call
         end
 
@@ -346,7 +346,7 @@ module Api
           Rails.cache.delete(cache_key)
           render json: { error: "generation_failed" }, status: :service_unavailable
         end
-      rescue => e
+      rescue StandardError => e
         Rails.logger.error("[MatchDetail#ai_summary] #{e.message}")
         render json: { error: "server_error" }, status: :internal_server_error
       end
@@ -355,7 +355,7 @@ module Api
         home_id = params[:home_team_id].to_i
         away_id = params[:away_team_id].to_i
         render json: { h2h: [], home_form: [], away_form: [] }
-      rescue => e
+      rescue StandardError => e
         Rails.logger.error("[MatchDetailController#preview] #{e.message}")
         render json: { h2h: [], home_form: [], away_form: [] }
       end

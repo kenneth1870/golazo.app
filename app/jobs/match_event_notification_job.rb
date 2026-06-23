@@ -19,6 +19,14 @@ class MatchEventNotificationJob < ApplicationJob
   def perform(event_type:, match_id:, home_name:, away_name:, home_score: nil, away_score: nil, match_url: nil, minute: nil, scorer: nil)
     event_type = event_type.to_s
 
+    # Deduplicate retried jobs — same event + scoreline within 10 min → skip.
+    dedup_key = "notif_sent_#{event_type}_#{match_id}_#{home_score}_#{away_score}_#{minute}"
+    if Rails.cache.read(dedup_key)
+      Rails.logger.info("[PushNotification] Skipping duplicate #{event_type} for match #{match_id}")
+      return
+    end
+    Rails.cache.write(dedup_key, 1, expires_in: 10.minutes)
+
     if ENV["VAPID_PUBLIC_KEY"].blank? || ENV["VAPID_PRIVATE_KEY"].blank?
       Rails.logger.error("[PushNotification] VAPID keys not configured — skipping #{event_type} notification")
       return

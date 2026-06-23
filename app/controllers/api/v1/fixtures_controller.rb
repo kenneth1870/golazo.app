@@ -19,7 +19,7 @@ module Api
             }
           )
         }
-      rescue => e
+      rescue StandardError => e
         Rails.logger.error("[FixturesController] #{e.message}")
         render json: []
       end

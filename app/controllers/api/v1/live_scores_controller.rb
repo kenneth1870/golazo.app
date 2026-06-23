@@ -4,7 +4,7 @@ module Api
       # Live matches — already normalized by LiveScoresClient#live_matches
       def index
         render json: LiveScoresClient.new.live_matches
-      rescue => e
+      rescue StandardError => e
         Rails.logger.error("[LiveScoresController] #{e.message}")
         render json: []
       end
@@ -16,7 +16,7 @@ module Api
         matches = Rails.cache.read("live_scores_live_v6") || LiveScoresClient.new.live_matches
         wc_count = matches.count { |m| m[:league_id].to_i == 1 }
         render json: { count: wc_count }
-      rescue => e
+      rescue StandardError => e
         Rails.logger.error("[LiveScoresController#count] #{e.message}")
         render json: { count: 0 }
       end

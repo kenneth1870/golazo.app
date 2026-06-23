@@ -1059,10 +1059,12 @@ function InjuriesSection({ fixtureId, homeName, awayName }) {
 
   useEffect(() => {
     const apiId = String(fixtureId).replace(/^ext-/, "")
+    let cancelled = false
     fetch(`/api/v1/fixture_injuries/${apiId}`)
       .then(r => r.json())
-      .then(d => setInjuries(Array.isArray(d) && d.length ? d : []))
-      .catch(() => setInjuries([]))
+      .then(d => { if (!cancelled) setInjuries(Array.isArray(d) && d.length ? d : []) })
+      .catch(() => { if (!cancelled) setInjuries([]) })
+    return () => { cancelled = true }
   }, [fixtureId])
 
   if (!injuries?.length) return null
