@@ -675,14 +675,16 @@ class LiveScoresClient
   def normalize_events(raw)
     raw.map do |e|
       {
-        minute:   e.dig("time", "elapsed"),
-        extra:    e.dig("time", "extra"),
-        team:     { name: e.dig("team", "name"),     logo: e.dig("team", "logo") },
-        player:   e.dig("player", "name"),
-        assist:   e.dig("assist", "name"),
-        type:     e["type"].to_s,
-        detail:   e["detail"] || e["type"].to_s,
-        comments: e["comments"]
+        minute:     e.dig("time", "elapsed"),
+        extra:      e.dig("time", "extra"),
+        team:       { name: e.dig("team", "name"),     logo: e.dig("team", "logo") },
+        player:     e.dig("player", "name"),
+        player_id:  e.dig("player", "id"),
+        assist:     e.dig("assist", "name"),
+        assist_id:  e.dig("assist", "id"),
+        type:       e["type"].to_s,
+        detail:     e["detail"] || e["type"].to_s,
+        comments:   e["comments"]
       }
     end
   end

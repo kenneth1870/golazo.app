@@ -44,7 +44,20 @@ class WorldCupScorers
 
     finished = finished_matches.pluck(:external_id)
 
-    tally = Hash.new { |h, k| h[k] = { goals: 0, assists: 0, yellow_cards: 0, red_cards: 0, team_name: nil, team_logo: nil } }
+    # Key: player_id when available, else player_name (downcased for dedup).
+    # The API returns inconsistent name formats across matches (e.g. "K. Mbappe"
+    # in one fixture vs "Kylian Mbappé" in another), so we must use the numeric
+    # player ID as the canonical key. We keep the longest name seen so the full
+    # name wins over the abbreviated one.
+    tally = Hash.new { |h, k| h[k] = { name: nil, goals: 0, assists: 0, yellow_cards: 0, red_cards: 0, team_name: nil, team_logo: nil } }
+
+    tally_key = ->(player_id, player_name) {
+      player_id.present? ? "id_#{player_id}" : player_name.to_s.downcase
+    }
+
+    update_name = ->(bucket, name) {
+      bucket[:name] = name if name.to_s.length > bucket[:name].to_s.length
+    }
 
     finished.each do |fixture_id|
       events = fetch_events(fixture_id)
@@ -52,35 +65,44 @@ class WorldCupScorers
         next unless e["type"].in?([ "Goal", "Card" ])
 
         if e["type"] == "Goal" && !%w[Missed\ Penalty Own\ Goal].include?(e["detail"])
-          scorer = e.dig("player", "name").presence
-          if scorer
-            tally[scorer][:team_name] ||= e.dig("team", "name")
-            tally[scorer][:team_logo] ||= e.dig("team", "logo")
-            tally[scorer][:goals] += 1
+          scorer_name = e.dig("player", "name").presence
+          scorer_id   = e.dig("player", "id")
+          if scorer_name
+            key = tally_key.call(scorer_id, scorer_name)
+            tally[key][:team_name] ||= e.dig("team", "name")
+            tally[key][:team_logo] ||= e.dig("team", "logo")
+            tally[key][:goals] += 1
+            update_name.call(tally[key], scorer_name)
           end
 
-          assister = e.dig("assist", "name").presence
-          if assister
-            tally[assister][:team_name] ||= e.dig("team", "name")
-            tally[assister][:team_logo] ||= e.dig("team", "logo")
-            tally[assister][:assists] += 1
+          assist_name = e.dig("assist", "name").presence
+          assist_id   = e.dig("assist", "id")
+          if assist_name
+            key = tally_key.call(assist_id, assist_name)
+            tally[key][:team_name] ||= e.dig("team", "name")
+            tally[key][:team_logo] ||= e.dig("team", "logo")
+            tally[key][:assists] += 1
+            update_name.call(tally[key], assist_name)
           end
         elsif e["type"] == "Card"
-          player = e.dig("player", "name").presence
-          next if player.blank?
-          tally[player][:team_name] ||= e.dig("team", "name")
-          tally[player][:team_logo] ||= e.dig("team", "logo")
+          player_name = e.dig("player", "name").presence
+          player_id   = e.dig("player", "id")
+          next if player_name.blank?
+          key = tally_key.call(player_id, player_name)
+          tally[key][:team_name] ||= e.dig("team", "name")
+          tally[key][:team_logo] ||= e.dig("team", "logo")
+          update_name.call(tally[key], player_name)
           case e["detail"]
-          when "Yellow Card" then tally[player][:yellow_cards] += 1
-          when "Red Card"    then tally[player][:red_cards] += 1
+          when "Yellow Card" then tally[key][:yellow_cards] += 1
+          when "Red Card"    then tally[key][:red_cards] += 1
           end
         end
       end
     end
 
-    sorted = tally.map do |name, stats|
+    sorted = tally.map do |_key, stats|
       {
-        player: { name: name, photo: nil, nationality: nil },
+        player: { name: stats[:name], photo: nil, nationality: nil },
         team:   { name: stats[:team_name], crest: stats[:team_logo] },
         goals:        stats[:goals],
         assists:      stats[:assists],
@@ -109,11 +131,11 @@ class WorldCupScorers
 
     events = detail[:events]&.map do |e|
       {
-        "type"   => e[:type],
-        "detail" => e[:detail],
-        "team"   => { "name" => e.dig(:team, :name), "logo" => e.dig(:team, :logo) },
-        "player" => { "name" => e[:player] },
-        "assist" => { "name" => e[:assist] }
+        "type"      => e[:type],
+        "detail"    => e[:detail],
+        "team"      => { "name" => e.dig(:team, :name), "logo" => e.dig(:team, :logo) },
+        "player"    => { "name" => e[:player], "id" => e[:player_id] },
+        "assist"    => { "name" => e[:assist],  "id" => e[:assist_id] }
       }
     end || []
 
