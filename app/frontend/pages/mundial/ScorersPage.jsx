@@ -52,9 +52,11 @@ function LeaderHero({ player, tab, lang }) {
         ) : (
           <div style={{ color: "var(--text)", fontWeight: 900, fontSize: "1.2rem" }}>{player.player?.name}</div>
         )}
-        <div style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 2 }}>
-          {player.played ?? 0} {t("mundial.matchesPlayed")}
-        </div>
+        {player.played > 0 && (
+          <div style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 2 }}>
+            {player.played} {t("mundial.matchesPlayed")}
+          </div>
+        )}
       </div>
 
       <div style={{ textAlign: "center", flexShrink: 0 }}>

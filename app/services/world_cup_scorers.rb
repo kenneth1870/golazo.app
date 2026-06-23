@@ -27,12 +27,22 @@ class WorldCupScorers
     competition = Competition.find_by(code: competition_code)
     return [] unless competition
 
-    finished = Match
+    finished_matches = Match
+      .includes(:home_team, :away_team)
       .where(competition: competition, status: "finished")
       .where.not(external_id: nil)
-      .pluck(:external_id)
 
-    return [] if finished.empty?
+    return [] if finished_matches.empty?
+
+    # Count how many finished matches each team has played so we can show it
+    # on the scorers page instead of the always-wrong "0 played".
+    team_played = Hash.new(0)
+    finished_matches.each do |m|
+      team_played[m.home_team&.name] += 1 if m.home_team&.name
+      team_played[m.away_team&.name] += 1 if m.away_team&.name
+    end
+
+    finished = finished_matches.pluck(:external_id)
 
     tally = Hash.new { |h, k| h[k] = { goals: 0, assists: 0, yellow_cards: 0, red_cards: 0, team_name: nil, team_logo: nil } }
 
@@ -76,6 +86,7 @@ class WorldCupScorers
         assists:      stats[:assists],
         yellow_cards: stats[:yellow_cards],
         red_cards:    stats[:red_cards],
+        played:       team_played[stats[:team_name]].presence,
         value: stats[stat]
       }
     end.select { |r| r[:value].to_i > 0 }
