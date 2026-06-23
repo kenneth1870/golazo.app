@@ -19,34 +19,36 @@ class MatchEventNotificationJob < ApplicationJob
   def perform(event_type:, match_id:, home_name:, away_name:, home_score: nil, away_score: nil, match_url: nil, minute: nil, scorer: nil)
     event_type = event_type.to_s
 
-    # Deduplicate retried jobs — same event + scoreline within 10 min → skip.
-    dedup_key = "notif_sent_#{event_type}_#{match_id}_#{home_score}_#{away_score}_#{minute}"
-    if Rails.cache.read(dedup_key)
-      Rails.logger.info("[PushNotification] Skipping duplicate #{event_type} for match #{match_id}")
-      return
-    end
-    Rails.cache.write(dedup_key, 1, expires_in: 10.minutes)
-
     if ENV["VAPID_PUBLIC_KEY"].blank? || ENV["VAPID_PRIVATE_KEY"].blank?
       Rails.logger.error("[PushNotification] VAPID keys not configured — skipping #{event_type} notification")
       return
     end
 
     # Final delivery-time gate for full-time. Re-check the LIVE DB state at the
-    # moment of sending, so a "match ended" push can never go out while the game
-    # is still on — regardless of how the job was enqueued (premature trigger,
-    # stale/retried job from an earlier outage, or any upstream bug). The match
-    # must actually be 'finished' in the DB and have run long enough to plausibly
-    # be over (≥100 min since kickoff: 45 + half-time + 45 + stoppage; extra time
-    # is later still).
+    # moment of sending so a "match ended" push can never go out while the game
+    # is still on. Threshold is 85 min: matches cannot legitimately finish before
+    # ~88 min (45 + whistle + 45), so 85 is a safe floor that lets normal-time
+    # results through immediately while blocking premature triggers.
+    # IMPORTANT: this check must run BEFORE the dedup key is written — if the
+    # gate blocks, we must not consume the idempotency window so that the next
+    # sync cycle can retry once the threshold is met.
     if event_type == "fulltime"
       match = Match.find_by(id: match_id)
       if match.nil? || match.status != "finished" ||
-          (match.kickoff_at.present? && match.kickoff_at > 100.minutes.ago)
+          (match.kickoff_at.present? && match.kickoff_at > 85.minutes.ago)
         Rails.logger.info("[PushNotification] Skipping fulltime for match #{match_id}: status=#{match&.status.inspect} kickoff=#{match&.kickoff_at}")
         return
       end
     end
+
+    # Deduplicate retried jobs — written only after all gates pass so a blocked
+    # fulltime gate doesn't consume the idempotency window prematurely.
+    dedup_key = "notif_sent_#{event_type}_#{match_id}_#{home_score}_#{away_score}_#{minute}"
+    if Rails.cache.read(dedup_key)
+      Rails.logger.info("[PushNotification] Skipping duplicate #{event_type} for match #{match_id}")
+      return
+    end
+    Rails.cache.write(dedup_key, 1, expires_in: 10.minutes)
 
     score_str  = "#{home_score}–#{away_score}" if home_score && away_score
     url        = match_url || "/"
