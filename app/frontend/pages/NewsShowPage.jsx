@@ -202,6 +202,24 @@ export default function NewsShowPage() {
           </p>
         ) : null}
 
+        {/* Read original article CTA — shown when full content wasn't scraped */}
+        {paragraphs.length < 3 && article.link && (
+          <a
+            href={article.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              marginTop: 8, marginBottom: 28,
+              background: "var(--accent)", color: "#fff",
+              padding: "10px 20px", borderRadius: 8,
+              fontWeight: 700, fontSize: "0.9rem", textDecoration: "none",
+            }}
+          >
+            {t("news.readOn", { source: article.source })}
+          </a>
+        )}
+
         {/* Back */}
         <div style={{ marginTop: 40, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
           <Link to="/news" style={{ color: "var(--accent)", fontSize: "0.85rem", textDecoration: "none" }}>
