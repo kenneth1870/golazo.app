@@ -91,6 +91,7 @@ export default function AdminMatchesPage() {
   const [filter,   setFilter]   = useState("all")
   const [editing,  setEditing]  = useState(null)
   const [toast,    setToast]    = useState(null)
+  const [healing,  setHealing]  = useState(false)
 
   const load = () => {
     setLoading(true)
@@ -99,6 +100,20 @@ export default function AdminMatchesPage() {
       .then(setMatches)
       .catch(() => {})
       .finally(() => setLoading(false))
+  }
+
+  const healMatches = async () => {
+    setHealing(true)
+    try {
+      await authFetch("/api/v1/admin/matches/heal", { method: "POST" })
+      setToast("Heal job enqueued — scores & scorers will update in ~30s")
+      setTimeout(() => setToast(null), 6000)
+    } catch {
+      setToast("Heal request failed")
+      setTimeout(() => setToast(null), 3000)
+    } finally {
+      setHealing(false)
+    }
   }
 
   useEffect(() => { load() }, [])
@@ -134,7 +149,7 @@ export default function AdminMatchesPage() {
             {matches.length} total
           </p>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {["all", "live", "scheduled", "finished"].map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{
               background: filter === f ? "#ee1e46" : "rgba(255,255,255,.07)",
@@ -145,6 +160,19 @@ export default function AdminMatchesPage() {
               {f}
             </button>
           ))}
+          <button
+            onClick={healMatches}
+            disabled={healing}
+            title="Re-fetch all WC match dates from the API, fix scores/statuses, bust scorer caches"
+            style={{
+              background: healing ? "rgba(255,255,255,.07)" : "rgba(16,185,129,.15)",
+              color: healing ? "rgba(255,255,255,.3)" : "#10b981",
+              border: "1px solid rgba(16,185,129,.3)", borderRadius: 6, padding: "6px 14px",
+              fontSize: "0.78rem", fontWeight: 700, cursor: healing ? "not-allowed" : "pointer",
+            }}
+          >
+            {healing ? "Healing…" : "Heal All"}
+          </button>
         </div>
       </div>
 

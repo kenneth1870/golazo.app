@@ -674,6 +674,13 @@ class WorldCupSync
       end
       RecalculateStandingsJob.perform_later
       bust_scorers_cache(match)
+      # Bust the per-fixture event cache so WorldCupScorers re-fetches
+      # events from the API on the next scorer aggregation — prevents a
+      # stale/empty event cache from zeroing out a player's goal tally.
+      if match.external_id.present?
+        Rails.cache.delete("wc_fixture_events_v1_#{match.external_id}")
+        Rails.cache.delete("live_scores_detail_v5_#{match.external_id}")
+      end
 
       # Bust the today-api cache so the next refetch (triggered by the
       # standings-channel broadcast above) sees the finished status, not a

@@ -88,22 +88,28 @@ class WorldCupScorers
   end
 
   def self.fetch_events(fixture_id)
-    Rails.cache.fetch("wc_fixture_events_v1_#{fixture_id}", expires_in: FIXTURE_EVENTS_TTL) do
-      detail = client.match_detail(fixture_id)
-      next [] unless detail
+    cached = Rails.cache.read("wc_fixture_events_v1_#{fixture_id}")
+    return cached unless cached.nil?
 
-      detail[:events]&.map do |e|
-        {
-          "type"   => e[:type],
-          "detail" => e[:detail],
-          "team"   => { "name" => e.dig(:team, :name), "logo" => e.dig(:team, :logo) },
-          "player" => { "name" => e[:player] },
-          "assist" => { "name" => e[:assist] }
-        }
-      end || []
-    rescue => e
-      Rails.logger.error("[WorldCupScorers] events for #{fixture_id}: #{e.message}")
-      []
-    end
+    detail = client.match_detail(fixture_id)
+    # Don't cache on API failure — let the next request retry rather than
+    # locking empty events in for 24 h and zeroing out a player's goal tally.
+    return [] unless detail
+
+    events = detail[:events]&.map do |e|
+      {
+        "type"   => e[:type],
+        "detail" => e[:detail],
+        "team"   => { "name" => e.dig(:team, :name), "logo" => e.dig(:team, :logo) },
+        "player" => { "name" => e[:player] },
+        "assist" => { "name" => e[:assist] }
+      }
+    end || []
+
+    Rails.cache.write("wc_fixture_events_v1_#{fixture_id}", events, expires_in: FIXTURE_EVENTS_TTL)
+    events
+  rescue => e
+    Rails.logger.error("[WorldCupScorers] events for #{fixture_id}: #{e.message}")
+    []
   end
 end
