@@ -24,19 +24,14 @@ class MatchEventNotificationJob < ApplicationJob
       return
     end
 
-    # Final delivery-time gate for full-time. Re-check the LIVE DB state at the
-    # moment of sending so a "match ended" push can never go out while the game
-    # is still on. Threshold is 85 min: matches cannot legitimately finish before
-    # ~88 min (45 + whistle + 45), so 85 is a safe floor that lets normal-time
-    # results through immediately while blocking premature triggers.
-    # IMPORTANT: this check must run BEFORE the dedup key is written — if the
-    # gate blocks, we must not consume the idempotency window so that the next
-    # sync cycle can retry once the threshold is met.
+    # Guard for full-time: re-check DB status at the moment of sending so the
+    # push only goes out when the match is actually finished. The external API
+    # sets status="finished" only after the final whistle, so trusting the DB
+    # record is sufficient — no time-based gate needed.
     if event_type == "fulltime"
       match = Match.find_by(id: match_id)
-      if match.nil? || match.status != "finished" ||
-          (match.kickoff_at.present? && match.kickoff_at > 85.minutes.ago)
-        Rails.logger.info("[PushNotification] Skipping fulltime for match #{match_id}: status=#{match&.status.inspect} kickoff=#{match&.kickoff_at}")
+      if match.nil? || match.status != "finished"
+        Rails.logger.info("[PushNotification] Skipping fulltime for match #{match_id}: status=#{match&.status.inspect}")
         return
       end
     end
