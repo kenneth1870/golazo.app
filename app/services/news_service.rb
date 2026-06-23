@@ -250,6 +250,11 @@ class NewsService
       header_img = a["images"]&.find { |i| i["type"] == "header" }&.dig("url")
       img = header_img || img
 
+      # If a user previously viewed this article and we scraped a better og:image,
+      # prefer it over the API thumbnail so the list card matches the detail page.
+      og_cache_key = "espn_og_#{Digest::SHA1.hexdigest(link)[0, 12]}"
+      img = Rails.cache.read(og_cache_key) || img
+
       pub_str   = a["published"]
       published = pub_str ? Time.parse(pub_str) : nil
       espn_id   = link.match(%r{/_/id/(\d+)/})&.[](1)
@@ -312,6 +317,11 @@ class NewsService
             # If we got at least an image or real paragraphs, use this result
             if hero_img.present? || paragraphs.length >= 2
               Rails.logger.info("[NewsService] ESPN article #{espn_id} scraped via mobile UA (#{paragraphs.length} paras, image=#{hero_img.present?})")
+              # Persist better og:image so next feed rebuild uses it for the card
+              if hero_img.present? && original_url.present?
+                og_key = "espn_og_#{Digest::SHA1.hexdigest(original_url)[0, 12]}"
+                Rails.cache.write(og_key, hero_img, expires_in: 6.hours)
+              end
               next { hero_image: hero_img, paragraphs: paragraphs }
             end
           else

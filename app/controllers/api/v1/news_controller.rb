@@ -45,6 +45,12 @@ module Api
         hero_image = body[:hero_image].presence || article[:image]
         paragraphs = body[:paragraphs].presence || (article[:summary].present? ? [ article[:summary] ] : [])
 
+        # Propagate the scraped hero_image back to the per-article cache so
+        # subsequent list renders show the same specific image as the detail page.
+        if body[:hero_image].present? && body[:hero_image] != article[:image] && article[:id].present?
+          Rails.cache.write("news_article_#{lang}_#{article[:id]}", article.merge(image: body[:hero_image]), expires_in: 24.hours)
+        end
+
         render json: { hero_image: hero_image, paragraphs: paragraphs }
       rescue => e
         Rails.logger.error("[NewsController] content: #{e.message}")
