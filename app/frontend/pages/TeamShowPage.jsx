@@ -521,7 +521,7 @@ function MatchLine({ match, teamName, navigate }) {
       </div>
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">
-          {opponent?.flag_url && <img src={opponent.flag_url} alt="" className="flag-xs" onError={e => (e.target.style.display="none")} />}
+          {opponent?.flag_url && <img src={opponent.flag_url} alt={opponent.name} className="flag-xs" onError={e => (e.target.style.display="none")} />}
           <span style={{ color: "var(--muted)", fontSize: "0.72rem", marginRight: 6 }}>{isHome ? "H" : "A"}</span>
           <span className="team-name">{translateTeam(opponent?.name, i18n.language)}</span>
         </div>

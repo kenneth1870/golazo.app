@@ -58,7 +58,7 @@ function StandingsTable({ group, rows, onNavigate, t, i18n }) {
                 <td>
                   <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                     {s.team?.flag_url && (
-                      <img src={s.team.flag_url} alt="" className="flag-xs" loading="eager"
+                      <img src={s.team.flag_url} alt={s.team.name} className="flag-xs" loading="eager"
                         onError={e => (e.target.style.display = "none")} />
                     )}
                     <span style={{ fontWeight: 600, color: "var(--text)" }}>{translateTeam(s.team?.name, i18n.language)}</span>

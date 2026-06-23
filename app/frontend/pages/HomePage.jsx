@@ -107,7 +107,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
       padding: "16px 20px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        {fav.flag_url && <img src={fav.flag_url} alt="" className="logo-sm" onError={e => (e.target.style.display="none")} />}
+        {fav.flag_url && <img src={fav.flag_url} alt={fav.name} className="logo-sm" onError={e => (e.target.style.display="none")} />}
         <div>
           <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>{t("home.yourTeam")}</div>
           <div style={{ fontWeight: 800, color: "var(--text)", fontSize: "1rem" }}>{fav.name}</div>
@@ -430,7 +430,7 @@ export default function HomePage() {
                       <div className="d-flex align-items-center justify-content-around justify-content-between w-100">
                         <div className="team-1 text-center">
                           {nextMatch.home_team?.flag_url
-                            ? <img src={nextMatch.home_team.flag_url} alt="" className="logo-md" style={{ margin: "0 auto" }} />
+                            ? <img src={nextMatch.home_team.flag_url} alt={nextMatch.home_team.name} className="logo-md" style={{ margin: "0 auto" }} />
                             : <span style={{ fontSize: "3rem" }}>🏳️</span>
                           }
                           <h3>{translateTeam(nextMatch.home_team?.name, i18n.language)}</h3>
@@ -438,7 +438,7 @@ export default function HomePage() {
                         <div><span className="vs"><span>VS</span></span></div>
                         <div className="team-2 text-center">
                           {nextMatch.away_team?.flag_url
-                            ? <img src={nextMatch.away_team.flag_url} alt="" className="logo-md" style={{ margin: "0 auto" }} />
+                            ? <img src={nextMatch.away_team.flag_url} alt={nextMatch.away_team.name} className="logo-md" style={{ margin: "0 auto" }} />
                             : <span style={{ fontSize: "3rem" }}>🏳️</span>
                           }
                           <h3>{translateTeam(nextMatch.away_team?.name, i18n.language)}</h3>
@@ -493,14 +493,14 @@ export default function HomePage() {
                           </td>
                           <td>
                             <div className="d-flex align-items-center" style={{ gap: 6 }}>
-                              {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt="" className="flag-xs" />}
+                              {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt={m.home_team.name} className="flag-xs" />}
                               <strong style={{ color: "var(--text)" }}>{m.home_team?.code}</strong>
                             </div>
                           </td>
                           <td style={{ color: "gray", fontSize: "0.75rem" }}>vs</td>
                           <td>
                             <div className="d-flex align-items-center" style={{ gap: 6 }}>
-                              {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt="" className="flag-xs" />}
+                              {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt={m.away_team.name} className="flag-xs" />}
                               <strong style={{ color: "var(--text)" }}>{m.away_team?.code}</strong>
                             </div>
                           </td>
@@ -522,7 +522,7 @@ export default function HomePage() {
                       </div>
                       <div className="match-row__teams">
                         <div className="match-row__team match-row__team--home">
-                          {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt="" className="flag-xs" onError={e => (e.target.style.display="none")} />}
+                          {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt={m.home_team.name} className="flag-xs" onError={e => (e.target.style.display="none")} />}
                           <span className="team-name">{translateTeam(m.home_team?.name, i18n.language)}</span>
                         </div>
                         <div className="match-row__score">
@@ -530,7 +530,7 @@ export default function HomePage() {
                         </div>
                         <div className="match-row__team match-row__team--away">
                           <span className="team-name">{translateTeam(m.away_team?.name, i18n.language)}</span>
-                          {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt="" className="flag-xs" onError={e => (e.target.style.display="none")} />}
+                          {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt={m.away_team.name} className="flag-xs" onError={e => (e.target.style.display="none")} />}
                         </div>
                       </div>
                       <div className="match-row__meta">

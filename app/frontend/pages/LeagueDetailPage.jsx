@@ -49,7 +49,7 @@ function StandingsTable({ standings, t, i18n }) {
                         {s.team?.flag_url && (
                           <img
                             src={s.team.flag_url}
-                            alt=""
+                            alt={s.team.name}
                             className="flag-xs"
                             loading="eager"
                             onError={e => (e.target.style.display = "none")}
@@ -168,7 +168,7 @@ export default function LeagueDetailPage() {
             {competition?.logo && (
               <img
                 src={competition.logo}
-                alt=""
+                alt={competition.name}
                 className="logo-lg" style={{ margin: "0 auto 12px" }}
                 onError={e => (e.target.style.display = "none")}
               />

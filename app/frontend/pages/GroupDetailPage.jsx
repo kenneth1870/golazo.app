@@ -75,7 +75,7 @@ function QualificationPanel({ standings, t, lang }) {
           return (
             <div key={s.team?.id ?? idx} style={{ display: "flex", alignItems: "center", gap: 10 }}>
               {s.team?.flag_url && (
-                <img src={s.team.flag_url} alt="" style={{ width: 22, height: 22, objectFit: "contain", borderRadius: 2, flexShrink: 0 }} />
+                <img src={s.team.flag_url} alt={s.team.name} style={{ width: 22, height: 22, objectFit: "contain", borderRadius: 2, flexShrink: 0 }} />
               )}
               <span style={{ flex: 1, fontSize: "0.82rem", fontWeight: 700, color: "var(--text)", minWidth: 0 }}>
                 {teamName}
@@ -200,7 +200,7 @@ function WhatIfPanel({ matches, standings, lang, t }) {
               borderLeft: `3px solid ${i < 2 ? "#10b981" : i === 2 ? "#f59e0b" : "#ef4444"}`,
             }}>
               <span style={{ width: 20, fontWeight: 900, fontSize: "0.8rem", color: i < 2 ? "#10b981" : i === 2 ? "#f59e0b" : "#ef4444" }}>#{i + 1}</span>
-              {s.team?.flag_url && <img src={s.team.flag_url} alt="" style={{ width: 22, height: 22, objectFit: "contain" }} />}
+              {s.team?.flag_url && <img src={s.team.flag_url} alt={s.team.name} style={{ width: 22, height: 22, objectFit: "contain" }} />}
               <span style={{ flex: 1, fontWeight: 700, fontSize: "0.85rem", color: "var(--text)" }}>{translateTeam(s.team?.name, lang)}</span>
               <span style={{ fontWeight: 900, fontSize: "0.9rem", color: "var(--text)" }}>{s.pts}</span>
               <span style={{ fontSize: "0.65rem", color: "var(--muted)", marginLeft: 2 }}>pts</span>
@@ -349,7 +349,7 @@ export default function GroupDetailPage() {
                             <td style={{ color: rankColor, fontWeight: 700 }}>{s.rank ?? i + 1}</td>
                             <td>
                               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                {s.team.flag_url && <img src={s.team.flag_url} alt="" className="flag-xs" />}
+                                {s.team.flag_url && <img src={s.team.flag_url} alt={s.team.name} className="flag-xs" />}
                                 <Link to={`/teams/${s.team.id}`} style={{ color: "var(--text)", fontWeight: 700 }}>{teamName}</Link>
                               </div>
                             </td>
