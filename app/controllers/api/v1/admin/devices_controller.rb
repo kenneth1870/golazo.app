@@ -8,8 +8,8 @@ module Api
         # opened the app, with summary stats and a per-device breakdown.
         def index
           now      = Time.current
-          page     = [params[:page].to_i, 1].max
-          per_page = [[params[:per].to_i, 1].max, 200].min
+          page     = [ params[:page].to_i, 1 ].max
+          per_page = [ [ params[:per].to_i, 1 ].max, 200 ].min
           per_page = 100 if per_page.zero?
           push_ids = PushSubscription.where.not(device_id: nil).pluck(:device_id).to_set
 
