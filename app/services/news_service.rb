@@ -104,7 +104,7 @@ class NewsService
   # feed fetch. Falls back to scanning the full feed so show/content never 404
   # on a cold cache.
   def find_article(id:, lang:)
-    Rails.cache.fetch("news_article_#{lang}_#{id}", expires_in: 35.minutes) do
+    Rails.cache.fetch("news_article_#{lang}_#{id}", expires_in: 24.hours) do
       latest(limit: 200, lang: lang).find { |a| a[:id] == id }
     end
   end
@@ -146,11 +146,11 @@ class NewsService
 
       merged
     end.tap do |items|
-      Rails.cache.write("news_feed_stale_#{lang}", items, expires_in: 4.hours) if items.any?
+      Rails.cache.write("news_feed_stale_#{lang}", items, expires_in: 24.hours) if items.any?
       items.each do |a|
         next unless a[:id].present?
         key = "news_article_#{lang}_#{a[:id]}"
-        Rails.cache.write(key, a, expires_in: 35.minutes) unless Rails.cache.exist?(key)
+        Rails.cache.write(key, a, expires_in: 24.hours)
       end
     end
 
