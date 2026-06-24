@@ -5,11 +5,44 @@ import { usePageMeta } from "../../hooks/usePageMeta"
 import FlagImg from "../../components/FlagImg"
 import { translateTeam } from "../../i18n/teamNames"
 
+// ── Round name i18n ────────────────────────────────────
+const ROUND_KEYS = {
+  "Round of 32":   "bracket.roundOf32",
+  "Round of 16":   "bracket.roundOf16",
+  "Quarter Final": "bracket.quarterFinals",
+  "Semi Final":    "bracket.semiFinals",
+  "3rd Place":     "bracket.thirdPlace",
+  "Final":         "bracket.final",
+}
+
+// ── Slot code → human label ────────────────────────────
+// Codes: "1A"/"2A" = 1st/2nd of Group A; "T1"-"T8" = best 3rd-placed; "Wn"/"Ln" = winner/loser of match n
+function slotLabel(code, lang) {
+  if (!code) return "TBD"
+  const m1 = code.match(/^([12])([A-L])$/)
+  if (m1) {
+    const pos = m1[1] === "1" ? (lang === "es" ? "1°" : "1st") : (lang === "es" ? "2°" : "2nd")
+    return `${pos} Grupo ${m1[2]}`
+  }
+  if (/^T\d+$/.test(code)) return lang === "es" ? "Mejor 3°" : "Best 3rd"
+  if (/^W(\d+)$/.test(code)) {
+    const n = code.slice(1)
+    return lang === "es" ? `Gan. partido ${n}` : `Winner M${n}`
+  }
+  if (/^L(\d+)$/.test(code)) {
+    const n = code.slice(1)
+    return lang === "es" ? `Perd. partido ${n}` : `Loser M${n}`
+  }
+  return code
+}
+
 // ── Phase label from match fields ─────────────────────
 function phaseLabel(match, t) {
   if (match.group_stage) return `${t("scores.groupStage", "Fase de Grupos")} · ${match.group_stage}`
-  if (match.round)       return match.round
-  if (match.bracket_pos) return match.bracket_pos
+  if (match.round) {
+    const key = ROUND_KEYS[match.round]
+    return key ? t(key, match.round) : match.round
+  }
   return t("scores.knockout", "Eliminatorias")
 }
 
@@ -17,8 +50,8 @@ function phaseLabel(match, t) {
 function FixtureCard({ match, onClick }) {
   const { i18n } = useTranslation()
 
-  const homeName = translateTeam(match.home_team?.name, i18n.language) || match.home_slot || "TBD"
-  const awayName = translateTeam(match.away_team?.name, i18n.language) || match.away_slot || "TBD"
+  const homeName = translateTeam(match.home_team?.name, i18n.language) || slotLabel(match.home_slot, i18n.language)
+  const awayName = translateTeam(match.away_team?.name, i18n.language) || slotLabel(match.away_slot, i18n.language)
 
   const hasScore   = match.home_score !== null && match.away_score !== null
   const isFinished = match.status === "finished"

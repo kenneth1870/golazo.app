@@ -25,13 +25,9 @@ module Api
         else scope.order(kickoff_at: :asc).limit(200)
         end
 
-        # Suppress scheduled knockout placeholders with no teams assigned yet —
-        # they render as blank "vs" rows until group-stage results determine the teams.
-        scope = scope.where("status != 'scheduled' OR (home_team_id IS NOT NULL AND away_team_id IS NOT NULL)")
-
         render json: scope.map { |m|
           m.as_json(
-            only:    %i[id external_id status kickoff_at home_score away_score home_slot away_slot bracket_pos group_stage],
+            only:    %i[id external_id status kickoff_at home_score away_score home_slot away_slot bracket_pos group_stage round],
             include: {
               home_team:   { only: %i[id name code flag_url] },
               away_team:   { only: %i[id name code flag_url] },
