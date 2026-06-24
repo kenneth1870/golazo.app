@@ -571,7 +571,9 @@ class WorldCupSync
     return false if new_total < old_total
 
     # Only push a "goal" alert when the total score actually increased.
-    scored = new_total > old_total
+    # Suppress if the API has flagged a VAR disallowed goal — the score bump
+    # may be a transient feed artefact before the reversal comes through.
+    scored = new_total > old_total && !raw[:var_disallowed]
 
     # Skip if the match_detail_controller already fired the notification when it
     # patched the DB score (atomic write: only the first writer fires).

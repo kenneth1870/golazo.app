@@ -208,7 +208,7 @@ module Api
             if Rails.cache.write(dedup, true, expires_in: 5.minutes, unless_exist: true)
               # Events use symbol keys from LiveScoresClient#normalize_events
               scorer_name = data[:events]
-                &.select { |e| (e[:type] || e["type"]) == "Goal" && (e[:detail] || e["detail"]) != "Own Goal" }
+                &.select { |e| (e[:type] || e["type"]) == "Goal" && (e[:detail] || e["detail"]) != "Own Goal" && (e[:detail] || e["detail"]) != "Goal Disallowed" }
                 &.last&.then { |e| e[:player] || e.dig("player", "name") }.presence
               MatchEventNotificationJob.perform_later(
                 event_type: "goal",

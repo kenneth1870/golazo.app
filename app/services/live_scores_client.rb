@@ -619,8 +619,12 @@ class LiveScoresClient
       },
       last_scorer: begin
         evts = f["events"] || []
-        goal = evts.select { |e| e["type"] == "Goal" && e.dig("detail") != "Own Goal" }.last
+        goal = evts.select { |e| e["type"] == "Goal" && e.dig("detail") != "Own Goal" && e.dig("detail") != "Goal Disallowed" }.last
         goal&.dig("player", "name").presence
+      end,
+      var_disallowed: begin
+        evts = f["events"] || []
+        evts.any? { |e| e["type"] == "Goal" && e.dig("detail") == "Goal Disallowed" }
       end
     }
   end
