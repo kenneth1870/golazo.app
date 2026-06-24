@@ -154,7 +154,9 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">
           <FlagImg src={match.home_team?.flag_url} name={match.home_team?.name} size={16} className="flag-xs" />
-          <span className="team-name">{translateTeam(match.home_team?.name, i18n.language)}</span>
+          <span className="team-name">
+            {translateTeam(match.home_team?.name, i18n.language) || match.home_slot || "TBD"}
+          </span>
           {match.home_red_cards > 0 && (
             <span className="red-card-badge">🟥{match.home_red_cards > 1 ? `×${match.home_red_cards}` : ""}</span>
           )}
@@ -169,7 +171,9 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
           {match.away_red_cards > 0 && (
             <span className="red-card-badge">🟥{match.away_red_cards > 1 ? `×${match.away_red_cards}` : ""}</span>
           )}
-          <span className="team-name">{translateTeam(match.away_team?.name, i18n.language)}</span>
+          <span className="team-name">
+            {translateTeam(match.away_team?.name, i18n.language) || match.away_slot || "TBD"}
+          </span>
           <FlagImg src={match.away_team?.flag_url} name={match.away_team?.name} size={16} className="flag-xs" />
         </div>
       </div>

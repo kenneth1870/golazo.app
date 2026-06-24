@@ -184,7 +184,13 @@ module Api
         date_scope = ->(s) { s.where(kickoff_at: local_day_range(date, tz)) }
 
         authoritative = date_scope.call(base.where(status: %w[live finished]))
-        overdue       = date_scope.call(base.where(status: "scheduled").where("kickoff_at < ?", Time.current))
+        # Only include overdue scheduled matches that have both teams known — otherwise
+        # knockout placeholders with no teams appear as blank "vs" rows.
+        overdue       = date_scope.call(
+          base.where(status: "scheduled")
+              .where("kickoff_at < ?", Time.current)
+              .where("home_team_id IS NOT NULL AND away_team_id IS NOT NULL")
+        )
 
         (authoritative.to_a + overdue.to_a).map { |m| normalize_db(m) }.uniq { |m| m[:id] }
       rescue => e
@@ -211,6 +217,9 @@ module Api
           .joins(:competition)
           .where(competitions: { code: "WC" })
           .where(kickoff_at: local_day_range(date, tz))
+          # Hide scheduled knockout placeholders whose teams aren't determined yet —
+          # they show as blank "vs" rows. Live/finished matches always pass through.
+          .where("status != 'scheduled' OR (home_team_id IS NOT NULL AND away_team_id IS NOT NULL)")
           .includes(:home_team, :away_team, :competition)
           .order(:kickoff_at)
           .map { |m| normalize_db(m) }
@@ -285,8 +294,11 @@ module Api
             logo:    m.competition.logo,
             country: m.competition.country
           } : nil,
-          home_team: { name: m.home_team&.name, flag_url: m.home_team&.flag_url },
-          away_team: { name: m.away_team&.name, flag_url: m.away_team&.flag_url }
+          home_team:  { name: m.home_team&.name, flag_url: m.home_team&.flag_url },
+          away_team:  { name: m.away_team&.name, flag_url: m.away_team&.flag_url },
+          home_slot:  m.home_slot,
+          away_slot:  m.away_slot,
+          bracket_pos: m.bracket_pos
         }
       end
     end
