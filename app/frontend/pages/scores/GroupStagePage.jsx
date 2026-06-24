@@ -57,12 +57,70 @@ function MiniStandingsTable({ group, rows }) {
   )
 }
 
+function BestThirdsTable({ rows }) {
+  const { t } = useTranslation()
+  if (!rows?.length) return null
+  return (
+    <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+      <div className="bracket-scroll-hint" style={{ marginBottom: 4 }}>{t("bracket.swipeHint")}</div>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem", minWidth: 300 }}>
+        <thead>
+          <tr style={{ color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>
+            <th style={{ textAlign: "center", padding: "3px 6px", fontWeight: 600, width: 28 }}>#</th>
+            <th style={{ textAlign: "left",   padding: "3px 6px", fontWeight: 600 }}>{t("table.team")}</th>
+            <th style={{ textAlign: "center", padding: "3px 4px", fontWeight: 600 }}>{t("table.played")}</th>
+            <th style={{ textAlign: "center", padding: "3px 4px", fontWeight: 600 }}>{t("table.won")}</th>
+            <th style={{ textAlign: "center", padding: "3px 4px", fontWeight: 600 }}>{t("table.drawn")}</th>
+            <th style={{ textAlign: "center", padding: "3px 4px", fontWeight: 600 }}>{t("table.lost")}</th>
+            <th style={{ textAlign: "center", padding: "3px 4px", fontWeight: 600 }}>{t("table.gd")}</th>
+            <th style={{ textAlign: "center", padding: "3px 4px", fontWeight: 700, color: "var(--accent)" }}>{t("table.points")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((s, i) => {
+            const advances = i < 8
+            const bg = advances
+              ? `rgba(16,185,129,${i < 4 ? 0.1 : 0.05})`
+              : "rgba(239,68,68,0.04)"
+            return (
+              <tr key={s.team?.id ?? i} style={{ borderTop: "1px solid var(--border)", background: bg }}>
+                <td style={{ textAlign: "center", padding: "5px 6px", color: "var(--muted)", fontWeight: 600 }}>
+                  {s.rank}
+                </td>
+                <td style={{ padding: "5px 6px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    {advances && <span style={{ width: 3, height: 14, borderRadius: 2, background: "#10b981", display: "inline-block", flexShrink: 0 }} />}
+                    {s.team?.flag_url && <img src={s.team.flag_url} alt="" loading="eager" style={{ width: 16, height: 11, objectFit: "cover", borderRadius: 1, flexShrink: 0 }} onError={e => (e.target.style.display = "none")} />}
+                    <Link to={`/teams/${s.team?.id}`} style={{ color: "var(--text)", textDecoration: "none", fontWeight: advances ? 700 : 400 }}>
+                      {s.team?.code || s.team?.name}
+                    </Link>
+                    {s.team?.group && <span style={{ fontSize: "0.65rem", color: "var(--muted)", marginLeft: 2 }}>({s.team.group})</span>}
+                  </div>
+                </td>
+                <td style={{ textAlign: "center", padding: "5px 4px", color: "var(--muted)" }}>{s.played ?? 0}</td>
+                <td style={{ textAlign: "center", padding: "5px 4px", color: "var(--muted)" }}>{s.won ?? 0}</td>
+                <td style={{ textAlign: "center", padding: "5px 4px", color: "var(--muted)" }}>{s.drawn ?? 0}</td>
+                <td style={{ textAlign: "center", padding: "5px 4px", color: "var(--muted)" }}>{s.lost ?? 0}</td>
+                <td style={{ textAlign: "center", padding: "5px 4px", color: "var(--muted)" }}>
+                  {(s.goal_diff ?? 0) > 0 ? `+${s.goal_diff}` : s.goal_diff ?? 0}
+                </td>
+                <td style={{ textAlign: "center", padding: "5px 4px", fontWeight: 800, color: "var(--text)" }}>{s.points ?? 0}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 export default function GroupStagePage() {
   const { t } = useTranslation()
   usePageMeta(t("nav.groupStage"), "FIFA World Cup 2026 group stage matches — all 72 group fixtures across 12 groups.")
   const { matches, loading } = useMatches("all", { competition: "WC" })
   const navigate = useNavigate()
   const [standings, setStandings] = useState({})
+  const [bestThirds, setBestThirds] = useState([])
 
   const hasLiveOrRecent = matches.some(m =>
     m.status === "live" ||
@@ -74,9 +132,15 @@ export default function GroupStagePage() {
     .then(setStandings)
     .catch(() => {})
 
+  const loadBestThirds = () => fetch("/api/v1/standings/best_thirds", { cache: "no-store" })
+    .then(r => r.json())
+    .then(setBestThirds)
+    .catch(() => {})
+
   useEffect(() => {
     loadStandings()
-    const iv = setInterval(loadStandings, hasLiveOrRecent ? 30_000 : 60_000)
+    loadBestThirds()
+    const iv = setInterval(() => { loadStandings(); loadBestThirds() }, hasLiveOrRecent ? 30_000 : 60_000)
     return () => clearInterval(iv)
   }, [hasLiveOrRecent])
 
@@ -123,6 +187,22 @@ export default function GroupStagePage() {
             </div>
           ))}
         </div>
+
+        {/* Best Third-placed Teams */}
+        {bestThirds.length > 0 && (
+          <div style={{ marginTop: 48 }}>
+            <div style={{
+              fontSize: "0.72rem", fontWeight: 800, color: "#ee1e46",
+              textTransform: "uppercase", letterSpacing: ".08em",
+              marginBottom: 12,
+            }}>
+              {t("table.bestThirds", "Mejores Terceros")}
+            </div>
+            <div className="group-matches-card" style={{ padding: "12px 16px" }}>
+              <BestThirdsTable rows={bestThirds} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

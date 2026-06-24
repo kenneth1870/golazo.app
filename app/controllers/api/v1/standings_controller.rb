@@ -1,6 +1,28 @@
 module Api
   module V1
     class StandingsController < BaseController
+      def best_thirds
+        result = Rails.cache.fetch("standings_WC_best_thirds", expires_in: 3.minutes, race_condition_ttl: 10.seconds) do
+          wc = Competition.find_by(code: "WC")
+          next [] unless wc
+          WorldCupStandings.new(wc).third_place_table.each_with_index.map do |s, idx|
+            {
+              rank:          idx + 1,
+              team:          { id: s.team.id, name: s.team.name, code: s.team.code, flag_url: s.team.flag_url, group: s.team.group },
+              played:        s.played,
+              won:           s.won,
+              drawn:         s.drawn,
+              lost:          s.lost,
+              goals_for:     s.goals_for,
+              goals_against: s.goals_against,
+              goal_diff:     s.goal_difference,
+              points:        s.points
+            }
+          end
+        end
+        render json: result
+      end
+
       def index
         competition_code = params[:competition].presence || "WC"
         ttl = competition_code == "WC" ? 3.minutes : 30.minutes

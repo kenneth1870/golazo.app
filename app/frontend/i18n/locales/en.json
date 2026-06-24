@@ -161,7 +161,8 @@
     "group": "Group",
     "player": "Player",
     "gf": "GF",
-    "ga": "GA"
+    "ga": "GA",
+    "bestThirds": "Best Third-placed Teams"
   },
   "match": {
     "summary": "Summary",

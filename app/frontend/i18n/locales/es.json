@@ -161,7 +161,8 @@
     "group": "Grupo",
     "player": "Jugador",
     "gf": "GF",
-    "ga": "GC"
+    "ga": "GC",
+    "bestThirds": "Mejores Terceros"
   },
   "match": {
     "summary": "Resumen",

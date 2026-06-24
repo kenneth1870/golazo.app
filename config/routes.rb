@@ -78,6 +78,7 @@ Rails.application.routes.draw do
           get :sidelined
         end
       end
+      get "standings/best_thirds", to: "standings#best_thirds"
       resources :standings, only: [ :index ]
       resources :matches, only: [ :index, :show, :update ] do
         resources :goals,     only: [ :create ]
