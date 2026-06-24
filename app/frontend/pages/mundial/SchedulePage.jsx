@@ -58,7 +58,7 @@ function FixtureCard({ match, onClick }) {
   const isLive     = match.status === "live"
 
   const dateStr = match.kickoff_at
-    ? new Date(match.kickoff_at).toLocaleDateString(i18n.language, { day: "2-digit", month: "2-digit", year: "2-digit" })
+    ? new Date(match.kickoff_at).toLocaleDateString(i18n.language, { day: "2-digit", month: "2-digit", year: "2-digit", timeZone: "UTC" })
     : "—"
   const timeStr = match.kickoff_at
     ? new Date(match.kickoff_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -212,7 +212,7 @@ export default function SchedulePage() {
   const byDate = {}
   for (const m of matches) {
     const dateLabel = m.kickoff_at
-      ? new Date(m.kickoff_at).toLocaleDateString(i18n.language, { weekday: "long", year: "numeric", month: "long", day: "numeric" })
+      ? new Date(m.kickoff_at).toLocaleDateString(i18n.language, { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })
       : "TBD"
     const phase = phaseLabel(m, t)
 
