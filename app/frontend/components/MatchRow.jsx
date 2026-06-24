@@ -43,7 +43,9 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">
           <FlagOrPlaceholder src={match.home_team?.flag_url} name={match.home_team?.name} />
-          <span className="team-name">{translateTeam(match.home_team?.name, i18n.language)}</span>
+          <span className="team-name">
+            {translateTeam(match.home_team?.name, i18n.language) || match.home_slot || "TBD"}
+          </span>
         </div>
 
         <div className="match-row__score">
@@ -54,7 +56,9 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
         </div>
 
         <div className="match-row__team match-row__team--away">
-          <span className="team-name">{translateTeam(match.away_team?.name, i18n.language)}</span>
+          <span className="team-name">
+            {translateTeam(match.away_team?.name, i18n.language) || match.away_slot || "TBD"}
+          </span>
           <FlagOrPlaceholder src={match.away_team?.flag_url} name={match.away_team?.name} />
         </div>
       </div>
