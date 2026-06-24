@@ -92,7 +92,15 @@
     "filterAll": "Todos",
     "myTeams": "Mis Equipos",
     "groupStage": "Fase de Grupos",
-    "knockout": "Eliminatorias"
+    "knockout": "Eliminatorias",
+    "tabToday": "Hoy",
+    "tabResults": "Resultados",
+    "tabFixtures": "Próximos",
+    "tabGroups": "Grupos",
+    "tabBracket": "Bracket",
+    "viewFullMatch": "Ver partido →",
+    "noGoals": "Sin goles registrados",
+    "goalsLoading": "Cargando..."
   },
   "groups": {
     "title": "Grupos",

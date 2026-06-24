@@ -129,69 +129,144 @@ function DateStrip({ selected, onChange }) {
 // ─── Real-match row (API shape) ────────────────────────
 function RealMatchRow({ match, onMatchClick, flashing }) {
   const { t, i18n } = useTranslation()
-  const isLive     = match.status === "live"
-  const isFinished = match.status === "finished"
-  const hasScore   = match.home_score !== null && match.away_score !== null
-  const clickable  = !!match.external_id
+  const [expanded, setExpanded]   = useState(false)
+  const [goals,    setGoals]      = useState(null)   // null=not yet fetched
+  const [fetching, setFetching]   = useState(false)
+
+  const isLive      = match.status === "live"
+  const isFinished  = match.status === "finished"
+  const hasScore    = match.home_score !== null && match.away_score !== null
+  const clickable   = !!match.external_id
+  const expandable  = (isLive || isFinished) && clickable
 
   const kickoffTime = match.kickoff_at
     ? new Date(match.kickoff_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : "TBD"
 
+  const handleTap = () => {
+    if (!expandable) {
+      // Upcoming match: navigate directly
+      if (clickable) onMatchClick(match.external_id, match)
+      return
+    }
+    if (!expanded) {
+      setExpanded(true)
+      if (goals === null && !fetching && match.external_id) {
+        setFetching(true)
+        fetch(`/api/v1/match_detail/${match.external_id}`)
+          .then(r => r.json())
+          .then(data => setGoals((data.events || []).filter(e => e.type === "Goal" && e.detail !== "Goal Disallowed")))
+          .catch(() => setGoals([]))
+          .finally(() => setFetching(false))
+      }
+    } else {
+      setExpanded(false)
+    }
+  }
+
   return (
-    <div
-      className={`match-row${isLive ? " match-row--live" : ""}${clickable ? " match-row--clickable" : ""}${flashing ? " match-row--score-flash" : ""}`}
-      onClick={clickable ? () => onMatchClick(match.external_id, match) : undefined}
-    >
-      <div className="match-row__status">
-        {isLive
-          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}${match.minute_extra ? `+${match.minute_extra}` : ""}'` : t("status.live")}</span>
-          : isFinished
-          ? <span className="match-status-ft">{t("status.ft")}</span>
-          : <span className="match-status-time">{kickoffTime}</span>
-        }
-      </div>
-      <div className="match-row__teams">
-        <div className="match-row__team match-row__team--home">
-          <FlagImg src={match.home_team?.flag_url} name={match.home_team?.name} size={16} className="flag-xs" />
-          <span className="team-name">
-            {translateTeam(match.home_team?.name, i18n.language) || match.home_slot || "TBD"}
-          </span>
-          {match.home_red_cards > 0 && (
-            <span className="red-card-badge">🟥{match.home_red_cards > 1 ? `×${match.home_red_cards}` : ""}</span>
-          )}
-        </div>
-        <div className="match-row__score">
-          {hasScore
-            ? <span className={`score-pill${isLive ? " score-pill--live" : ""}`}>{match.home_score} – {match.away_score}</span>
-            : <span className="score-pill score-pill--vs">vs</span>
+    <div>
+      <div
+        className={`match-row${isLive ? " match-row--live" : ""}${clickable ? " match-row--clickable" : ""}${flashing ? " match-row--score-flash" : ""}`}
+        onClick={handleTap}
+      >
+        <div className="match-row__status">
+          {isLive
+            ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}${match.minute_extra ? `+${match.minute_extra}` : ""}'` : t("status.live")}</span>
+            : isFinished
+            ? <span className="match-status-ft">{t("status.ft")}</span>
+            : <span className="match-status-time">{kickoffTime}</span>
           }
         </div>
-        <div className="match-row__team match-row__team--away">
-          {match.away_red_cards > 0 && (
-            <span className="red-card-badge">🟥{match.away_red_cards > 1 ? `×${match.away_red_cards}` : ""}</span>
+        <div className="match-row__teams">
+          <div className="match-row__team match-row__team--home">
+            <FlagImg src={match.home_team?.flag_url} name={match.home_team?.name} size={16} className="flag-xs" />
+            <span className="team-name">
+              {translateTeam(match.home_team?.name, i18n.language) || match.home_slot || "TBD"}
+            </span>
+            {match.home_red_cards > 0 && (
+              <span className="red-card-badge">🟥{match.home_red_cards > 1 ? `×${match.home_red_cards}` : ""}</span>
+            )}
+          </div>
+          <div className="match-row__score">
+            {hasScore
+              ? <span className={`score-pill${isLive ? " score-pill--live" : ""}`}>{match.home_score} – {match.away_score}</span>
+              : <span className="score-pill score-pill--vs">vs</span>
+            }
+          </div>
+          <div className="match-row__team match-row__team--away">
+            {match.away_red_cards > 0 && (
+              <span className="red-card-badge">🟥{match.away_red_cards > 1 ? `×${match.away_red_cards}` : ""}</span>
+            )}
+            <span className="team-name">
+              {translateTeam(match.away_team?.name, i18n.language) || match.away_slot || "TBD"}
+            </span>
+            <FlagImg src={match.away_team?.flag_url} name={match.away_team?.name} size={16} className="flag-xs" />
+          </div>
+        </div>
+        <div className="match-row__meta" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          {!isLive && !isFinished && clickable && (
+            <span
+              onClick={e => { e.stopPropagation(); onMatchClick(match.external_id, match) }}
+              style={{
+                fontSize: "0.6rem", fontWeight: 700, padding: "2px 7px",
+                background: "rgba(238,30,70,.12)", border: "1px solid rgba(238,30,70,.25)",
+                borderRadius: 10, color: "#ee1e46", cursor: "pointer", whiteSpace: "nowrap",
+              }}
+            >
+              🎯
+            </span>
           )}
-          <span className="team-name">
-            {translateTeam(match.away_team?.name, i18n.language) || match.away_slot || "TBD"}
-          </span>
-          <FlagImg src={match.away_team?.flag_url} name={match.away_team?.name} size={16} className="flag-xs" />
+          {expandable && (
+            <span style={{ fontSize: "0.7rem", color: "var(--muted)", transition: "transform .2s", display: "inline-block", transform: expanded ? "rotate(90deg)" : "none" }}>›</span>
+          )}
+          {!expandable && clickable && <span style={{ fontSize: "0.65rem", color: "var(--muted)" }}>›</span>}
         </div>
       </div>
-      <div className="match-row__meta" style={{ display: "flex", alignItems: "center", gap: 4 }}>
-        {!isLive && !isFinished && clickable && (
-          <span
+
+      {/* ── Inline goal panel ── */}
+      {expanded && (
+        <div style={{
+          background: "var(--surface2)",
+          borderTop: "1px solid var(--border)",
+          padding: "10px 16px 12px",
+          fontSize: ".73rem",
+        }}>
+          {fetching || goals === null ? (
+            <div style={{ display: "flex", gap: 8 }}>
+              {[80, 120, 60].map(w => <div key={w} className="loading-shimmer" style={{ height: 14, width: w, borderRadius: 4 }} />)}
+            </div>
+          ) : goals.length === 0 ? (
+            <span style={{ color: "var(--muted)" }}>{t("scores.noGoals", "No goals recorded")}</span>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              {goals.map((g, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: ".75rem" }}>
+                    {g.detail === "Own Goal" ? "🔴" : g.detail === "Penalty" ? "⚽🅿" : "⚽"}
+                  </span>
+                  <span style={{ fontWeight: 700, color: "var(--text)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {g.player}
+                  </span>
+                  <span style={{ color: "var(--muted)", flexShrink: 0 }}>
+                    {g.minute}{g.extra ? `+${g.extra}` : ""}'
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          <button
             onClick={e => { e.stopPropagation(); onMatchClick(match.external_id, match) }}
             style={{
-              fontSize: "0.6rem", fontWeight: 700, padding: "2px 7px",
-              background: "rgba(238,30,70,.12)", border: "1px solid rgba(238,30,70,.25)",
-              borderRadius: 10, color: "#ee1e46", cursor: "pointer", whiteSpace: "nowrap",
+              marginTop: 10, background: "none", border: "none",
+              color: "var(--accent)", fontSize: ".7rem", fontWeight: 700,
+              cursor: "pointer", padding: 0,
             }}
           >
-            🎯
-          </span>
-        )}
-        {clickable && <span style={{ fontSize: "0.65rem", color: "var(--muted)" }}>›</span>}
-      </div>
+            {t("scores.viewFullMatch", "Ver partido →")}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -201,7 +276,9 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
   const { t, i18n } = useTranslation()
   const comp    = matches[0]?.competition
   const hasLive = matches.some(m => m.status === "live")
-  const isReal  = typeof matches[0]?.id === "string" && matches[0]?.id?.startsWith("ext_")
+  // Use the rich RealMatchRow (with expandable goals) for any match that has an
+  // external_id — covers both live-API matches ("ext_" ids) and WC DB matches ("db_" ids).
+  const isReal  = !!matches[0]?.external_id
   const canNav  = comp?.code && !String(comp.code).match(/^\d+$/)
 
   const sorted = [...matches].sort((a, b) => {

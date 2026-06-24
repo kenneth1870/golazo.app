@@ -83,7 +83,7 @@ function nextBgIdx(current) {
   return idx
 }
 
-export default function Hero({ nextMatch, liveCount = 0 }) {
+export default function Hero({ nextMatch, liveCount = 0, compact = false }) {
   const navigate   = useNavigate()
   const { t }      = useTranslation()
   const target     = nextMatch?.kickoff_at || WC_OPENING
@@ -113,6 +113,39 @@ export default function Hero({ nextMatch, liveCount = 0 }) {
     const iv = setInterval(tick, 7000)
     return () => clearInterval(iv)
   }, [])  // runs once — refs keep the closure fresh
+
+  // ── Compact / slim mode ──────────────────────────────
+  if (compact) {
+    return (
+      <div style={{
+        background: liveCount > 0
+          ? "linear-gradient(90deg, rgba(238,30,70,.1) 0%, transparent 100%)"
+          : "var(--surface)",
+        borderBottom: "1px solid var(--border)",
+        padding: "10px 0",
+      }}>
+        <div className="container" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0, overflow: "hidden" }}>
+            {liveCount > 0
+              ? <><span className="live-dot" /><span style={{ fontWeight: 800, fontSize: ".78rem", color: "#ee1e46", whiteSpace: "nowrap" }}>{t("hero.liveNow", { count: liveCount })}</span></>
+              : <span style={{ fontWeight: 800, fontSize: ".78rem", color: "var(--text)", whiteSpace: "nowrap" }}>⚽ FIFA World Cup 2026</span>
+            }
+            <span style={{ fontSize: ".68rem", color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              · {t("hero.badge", "Live Coverage")}
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+            <button className="btn btn-primary" style={{ padding: "6px 14px", fontSize: ".7rem" }} onClick={() => navigate("/scores/today")}>
+              {liveCount > 0 ? t("hero.liveBtn") : t("hero.todayBtn", "Hoy")}
+            </button>
+            <button className="btn btn-secondary" style={{ padding: "6px 12px", fontSize: ".7rem" }} onClick={() => navigate("/mundial")}>
+              🏆 Mundial
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const isOpening  = !nextMatch?.kickoff_at
   const countdownLabel = isOpening

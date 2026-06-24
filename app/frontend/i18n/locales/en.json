@@ -92,7 +92,15 @@
     "filterAll": "All",
     "myTeams": "My Teams",
     "groupStage": "Group Stage",
-    "knockout": "Knockout Rounds"
+    "knockout": "Knockout Rounds",
+    "tabToday": "Today",
+    "tabResults": "Results",
+    "tabFixtures": "Fixtures",
+    "tabGroups": "Groups",
+    "tabBracket": "Bracket",
+    "viewFullMatch": "Full match →",
+    "noGoals": "No goals recorded",
+    "goalsLoading": "Loading..."
   },
   "groups": {
     "title": "Groups",
