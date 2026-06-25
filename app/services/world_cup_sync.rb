@@ -439,7 +439,7 @@ class WorldCupSync
     # Cache for 90 s so the per-minute sync job doesn't run 3 DB queries on
     # every tick between tournaments. During live play the cache is busted
     # immediately when a match transitions to/from live (see sync_match_from_live).
-    Rails.cache.fetch("wc_matches_active_v1", expires_in: 90.seconds) do
+    Rails.cache.fetch("wc_matches_active_v1", expires_in: 90.seconds, race_condition_ttl: 10.seconds) do
       wc = Competition.find_by(code: "WC")
       next false unless wc
 

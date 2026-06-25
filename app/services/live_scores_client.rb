@@ -193,7 +193,7 @@ class LiveScoresClient
       away_id = fx.dig("teams", "away", "id")
 
       h2h_raw = if home_id && away_id
-        Rails.cache.fetch("live_scores_h2h_v1_#{home_id}_#{away_id}", expires_in: 24.hours) do
+        Rails.cache.fetch("live_scores_h2h_v1_#{home_id}_#{away_id}", expires_in: 24.hours, race_condition_ttl: 30.seconds) do
           get("fixtures/headtohead", h2h: "#{home_id}-#{away_id}", last: 10).dig("response") || []
         end
       else
@@ -245,7 +245,7 @@ class LiveScoresClient
   # (groups already flattened so callers can re-group by group_name if needed).
   def league_standings(league_id, season_id)
     # Standings change only when a match finishes; 30 min matches the sync job cadence.
-    Rails.cache.fetch("live_scores_standings_v2_#{league_id}_#{season_id}", expires_in: 30.minutes) do
+    Rails.cache.fetch("live_scores_standings_v2_#{league_id}_#{season_id}", expires_in: 30.minutes, race_condition_ttl: 15.seconds) do
       data = get("standings", league: league_id, season: season_id)
       groups = data.dig("response", 0, "league", "standings") || []
       groups.flatten
@@ -257,7 +257,7 @@ class LiveScoresClient
 
   # Top scorers for a league/season. Returns raw API-Football response array.
   def top_scorers(league_id, season_id)
-    cached = Rails.cache.fetch("live_scores_scorers_v2_#{league_id}_#{season_id}", expires_in: 5.minutes) do
+    cached = Rails.cache.fetch("live_scores_scorers_v2_#{league_id}_#{season_id}", expires_in: 5.minutes, race_condition_ttl: 10.seconds) do
       data = get("players/topscorers", league: league_id, season: season_id)
       data.dig("response") || []
     end
@@ -269,7 +269,7 @@ class LiveScoresClient
 
   # All leagues (cached 24 h).
   def leagues
-    Rails.cache.fetch("live_scores_leagues_v2", expires_in: 24.hours) do
+    Rails.cache.fetch("live_scores_leagues_v2", expires_in: 24.hours, race_condition_ttl: 30.seconds) do
       data = get("leagues", current: "true")
       data.dig("response") || []
     end
@@ -282,7 +282,7 @@ class LiveScoresClient
   def search_players(query)
     season = Date.today.year
     # Cache per normalized query — identical searches within 5 min share one upstream call.
-    Rails.cache.fetch("live_scores_player_search_v1_#{season}_#{query.to_s.downcase.strip}", expires_in: 5.minutes) do
+    Rails.cache.fetch("live_scores_player_search_v1_#{season}_#{query.to_s.downcase.strip}", expires_in: 5.minutes, race_condition_ttl: 10.seconds) do
       data = get("players", search: query, season: season)
       data.dig("response") || []
     end
@@ -295,7 +295,7 @@ class LiveScoresClient
 
   def fixture_predictions(fixture_id)
     # Pre-match AI predictions are published once and never change — cache for 24 h.
-    Rails.cache.fetch("fixture_preds_v1_#{fixture_id}", expires_in: 24.hours) do
+    Rails.cache.fetch("fixture_preds_v1_#{fixture_id}", expires_in: 24.hours, race_condition_ttl: 30.seconds) do
       raw = get("predictions", fixture: fixture_id)
       r   = raw.dig("response", 0)
       next nil unless r
@@ -340,7 +340,7 @@ class LiveScoresClient
   # ── Odds ────────────────────────────────────────────────────────────────────
 
   def fixture_odds(fixture_id)
-    Rails.cache.fetch("fixture_odds_v1_#{fixture_id}", expires_in: 30.minutes) do
+    Rails.cache.fetch("fixture_odds_v1_#{fixture_id}", expires_in: 30.minutes, race_condition_ttl: 15.seconds) do
       raw        = get("odds", fixture: fixture_id)
       r          = raw.dig("response", 0)
       next({}) unless r
@@ -424,7 +424,7 @@ class LiveScoresClient
   # ── Pre-match injuries / suspensions ─────────────────────────────────────
 
   def fixture_injuries(fixture_id)
-    Rails.cache.fetch("fixture_injuries_v1_#{fixture_id}", expires_in: 30.minutes) do
+    Rails.cache.fetch("fixture_injuries_v1_#{fixture_id}", expires_in: 30.minutes, race_condition_ttl: 15.seconds) do
       raw = get("injuries", fixture: fixture_id)
       (raw.dig("response") || []).map do |r|
         {
@@ -443,7 +443,7 @@ class LiveScoresClient
   # ── Tournament leaderboards ───────────────────────────────────────────────
 
   def top_assists(league_id, season_id)
-    cached = Rails.cache.fetch("live_scores_assists_v1_#{league_id}_#{season_id}", expires_in: 5.minutes) do
+    cached = Rails.cache.fetch("live_scores_assists_v1_#{league_id}_#{season_id}", expires_in: 5.minutes, race_condition_ttl: 10.seconds) do
       data = get("players/topassists", league: league_id, season: season_id)
       data.dig("response") || []
     end
@@ -454,7 +454,7 @@ class LiveScoresClient
   end
 
   def top_yellow_cards(league_id, season_id)
-    cached = Rails.cache.fetch("live_scores_yellowcards_v1_#{league_id}_#{season_id}", expires_in: 5.minutes) do
+    cached = Rails.cache.fetch("live_scores_yellowcards_v1_#{league_id}_#{season_id}", expires_in: 5.minutes, race_condition_ttl: 10.seconds) do
       data = get("players/topyellowcards", league: league_id, season: season_id)
       data.dig("response") || []
     end
@@ -465,7 +465,7 @@ class LiveScoresClient
   end
 
   def top_red_cards(league_id, season_id)
-    cached = Rails.cache.fetch("live_scores_redcards_v1_#{league_id}_#{season_id}", expires_in: 5.minutes) do
+    cached = Rails.cache.fetch("live_scores_redcards_v1_#{league_id}_#{season_id}", expires_in: 5.minutes, race_condition_ttl: 10.seconds) do
       data = get("players/topredcards", league: league_id, season: season_id)
       data.dig("response") || []
     end
@@ -480,7 +480,7 @@ class LiveScoresClient
   # Lightweight single-fixture fetch just to resolve the venue ID.
   # Cached 7 days — venue IDs don't change.
   def fixture_venue_id(fixture_id)
-    Rails.cache.fetch("fixture_venue_id_v1_#{fixture_id}", expires_in: 7.days) do
+    Rails.cache.fetch("fixture_venue_id_v1_#{fixture_id}", expires_in: 7.days, race_condition_ttl: 60.seconds) do
       raw = get("fixtures", id: fixture_id)
       raw.dig("response", 0, "fixture", "venue", "id")
     end
@@ -491,7 +491,7 @@ class LiveScoresClient
 
   def venue_detail(venue_id)
     return nil unless venue_id.present?
-    Rails.cache.fetch("venue_detail_v1_#{venue_id}", expires_in: 24.hours) do
+    Rails.cache.fetch("venue_detail_v1_#{venue_id}", expires_in: 24.hours, race_condition_ttl: 30.seconds) do
       raw = get("venues", id: venue_id)
       v   = raw.dig("response", 0)
       next nil unless v
@@ -538,7 +538,7 @@ class LiveScoresClient
   end
 
   def player_trophies(player_id)
-    Rails.cache.fetch("player_trophies_v1_#{player_id}", expires_in: 12.hours) do
+    Rails.cache.fetch("player_trophies_v1_#{player_id}", expires_in: 12.hours, race_condition_ttl: 30.seconds) do
       raw = get("trophies", player: player_id)
       Array(raw.dig("response")).map do |t|
         { league: t["league"], place: t["place"], season: t["season"], country: t["country"] }
@@ -550,7 +550,7 @@ class LiveScoresClient
   end
 
   def player_sidelined(player_id)
-    Rails.cache.fetch("player_sidelined_v1_#{player_id}", expires_in: 6.hours) do
+    Rails.cache.fetch("player_sidelined_v1_#{player_id}", expires_in: 6.hours, race_condition_ttl: 30.seconds) do
       raw = get("sidelined", player: player_id)
       Array(raw.dig("response")).map do |s|
         { type: s["type"], start: s["start"], end_date: s["end"] }

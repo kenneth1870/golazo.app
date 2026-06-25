@@ -147,7 +147,7 @@ export default function AdminStandingsPage() {
                         <td style={{ padding: "7px 8px 7px 12px", color: i < 2 ? "#10b981" : "rgba(255,255,255,.3)", fontSize: "0.8rem", fontWeight: 700 }}>{i + 1}</td>
                         <td style={{ padding: "7px 8px", minWidth: 110 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            {r.team.flag_url && <img src={r.team.flag_url} alt="" style={{ width: 20, height: 14, objectFit: "cover", borderRadius: 2, flexShrink: 0 }} onError={e => e.target.style.display="none"} />}
+                            {r.team.flag_url && <img src={r.team.flag_url} alt={r.team.name} style={{ width: 20, height: 14, objectFit: "cover", borderRadius: 2, flexShrink: 0 }} onError={e => e.target.style.display="none"} />}
                             <span style={{ color: "#fff", fontSize: "0.8rem", fontWeight: 600, whiteSpace: "nowrap" }}>{r.team.name}</span>
                           </div>
                         </td>

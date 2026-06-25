@@ -67,7 +67,7 @@ export default function MatchDetail({ matchId, onBack }) {
               <div className="team-1 w-50">
                 <div className="team-details w-100 text-center">
                   {match.home_team?.flag_url
-                    ? <img src={match.home_team.flag_url} alt="" className="logo-lg" style={{ margin: "0 auto 8px" }} />
+                    ? <img src={match.home_team.flag_url} alt={match.home_team.name} className="logo-lg" style={{ margin: "0 auto 8px" }} />
                     : <span style={{ fontSize: "3rem" }}>🏳️</span>
                   }
                   <h3>{translateTeam(match.home_team?.name, i18n.language)}</h3>
@@ -83,7 +83,7 @@ export default function MatchDetail({ matchId, onBack }) {
               <div className="team-2 w-50">
                 <div className="team-details w-100 text-center">
                   {match.away_team?.flag_url
-                    ? <img src={match.away_team.flag_url} alt="" className="logo-lg" style={{ margin: "0 auto 8px" }} />
+                    ? <img src={match.away_team.flag_url} alt={match.away_team.name} className="logo-lg" style={{ margin: "0 auto 8px" }} />
                     : <span style={{ fontSize: "3rem" }}>🏳️</span>
                   }
                   <h3>{translateTeam(match.away_team?.name, i18n.language)}</h3>

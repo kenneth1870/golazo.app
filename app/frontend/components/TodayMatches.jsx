@@ -46,7 +46,7 @@ function MatchRow({ match, onClick }) {
       <div className="d-flex align-items-center" style={{ flex: 1, justifyContent: "flex-end", gap: 8 }}>
         <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.9rem" }}>{match.home_team?.name}</span>
         {match.home_team?.flag_url && (
-          <img src={match.home_team.flag_url} alt="" className="flag-xs" loading="eager" />
+          <img src={match.home_team.flag_url} alt={match.home_team.name} className="flag-xs" loading="eager" />
         )}
       </div>
 
@@ -69,7 +69,7 @@ function MatchRow({ match, onClick }) {
       {/* Away team */}
       <div className="d-flex align-items-center" style={{ flex: 1, gap: 8 }}>
         {match.away_team?.flag_url && (
-          <img src={match.away_team.flag_url} alt="" className="flag-xs" loading="eager" />
+          <img src={match.away_team.flag_url} alt={match.away_team.name} className="flag-xs" loading="eager" />
         )}
         <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.9rem" }}>{match.away_team?.name}</span>
       </div>

@@ -40,7 +40,7 @@ function ResultRow({ match, onMatchClick }) {
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">
           {match.home_team?.flag_url && (
-            <img src={match.home_team.flag_url} alt="" className="flag-xs" loading="eager"
+            <img src={match.home_team.flag_url} alt={match.home_team.name} className="flag-xs" loading="eager"
               onError={e => (e.target.style.display = "none")} />
           )}
           <span className="team-name">{match.home_team?.name}</span>
@@ -54,7 +54,7 @@ function ResultRow({ match, onMatchClick }) {
         <div className="match-row__team match-row__team--away">
           <span className="team-name">{match.away_team?.name}</span>
           {match.away_team?.flag_url && (
-            <img src={match.away_team.flag_url} alt="" className="flag-xs" loading="eager"
+            <img src={match.away_team.flag_url} alt={match.away_team.name} className="flag-xs" loading="eager"
               onError={e => (e.target.style.display = "none")} />
           )}
         </div>

@@ -104,7 +104,7 @@ class NewsService
   # feed fetch. Falls back to scanning the full feed so show/content never 404
   # on a cold cache.
   def find_article(id:, lang:)
-    Rails.cache.fetch("news_article_#{lang}_#{id}", expires_in: 24.hours) do
+    Rails.cache.fetch("news_article_#{lang}_#{id}", expires_in: 24.hours, race_condition_ttl: 30.seconds) do
       latest(limit: 200, lang: lang).find { |a| a[:id] == id }
     end
   end
@@ -195,7 +195,7 @@ class NewsService
       return fetch_espn_article_content($1, url)
     end
 
-    Rails.cache.fetch("news_content_#{Digest::SHA1.hexdigest(url)}", expires_in: 60.minutes) do
+    Rails.cache.fetch("news_content_#{Digest::SHA1.hexdigest(url)}", expires_in: 60.minutes, race_condition_ttl: 15.seconds) do
       response = Faraday.get(url) do |req|
         req.options.timeout      = 8
         req.options.open_timeout = 5
@@ -296,7 +296,7 @@ class NewsService
   #   2. Side-cache written by fetch_espn_api — instant, has image + description.
   #   3. Direct ESPN JSON API call — last resort; returns description only.
   def fetch_espn_article_content(espn_id, original_url = nil)
-    Rails.cache.fetch("espn_content_v2_#{espn_id}", expires_in: 60.minutes) do
+    Rails.cache.fetch("espn_content_v2_#{espn_id}", expires_in: 60.minutes, race_condition_ttl: 15.seconds) do
       # ── 1. Mobile scrape (bypasses WAF) ──────────────────────────────────────
       if original_url.present?
         begin
@@ -464,7 +464,7 @@ class NewsService
 
     # Cache the og:image result itself so we don't re-scrape every 30 min
     cache_key = "espn_og_#{Digest::SHA1.hexdigest(url)[0, 12]}"
-    Rails.cache.fetch(cache_key, expires_in: 6.hours) do
+    Rails.cache.fetch(cache_key, expires_in: 6.hours, race_condition_ttl: 30.seconds) do
       resp = Faraday.get(url) do |req|
         req.options.timeout      = 6
         req.options.open_timeout = 4

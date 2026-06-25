@@ -95,7 +95,7 @@ function TeamButton({ team, isWinner, isPicked, onClick, disabled }) {
       title={team.resolved ? team.name : `Slot: ${team.name}`}
     >
       {team.flag_url
-        ? <img src={team.flag_url} alt="" className="flag-xs" loading="eager" onError={e => (e.target.style.display = "none")} />
+        ? <img src={team.flag_url} alt={team.name} className="flag-xs" loading="eager" onError={e => (e.target.style.display = "none")} />
         : <span className="pred-team__dot" />
       }
       <span className="pred-team__name">{translateTeam(team.name, i18n.language) || "?"}</span>

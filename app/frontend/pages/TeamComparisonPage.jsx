@@ -137,13 +137,13 @@ export default function TeamComparisonPage() {
             {/* Team headers */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, textAlign: "center" }}>
               <Link to={`/teams/${homeId}`} style={{ flex: 1, textDecoration: "none" }}>
-                {homeData.flag_url && <img src={homeData.flag_url} alt="" style={{ width: 48, height: 48, objectFit: "contain", display: "block", margin: "0 auto 6px" }} />}
+                {homeData.flag_url && <img src={homeData.flag_url} alt={homeName} style={{ width: 48, height: 48, objectFit: "contain", display: "block", margin: "0 auto 6px" }} />}
                 <div style={{ fontWeight: 900, fontSize: "0.95rem", color: "var(--text)" }}>{homeName}</div>
                 {homeData.group && <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>{t("nav.group", { letter: homeData.group })}</div>}
               </Link>
               <div style={{ fontWeight: 900, fontSize: "1.2rem", color: "var(--muted)" }}>vs</div>
               <Link to={`/teams/${awayId}`} style={{ flex: 1, textDecoration: "none" }}>
-                {awayData.flag_url && <img src={awayData.flag_url} alt="" style={{ width: 48, height: 48, objectFit: "contain", display: "block", margin: "0 auto 6px" }} />}
+                {awayData.flag_url && <img src={awayData.flag_url} alt={awayName} style={{ width: 48, height: 48, objectFit: "contain", display: "block", margin: "0 auto 6px" }} />}
                 <div style={{ fontWeight: 900, fontSize: "0.95rem", color: "var(--text)" }}>{awayName}</div>
                 {awayData.group && <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>{t("nav.group", { letter: awayData.group })}</div>}
               </Link>

@@ -19,7 +19,7 @@ function LiveMatchRow({ match, onMatchClick }) {
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">
           {match.home?.logo && (
-            <img src={match.home.logo} alt="" className="flag-xs" loading="eager"
+            <img src={match.home.logo} alt={match.home.name} className="flag-xs" loading="eager"
               onError={e => (e.target.style.display = "none")} />
           )}
           <span className="team-name">{match.home?.name}</span>
@@ -39,7 +39,7 @@ function LiveMatchRow({ match, onMatchClick }) {
           )}
           <span className="team-name">{match.away?.name}</span>
           {match.away?.logo && (
-            <img src={match.away.logo} alt="" className="flag-xs" loading="eager"
+            <img src={match.away.logo} alt={match.away.name} className="flag-xs" loading="eager"
               onError={e => (e.target.style.display = "none")} />
           )}
         </div>

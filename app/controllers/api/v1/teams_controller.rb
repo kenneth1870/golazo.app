@@ -68,7 +68,7 @@ module Api
         end
 
         cache_key = "team_squad_#{team.external_id}"
-        data = Rails.cache.fetch(cache_key, expires_in: 24.hours) do
+        data = Rails.cache.fetch(cache_key, expires_in: 24.hours, race_condition_ttl: 30.seconds) do
           resp = Faraday.new("https://v3.football.api-sports.io") do |f|
             f.headers["x-apisports-key"] = api_key
           end.get("/players/squads", { team: team.external_id })

@@ -29,7 +29,7 @@ class ApiSportsClient
 
     Rails.logger.info("[ApiSportsClient] using fixture_id=#{fixture_id} for #{home_name} vs #{away_name}")
 
-    Rails.cache.fetch("apisports_detail_#{fixture_id}", expires_in: 30.minutes) do
+    Rails.cache.fetch("apisports_detail_#{fixture_id}", expires_in: 30.minutes, race_condition_ttl: 15.seconds) do
       fetch_full_detail(fixture_id)
     end
   end
@@ -40,7 +40,7 @@ class ApiSportsClient
 
   def find_fixture_id(home_name, away_name, date)
     cache_key = "apisports_fid_#{Digest::SHA1.hexdigest("#{home_name}-#{away_name}-#{date}")}"
-    Rails.cache.fetch(cache_key, expires_in: 7.days) do
+    Rails.cache.fetch(cache_key, expires_in: 7.days, race_condition_ttl: 60.seconds) do
       season = date.year
       # Try current year first, then previous (matches played late Dec / early Jan)
       [ season, season - 1 ].each do |s|

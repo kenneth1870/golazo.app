@@ -3,20 +3,20 @@ class WorldCupScorers
   FIXTURE_EVENTS_TTL = 24.hours
 
   def self.scorers(competition_code = "WC")
-    Rails.cache.fetch("wc_scorers_v1_#{competition_code}", expires_in: CACHE_TTL) do
+    Rails.cache.fetch("wc_scorers_v1_#{competition_code}", expires_in: CACHE_TTL, race_condition_ttl: 10.seconds) do
       aggregate(competition_code, stat: :goals)
     end.presence || []
   end
 
   def self.assists(competition_code = "WC")
-    Rails.cache.fetch("wc_assists_v1_#{competition_code}", expires_in: CACHE_TTL) do
+    Rails.cache.fetch("wc_assists_v1_#{competition_code}", expires_in: CACHE_TTL, race_condition_ttl: 10.seconds) do
       aggregate(competition_code, stat: :assists)
     end.presence || []
   end
 
   def self.cards(competition_code = "WC", type: :yellow)
     key = "wc_#{type}_cards_v1_#{competition_code}"
-    Rails.cache.fetch(key, expires_in: CACHE_TTL) do
+    Rails.cache.fetch(key, expires_in: CACHE_TTL, race_condition_ttl: 10.seconds) do
       aggregate(competition_code, stat: type == :red ? :red_cards : :yellow_cards)
     end.presence || []
   end

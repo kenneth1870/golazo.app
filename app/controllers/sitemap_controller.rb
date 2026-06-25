@@ -43,7 +43,7 @@ class SitemapController < ApplicationController
 
     # Recent news articles — IDs are SHA1 digests of the article link,
     # generated at parse time by NewsService. Re-use the feed cache.
-    @news_articles = Rails.cache.fetch("sitemap_news_v1", expires_in: 1.hour) do
+    @news_articles = Rails.cache.fetch("sitemap_news_v1", expires_in: 1.hour, race_condition_ttl: 30.seconds) do
       NewsService.new.latest(limit: 200) rescue []
     end
 

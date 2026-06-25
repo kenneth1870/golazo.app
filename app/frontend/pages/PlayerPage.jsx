@@ -283,7 +283,7 @@ export default function PlayerPage() {
                 </div>
                 {team?.name && (
                   <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}>
-                    {team.logo && <img src={team.logo} alt="" style={{ width: 20, height: 20, objectFit: "contain" }} onError={e => (e.target.style.display="none")} />}
+                    {team.logo && <img src={team.logo} alt={team.name} style={{ width: 20, height: 20, objectFit: "contain" }} onError={e => (e.target.style.display="none")} />}
                     <span style={{ fontSize: "0.82rem", color: "rgba(255,255,255,.7)", fontWeight: 600 }}>{team.name}</span>
                   </div>
                 )}

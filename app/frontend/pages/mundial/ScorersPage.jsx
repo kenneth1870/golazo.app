@@ -90,7 +90,7 @@ function PlayerRow({ player, rank, maxValue, tab, lang }) {
       <div style={{ minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
           {player.team?.crest && (
-            <img src={player.team.crest} alt="" style={{ width: 18, height: 18, objectFit: "contain", flexShrink: 0 }}
+            <img src={player.team.crest} alt={player.team.name} style={{ width: 18, height: 18, objectFit: "contain", flexShrink: 0 }}
               onError={e => (e.target.style.display = "none")} />
           )}
           {player.player?.id ? (
