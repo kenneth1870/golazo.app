@@ -50,8 +50,23 @@ module Api
           goal_diff:      goals_scored - goals_conceded
         }
 
+        # Serialize matches minimally — the team page renders a fixture list and
+        # never touches goals/match_stats, so excluding them avoids an N+1 over
+        # those associations (they aren't preloaded) and trims the payload.
+        # Mirrors MatchesController#index.
+        matches_json = matches.map { |m|
+          m.as_json(
+            only:    %i[id external_id status kickoff_at home_score away_score home_slot away_slot bracket_pos group_stage round],
+            include: {
+              home_team:   { only: %i[id name code flag_url] },
+              away_team:   { only: %i[id name code flag_url] },
+              competition: { only: %i[id name code logo country] }
+            }
+          )
+        }
+
         render json: team.as_json(only: %i[id name code flag_url group confederation external_id]).merge(
-          matches: matches,
+          matches: matches_json,
           scorers: scorers,
           tournament_stats: tournament_stats
         )

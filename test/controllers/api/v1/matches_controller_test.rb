@@ -43,6 +43,23 @@ class Api::V1::MatchesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "GET sets a strong content ETag and Cache-Control" do
+    get "/api/v1/matches/db-#{@match.id}"
+    assert_response :success
+    assert_match(/\A"[0-9a-f]{8}"\z/, response.headers["ETag"])
+    assert_includes response.headers["Cache-Control"].to_s, "max-age="
+  end
+
+  test "conditional GET with matching If-None-Match returns 304 with empty body" do
+    get "/api/v1/matches/db-#{@match.id}"
+    etag = response.headers["ETag"]
+    assert etag.present?, "expected an ETag on the first response"
+
+    get "/api/v1/matches/db-#{@match.id}", headers: { "If-None-Match" => etag }
+    assert_response :not_modified
+    assert_empty response.body
+  end
+
   private
 
   def with_admin_token(token)

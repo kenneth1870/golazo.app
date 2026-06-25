@@ -1,11 +1,9 @@
-require "web-push"
-
 class MatchEventNotificationJob < ApplicationJob
   queue_as :critical
 
-  # Subscription errors are handled inline (per-sub rescue) so the job never
-  # raises them — discard_on is a safety net for unexpected propagation only.
-  discard_on WebPush::ExpiredSubscription, WebPush::InvalidSubscription
+  # Orchestrator only: resolves subscribers + localized copy, then fans delivery
+  # out to DeliverPushJob. The actual WebPush sends (and per-sub error handling)
+  # live there.
 
   EVENT_EMOJIS = {
     "goal"      => "⚽",
@@ -15,6 +13,10 @@ class MatchEventNotificationJob < ApplicationJob
     "red_card"  => "🟥",
     "prematch"  => "⏰"
   }.freeze
+
+  # Subscribers per delivery job. Small enough that batches run in parallel
+  # across workers; large enough to avoid per-job overhead dominating.
+  BATCH_SIZE = 100
 
   def perform(event_type:, match_id:, home_name:, away_name:, home_score: nil, away_score: nil, match_url: nil, minute: nil, scorer: nil)
     event_type = event_type.to_s
@@ -63,15 +65,14 @@ class MatchEventNotificationJob < ApplicationJob
         Goal.where(match_id: match_id).order(created_at: :desc).first&.player_name.presence
     end
 
-    copy_cache = {}
-
-    subs.each do |sub|
-      locale      = %w[es en].include?(sub.locale) ? sub.locale : "es"
-      title, body = copy_cache[locale] ||= begin
-        home_t = TeamNameTranslator.translate(home_name, locale)
-        away_t = TeamNameTranslator.translate(away_name, locale)
-        build_copy(locale, event_type, home_t, away_t, score_str, minute, scorer)
-      end
+    # Build the localized payload once per locale (copy is identical for every
+    # subscriber in a locale — the random goal phrasing is sampled once here),
+    # then fan out delivery into batched DeliverPushJobs so the blocking WebPush
+    # sends parallelize across workers instead of running serially in this job.
+    subs.group_by { |sub| %w[es en].include?(sub.locale) ? sub.locale : "es" }.each do |locale, locale_subs|
+      home_t = TeamNameTranslator.translate(home_name, locale)
+      away_t = TeamNameTranslator.translate(away_name, locale)
+      title, body = build_copy(locale, event_type, home_t, away_t, score_str, minute, scorer)
 
       payload = {
         title:    title,
@@ -82,35 +83,12 @@ class MatchEventNotificationJob < ApplicationJob
         match_id: match_id
       }.to_json
 
-      WebPush.payload_send(
-        message:    payload,
-        endpoint:   sub.endpoint,
-        p256dh:     sub.p256dh,
-        auth:       sub.auth,
-        vapid: {
-          subject:     ENV["VAPID_SUBJECT"],
-          public_key:  ENV["VAPID_PUBLIC_KEY"],
-          private_key: ENV["VAPID_PRIVATE_KEY"]
-        },
-        ttl: 300
-      )
-      Rails.logger.info("[PushNotification] Sent #{event_type} to sub #{sub.id} (#{sub.push_provider})")
-    rescue WebPush::ExpiredSubscription, WebPush::InvalidSubscription => e
-      Rails.logger.info("[PushNotification] Removing stale subscription #{sub.id}: #{e.message}")
-      sub.destroy
-    rescue WebPush::ResponseError => e
-      Rails.logger.warn("[PushNotification] ResponseError for sub #{sub.id}: #{e.message}")
-      fail_key = "push_fail_#{sub.id}"
-      count    = (Rails.cache.read(fail_key) || 0) + 1
-      if count >= 5
-        Rails.logger.info("[PushNotification] Removing subscription #{sub.id} after #{count} consecutive failures")
-        sub.destroy
-      else
-        Rails.cache.write(fail_key, count, expires_in: 7.days)
+      locale_subs.each_slice(BATCH_SIZE) do |batch|
+        DeliverPushJob.perform_later(subscription_ids: batch.map(&:id), payload: payload)
       end
-    rescue => e
-      Rails.logger.error("[PushNotification] Unexpected error for sub #{sub.id}: #{e.class}: #{e.message}")
     end
+
+    Rails.logger.info("[PushNotification] Enqueued #{event_type} delivery for #{subs.size} subscribers")
   end
 
   private
