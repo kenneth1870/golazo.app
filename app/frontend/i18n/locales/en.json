@@ -150,7 +150,13 @@
     "leader": "Leader",
     "matchesPlayed": "matches played",
     "noData": "No data yet",
-    "appearsWhenPlayed": "Data will appear when matches begin"
+    "appearsWhenPlayed": "Data will appear when matches begin",
+    "tabNavTeams": "Teams",
+    "tabNavSchedule": "Schedule",
+    "tabNavVenues": "Venues",
+    "tabNavStats": "Goals",
+    "tabNavGroups": "Groups",
+    "tabNavKnockout": "Bracket"
   },
   "table": {
     "pos": "#",

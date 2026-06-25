@@ -491,10 +491,12 @@ a:hover{color:var(--accent);opacity:.85}
   background:color-mix(in srgb,var(--accent,#ee1e46) 85%,#fff) !important;
 }
 
-/* Tab bar right-edge fade hint */
-.tab-bar__inner{
-  -webkit-mask-image:linear-gradient(to right,black 88%,transparent 100%);
-  mask-image:linear-gradient(to right,black 88%,transparent 100%);
+/* Tab bar right-edge fade hint — only when tabs actually overflow */
+@media(min-width:577px){
+  .tab-bar__inner{
+    -webkit-mask-image:linear-gradient(to right,black 88%,transparent 100%);
+    mask-image:linear-gradient(to right,black 88%,transparent 100%);
+  }
 }
 
 /* ─── Section ────────────────────────────────────────── */
@@ -1393,8 +1395,8 @@ a:hover{color:var(--accent);opacity:.85}
   .col-6{flex:0 0 50%;max-width:50%}
   .venue-card{padding:14px}
   .news-card{padding:16px}
-  .tab-link{padding:6px 13px;font-size:.66rem}
-  .tab-bar__inner{gap:5px;padding:8px 12px}
+  .tab-link{padding:6px 4px;font-size:.62rem;flex:1;text-align:center;flex-shrink:1}
+  .tab-bar__inner{gap:0;padding:6px 8px}
   /* Prediction bars: tighter on mobile */
   .prediction-bar-row{grid-template-columns:1fr 2fr 32px;gap:6px}
   .prediction-bar-row__label{font-size:.72rem}

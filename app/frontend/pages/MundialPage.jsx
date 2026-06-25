@@ -10,12 +10,12 @@ export default function MundialPage() {
   )
 
   const TABS = [
-    { path: "/mundial/teams",    label: t("nav.teams") },
-    { path: "/mundial/schedule", label: t("nav.schedule") },
-    { path: "/mundial/venues",   label: t("nav.venues") },
-    { path: "/mundial/scorers",  label: t("nav.topScorers") },
-    { path: "/scores/groups",    label: t("scores.groupStage"), external: true },
-    { path: "/scores/knockout",  label: t("scores.knockout"),   external: true },
+    { path: "/mundial/teams",    label: t("mundial.tabNavTeams",    t("nav.teams")) },
+    { path: "/mundial/schedule", label: t("mundial.tabNavSchedule", t("nav.schedule")) },
+    { path: "/mundial/venues",   label: t("mundial.tabNavVenues",   t("nav.venues")) },
+    { path: "/mundial/scorers",  label: t("mundial.tabNavStats",    t("nav.topScorers")) },
+    { path: "/scores/groups",    label: t("mundial.tabNavGroups",   t("scores.groupStage")), external: true },
+    { path: "/scores/knockout",  label: t("mundial.tabNavKnockout", t("scores.knockout")),   external: true },
   ]
 
   return (

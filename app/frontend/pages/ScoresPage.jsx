@@ -21,13 +21,6 @@ export default function ScoresPage() {
 
   return (
     <div>
-      <div className="page-hero" style={{ backgroundImage: "url('/images/hero_1.jpg')" }}>
-        <div className="container">
-          <h1 className="page-hero__title">{t("nav.scores")}</h1>
-          <p className="page-hero__sub">{t("scores.wcSubtitle")}</p>
-        </div>
-      </div>
-
       <div className="tab-bar sticky-tabs">
         <div className="container">
           <div className="tab-bar__inner">

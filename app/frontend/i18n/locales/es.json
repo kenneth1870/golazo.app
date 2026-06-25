@@ -150,7 +150,13 @@
     "leader": "Líder",
     "matchesPlayed": "partidos jugados",
     "noData": "Sin datos aún",
-    "appearsWhenPlayed": "Aparecerán cuando comiencen los partidos"
+    "appearsWhenPlayed": "Aparecerán cuando comiencen los partidos",
+    "tabNavTeams": "Equipos",
+    "tabNavSchedule": "Calend.",
+    "tabNavVenues": "Sedes",
+    "tabNavStats": "Goles",
+    "tabNavGroups": "Grupos",
+    "tabNavKnockout": "Bracket"
   },
   "table": {
     "pos": "#",
