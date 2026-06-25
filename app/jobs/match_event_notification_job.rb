@@ -65,6 +65,11 @@ class MatchEventNotificationJob < ApplicationJob
         Goal.where(match_id: match_id).order(created_at: :desc).first&.player_name.presence
     end
 
+    # Filter by per-subscriber event preferences before building localized copy.
+    # Empty prefs (default) = receives all events; explicit list = opt-in subset.
+    subs = subs.select { |sub| sub.receives_event?(event_type) }
+    return if subs.empty?
+
     # Build the localized payload once per locale (copy is identical for every
     # subscriber in a locale — the random goal phrasing is sampled once here),
     # then fan out delivery into batched DeliverPushJobs so the blocking WebPush

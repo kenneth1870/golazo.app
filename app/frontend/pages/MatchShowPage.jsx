@@ -1620,7 +1620,10 @@ function GoalToast({ text, visible, onDismiss }) {
 
 // ─── Notification event-type preferences ─────────────
 const NOTIF_PREF_KEY = "golazo_notif_prefs"
-const DEFAULT_PREFS  = { goal: true, card: false, subst: false, halftime: true, fulltime: true }
+const DEFAULT_PREFS  = { goal: true, kickoff: true, halftime: false, fulltime: true, red_card: false }
+
+// Maps local pref keys → server event_type strings (same names for clarity)
+const PUSH_EVENT_MAP = { goal: "goal", kickoff: "kickoff", halftime: "halftime", fulltime: "fulltime", red_card: "red_card" }
 
 function getNotifPrefs() {
   try {
@@ -1631,28 +1634,43 @@ function getNotifPrefs() {
 function saveNotifPrefs(prefs) {
   try { localStorage.setItem(NOTIF_PREF_KEY, JSON.stringify(prefs)) } catch {}
 }
+function prefsToServerList(prefs) {
+  // Empty list = all events; non-empty = explicit opt-in. Always send the
+  // selected subset. If all are checked (or all defaults), send [] to mean "all".
+  const selected = Object.entries(PUSH_EVENT_MAP)
+    .filter(([k]) => prefs[k])
+    .map(([, v]) => v)
+  const allSelected = Object.keys(PUSH_EVENT_MAP).every(k => prefs[k])
+  return allSelected ? [] : selected
+}
 
 function NotifPrefsPanel() {
+  const { t } = useTranslation()
   const [prefs, setPrefs] = useState(getNotifPrefs)
+  const { subscribed, updateEventPrefs } = usePushNotifications()
+
   const toggle = key => {
     const next = { ...prefs, [key]: !prefs[key] }
     setPrefs(next)
     saveNotifPrefs(next)
+    if (subscribed) updateEventPrefs(prefsToServerList(next))
   }
+
   const opts = [
-    { key: "goal",     label: "⚽ Goals" },
-    { key: "card",     label: "🟨 Cards" },
-    { key: "subst",    label: "🔄 Substitutions" },
-    { key: "halftime", label: "⏸ Half-time" },
-    { key: "fulltime", label: "🏁 Full-time" },
+    { key: "goal",     label: `⚽ ${t("push.pref.goals",    "Goals")}` },
+    { key: "kickoff",  label: `⏰ ${t("push.pref.kickoff",  "Kickoff")}` },
+    { key: "halftime", label: `⏸ ${t("push.pref.halftime", "Half-time")}` },
+    { key: "fulltime", label: `🏁 ${t("push.pref.fulltime", "Full-time")}` },
+    { key: "red_card", label: `🟥 ${t("push.pref.redCard",  "Red cards")}` },
   ]
+
   return (
     <div style={{
       background: "var(--surface2)", border: "1px solid var(--border)",
       borderRadius: 10, padding: "12px 16px", marginBottom: 16,
     }}>
       <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 10 }}>
-        🔔 In-app alert preferences
+        🔔 {t("push.pref.title", "Alert preferences")}
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {opts.map(({ key, label }) => (

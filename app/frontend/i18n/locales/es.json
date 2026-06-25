@@ -484,7 +484,15 @@
     "allow": "Permitir",
     "error": "No se pudieron activar las notificaciones. Inténtalo de nuevo.",
     "iosHint": "Agrega esta app a tu pantalla de inicio para activar las notificaciones.",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "pref": {
+      "title": "Preferencias de alertas",
+      "goals": "Goles",
+      "kickoff": "Inicio",
+      "halftime": "Medio tiempo",
+      "fulltime": "Final",
+      "redCard": "Tarjetas rojas"
+    }
   },
   "standings": {
     "qualified": "Clasificado",

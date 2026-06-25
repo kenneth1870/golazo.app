@@ -27,7 +27,7 @@ export function usePushNotifications() {
     })
   }, [])
 
-  const subscribe = useCallback(async (teamNames = []) => {
+  const subscribe = useCallback(async (teamNames = [], eventPrefs = []) => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       return { error: "Push not supported in this browser" }
     }
@@ -62,12 +62,13 @@ export function usePushNotifications() {
           "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || "",
         },
         body: JSON.stringify({
-          endpoint:  subJson.endpoint,
-          p256dh:    subJson.keys?.p256dh,
-          auth:      subJson.keys?.auth,
-          device_id: getDeviceId(),
-          team_ids:  teamNames,
-          locale:    i18n.language,
+          endpoint:     subJson.endpoint,
+          p256dh:       subJson.keys?.p256dh,
+          auth:         subJson.keys?.auth,
+          device_id:    getDeviceId(),
+          team_ids:     teamNames,
+          event_prefs:  eventPrefs,
+          locale:       i18n.language,
         }),
       })
 
@@ -110,21 +111,43 @@ export function usePushNotifications() {
     }
   }, [])
 
-  const updateTeams = useCallback(async (teamNames) => {
+  const updateTeams = useCallback(async (teamNames, eventPrefs) => {
     try {
       const reg = await navigator.serviceWorker.ready
       const pushSub = await reg.pushManager.getSubscription()
       if (!pushSub) return
+      const body = { endpoint: pushSub.endpoint, team_ids: teamNames }
+      if (eventPrefs !== undefined) body.event_prefs = eventPrefs
       await fetch("/api/v1/push_subscriptions/teams", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || "",
         },
-        body: JSON.stringify({ endpoint: pushSub.endpoint, team_ids: teamNames }),
+        body: JSON.stringify(body),
       })
     } catch (err) {
       // swallow — non-critical background sync
+    }
+  }, [])
+
+  const updateEventPrefs = useCallback(async (eventPrefs) => {
+    try {
+      const reg = await navigator.serviceWorker.ready
+      const pushSub = await reg.pushManager.getSubscription()
+      if (!pushSub) return
+      const existing = JSON.parse(localStorage.getItem("push_sub_teams") || "[]")
+      await fetch("/api/v1/push_subscriptions/teams", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || "",
+        },
+        body: JSON.stringify({ endpoint: pushSub.endpoint, team_ids: existing, event_prefs: eventPrefs }),
+      })
+      localStorage.setItem("push_event_prefs", JSON.stringify(eventPrefs))
+    } catch (err) {
+      // swallow
     }
   }, [])
 
@@ -158,5 +181,9 @@ export function usePushNotifications() {
     return teamNames.some(n => saved.includes(n))
   }, [subscribed])
 
-  return { supported, permission, subscribed, loading, subscribe, unsubscribe, updateTeams, addTeams, teamsSubscribed, needsIosInstall }
+  const eventPrefs = (() => {
+    try { return JSON.parse(localStorage.getItem("push_event_prefs") || "[]") } catch { return [] }
+  })()
+
+  return { supported, permission, subscribed, loading, subscribe, unsubscribe, updateTeams, addTeams, teamsSubscribed, needsIosInstall, updateEventPrefs, eventPrefs }
 }

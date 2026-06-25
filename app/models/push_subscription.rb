@@ -16,6 +16,22 @@ class PushSubscription < ApplicationRecord
     self.team_ids = arr.to_json
   end
 
+  VALID_EVENT_TYPES = %w[goal kickoff fulltime halftime red_card prematch].freeze
+
+  # Returns the list of subscribed event types. Empty array means all events.
+  def event_prefs_list
+    list = JSON.parse(event_prefs || "[]")
+    list.is_a?(Array) ? list.map(&:to_s) & VALID_EVENT_TYPES : []
+  rescue JSON::ParserError
+    []
+  end
+
+  # Returns true if this subscriber wants to receive the given event type.
+  def receives_event?(event_type)
+    prefs = event_prefs_list
+    prefs.empty? || prefs.include?(event_type.to_s)
+  end
+
   def self.for_teams(names)
     names = Array(names).map(&:to_s).reject(&:blank?)
     return none if names.blank?

@@ -484,7 +484,15 @@
     "allow": "Allow",
     "error": "Couldn't enable notifications. Please try again.",
     "iosHint": "Add this app to your Home Screen first to enable notifications.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "pref": {
+      "title": "Alert preferences",
+      "goals": "Goals",
+      "kickoff": "Kickoff",
+      "halftime": "Half-time",
+      "fulltime": "Full-time",
+      "redCard": "Red cards"
+    }
   },
   "standings": {
     "qualified": "Qualified",

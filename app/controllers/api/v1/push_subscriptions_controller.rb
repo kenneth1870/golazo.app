@@ -19,6 +19,7 @@ module Api
           auth:         params[:auth].to_s,
           device_id:    params[:device_id].to_s.presence,
           team_ids:     (params[:team_ids] || []).to_json,
+          event_prefs:  sanitize_event_prefs(params[:event_prefs]),
           locale:       locale,
           user_agent:   request.user_agent.to_s.first(500),
           last_seen_at: Time.current,
@@ -69,8 +70,10 @@ module Api
         sub = PushSubscription.find_by(endpoint: params[:endpoint])
         return render json: { error: "Not found" }, status: :not_found unless sub
 
-        sub.update!(team_ids: (params[:team_ids] || []).to_json, last_seen_at: Time.current)
-        render json: { ok: true, team_ids: sub.team_names }
+        attrs = { team_ids: (params[:team_ids] || []).to_json, last_seen_at: Time.current }
+        attrs[:event_prefs] = sanitize_event_prefs(params[:event_prefs]) if params.key?(:event_prefs)
+        sub.update!(attrs)
+        render json: { ok: true, team_ids: sub.team_names, event_prefs: sub.event_prefs_list }
       end
 
       # DELETE /api/v1/push_subscriptions
@@ -152,6 +155,14 @@ module Api
         web.push.apple.com
         push.apple.com
       ].freeze
+
+      # Accept only known event type strings; unknown values are dropped silently.
+      # Empty array (or nil) → subscriber receives all events.
+      def sanitize_event_prefs(raw)
+        return "[]" if raw.nil?
+        allowed = PushSubscription::VALID_EVENT_TYPES
+        (Array(raw).map(&:to_s) & allowed).to_json
+      end
 
       def valid_push_endpoint?(endpoint)
         uri = URI.parse(endpoint)
