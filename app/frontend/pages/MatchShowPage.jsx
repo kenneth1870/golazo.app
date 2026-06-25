@@ -566,7 +566,7 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
               fontSize: ".72rem", fontWeight: 800, color: "#ee1e46", letterSpacing: ".06em",
             }}>
               <span className="live-dot" />
-              {liveMinute ? `${liveMinute}${liveExtra ? `+${liveExtra}` : ""}'` : "LIVE"}
+              {liveMinute ? `${liveMinute}${liveExtra ? `+${liveExtra}` : ""}'` : t("status.live")}
               {isHT && t("match.halfTimeShort")}
             </div>
           ) : isFT ? (

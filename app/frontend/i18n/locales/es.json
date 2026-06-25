@@ -317,7 +317,8 @@
   "status": {
     "live": "EN VIVO",
     "ft": "FIN",
-    "vs": "vs"
+    "vs": "vs",
+    "liveCount": "{{count}} EN VIVO"
   },
   "leagues": {
     "title": "Todas las Ligas",

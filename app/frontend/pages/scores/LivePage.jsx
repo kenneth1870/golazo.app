@@ -8,6 +8,7 @@ import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 import { prefetchMatchDetail, navIdFor } from "../../utils/matchDetailCache"
 
 function LiveMatchRow({ match, onMatchClick }) {
+  const { t } = useTranslation()
   const hasScore = match.home?.score !== null && match.away?.score !== null
 
   const warm = () => prefetchMatchDetail(navIdFor(match))
@@ -18,7 +19,7 @@ function LiveMatchRow({ match, onMatchClick }) {
       <div className="match-row__status">
         <span className="match-status-live">
           <span className="live-dot" />
-          {match.minute ? `${match.minute}'` : "LIVE"}
+          {match.minute ? `${match.minute}'` : t("status.live")}
         </span>
       </div>
       <div className="match-row__teams">

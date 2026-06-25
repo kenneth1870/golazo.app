@@ -511,9 +511,9 @@ function MatchLine({ match, teamName, navigate }) {
     >
       <div className="match-row__status">
         {isLive
-          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'` : "LIVE"}</span>
+          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'` : t("status.live")}</span>
           : isFinished
-          ? <span className="match-status-ft">FT</span>
+          ? <span className="match-status-ft">{t("status.ft")}</span>
           : <span className="match-status-time">
               {match.kickoff_at ? new Date(match.kickoff_at).toLocaleDateString([], { month: "short", day: "numeric" }) : ""}
             </span>

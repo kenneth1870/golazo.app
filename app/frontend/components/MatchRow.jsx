@@ -22,7 +22,7 @@ function FlagOrPlaceholder({ src, name }) {
 }
 
 export default function MatchRow({ match, onClick, showDate = false, showMeta = true }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
   const hasScore   = match.home_score !== null && match.away_score !== null
@@ -40,9 +40,9 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
     >
       <div className="match-row__status">
         {isLive
-          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'` : "LIVE"}</span>
+          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'` : t("status.live")}</span>
           : isFinished
-          ? <span className="match-status-ft">FT</span>
+          ? <span className="match-status-ft">{t("status.ft")}</span>
           : <span className="match-status-time">
               {showDate && <span className="match-date">{formatMatchDate(match.kickoff_at, i18n.language)}</span>}
               {formatKickoff(match.kickoff_at, i18n.language)}

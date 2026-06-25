@@ -16,7 +16,7 @@ function fmtKickoff(utc) {
 }
 
 function MatchRow({ match }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate  = useNavigate()
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
@@ -30,9 +30,9 @@ function MatchRow({ match }) {
     >
       <div className="match-row__status">
         {isLive
-          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'` : "LIVE"}</span>
+          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'` : t("status.live")}</span>
           : isFinished
-          ? <span className="match-status-ft">FT</span>
+          ? <span className="match-status-ft">{t("status.ft")}</span>
           : <span className="match-status-time">{fmtKickoff(match.kickoff_at)}</span>
         }
       </div>

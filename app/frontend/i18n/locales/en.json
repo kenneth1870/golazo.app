@@ -317,7 +317,8 @@
   "status": {
     "live": "LIVE",
     "ft": "FT",
-    "vs": "vs"
+    "vs": "vs",
+    "liveCount": "{{count}} LIVE"
   },
   "leagues": {
     "title": "All Leagues",

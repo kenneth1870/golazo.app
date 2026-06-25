@@ -10,7 +10,7 @@ function formatKickoff(utcDate, locale) {
 }
 
 function MatchRow({ match, onClick }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
   const hasScore   = match.home_score !== null && match.away_score !== null
@@ -32,10 +32,10 @@ function MatchRow({ match, onClick }) {
       <div style={{ width: 70, flexShrink: 0, textAlign: "center" }}>
         {isLive ? (
           <span style={{ color: "#ee1e46", fontSize: "0.7rem", fontWeight: 700, letterSpacing: 1 }}>
-            <span className="live-indicator" /> {match.minute || "LIVE"}
+            <span className="live-indicator" /> {match.minute || t("status.live")}
           </span>
         ) : isFinished ? (
-          <span style={{ color: "gray", fontSize: "0.72rem" }}>FT</span>
+          <span style={{ color: "gray", fontSize: "0.72rem" }}>{t("status.ft")}</span>
         ) : (
           <span style={{ color: "var(--muted)", fontSize: "0.8rem" }}>
             {formatKickoff(match.kickoff_at, i18n.language)}
@@ -84,7 +84,7 @@ function MatchRow({ match, onClick }) {
 }
 
 function CompetitionGroup({ competition, matches, onMatchSelect }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const liveCount = matches.filter(m => m.status === "live").length
 
   return (
@@ -104,7 +104,7 @@ function CompetitionGroup({ competition, matches, onMatchSelect }) {
             background: "#ee1e46", color: "#fff", fontSize: "0.65rem",
             fontWeight: 700, padding: "2px 7px", borderRadius: 4, letterSpacing: 1
           }}>
-            {liveCount} LIVE
+            {t("status.liveCount", { count: liveCount })}
           </span>
         )}
       </div>

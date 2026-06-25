@@ -324,7 +324,7 @@ function FavTeamAlert({ match, onMatchClick, onDismiss }) {
   const away = translateTeam(match.away_team?.name, i18n.language)
   const score = match.home_score !== null && match.away_score !== null
     ? `${match.home_score}–${match.away_score}` : null
-  const minute = match.minute ? `${match.minute}'` : "LIVE"
+  const minute = match.minute ? `${match.minute}'` : t("status.live")
 
   return (
     <div style={{

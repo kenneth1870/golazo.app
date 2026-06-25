@@ -99,7 +99,7 @@ function MatchSlot({ match, onClick }) {
       {isLive && (
         <div className="bracket-slot__live-bar">
           <span className="live-dot" />
-          <span style={{ fontSize: "0.6rem" }}>{match.minute ? `${match.minute}'` : "LIVE"}</span>
+          <span style={{ fontSize: "0.6rem" }}>{match.minute ? `${match.minute}'` : t("status.live")}</span>
         </div>
       )}
     </div>
