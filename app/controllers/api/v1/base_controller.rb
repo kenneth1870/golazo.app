@@ -31,7 +31,7 @@ module Api
 
       def require_user!
         return render json: { error: "unauthorized" }, status: :unauthorized unless current_user
-        return render json: { error: "blocked" }, status: :forbidden if current_user.blocked?
+        render json: { error: "blocked" }, status: :forbidden if current_user.blocked?
       end
 
       def require_admin!
