@@ -1691,7 +1691,7 @@ function NotifPrefsPanel() {
 }
 
 // ─── Push notification banner for live matches ────────
-function LivePushBanner({ homeName, awayName, onDismiss }) {
+function LivePushBanner({ homeName, awayName, teamNamesRaw, onDismiss }) {
   const { t } = useTranslation()
   const { supported, permission, subscribed, loading, subscribe, needsIosInstall } = usePushNotifications()
   const [done,   setDone]   = useState(false)
@@ -1702,7 +1702,7 @@ function LivePushBanner({ homeName, awayName, onDismiss }) {
   const enable = async () => {
     if (needsIosInstall) return
     setErrMsg(null)
-    const res = await subscribe([homeName, awayName].filter(Boolean))
+    const res = await subscribe((teamNamesRaw || [homeName, awayName]).filter(Boolean))
     if (res.ok) {
       setDone(true)
     } else if (res.error === "Permission denied") {
@@ -2316,6 +2316,7 @@ export default function MatchShowPage() {
           <LivePushBanner
             homeName={homeName}
             awayName={awayName}
+            teamNamesRaw={[homeTeamRaw, awayTeamRaw].filter(Boolean)}
             onDismiss={() => setShowNotifBanner(false)}
           />
         )}
