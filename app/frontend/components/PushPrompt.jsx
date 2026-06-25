@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 
 const DISMISSED_KEY = "golazo_push_dismissed_at"
-const DISMISS_TTL_MS = 7 * 24 * 60 * 60 * 1000 // re-prompt after 7 days
+const DISMISS_TTL_MS = 24 * 60 * 60 * 1000 // re-prompt after 1 day
 
 // Shown after a user views the page for 3 seconds.
 // Asks to enable goal alerts, optionally scoped to a favorite team.
@@ -26,7 +26,7 @@ export default function PushPrompt({ favoriteTeamName = null }) {
     }
     const dismissedAt = parseInt(localStorage.getItem(DISMISSED_KEY) || "0", 10)
     if (dismissedAt && Date.now() - dismissedAt < DISMISS_TTL_MS) return
-    const timer = setTimeout(() => setVisible(true), 3000)
+    const timer = setTimeout(() => setVisible(true), 1000)
     return () => clearTimeout(timer)
   }, [supported, needsIosInstall, permission, subscribed])
 

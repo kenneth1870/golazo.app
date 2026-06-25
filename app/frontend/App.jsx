@@ -16,6 +16,8 @@ import ConsentBanner from "./components/ConsentBanner"
 import RequireAdmin from "./components/RequireAdmin"
 import LoginPage from "./pages/LoginPage"
 import { useFavorites } from "./hooks/useFavorites"
+import { usePushNotifications } from "./hooks/usePushNotifications"
+import { isIosSafari, isStandalone } from "./utils/platform"
 
 // Critical path — loaded eagerly (always needed on first paint)
 import HomePage   from "./pages/HomePage"
@@ -65,12 +67,36 @@ function PageLoader() {
   )
 }
 
+// Auto-subscribe any device that hasn't made a push permission decision yet.
+// Triggers the native browser dialog directly — no custom modal — so every
+// supported device gets enrolled on first visit. iOS Safari in browser mode
+// is skipped (needs PWA install first; PushPrompt handles that separately).
+// Re-prompts after 30 days in case a subscription has lapsed.
+const PUSH_AUTO_KEY = "golazo_push_auto"
+const PUSH_AUTO_TTL = 30 * 24 * 60 * 60 * 1000
+
+function useAutoSubscribePush() {
+  const { subscribe, subscribed } = usePushNotifications()
+  useEffect(() => {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return
+    if (Notification.permission !== "default") return
+    if (subscribed) return
+    if (isIosSafari() && !isStandalone()) return // needs PWA install first
+    const last = parseInt(localStorage.getItem(PUSH_AUTO_KEY) || "0", 10)
+    if (last && Date.now() - last < PUSH_AUTO_TTL) return
+    localStorage.setItem(PUSH_AUTO_KEY, Date.now().toString())
+    const t = setTimeout(() => { subscribe([]) }, 2000)
+    return () => clearTimeout(t)
+  }, [subscribe, subscribed])
+}
+
 export default function App() {
   const location = useLocation()
   const navigate = useNavigate()
   useLocale() // auto-detect language from IP / device on every session
   useAnalytics() // fire-and-forget usage heartbeat for the admin device panel
   useKeepAlive() // ping /up every 4 min to prevent Render free-plan cold starts
+  useAutoSubscribePush()
   const { show: showOnboarding, dismiss: dismissOnboarding } = useOnboarding()
   const { favoriteTeams } = useFavorites()
   const favTeamName = favoriteTeams[0]?.name ?? null
