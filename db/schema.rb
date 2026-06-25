@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_22_205516) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_24_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -28,6 +28,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_22_205516) do
   end
 
   create_table "devices", force: :cascade do |t|
+    t.datetime "blocked_at"
     t.string "city"
     t.string "country"
     t.datetime "created_at", null: false
@@ -42,6 +43,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_22_205516) do
     t.datetime "updated_at", null: false
     t.string "user_agent"
     t.integer "visit_count", default: 0, null: false
+    t.index ["blocked_at"], name: "index_devices_on_blocked_at"
     t.index ["device_id"], name: "index_devices_on_device_id", unique: true
     t.index ["last_seen_at"], name: "index_devices_on_last_seen_at"
   end
@@ -339,6 +341,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_22_205516) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.datetime "blocked_at"
     t.datetime "created_at", null: false
     t.string "email"
     t.datetime "last_sign_in_at"

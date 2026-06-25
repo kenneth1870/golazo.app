@@ -5,10 +5,18 @@ module Api
     class SessionsController < BaseController
       before_action :require_user!, only: %i[me logout]
 
+      # Throttle password logins to blunt credential-stuffing / brute force.
+      # Keyed by client IP; no-ops gracefully if the cache store can't increment.
+      rate_limit to: 10, within: 3.minutes, only: :create,
+        with: -> { render json: { error: "too_many_attempts" }, status: :too_many_requests }
+
       # POST /api/v1/sessions — login
       def create
         user = User.find_by(email: params[:email].to_s.downcase.strip)
         if user&.authenticate(params[:password])
+          if user.blocked?
+            return render json: { error: "This account has been blocked" }, status: :forbidden
+          end
           user.update_columns(
             last_sign_in_at: Time.current,
             sign_in_count:   user.sign_in_count + 1

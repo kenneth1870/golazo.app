@@ -30,6 +30,13 @@ module Api
             return render json: { error: "Cannot demote the last admin" }, status: :unprocessable_entity
           end
 
+          if params.key?(:blocked)
+            if @user == current_user
+              return render json: { error: "Cannot block your own account" }, status: :unprocessable_entity
+            end
+            @user.blocked_at = ActiveModel::Type::Boolean.new.cast(params[:blocked]) ? Time.current : nil
+          end
+
           @user.role = params[:role] if params.key?(:role)
 
           if @user.update(user_params)

@@ -13,6 +13,29 @@ class Device < ApplicationRecord
   # Returns the device.
   DEVICE_ID_FORMAT = /\A[\w\-]{8,64}\z/
 
+  # SQL that derives the OS family from the user_agent string. Reused by
+  # os_breakdown and the by_os filter so they stay in sync.
+  OS_CASE_SQL = <<~SQL.squish.freeze
+    CASE
+      WHEN user_agent ~* 'iphone|ipad|ipod'    THEN 'iOS'
+      WHEN user_agent ~* 'android'             THEN 'Android'
+      WHEN user_agent ~* 'windows'             THEN 'Windows'
+      WHEN user_agent ~* 'mac os x|macintosh'  THEN 'macOS'
+      WHEN user_agent ~* 'linux'               THEN 'Linux'
+      ELSE 'Unknown'
+    END
+  SQL
+
+  # Free-text search across the human-meaningful columns.
+  scope :search, ->(q) {
+    term = "%#{sanitize_sql_like(q.to_s.strip)}%"
+    where("device_id ILIKE :t OR city ILIKE :t OR region ILIKE :t OR country ILIKE :t OR ip_address ILIKE :t OR last_path ILIKE :t", t: term)
+  }
+  scope :by_os,      ->(os)      { where("#{OS_CASE_SQL} = ?", os.to_s) }
+  scope :by_country, ->(country) { where(country: country.to_s) }
+
+  def blocked? = blocked_at.present?
+
   def self.track!(device_id:, user_agent: nil, locale: nil, path: nil, ip: nil)
     device_id = device_id.to_s.strip
     return nil if device_id.blank?
@@ -20,6 +43,9 @@ class Device < ApplicationRecord
 
     now = Time.current
     dev = find_or_initialize_by(device_id: device_id)
+
+    # A blocked device is ignored: no engagement, no session bumps, no geo.
+    return dev if dev.persisted? && dev.blocked?
 
     if dev.new_record?
       dev.first_seen_at = now
@@ -47,14 +73,7 @@ class Device < ApplicationRecord
   # OS breakdown computed in SQL (os is derived from user_agent, not a column).
   def self.os_breakdown
     connection.select_rows(<<~SQL).to_h
-      SELECT CASE
-        WHEN user_agent ~* 'iphone|ipad|ipod'    THEN 'iOS'
-        WHEN user_agent ~* 'android'             THEN 'Android'
-        WHEN user_agent ~* 'windows'             THEN 'Windows'
-        WHEN user_agent ~* 'mac os x|macintosh'  THEN 'macOS'
-        WHEN user_agent ~* 'linux'               THEN 'Linux'
-        ELSE 'Unknown'
-      END AS os, COUNT(*)
+      SELECT #{OS_CASE_SQL} AS os, COUNT(*)
       FROM devices
       GROUP BY 1
       ORDER BY 2 DESC
@@ -84,6 +103,7 @@ class Device < ApplicationRecord
       engaged_human:   engaged_human,
       last_path:       last_path,
       push_enabled:    push_device_ids ? push_device_ids.include?(device_id) : nil,
+      blocked:         blocked?,
       first_seen_at:   first_seen_at&.iso8601,
       last_seen_at:    last_seen_at&.iso8601,
       ip_address:      ip_address,

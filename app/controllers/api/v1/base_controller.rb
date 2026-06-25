@@ -30,7 +30,8 @@ module Api
       end
 
       def require_user!
-        render json: { error: "unauthorized" }, status: :unauthorized unless current_user
+        return render json: { error: "unauthorized" }, status: :unauthorized unless current_user
+        render json: { error: "blocked" }, status: :forbidden if current_user.blocked?
       end
 
       def require_admin!
@@ -41,8 +42,8 @@ module Api
         return if env_token.present? && provided.present? &&
                   ActiveSupport::SecurityUtils.secure_compare(provided, env_token)
 
-        # JWT-based admin check
-        return if current_user&.admin?
+        # JWT-based admin check (blocked admins lose access immediately)
+        return if current_user&.admin? && !current_user.blocked?
 
         render json: { error: "unauthorized" }, status: :unauthorized
       end
