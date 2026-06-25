@@ -310,7 +310,7 @@ class WorldCupSync
       /quarter.final/i      => "Quarter Final",
       /semi.final/i         => "Semi Final",
       /3rd place/i          => "3rd Place",
-      /final/i              => "Final",
+      /final/i              => "Final"
     }
 
     resolved = 0
