@@ -9,6 +9,7 @@ import { useLocale } from "../../hooks/useLocale"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useFavorites } from "../../hooks/useFavorites"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
+import { prefetchMatchDetail, navIdFor } from "../../utils/matchDetailCache"
 import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
 
@@ -169,6 +170,8 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
       <div
         className={`match-row${isLive ? " match-row--live" : ""}${clickable ? " match-row--clickable" : ""}${flashing ? " match-row--score-flash" : ""}`}
         onClick={handleTap}
+        onMouseEnter={clickable ? () => prefetchMatchDetail(navIdFor(match)) : undefined}
+        onTouchStart={clickable ? () => prefetchMatchDetail(navIdFor(match)) : undefined}
       >
         <div className="match-row__status">
           {isLive
@@ -552,9 +555,15 @@ export default function TodayPage() {
     const iso   = toISO(selected)
     const today = toISO(new Date())
     if (iso !== today) return
-    const iv = setInterval(() => load(selected), hasLive ? 15000 : 300000)
+    // Pause the safety-net poll while the tab is hidden; refresh on return.
+    const interval  = hasLive ? 15000 : 300000
+    const tick      = () => { if (!document.hidden) load(selected) }
+    const onVisible = () => { if (!document.hidden) load(selected) }
+    const iv = setInterval(tick, interval)
+    document.addEventListener("visibilitychange", onVisible)
     return () => {
       clearInterval(iv)
+      document.removeEventListener("visibilitychange", onVisible)
       clearTimeout(flashTimerRef.current)
     }
   }, [selected, load, hasLive])

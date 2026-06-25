@@ -2,6 +2,7 @@ import { useState } from "react"
 import { formatKickoff, formatMatchDate } from "../hooks/useLocalTime"
 import { useTranslation } from "react-i18next"
 import { translateTeam } from "../i18n/teamNames"
+import { prefetchMatchDetail, navIdFor } from "../utils/matchDetailCache"
 
 function FlagOrPlaceholder({ src, name }) {
   const [err, setErr] = useState(false)
@@ -26,8 +27,17 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
   const isFinished = match.status === "finished"
   const hasScore   = match.home_score !== null && match.away_score !== null
 
+  // Warm the match-detail cache on intent-to-click so the page paints instantly.
+  const warm = onClick ? () => prefetchMatchDetail(navIdFor(match)) : undefined
+
   return (
-    <div className={`match-row${isLive ? " match-row--live" : ""}${onClick ? " match-row--clickable" : ""}`} onClick={onClick}>
+    <div
+      className={`match-row${isLive ? " match-row--live" : ""}${onClick ? " match-row--clickable" : ""}`}
+      onClick={onClick}
+      onMouseEnter={warm}
+      onTouchStart={warm}
+      onFocus={warm}
+    >
       <div className="match-row__status">
         {isLive
           ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'` : "LIVE"}</span>

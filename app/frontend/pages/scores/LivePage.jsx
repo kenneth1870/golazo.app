@@ -3,13 +3,18 @@ import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague } from "../../i18n/leagueNames"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { useVisiblePolling } from "../../hooks/useVisiblePolling"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
+import { prefetchMatchDetail, navIdFor } from "../../utils/matchDetailCache"
 
 function LiveMatchRow({ match, onMatchClick }) {
   const hasScore = match.home?.score !== null && match.away?.score !== null
 
+  const warm = () => prefetchMatchDetail(navIdFor(match))
+
   return (
-    <div className="match-row match-row--live match-row--clickable" onClick={() => onMatchClick(match.external_id)}>
+    <div className="match-row match-row--live match-row--clickable" onClick={() => onMatchClick(match.external_id)}
+      onMouseEnter={warm} onTouchStart={warm}>
       <div className="match-row__status">
         <span className="match-status-live">
           <span className="live-dot" />
@@ -95,9 +100,10 @@ export default function LivePage() {
 
   useEffect(() => {
     load().finally(() => setLoading(false))
-    const iv = setInterval(load, 30000)
-    return () => clearInterval(iv)
   }, [])
+
+  // Refresh every 30s, but only while the tab is visible.
+  useVisiblePolling(load, 30000)
 
   const byLeague = matches.reduce((acc, m) => {
     const key = m.league_id ?? m.league_name ?? "other"

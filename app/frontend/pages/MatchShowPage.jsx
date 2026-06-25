@@ -19,6 +19,8 @@ import ScorePredictionPanel from "./match/ScorePredictionPanel"
 import MatchReactions from "../components/MatchReactions"
 import { useReminders } from "../hooks/useReminders"
 import { usePushNotifications } from "../hooks/usePushNotifications"
+import { useVisiblePolling } from "../hooks/useVisiblePolling"
+import { getCachedMatchDetail, setCachedMatchDetail } from "../utils/matchDetailCache"
 import { getMatchColor } from "../utils/teamColors"
 import { sourceColor } from "../utils/sourceColors"
 import { storageGet, storageSet } from "../utils/safeStorage"
@@ -1870,8 +1872,10 @@ export default function MatchShowPage() {
   const navigate    = useNavigate()
   const location    = useLocation()
   const preview     = location.state?.preview
-  const [data, setData]         = useState(() => previewToFixture(preview))
-  const [loading, setLoading]   = useState(true)
+  // Seed from the prefetch cache (warmed on row hover/tap) for an instant paint;
+  // fall back to the list preview, then to a skeleton while the fetch runs.
+  const [data, setData]         = useState(() => getCachedMatchDetail(id) || previewToFixture(preview))
+  const [loading, setLoading]   = useState(() => !getCachedMatchDetail(id))
   const [tab, setTab]           = useState("summary")
   const [toast, setToast]       = useState(null)
   const [showNotifBanner, setShowNotifBanner] = useState(false)
@@ -2003,6 +2007,7 @@ export default function MatchShowPage() {
     return fetchWithTimeout(`/api/v1/match_detail/${id}`, 10000)
       .then(r => r.json())
       .then(d => {
+        if (d?.fixture) setCachedMatchDetail(id, d)
         setData(prev => {
           if (fetchStarted < dataFetchedAt.current) return prev  // WS beat us — keep fresher data
           dataFetchedAt.current = fetchStarted
@@ -2014,13 +2019,18 @@ export default function MatchShowPage() {
   }, [id])
 
   useEffect(() => {
-    setLoading(true)
+    // When navigating to an already-prefetched match, swap in cached data and
+    // skip the skeleton; otherwise show the skeleton until the fetch resolves.
+    const cached = getCachedMatchDetail(id)
+    if (cached) { setData(cached); setLoading(false) } else { setLoading(true) }
     load().finally(() => setLoading(false))
-    // Adaptive polling: 20s when live, 60s otherwise
-    const interval = isLive ? 20000 : 60000
-    const iv = setInterval(load, interval)
-    return () => clearInterval(iv)
-  }, [id, isLive])
+  }, [id])
+
+  // Adaptive polling: 20s when live, 60s otherwise. Paused while the tab is
+  // hidden — match_detail is the heaviest endpoint (external API call + DB
+  // writes + ActionCable broadcasts on every hit), so a backgrounded tab must
+  // not keep hammering it.
+  useVisiblePolling(load, isLive ? 20000 : 60000, [id])
 
   // ActionCable subscription — push updates when live.
   // Stamps dataFetchedAt so concurrent polls know this data is the freshest.

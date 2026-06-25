@@ -6,6 +6,7 @@ import MatchRow from "../components/MatchRow"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { translateTeam } from "../i18n/teamNames"
 import { useStandingsChannel } from "../hooks/useStandingsChannel"
+import { useVisiblePolling } from "../hooks/useVisiblePolling"
 
 // ─── Qualification scenario logic ─────────────────────
 // WC 2026: top 2 from each group advance automatically.
@@ -251,15 +252,11 @@ export default function GroupDetailPage() {
   useEffect(() => { loadStandings() }, [group]) // eslint-disable-line
   useStandingsChannel(onStandingsUpdate)
 
-  // Auto-refresh standings every 30s when group has a live match
+  // Auto-refresh standings every 30s when group has a live match (visible tabs only)
   const hasLiveInGroup = matches.some(m =>
     m.status === "live" || ["1H","2H","HT","ET","BT","P"].includes(m.status?.short ?? "")
   )
-  useEffect(() => {
-    if (!hasLiveInGroup) return
-    const iv = setInterval(loadStandings, 30000)
-    return () => clearInterval(iv)
-  }, [hasLiveInGroup, group]) // eslint-disable-line
+  useVisiblePolling(loadStandings, hasLiveInGroup ? 30000 : null, [group])
 
   // Group matches by date → matchday labels
   const matchDays = matches.reduce((acc, m) => {

@@ -5,6 +5,7 @@ import { useMatches } from "../../hooks/useMatches"
 import MatchRow from "../../components/MatchRow"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useStandingsChannel } from "../../hooks/useStandingsChannel"
+import { useVisiblePolling } from "../../hooks/useVisiblePolling"
 
 const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
@@ -138,9 +139,11 @@ export default function GroupStagePage() {
   useEffect(() => {
     loadStandings()
     loadBestThirds()
-    const iv = setInterval(() => { loadStandings(); loadBestThirds() }, hasLiveOrRecent ? 30_000 : 60_000)
-    return () => clearInterval(iv)
   }, [hasLiveOrRecent])
+
+  // Refresh standings on an interval (30s with live/recent matches, 60s
+  // otherwise), paused while the tab is hidden.
+  useVisiblePolling(() => { loadStandings(); loadBestThirds() }, hasLiveOrRecent ? 30_000 : 60_000)
 
   useStandingsChannel(loadStandings)
 
