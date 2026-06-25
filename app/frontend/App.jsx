@@ -1,5 +1,5 @@
-import { lazy, Suspense } from "react"
-import { Routes, Route, Navigate, useLocation } from "react-router-dom"
+import { lazy, Suspense, useEffect } from "react"
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom"
 import { useLocale } from "./hooks/useLocale"
 import { useAnalytics } from "./hooks/useAnalytics"
 import { useKeepAlive } from "./hooks/useKeepAlive"
@@ -67,12 +67,31 @@ function PageLoader() {
 
 export default function App() {
   const location = useLocation()
+  const navigate = useNavigate()
   useLocale() // auto-detect language from IP / device on every session
   useAnalytics() // fire-and-forget usage heartbeat for the admin device panel
   useKeepAlive() // ping /up every 4 min to prevent Render free-plan cold starts
   const { show: showOnboarding, dismiss: dismissOnboarding } = useOnboarding()
   const { favoriteTeams } = useFavorites()
   const favTeamName = favoriteTeams[0]?.name ?? null
+
+  // Handle notification-tap navigation from the service worker.
+  // WindowClient.navigate() is unreliable in iOS standalone PWA, so the SW
+  // sends a postMessage instead and we navigate via React Router here.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return
+    const handler = (event) => {
+      if (event.data?.type === "navigate" && event.data?.url) {
+        const target = event.data.url
+        const path = target.startsWith(window.location.origin)
+          ? target.slice(window.location.origin.length)
+          : target
+        navigate(path)
+      }
+    }
+    navigator.serviceWorker.addEventListener("message", handler)
+    return () => navigator.serviceWorker.removeEventListener("message", handler)
+  }, [navigate])
 
   // Admin + login routes render outside the public layout (no Navbar/Footer/BottomNav)
   const isAdminOrAuth = location.pathname.startsWith("/admin") || location.pathname === "/login"
