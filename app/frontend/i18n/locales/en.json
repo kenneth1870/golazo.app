@@ -97,7 +97,7 @@
     "tabResults": "Results",
     "tabFixtures": "Fixtures",
     "tabGroups": "Groups",
-    "tabBracket": "Bracket",
+    "tabBracket": "Knockout",
     "viewFullMatch": "Full match →",
     "noGoals": "No goals recorded",
     "goalsLoading": "Loading..."
@@ -158,7 +158,7 @@
     "tabNavVenues": "Venues",
     "tabNavStats": "Goals",
     "tabNavGroups": "Groups",
-    "tabNavKnockout": "Bracket"
+    "tabNavKnockout": "Knockout"
   },
   "table": {
     "pos": "#",

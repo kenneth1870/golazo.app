@@ -97,7 +97,7 @@
     "tabResults": "Resultados",
     "tabFixtures": "Próximos",
     "tabGroups": "Grupos",
-    "tabBracket": "Bracket",
+    "tabBracket": "Eliminatorias",
     "viewFullMatch": "Ver partido →",
     "noGoals": "Sin goles registrados",
     "goalsLoading": "Cargando..."
@@ -158,7 +158,7 @@
     "tabNavVenues": "Sedes",
     "tabNavStats": "Goles",
     "tabNavGroups": "Grupos",
-    "tabNavKnockout": "Bracket"
+    "tabNavKnockout": "Eliminatorias"
   },
   "table": {
     "pos": "#",
