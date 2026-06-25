@@ -142,55 +142,91 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
 
 // ─── Today's matches strip ────────────────────────────────────────────────────
 function TodayMatchesSection({ todayMatches, navigate, t }) {
-  // todayMatches comes from /api/v1/today filtered to WC — same source as scores/today page.
-  // Already deduplicated and timezone-correct; just sort and slice.
-  const all     = [...(todayMatches || [])]
+  const all = [...(todayMatches || [])]
     .sort((a, b) => new Date(a.kickoff_at || a.kickoff) - new Date(b.kickoff_at || b.kickoff))
-  const liveCount = all.filter(m => m.status === "live").length
-  const visible = all.slice(0, 6)
-  if (visible.length === 0) return null
+  const live      = all.filter(m => m.status === "live")
+  const rest      = all.filter(m => m.status !== "live")
+  const liveCount = live.length
+
+  if (all.length === 0) return null
 
   return (
     <div style={{ marginBottom: 8 }}>
-      {/* Section header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {liveCount > 0
-            ? <><span className="live-dot" /><span style={{ fontWeight: 800, fontSize: ".78rem", color: "var(--text)" }}>LIVE</span></>
-            : <span style={{ fontWeight: 800, fontSize: ".78rem", color: "var(--text)", textTransform: "uppercase", letterSpacing: ".06em" }}>{t("time.today", "Today")}</span>
-          }
-          <span style={{ fontSize: ".7rem", color: "var(--muted)" }}>
-            · {t("scores.wcSubtitle", "FIFA World Cup 2026")}
-          </span>
-        </div>
-        <button
-          onClick={() => navigate("/scores/today")}
-          style={{ background: "none", border: "none", color: "var(--accent)", fontSize: ".72rem", fontWeight: 700, cursor: "pointer", padding: 0 }}
-        >
-          {t("home.viewAll")}
-        </button>
-      </div>
-
-      {/* Match rows */}
-      <div style={{ background: "var(--surface)", borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)" }}>
-        {visible.map((m, i) => (
-          <div key={m.id} style={{ borderBottom: i < visible.length - 1 ? "1px solid var(--border)" : "none" }}>
-            <MatchRow
-              match={m}
-              showDate={false}
-              onClick={() => navigate(`/matches/${m.external_id ?? m.id}`)}
-            />
+      {/* ── LIVE NOW banner — only shown when matches are in progress ── */}
+      {liveCount > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+              <span className="live-dot" />
+              <span style={{ fontWeight: 900, fontSize: ".82rem", color: "#ee1e46", letterSpacing: ".04em" }}>
+                LIVE NOW
+              </span>
+              <span style={{ fontSize: ".68rem", color: "var(--muted)" }}>
+                · {liveCount} {liveCount === 1 ? t("scores.match", "match") : t("scores.matches", "matches")}
+              </span>
+            </div>
+            <button
+              onClick={() => navigate("/scores/today")}
+              style={{ background: "none", border: "none", color: "var(--accent)", fontSize: ".72rem", fontWeight: 700, cursor: "pointer", padding: 0 }}
+            >
+              {t("home.viewAll")}
+            </button>
           </div>
-        ))}
-      </div>
+          <div style={{ background: "rgba(238,30,70,.06)", borderRadius: 12, overflow: "hidden", border: "1px solid rgba(238,30,70,.2)" }}>
+            {live.map((m, i) => (
+              <div key={m.id} style={{ borderBottom: i < live.length - 1 ? "1px solid rgba(238,30,70,.12)" : "none" }}>
+                <MatchRow
+                  match={m}
+                  showDate={false}
+                  onClick={() => navigate(`/matches/${m.external_id ?? m.id}`)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-      {all.length > 6 && (
-        <button
-          onClick={() => navigate("/scores/today")}
-          style={{ width: "100%", marginTop: 8, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: 8, padding: "9px", fontSize: ".72rem", fontWeight: 700, cursor: "pointer" }}
-        >
-          {t("home.moreMatches", { count: all.length - 6 })}
-        </button>
+      {/* ── Today (non-live) ── */}
+      {rest.length > 0 && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontWeight: 800, fontSize: ".78rem", color: "var(--text)", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                {t("time.today", "Today")}
+              </span>
+              <span style={{ fontSize: ".7rem", color: "var(--muted)" }}>
+                · {t("scores.wcSubtitle", "FIFA World Cup 2026")}
+              </span>
+            </div>
+            {liveCount === 0 && (
+              <button
+                onClick={() => navigate("/scores/today")}
+                style={{ background: "none", border: "none", color: "var(--accent)", fontSize: ".72rem", fontWeight: 700, cursor: "pointer", padding: 0 }}
+              >
+                {t("home.viewAll")}
+              </button>
+            )}
+          </div>
+          <div style={{ background: "var(--surface)", borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)" }}>
+            {rest.slice(0, 6).map((m, i) => (
+              <div key={m.id} style={{ borderBottom: i < Math.min(rest.length, 6) - 1 ? "1px solid var(--border)" : "none" }}>
+                <MatchRow
+                  match={m}
+                  showDate={false}
+                  onClick={() => navigate(`/matches/${m.external_id ?? m.id}`)}
+                />
+              </div>
+            ))}
+          </div>
+          {rest.length > 6 && (
+            <button
+              onClick={() => navigate("/scores/today")}
+              style={{ width: "100%", marginTop: 8, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: 8, padding: "9px", fontSize: ".72rem", fontWeight: 700, cursor: "pointer" }}
+            >
+              {t("home.moreMatches", { count: rest.length - 6 })}
+            </button>
+          )}
+        </div>
       )}
     </div>
   )
