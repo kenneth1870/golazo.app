@@ -13,23 +13,34 @@ class PreMatchNotificationJob < ApplicationJob
     matches = Match.where(competition: wc, status: "scheduled")
                    .where(kickoff_at: window_start..window_end)
                    .includes(:home_team, :away_team)
+                   .order(:kickoff_at)
 
     Rails.logger.info("[PreMatchNotification] Checked window #{window_start.utc.strftime('%H:%M')}–#{window_end.utc.strftime('%H:%M')} UTC — #{matches.size} match(es) found")
 
-    matches.each do |match|
-      cache_key = "prematch_notified_#{match.id}"
-      next unless Rails.cache.write(cache_key, true, expires_in: 30.minutes, unless_exist: true)
+    # Atomically claim each match so it's only ever notified once, even across
+    # the overlapping 2-minute runs. Matches that survive the claim are bundled
+    # into a single notification (see PreMatchBundleNotificationJob) so two games
+    # kicking off together produce one push listing both — not two competing ones.
+    fresh = matches.select do |match|
+      Rails.cache.write("prematch_notified_#{match.id}", true, expires_in: 30.minutes, unless_exist: true) &&
+        match.status == "scheduled"
+    end
+    return if fresh.empty?
 
-      next if match.status != "scheduled"
+    PreMatchBundleNotificationJob.perform_later(
+      matches: fresh.map do |match|
+        {
+          id:        match.id,
+          home:      match.home_team&.name.to_s,
+          away:      match.away_team&.name.to_s,
+          home_code: match.home_team&.code,
+          away_code: match.away_team&.code,
+          url:       "/matches/#{match.external_id || "db-#{match.id}"}"
+        }
+      end
+    )
 
-      MatchEventNotificationJob.perform_later(
-        event_type: "prematch",
-        match_id:   match.id,
-        home_name:  match.home_team&.name.to_s,
-        away_name:  match.away_team&.name.to_s,
-        match_url:  "/matches/#{match.external_id || "db-#{match.id}"}"
-      )
-
+    fresh.each do |match|
       Rails.logger.info("[PreMatchNotification] #{match.home_team&.name} vs #{match.away_team&.name} kicks off at #{match.kickoff_at}")
     end
   end

@@ -272,7 +272,7 @@ self.addEventListener("push", event => {
     body:     payload.body  || "Actualización en vivo",
     icon:     payload.icon  || "/images/icon-192.png",
     badge:    payload.badge || "/images/badge-72.png",
-    tag:      payload.match_id ? `match-${payload.match_id}` : `golazo-${Date.now()}`,
+    tag:      payload.tag || (payload.match_id ? `match-${payload.match_id}` : `golazo-${Date.now()}`),
     renotify: true,
     data:     { url: payload.url || "/" },
     vibrate:  [200, 100, 200],
