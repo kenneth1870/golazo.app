@@ -23,7 +23,13 @@ Rails.application.routes.draw do
         get  "push",          to: "push#index"
         get  "push/devices",  to: "push#devices"
         post "push/broadcast", to: "push#broadcast"
-        get  "devices",       to: "devices#index"
+        get  "devices/export", to: "devices#export"
+        resources :devices, only: %i[index destroy] do
+          member do
+            post :block
+            post :push
+          end
+        end
       end
 
       resources :competitions, only: [ :index, :show ], param: :code

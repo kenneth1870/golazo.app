@@ -59,6 +59,18 @@ export default function AdminUsersPage() {
     }
   }
 
+  const toggleBlock = async (u) => {
+    const next = !u.blocked
+    const res = await authFetch(`/api/v1/admin/users/${u.id}`, { method: "PATCH", body: JSON.stringify({ blocked: next }) })
+    const d = await res.json()
+    if (res.ok) {
+      setUsers(us => us.map(x => x.id === u.id ? { ...x, blocked: d.blocked } : x))
+      showToast(next ? `🚫 ${u.name} blocked` : `✓ ${u.name} unblocked`)
+    } else {
+      showToast(`⚠ ${d.error || "Failed"}`, false)
+    }
+  }
+
   const deleteUser = async (u) => {
     if (!window.confirm(`Delete ${u.name} (${u.email})?`)) return
     const res = await authFetch(`/api/v1/admin/users/${u.id}`, { method: "DELETE" })
@@ -197,6 +209,7 @@ export default function AdminUsersPage() {
                   <td style={{ padding: "12px 16px", color: "#fff", fontSize: "0.88rem", fontWeight: 600 }}>
                     {u.name}
                     {u.id === me?.id && <span style={{ marginLeft: 6, fontSize: "0.68rem", color: "rgba(255,255,255,.3)" }}>(you)</span>}
+                    {u.blocked && <span style={{ marginLeft: 6, background: "rgba(239,68,68,.15)", color: "#f87171", border: "1px solid rgba(239,68,68,.3)", borderRadius: 20, padding: "1px 8px", fontSize: "0.66rem", fontWeight: 700 }}>BLOCKED</span>}
                   </td>
                   <td style={{ padding: "12px 16px", color: "rgba(255,255,255,.5)", fontSize: "0.82rem" }}>{u.email}</td>
                   <td style={{ padding: "12px 16px" }}><RoleBadge role={u.role} /></td>
@@ -216,6 +229,9 @@ export default function AdminUsersPage() {
                         <>
                           <button onClick={() => toggleRole(u)} style={{ background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.1)", color: "rgba(255,255,255,.5)", borderRadius: 6, padding: "4px 10px", fontSize: "0.72rem", cursor: "pointer" }}>
                             {u.role === "admin" ? "→ user" : "→ admin"}
+                          </button>
+                          <button onClick={() => toggleBlock(u)} style={{ background: u.blocked ? "rgba(245,158,11,.1)" : "rgba(255,255,255,.07)", border: `1px solid ${u.blocked ? "rgba(245,158,11,.3)" : "rgba(255,255,255,.1)"}`, color: u.blocked ? "#fbbf24" : "rgba(255,255,255,.5)", borderRadius: 6, padding: "4px 10px", fontSize: "0.72rem", cursor: "pointer" }}>
+                            {u.blocked ? "Unblock" : "Block"}
                           </button>
                           <button onClick={() => deleteUser(u)} style={{ background: "rgba(238,30,70,.08)", border: "1px solid rgba(238,30,70,.2)", color: "#ee1e46", borderRadius: 6, padding: "4px 10px", fontSize: "0.72rem", cursor: "pointer" }}>
                             Delete

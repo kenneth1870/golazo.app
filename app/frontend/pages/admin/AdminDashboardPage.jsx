@@ -1,6 +1,34 @@
 import { useState, useEffect } from "react"
 import { useAuthContext } from "../../contexts/AuthContext"
 
+function fmtSecs(s) {
+  s = Number(s) || 0
+  if (s >= 3600) return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`
+  if (s >= 60)   return `${Math.floor(s / 60)}m`
+  return `${s}s`
+}
+
+// Simple inline bar chart for the new-devices-per-day series.
+function BarChart({ series = [] }) {
+  const max = Math.max(1, ...series.map(p => p.count))
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 90, padding: "0 2px" }}>
+      {series.map((p, i) => {
+        const h = Math.round((p.count / max) * 100)
+        const d = new Date(p.date + "T00:00:00")
+        return (
+          <div key={i} title={`${p.date}: ${p.count} new`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+            <div style={{ width: "100%", display: "flex", alignItems: "flex-end", height: "100%" }}>
+              <div style={{ width: "100%", height: `${Math.max(h, p.count > 0 ? 6 : 2)}%`, background: p.count > 0 ? "#3b82f6" : "rgba(255,255,255,.08)", borderRadius: "3px 3px 0 0", transition: "height .3s" }} />
+            </div>
+            <span style={{ fontSize: "0.58rem", color: "rgba(255,255,255,.3)" }}>{d.getDate()}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function Stat({ icon, label, value, color = "#ee1e46" }) {
   return (
     <div style={{
@@ -82,6 +110,51 @@ export default function AdminDashboardPage() {
         <Stat icon="🎯" label="Predictions"        value={data?.predictions}      color="#06b6d4" />
         <Stat icon="📰" label="News articles"      value={data?.news_articles}    color="#84cc16" />
       </div>
+
+      {/* Usage analytics */}
+      {data?.devices && (
+        <div style={{ marginBottom: 32 }}>
+          <h2 style={{ color: "#fff", fontSize: "1.1rem", fontWeight: 800, margin: "0 0 14px" }}>Usage</h2>
+
+          {/* Device activity stats */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 16, marginBottom: 20 }}>
+            <Stat icon="📱" label="Total devices"     value={data.devices.total}                     color="#3b82f6" />
+            <Stat icon="🟢" label="Active today"      value={data.devices.active_today}              color="#10b981" />
+            <Stat icon="📆" label="Active last 7d"    value={data.devices.active_7d}                 color="#8b5cf6" />
+            <Stat icon="🔁" label="Total sessions"    value={data.devices.total_sessions}            color="#ec4899" />
+            <Stat icon="⏱️" label="Avg engagement"    value={fmtSecs(data.devices.avg_engaged_seconds)} color="#14b8a6" />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr)", gap: 16 }}>
+            {/* New devices per day */}
+            <div style={{ background: "#161b22", border: "1px solid rgba(255,255,255,.07)", borderRadius: 12, padding: "18px 20px" }}>
+              <h3 style={{ color: "#fff", margin: "0 0 14px", fontSize: "0.95rem" }}>
+                New devices <span style={{ color: "rgba(255,255,255,.35)", fontWeight: 400, fontSize: "0.8rem" }}>· last 14 days</span>
+              </h3>
+              <BarChart series={data.devices.new_per_day || []} />
+            </div>
+
+            {/* Top screens */}
+            <div style={{ background: "#161b22", border: "1px solid rgba(255,255,255,.07)", borderRadius: 12, padding: "18px 20px" }}>
+              <h3 style={{ color: "#fff", margin: "0 0 14px", fontSize: "0.95rem" }}>
+                Top screens <span style={{ color: "rgba(255,255,255,.35)", fontWeight: 400, fontSize: "0.8rem" }}>· where devices are</span>
+              </h3>
+              {(data.devices.top_screens || []).length === 0 ? (
+                <p style={{ color: "rgba(255,255,255,.3)", fontSize: "0.82rem", margin: 0 }}>No data yet</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {data.devices.top_screens.map((s, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                      <span style={{ color: "rgba(255,255,255,.7)", fontSize: "0.8rem", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.path}</span>
+                      <span style={{ color: "#fff", fontWeight: 700, fontSize: "0.82rem", background: "rgba(255,255,255,.06)", borderRadius: 6, padding: "1px 8px" }}>{s.count}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recent users */}
       {data?.recent_users?.length > 0 && (
