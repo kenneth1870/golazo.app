@@ -151,6 +151,8 @@
     "matchesPlayed": "matches played",
     "noData": "No data yet",
     "appearsWhenPlayed": "Data will appear when matches begin",
+    "venueMatchesTitle": "Matches at this venue",
+    "venueNoMatches": "No matches have been assigned to this venue yet.",
     "tabNavTeams": "Teams",
     "tabNavSchedule": "Schedule",
     "tabNavVenues": "Venues",

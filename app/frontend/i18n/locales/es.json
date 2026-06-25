@@ -151,6 +151,8 @@
     "matchesPlayed": "partidos jugados",
     "noData": "Sin datos aún",
     "appearsWhenPlayed": "Aparecerán cuando comiencen los partidos",
+    "venueMatchesTitle": "Partidos en este estadio",
+    "venueNoMatches": "No hay partidos asignados a este estadio aún.",
     "tabNavTeams": "Equipos",
     "tabNavSchedule": "Calend.",
     "tabNavVenues": "Sedes",

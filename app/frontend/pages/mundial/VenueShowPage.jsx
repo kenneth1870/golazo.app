@@ -226,7 +226,7 @@ export default function VenueShowPage() {
           {venue.matches?.length > 0 ? (
             <div>
               <div className="title-section">
-                <h2 className="heading" style={{ fontSize: "1rem" }}>Partidos en este estadio</h2>
+                <h2 className="heading" style={{ fontSize: "1rem" }}>{t("mundial.venueMatchesTitle", "Partidos en este estadio")}</h2>
               </div>
               <div className="match-section">
                 {venue.matches
@@ -237,7 +237,7 @@ export default function VenueShowPage() {
           ) : (
             <div style={{ textAlign: "center", padding: "32px 16px", color: "var(--muted)" }}>
               <div style={{ fontSize: "2rem", marginBottom: 8 }}>📅</div>
-              <p>No hay partidos asignados a este estadio aún.</p>
+              <p>{t("mundial.venueNoMatches", "No hay partidos asignados a este estadio aún.")}</p>
             </div>
           )}
         </div>
