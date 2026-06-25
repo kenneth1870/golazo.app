@@ -288,6 +288,97 @@ class WorldCupSync
     raise
   end
 
+  # Resolve knockout-stage TBD slots from API-Football once teams are known.
+  # Pulls the full WC fixture list, finds fixtures where real teams are assigned,
+  # and updates TBD match slots (home_team_id=NULL) with the correct teams,
+  # kickoff time, venue, and external_id. Safe to run multiple times; already-
+  # resolved slots are skipped. Partially updates as groups complete.
+  #
+  #   bin/rails runner "WorldCupSync.new.resolve_knockout_from_api"
+  def resolve_knockout_from_api
+    competition = Competition.find_by!(code: @code)
+    data = @api.send(:get, "fixtures", league: WC_LEAGUE_ID, season: WC_SEASON_ID)
+    fixtures = data.dig("response") || []
+    raise "No fixtures returned" if fixtures.empty?
+
+    log("resolve_knockout: #{fixtures.size} total fixtures from API-Football")
+
+    # API-Football round strings → our DB round names
+    round_map = {
+      /round of 32/i        => "Round of 32",
+      /round of 16/i        => "Round of 16",
+      /quarter.final/i      => "Quarter Final",
+      /semi.final/i         => "Semi Final",
+      /3rd place/i          => "3rd Place",
+      /final/i              => "Final",
+    }
+
+    resolved = 0
+    skipped  = 0
+
+    fixtures.each do |fx|
+      home_api = fx.dig("teams", "home", "name").to_s.strip
+      away_api = fx.dig("teams", "away", "name").to_s.strip
+      fixture_id = fx.dig("fixture", "id")
+      next if home_api.blank? || away_api.blank? || fixture_id.nil?
+
+      # Skip group-stage (already handled by import_group_fixtures)
+      api_round = fx.dig("league", "round").to_s
+      next if api_round =~ /group/i
+
+      home_team = find_team_by_api_name(home_api)
+      away_team = find_team_by_api_name(away_api)
+      next unless home_team && away_team
+
+      # If DB already has this fixture with teams, just ensure external_id is set
+      existing = Match.find_by(
+        home_team: home_team, away_team: away_team, competition: competition
+      )
+      if existing
+        if existing.external_id.to_s != fixture_id.to_s
+          existing.update_column(:external_id, fixture_id)
+          log("  Updated ext_id for #{home_api} vs #{away_api} → #{fixture_id}")
+        end
+        skipped += 1
+        next
+      end
+
+      # Map API round string to our round name
+      db_round = round_map.find { |pat, _| api_round =~ pat }&.last
+      unless db_round
+        log("  Unknown round '#{api_round}' for #{home_api} vs #{away_api} — skipping")
+        next
+      end
+
+      # Find an unassigned TBD slot for this round
+      slot = Match.where(competition: competition, round: db_round, home_team_id: nil).first
+      unless slot
+        log("  No TBD slot left for round '#{db_round}' — #{home_api} vs #{away_api} skipped")
+        next
+      end
+
+      kickoff = fx.dig("fixture", "date")
+      venue   = fx.dig("fixture", "venue", "name")
+
+      slot.update!(
+        home_team:   home_team,
+        away_team:   away_team,
+        external_id: fixture_id,
+        kickoff_at:  kickoff.present? ? Time.parse(kickoff) : slot.kickoff_at,
+        venue:       venue.presence || slot.venue,
+        status:      fx.dig("fixture", "status", "short") == "NS" ? "scheduled" : slot.status,
+      )
+      log("  Resolved #{db_round}: #{home_api} vs #{away_api} @ #{kickoff} (fixture #{fixture_id})")
+      resolved += 1
+    end
+
+    log("resolve_knockout done — #{resolved} resolved, #{skipped} already matched")
+    resolved
+  rescue => e
+    log("resolve_knockout error: #{e.message}")
+    raise
+  end
+
   # Legacy: kept for reference but superseded by sync_external_ids_from_api_football.
   # football-data.org IDs are in a different namespace from API-Football — do not use.
   # @deprecated
