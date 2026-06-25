@@ -7,23 +7,23 @@ import { useState, useEffect, useRef } from "react"
 
 // WC 2026: R32 → R16 → QF → SF → Final (+ 3rd place)
 const ROUNDS = [
-  { key: "Round of 32",    label: "R32",           count: 16 },
-  { key: "Round of 16",   label: "R16",            count: 8  },
-  { key: "Quarter Final", label: "Quarter Finals", count: 4  },
-  { key: "Semi Final",    label: "Semi Finals",    count: 2  },
-  { key: "Final",         label: "Final",          count: 1  },
+  { key: "Round of 32",   labelKey: "bracket.r32",           count: 16 },
+  { key: "Round of 16",   labelKey: "bracket.r16",           count: 8  },
+  { key: "Quarter Final", labelKey: "bracket.quarterFinals", count: 4  },
+  { key: "Semi Final",    labelKey: "bracket.semiFinals",    count: 2  },
+  { key: "Final",         labelKey: "bracket.final",         count: 1  },
 ]
-// Humanizes a knockout slot code into a short label shown until a real team is
-// resolved: "1A" → "Winner A", "2C" → "Runner-up C", "T3" → "3rd #3",
-// "W29"/"L30" → "Winner"/"Loser".
-function slotLabel(slot) {
+// Humanizes a knockout slot code into a short, localized label shown until a
+// real team is resolved: "1A" → "Winner A"/"Ganador A", "2C" → "Runner-up C",
+// "T3" → "3rd #3", "W29"/"L30" → "Winner"/"Loser". `t` is the i18n translator.
+function slotLabel(slot, t) {
   if (!slot) return "TBD"
   const wr = slot.match(/^([12])([A-L])$/)
-  if (wr) return `${wr[1] === "1" ? "Winner" : "Runner-up"} ${wr[2]}`
-  const t = slot.match(/^T(\d+)$/)
-  if (t) return `3rd #${t[1]}`
-  if (/^W\d+$/.test(slot)) return "Winner"
-  if (/^L\d+$/.test(slot)) return "Loser"
+  if (wr) return `${wr[1] === "1" ? t("bracket.winner") : t("bracket.runnerUp")} ${wr[2]}`
+  const th = slot.match(/^T(\d+)$/)
+  if (th) return `${t("bracket.third")} #${th[1]}`
+  if (/^W\d+$/.test(slot)) return t("bracket.winner")
+  if (/^L\d+$/.test(slot)) return t("bracket.loser")
   return "TBD"
 }
 
@@ -36,7 +36,7 @@ const R32_SLOTS = [
 ]
 
 function MatchSlot({ match, onClick }) {
-  const { i18n }    = useTranslation()
+  const { t, i18n } = useTranslation()
   const isLive      = match?.status === "live"
   const isFinished  = match?.status === "finished"
   const hasScore    = match?.home_score !== null && match?.away_score !== null
@@ -73,7 +73,7 @@ function MatchSlot({ match, onClick }) {
             onError={e => (e.target.style.display = "none")} />
         )}
         <span className={`bracket-slot__name${isFinished && match.home_score > match.away_score ? " bracket-slot__name--winner" : ""}${match.home_team?.name ? "" : " bracket-slot__name--tbd"}`}>
-          {match.home_team?.name ? translateTeam(match.home_team.name, i18n.language) : slotLabel(match.home_slot)}
+          {match.home_team?.name ? translateTeam(match.home_team.name, i18n.language) : slotLabel(match.home_slot, t)}
         </span>
         {hasScore && (
           <span className={`bracket-slot__score${isLive ? " bracket-slot__score--live" : ""}`}>
@@ -88,7 +88,7 @@ function MatchSlot({ match, onClick }) {
             onError={e => (e.target.style.display = "none")} />
         )}
         <span className={`bracket-slot__name${isFinished && match.away_score > match.home_score ? " bracket-slot__name--winner" : ""}${match.away_team?.name ? "" : " bracket-slot__name--tbd"}`}>
-          {match.away_team?.name ? translateTeam(match.away_team.name, i18n.language) : slotLabel(match.away_slot)}
+          {match.away_team?.name ? translateTeam(match.away_team.name, i18n.language) : slotLabel(match.away_slot, t)}
         </span>
         {hasScore && (
           <span className={`bracket-slot__score${isLive ? " bracket-slot__score--live" : ""}`}>
@@ -126,6 +126,7 @@ function RoundColumn({ label, matches, count, onMatchClick }) {
 }
 
 function QualifierSlot({ label }) {
+  const { t } = useTranslation()
   const isWinner = label.includes("1")
   return (
     <div style={{
@@ -143,7 +144,7 @@ function QualifierSlot({ label }) {
       }}>
         {label.replace("*", "").slice(-1)}
       </span>
-      <span>Group {label.replace(/[12*]/g, "")} {isWinner ? "Winner" : "Runner-up"}</span>
+      <span>{t(isWinner ? "bracket.groupWinner" : "bracket.groupRunnerUp", { group: label.replace(/[12*]/g, "") })}</span>
     </div>
   )
 }
@@ -166,7 +167,7 @@ function PlaceholderBracket() {
         <div className="bracket">
           {/* R32 — show qualifier labels */}
           <div className="bracket-round" style={{ minWidth: 180 }}>
-            <div className="bracket-round__label">R32</div>
+            <div className="bracket-round__label">{t("bracket.r32")}</div>
             <div className="bracket-round__slots">
               {R32_SLOTS.map(([home, away], i) => (
                 <div key={i} className="bracket-round__slot-wrap">
@@ -183,7 +184,7 @@ function PlaceholderBracket() {
           {/* Remaining rounds — empty slots */}
           {ROUNDS.slice(1).map(r => (
             <div key={r.key} className="bracket-round" style={{ minWidth: 160 }}>
-              <div className="bracket-round__label">{r.label}</div>
+              <div className="bracket-round__label">{t(r.labelKey)}</div>
               <div className="bracket-round__slots">
                 {Array.from({ length: r.count }).map((_, i) => (
                   <div key={i} className="bracket-round__slot-wrap">
@@ -257,7 +258,7 @@ export default function KnockoutPage() {
             {ROUNDS.map(r => (
               <RoundColumn
                 key={r.key}
-                label={r.label}
+                label={t(r.labelKey)}
                 matches={byRound[r.key]}
                 count={r.count}
                 onMatchClick={onMatchClick}

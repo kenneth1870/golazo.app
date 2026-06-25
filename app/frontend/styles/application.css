@@ -1325,48 +1325,35 @@ a:hover{color:var(--accent);opacity:.85}
 @media(min-width:768px){.bracket-scroll-hint{display:none}}
 .bracket{display:flex;gap:0;min-width:max-content;padding:8px 4px;align-items:stretch}
 .bracket-round{display:flex;flex-direction:column;gap:0;min-width:180px;position:relative}
+.bracket-round:not(:last-child){margin-right:28px}
 @media(min-width:768px){.bracket-round{min-width:200px}}
 .bracket-round__label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:center;padding:8px 0 12px}
 .bracket-round__slots{display:flex;flex-direction:column;flex:1}
 .bracket-round__slot-wrap{display:flex;flex-direction:column;flex:1;justify-content:center;padding:6px 0;position:relative}
 
-/* Connector lines between rounds */
-.bracket-round:not(:last-child) .bracket-round__slot-wrap::after{
-  content:"";position:absolute;
-  top:50%;right:-13px;
-  width:13px;height:1px;
-  background:rgba(255,255,255,.12);
-  pointer-events:none;
+/* ── Connector lines ───────────────────────────────────
+   Each non-final round leaves a 28px right gap (margin-right above). A single
+   horizontal line runs through every match (left:-14px → right:-14px); the
+   opaque card hides the middle, leaving clean 14px stubs in the gaps. A vertical
+   line on each odd (top-of-pair) match joins the pair's centres, so feeder pairs
+   merge into the next round's match in a tidy "⊐". Heights use 100% of the
+   slot-wrap, which equals the centre-to-centre distance, so they always align. */
+.bracket-round__slot-wrap::before{
+  content:"";position:absolute;z-index:0;pointer-events:none;
+  top:50%;left:-14px;right:-14px;height:2px;transform:translateY(-50%);
+  background:var(--border);
 }
-/* Vertical bar connecting pairs */
-.bracket-round:not(:first-child) .bracket-round__slot-wrap:nth-child(odd)::before{
-  content:"";position:absolute;
-  top:50%;left:-13px;
-  width:1px;
-  background:rgba(255,255,255,.12);
-  pointer-events:none;
-  height:calc(100% + 12px);
-}
-.bracket-round:not(:first-child) .bracket-round__slot-wrap:nth-child(even)::before{
-  content:"";position:absolute;
-  bottom:50%;left:-13px;
-  width:1px;
-  background:rgba(255,255,255,.12);
-  pointer-events:none;
-  height:calc(100% + 12px);
-}
-/* Horizontal stub from vertical bar to slot */
-.bracket-round:not(:first-child) .bracket-round__slot-wrap::after{
-  content:"";position:absolute;
-  top:50%;left:-13px;
-  width:13px;height:1px;
-  background:rgba(255,255,255,.12);
-  pointer-events:none;
+.bracket-round:first-child .bracket-round__slot-wrap::before{left:auto;width:14px}
+.bracket-round:last-child  .bracket-round__slot-wrap::before{right:auto;width:14px}
+.bracket-round:not(:last-child) .bracket-round__slot-wrap:nth-child(odd)::after{
+  content:"";position:absolute;z-index:0;pointer-events:none;
+  top:50%;right:-14px;width:2px;height:100%;
+  background:var(--border);
 }
 
 @keyframes bracketLivePulse{0%,100%{box-shadow:0 0 0 0 rgba(238,30,70,0)}50%{box-shadow:0 0 0 4px rgba(238,30,70,.25)}}
 @keyframes bracketScoreUpdate{0%{background:rgba(16,185,129,.3)}100%{background:transparent}}
-.bracket-slot{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;position:relative;transition:border-color .3s,background .3s}
+.bracket-slot{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;position:relative;z-index:1;transition:border-color .3s,background .3s}
 .bracket-slot:hover{border-color:rgba(238,30,70,.4);background:var(--surface2)}
 .bracket-slot--live{border-color:rgba(238,30,70,.5);animation:bracketLivePulse 2s ease-in-out infinite}
 .bracket-slot--score-updated{animation:bracketScoreUpdate .8s ease-out}
