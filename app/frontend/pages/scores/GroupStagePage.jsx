@@ -12,8 +12,7 @@ function MiniStandingsTable({ group, rows }) {
   const { t } = useTranslation()
   if (!rows?.length) return null
   return (
-    <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-    <div className="bracket-scroll-hint" style={{ marginBottom: 4 }}>{t("bracket.swipeHint")}</div>
+    <div>
     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem", marginTop: 0, minWidth: 260 }}>
       <thead>
         <tr style={{ color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>
