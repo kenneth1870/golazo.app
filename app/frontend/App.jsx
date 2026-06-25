@@ -79,9 +79,22 @@ function useAutoSubscribePush() {
   const { subscribe, subscribed } = usePushNotifications()
   useEffect(() => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return
-    if (Notification.permission !== "default") return
     if (subscribed) return
     if (isIosSafari() && !isStandalone()) return // needs PWA install first
+
+    const permission = Notification.permission
+
+    if (permission === "granted") {
+      // Permission already granted but subscription is missing — silently
+      // re-subscribe without any dialog. Happens when the server deletes a
+      // stale/failed subscription record or the browser clears its push state.
+      subscribe([])
+      return
+    }
+
+    if (permission !== "default") return // "denied" — nothing we can do
+
+    // First-time: trigger the native browser dialog after a short delay.
     const last = parseInt(localStorage.getItem(PUSH_AUTO_KEY) || "0", 10)
     if (last && Date.now() - last < PUSH_AUTO_TTL) return
     localStorage.setItem(PUSH_AUTO_KEY, Date.now().toString())
