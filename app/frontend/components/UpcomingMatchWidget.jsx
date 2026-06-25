@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { formatFull } from "../hooks/useLocalTime"
+import { translateTeam } from "../i18n/teamNames"
 
 export default function UpcomingMatchWidget({ match, onClick }) {
   const { i18n } = useTranslation()
+
   const kickoff = formatFull(match.kickoff_at, i18n.language)
 
   return (
@@ -20,7 +22,7 @@ export default function UpcomingMatchWidget({ match, onClick }) {
                 ? <img src={match.home_team.flag_url} alt={match.home_team.code} className="logo-md" style={{ margin: "0 auto" }} />
                 : <span style={{ fontSize: "2rem" }}>🏳️</span>
               }
-              <h3 style={{ fontSize: "0.9rem", marginTop: 8 }}>{match.home_team?.name}</h3>
+              <h3 style={{ fontSize: "0.9rem", marginTop: 8 }}>{translateTeam(match.home_team?.name, i18n.language) || match.home_team?.name}</h3>
             </div>
             <div>
               <span className="vs"><span>VS</span></span>
@@ -30,7 +32,7 @@ export default function UpcomingMatchWidget({ match, onClick }) {
                 ? <img src={match.away_team.flag_url} alt={match.away_team.code} className="logo-md" style={{ margin: "0 auto" }} />
                 : <span style={{ fontSize: "2rem" }}>🏳️</span>
               }
-              <h3 style={{ fontSize: "0.9rem", marginTop: 8 }}>{match.away_team?.name}</h3>
+              <h3 style={{ fontSize: "0.9rem", marginTop: 8 }}>{translateTeam(match.away_team?.name, i18n.language) || match.away_team?.name}</h3>
             </div>
           </div>
         </div>

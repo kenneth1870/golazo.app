@@ -110,7 +110,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
         {fav.flag_url && <img src={fav.flag_url} alt={fav.name} className="logo-sm" onError={e => (e.target.style.display="none")} />}
         <div>
           <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>{t("home.yourTeam")}</div>
-          <div style={{ fontWeight: 800, color: "var(--text)", fontSize: "1rem" }}>{fav.name}</div>
+          <div style={{ fontWeight: 800, color: "var(--text)", fontSize: "1rem" }}>{translateTeam(fav.name, i18n.language) || fav.name}</div>
           {fav.group && <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{t("nav.group", { letter: fav.group })}</div>}
         </div>
       </div>

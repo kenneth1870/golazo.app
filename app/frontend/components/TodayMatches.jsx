@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { translateLeague } from "../i18n/leagueNames"
+import { translateTeam } from "../i18n/teamNames"
 
 function formatKickoff(utcDate, locale) {
   return new Date(utcDate).toLocaleTimeString(locale || undefined, {
@@ -44,7 +45,7 @@ function MatchRow({ match, onClick }) {
 
       {/* Home team */}
       <div className="d-flex align-items-center" style={{ flex: 1, justifyContent: "flex-end", gap: 8 }}>
-        <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.9rem" }}>{match.home_team?.name}</span>
+        <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.9rem" }}>{translateTeam(match.home_team?.name, i18n.language) || match.home_team?.name}</span>
         {match.home_team?.flag_url && (
           <img src={match.home_team.flag_url} alt={match.home_team.name} className="flag-xs" loading="eager" />
         )}
@@ -71,7 +72,7 @@ function MatchRow({ match, onClick }) {
         {match.away_team?.flag_url && (
           <img src={match.away_team.flag_url} alt={match.away_team.name} className="flag-xs" loading="eager" />
         )}
-        <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.9rem" }}>{match.away_team?.name}</span>
+        <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.9rem" }}>{translateTeam(match.away_team?.name, i18n.language) || match.away_team?.name}</span>
       </div>
 
       {/* Round */}
@@ -144,7 +145,7 @@ export default function TodayMatches({ onMatchSelect }) {
     const onVisible = () => { if (!document.hidden) fetch_() }
     fetch_()
     document.addEventListener("visibilitychange", onVisible)
-    const iv = setInterval(fetch_, 30000)
+    const iv = setInterval(() => { if (!document.hidden) fetch_() }, 30000)
     return () => {
       clearInterval(iv)
       document.removeEventListener("visibilitychange", onVisible)
