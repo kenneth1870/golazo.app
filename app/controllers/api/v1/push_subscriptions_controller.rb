@@ -19,7 +19,7 @@ module Api
           auth:         params[:auth].to_s,
           device_id:    params[:device_id].to_s.presence,
           team_ids:     (params[:team_ids] || []).to_json,
-          event_prefs:  sanitize_event_prefs(params[:event_prefs]),
+          **(PushSubscription.column_names.include?("event_prefs") ? { event_prefs: sanitize_event_prefs(params[:event_prefs]) } : {}),
           locale:       locale,
           user_agent:   request.user_agent.to_s.first(500),
           last_seen_at: Time.current,
@@ -71,7 +71,9 @@ module Api
         return render json: { error: "Not found" }, status: :not_found unless sub
 
         attrs = { team_ids: (params[:team_ids] || []).to_json, last_seen_at: Time.current }
-        attrs[:event_prefs] = sanitize_event_prefs(params[:event_prefs]) if params.key?(:event_prefs)
+        if params.key?(:event_prefs) && PushSubscription.column_names.include?("event_prefs")
+          attrs[:event_prefs] = sanitize_event_prefs(params[:event_prefs])
+        end
         sub.update!(attrs)
         render json: { ok: true, team_ids: sub.team_names, event_prefs: sub.event_prefs_list }
       end

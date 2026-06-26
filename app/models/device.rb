@@ -34,7 +34,7 @@ class Device < ApplicationRecord
   scope :by_os,      ->(os)      { where("#{OS_CASE_SQL} = ?", os.to_s) }
   scope :by_country, ->(country) { where(country: country.to_s) }
 
-  def blocked? = blocked_at.present?
+  def blocked? = has_attribute?(:blocked_at) && blocked_at.present?
 
   def self.track!(device_id:, user_agent: nil, locale: nil, path: nil, ip: nil)
     device_id = device_id.to_s.strip

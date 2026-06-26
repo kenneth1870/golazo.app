@@ -30,7 +30,7 @@ module Api
             return render json: { error: "Cannot demote the last admin" }, status: :unprocessable_entity
           end
 
-          if params.key?(:blocked)
+          if params.key?(:blocked) && User.column_names.include?("blocked_at")
             if @user == current_user
               return render json: { error: "Cannot block your own account" }, status: :unprocessable_entity
             end

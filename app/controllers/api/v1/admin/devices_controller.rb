@@ -30,7 +30,7 @@ module Api
             active_today:   Device.where(last_seen_at: now.beginning_of_day..now).count,
             active_7d:      Device.where(last_seen_at: 7.days.ago..now).count,
             push_enabled:   push_ids.size,
-            blocked:        Device.where.not(blocked_at: nil).count,
+            blocked:        (Device.column_names.include?("blocked_at") ? Device.where.not(blocked_at: nil).count : 0),
             total_sessions: Device.sum(:visit_count),
             avg_engaged_seconds: Device.average(:engaged_seconds).to_f.round,
             by_os:          Device.os_breakdown,
@@ -72,6 +72,7 @@ module Api
 
         # POST /api/v1/admin/devices/:id/block — toggle blocked state.
         def block
+          return render json: { error: "blocked_at column not yet migrated" }, status: :service_unavailable unless Device.column_names.include?("blocked_at")
           @device.update!(blocked_at: @device.blocked? ? nil : Time.current)
           push_ids = PushSubscription.where.not(device_id: nil).pluck(:device_id).to_set
           render json: @device.admin_summary(push_ids)
@@ -113,7 +114,7 @@ module Api
           scope = scope.by_os(params[:os])             if params[:os].present?
           scope = scope.by_country(params[:country])   if params[:country].present?
           scope = scope.where(device_id: push_ids.to_a) if params[:push].present?
-          scope = scope.where.not(blocked_at: nil)     if params[:blocked].present?
+          scope = scope.where.not(blocked_at: nil) if params[:blocked].present? && Device.column_names.include?("blocked_at")
           scope
         end
 

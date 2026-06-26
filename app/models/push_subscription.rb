@@ -20,6 +20,7 @@ class PushSubscription < ApplicationRecord
 
   # Returns the list of subscribed event types. Empty array means all events.
   def event_prefs_list
+    return [] unless has_attribute?(:event_prefs)
     list = JSON.parse(event_prefs || "[]")
     list.is_a?(Array) ? list.map(&:to_s) & VALID_EVENT_TYPES : []
   rescue JSON::ParserError

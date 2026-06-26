@@ -33,7 +33,7 @@ class User < ApplicationRecord
     nil
   end
 
-  def blocked? = blocked_at.present?
+  def blocked? = has_attribute?(:blocked_at) && blocked_at.present?
 
   def as_json_public
     { id:, email:, name:, role:, blocked: blocked? }
