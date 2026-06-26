@@ -792,6 +792,16 @@ class WorldCupSync
     if api_ext_id.present? && match.external_id.to_s != api_ext_id.to_s
       attrs[:external_id] = api_ext_id
     end
+    # Force-heal: correct kickoff date when the API says it differs from what's
+    # stored. Covers group-stage matches imported with wrong placeholder dates
+    # (e.g. June 27 when the actual kickoff is June 26).
+    if force && m[:kickoff_at].present?
+      api_kickoff = Time.parse(m[:kickoff_at].to_s).utc rescue nil
+      if api_kickoff && match.kickoff_at&.utc&.to_i != api_kickoff.to_i
+        log("  Correcting kickoff for #{home_name} vs #{away_name}: #{match.kickoff_at&.iso8601} → #{api_kickoff.iso8601}")
+        attrs[:kickoff_at] = api_kickoff
+      end
+    end
 
     match.update!(attrs)
 
