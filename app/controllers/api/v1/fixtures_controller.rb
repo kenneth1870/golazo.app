@@ -6,6 +6,10 @@ module Api
         tz      = sanitize_tz(params[:tz])
         matches = Match
           .where(kickoff_at: local_day_range(date, tz))
+          # Hide scheduled knockout placeholders with no teams yet — they carry
+          # placeholder kickoff dates that bleed into adjacent date buckets and
+          # render as slot codes (e.g. "2A vs 2B"). Live/finished always pass.
+          .where("status != 'scheduled' OR (home_team_id IS NOT NULL AND away_team_id IS NOT NULL)")
           .includes(:home_team, :away_team, :competition)
           .order(:kickoff_at)
           .limit(100)
