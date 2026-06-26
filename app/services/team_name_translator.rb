@@ -4,7 +4,7 @@
 module TeamNameTranslator
   ES = {
     # Americas
-    "United States" => "Estados Unidos", "Mexico" => "México", "Brazil" => "Brasil",
+    "United States" => "Estados Unidos", "USA" => "Estados Unidos", "Mexico" => "México", "Brazil" => "Brasil",
     "Canada" => "Canadá", "Haiti" => "Haití", "Panama" => "Panamá",
     "Colombia" => "Colombia", "Ecuador" => "Ecuador", "Argentina" => "Argentina",
     "Uruguay" => "Uruguay", "Chile" => "Chile", "Peru" => "Perú",
@@ -49,7 +49,7 @@ module TeamNameTranslator
     "Palestine" => "Palestina", "Israel" => "Israel",
 
     # Caribbean / Oceania
-    "Curacao" => "Curazao", "Cape Verde" => "Cabo Verde", "Cabo Verde" => "Cabo Verde",
+    "Curacao" => "Curazao", "Curaçao" => "Curazao", "Cape Verde" => "Cabo Verde", "Cabo Verde" => "Cabo Verde",
     "Fiji" => "Fiyi", "Papua New Guinea" => "Papúa Nueva Guinea", "Solomon Islands" => "Islas Salomón",
 
     # Misc / Eastern Europe
@@ -64,6 +64,8 @@ module TeamNameTranslator
   def self.translate(name, locale = "es")
     return name if name.blank?
     base = locale.to_s.split("-").first&.downcase
-    base == "es" ? (ES[name] || name) : name
+    return name unless base == "es"
+    # Normalize to NFC so decomposed accents still match the NFC map keys.
+    ES[name.to_s.unicode_normalize(:nfc)] || name
   end
 end

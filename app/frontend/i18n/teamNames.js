@@ -5,6 +5,7 @@
 const ES = {
   // Americas
   "United States":          "Estados Unidos",
+  "USA":                    "Estados Unidos",
   "Mexico":                 "México",
   "Brazil":                 "Brasil",
   "Canada":                 "Canadá",
@@ -49,6 +50,7 @@ const ES = {
   "Romania":                "Rumania",
   "Greece":                 "Grecia",
   "Turkey":                 "Turquía",
+  "Türkiye":                "Turquía",
   "Albania":                "Albania",
   "Slovakia":               "Eslovaquia",
   "Slovenia":               "Eslovenia",
@@ -116,6 +118,7 @@ const ES = {
 
   // Caribbean / Other
   "Curacao":                "Curazao",
+  "Curaçao":                "Curazao",
   "Cape Verde":             "Cabo Verde",
   "Cabo Verde":             "Cabo Verde",
 
@@ -149,6 +152,9 @@ const ES = {
 export function translateTeam(name, lang) {
   if (!name) return name
   const base = (lang || "en").split("-")[0].toLowerCase()
-  if (base === "es" && ES[name]) return ES[name]
-  return name
+  if (base !== "es") return name
+  // Normalize to NFC so decomposed accents (e.g. "Curaçao" sent as c + ◌̧)
+  // still match the NFC keys in the map.
+  const key = name.normalize ? name.normalize("NFC") : name
+  return ES[key] || name
 }
