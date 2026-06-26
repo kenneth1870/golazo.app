@@ -93,6 +93,7 @@ export default function AdminMatchesPage() {
   const [toast,    setToast]    = useState(null)
   const [healing,  setHealing]  = useState(false)
   const [resolving, setResolving] = useState(false)
+  const [fixingKickoffs, setFixingKickoffs] = useState(false)
 
   const load = () => {
     setLoading(true)
@@ -114,6 +115,22 @@ export default function AdminMatchesPage() {
       setTimeout(() => setToast(null), 3000)
     } finally {
       setHealing(false)
+    }
+  }
+
+  const fixKickoffs = async () => {
+    setFixingKickoffs(true)
+    try {
+      const res = await authFetch("/api/v1/admin/matches/fix_kickoffs", { method: "POST" })
+      const data = await res.json()
+      setToast(data.message || "Kickoff dates fixed")
+      setTimeout(() => setToast(null), 6000)
+      load()
+    } catch {
+      setToast("Fix kickoffs failed")
+      setTimeout(() => setToast(null), 3000)
+    } finally {
+      setFixingKickoffs(false)
     }
   }
 
@@ -202,6 +219,19 @@ export default function AdminMatchesPage() {
             }}
           >
             {resolving ? "Resolving…" : "Resolve Knockout"}
+          </button>
+          <button
+            onClick={fixKickoffs}
+            disabled={fixingKickoffs}
+            title="Fix group-stage kickoff dates by comparing DB values against the full API season schedule"
+            style={{
+              background: fixingKickoffs ? "rgba(255,255,255,.07)" : "rgba(251,191,36,.12)",
+              color: fixingKickoffs ? "rgba(255,255,255,.3)" : "#fbbf24",
+              border: "1px solid rgba(251,191,36,.3)", borderRadius: 6, padding: "6px 14px",
+              fontSize: "0.78rem", fontWeight: 700, cursor: fixingKickoffs ? "not-allowed" : "pointer",
+            }}
+          >
+            {fixingKickoffs ? "Fixing…" : "Fix Kickoff Dates"}
           </button>
         </div>
       </div>

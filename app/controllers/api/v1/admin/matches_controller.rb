@@ -42,6 +42,15 @@ module Api
           render json: { ok: false, message: e.message }, status: :unprocessable_entity
         end
 
+        # Corrects group-stage kickoff dates by comparing DB values against the
+        # full API-Football WC season fixture list. Run when dates look wrong.
+        def fix_kickoffs
+          fixed = WorldCupSync.new.fix_group_stage_kickoffs
+          render json: { ok: true, message: "#{fixed} group-stage kickoff date(s) corrected" }
+        rescue => e
+          render json: { ok: false, message: e.message }, status: :unprocessable_entity
+        end
+
         private
 
         def find_match

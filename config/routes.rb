@@ -16,6 +16,7 @@ Rails.application.routes.draw do
         resources :matches, only: %i[index show update]
         post "matches/heal",             to: "matches#heal"
         post "matches/resolve_knockout", to: "matches#resolve_knockout"
+        post "matches/fix_kickoffs",     to: "matches#fix_kickoffs"
         resources :users,   only: %i[index show update destroy]
         resources :news,    only: %i[index]
         resources :teams,   only: %i[index update]

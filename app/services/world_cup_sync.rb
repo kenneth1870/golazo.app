@@ -379,6 +379,68 @@ class WorldCupSync
     raise
   end
 
+  # Fix group-stage kickoff dates by pulling the full WC season fixture list from
+  # the API and updating any DB match whose kickoff_at differs from what the API
+  # says. Matches are located by external_id (most reliable) or by teams as a
+  # fallback. Safe to run multiple times.
+  #
+  #   bin/rails runner "WorldCupSync.new.fix_group_stage_kickoffs"
+  def fix_group_stage_kickoffs
+    competition = Competition.find_by!(code: @code)
+    data = @api.send(:get, "fixtures", league: WC_LEAGUE_ID, season: WC_SEASON_ID)
+    fixtures = data.dig("response") || []
+    raise "No fixtures returned" if fixtures.empty?
+
+    log("fix_group_kickoffs: #{fixtures.size} total fixtures from API-Football")
+
+    fixed = 0
+    skipped = 0
+
+    fixtures.each do |fx|
+      api_round = fx.dig("league", "round").to_s
+      next unless api_round =~ /group/i  # only group stage
+
+      fixture_id = fx.dig("fixture", "id")
+      raw_kickoff = fx.dig("fixture", "date")
+      next unless fixture_id && raw_kickoff.present?
+
+      kickoff = Time.parse(raw_kickoff).utc
+
+      # Prefer lookup by external_id; fall back to team names.
+      match = Match.find_by(competition: competition, external_id: fixture_id.to_s)
+      unless match
+        home_api = fx.dig("teams", "home", "name").to_s.strip
+        away_api = fx.dig("teams", "away", "name").to_s.strip
+        home_team = find_team_by_api_name(home_api)
+        away_team = find_team_by_api_name(away_api)
+        match = Match.find_by(competition: competition, home_team: home_team, away_team: away_team) if home_team && away_team
+      end
+
+      unless match
+        skipped += 1
+        next
+      end
+
+      if match.kickoff_at&.utc != kickoff
+        old = match.kickoff_at&.iso8601
+        match.update_columns(kickoff_at: kickoff)
+        log("  Fixed #{match.home_team&.name} vs #{match.away_team&.name}: #{old} → #{kickoff.iso8601}")
+        fixed += 1
+      else
+        skipped += 1
+      end
+    end
+
+    # Bust date-range caches so the fixtures page reflects the corrected times.
+    bust_scorers_cache
+
+    log("fix_group_kickoffs done — #{fixed} fixed, #{skipped} already correct or not found")
+    fixed
+  rescue => e
+    log("fix_group_kickoffs error: #{e.message}")
+    raise
+  end
+
   # Legacy: kept for reference but superseded by sync_external_ids_from_api_football.
   # football-data.org IDs are in a different namespace from API-Football — do not use.
   # @deprecated
