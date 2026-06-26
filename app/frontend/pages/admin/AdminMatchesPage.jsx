@@ -92,6 +92,7 @@ export default function AdminMatchesPage() {
   const [editing,  setEditing]  = useState(null)
   const [toast,    setToast]    = useState(null)
   const [healing,  setHealing]  = useState(false)
+  const [resolving, setResolving] = useState(false)
 
   const load = () => {
     setLoading(true)
@@ -113,6 +114,22 @@ export default function AdminMatchesPage() {
       setTimeout(() => setToast(null), 3000)
     } finally {
       setHealing(false)
+    }
+  }
+
+  const resolveKnockout = async () => {
+    setResolving(true)
+    try {
+      const res = await authFetch("/api/v1/admin/matches/resolve_knockout", { method: "POST" })
+      const data = await res.json()
+      setToast(data.message || "Knockout slots resolved")
+      setTimeout(() => setToast(null), 6000)
+      load()
+    } catch {
+      setToast("Resolve knockout failed")
+      setTimeout(() => setToast(null), 3000)
+    } finally {
+      setResolving(false)
     }
   }
 
@@ -172,6 +189,19 @@ export default function AdminMatchesPage() {
             }}
           >
             {healing ? "Healing…" : "Heal All"}
+          </button>
+          <button
+            onClick={resolveKnockout}
+            disabled={resolving}
+            title="Fill TBD knockout slots with real teams from the API"
+            style={{
+              background: resolving ? "rgba(255,255,255,.07)" : "rgba(99,102,241,.15)",
+              color: resolving ? "rgba(255,255,255,.3)" : "#818cf8",
+              border: "1px solid rgba(99,102,241,.3)", borderRadius: 6, padding: "6px 14px",
+              fontSize: "0.78rem", fontWeight: 700, cursor: resolving ? "not-allowed" : "pointer",
+            }}
+          >
+            {resolving ? "Resolving…" : "Resolve Knockout"}
           </button>
         </div>
       </div>

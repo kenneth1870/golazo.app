@@ -33,6 +33,15 @@ module Api
           render json: { ok: true, message: "Heal job enqueued — check logs for progress" }
         end
 
+        # Fills TBD knockout slots with real team data from the API.
+        # Run this once teams are determined for each round.
+        def resolve_knockout
+          WorldCupSync.new.resolve_knockout_from_api
+          render json: { ok: true, message: "Knockout slots resolved — refresh the fixtures page" }
+        rescue => e
+          render json: { ok: false, message: e.message }, status: :unprocessable_entity
+        end
+
         private
 
         def find_match
