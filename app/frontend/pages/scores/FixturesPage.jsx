@@ -122,7 +122,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick }) {
             <div style={{ flex: 1 }}>
               <MatchRow match={m} onClick={() => onMatchClick(m)} />
             </div>
-            {m.status === "scheduled" && m.kickoff_at && new Date(m.kickoff_at) > new Date() && (
+            {m.status !== "live" && m.status !== "finished" && m.kickoff_at && new Date(m.kickoff_at) > new Date() && (
               <BellButton match={m} />
             )}
           </div>
