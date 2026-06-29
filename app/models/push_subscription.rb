@@ -40,13 +40,15 @@ class PushSubscription < ApplicationRecord
     # (older rows may have NULL from before the column default was set).
     # Team-specific: team_ids JSON array contains one of the match team names.
     #
-    # Use jsonb_exists_any(...) rather than the `?|` operator: with named bind
-    # params ActiveRecord does NOT collapse `??` → `?`, so the operator form
-    # silently breaks (PG receives a literal `??|` and raises "operator does not
-    # exist"). The function form has no `?` to escape, so it can't regress.
+    # Case-insensitive match: unnest the stored JSON array and compare lowercased
+    # values so subscriptions created with any casing ("brazil", "BRAZIL", etc.)
+    # still receive notifications. jsonb_exists_any is case-sensitive, so we use
+    # jsonb_array_elements_text + lower() instead.
+    lower_names = names.map(&:downcase)
     where(
-      "team_ids IS NULL OR team_ids IN ('[]', 'null') OR jsonb_exists_any(team_ids::jsonb, array[:names])",
-      names: names
+      "team_ids IS NULL OR team_ids IN ('[]', 'null') OR " \
+      "EXISTS (SELECT 1 FROM jsonb_array_elements_text(team_ids::jsonb) AS t(name) WHERE lower(t.name) = ANY(array[:names]))",
+      names: lower_names
     )
   end
 

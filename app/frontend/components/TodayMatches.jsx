@@ -36,7 +36,7 @@ function MatchRow({ match, onClick }) {
           <span style={{ color: "gray", fontSize: "0.72rem" }}>{t("status.ft")}</span>
         ) : (
           <span style={{ color: "var(--muted)", fontSize: "0.8rem" }}>
-            {formatKickoff(match.kickoff_at, i18n.language)}
+            {formatKickoff(match.kickoff_at)}
           </span>
         )}
       </div>

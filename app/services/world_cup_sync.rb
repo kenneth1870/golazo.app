@@ -88,8 +88,12 @@ class WorldCupSync
     today_matches = @api.matches_for_date(Date.today)
 
     next_day_early = @api.matches_for_date(Date.today + 1).select do |m|
-      t = Time.parse(m[:kickoff_at].to_s) rescue nil
-      t && t.utc.hour < 7
+      begin
+        t = Time.parse(m[:kickoff_at].to_s)
+        t.utc.hour < 7
+      rescue ArgumentError, TypeError
+        false
+      end
     end
 
     seen = Set.new(today_matches.map { |m| m[:external_id] })
@@ -737,14 +741,15 @@ class WorldCupSync
     # may be a transient feed artefact before the reversal comes through.
     scored = new_total > old_total && !raw[:var_disallowed]
 
-    # Skip if the match_detail_controller already fired the notification when it
-    # patched the DB score (atomic write: only the first writer fires).
+    match.update!(status: "live", home_score: home_score, away_score: away_score, minute: minute)
+
+    # Claim the dedup key AFTER the DB write succeeds — writing it before update!
+    # would consume the key on a failed write, permanently silencing that score.
     if scored
       dedup = "goal_notified_#{match.id}_#{home_score}_#{away_score}"
       scored = Rails.cache.write(dedup, true, expires_in: 5.minutes, unless_exist: true)
     end
 
-    match.update!(status: "live", home_score: home_score, away_score: away_score, minute: minute)
     broadcast_score(match, minute, minute_extra: minute_extra, notify: scored,
       scorer: scored ? raw[:last_scorer] : nil)
     true
@@ -776,20 +781,27 @@ class WorldCupSync
 
       # Second fallback: find a scheduled knockout slot for the home team when
       # the external_id itself is unassigned (can happen after earlier evictions).
+      # Narrow by kickoff proximity (±4 h) so a team appearing in multiple rounds
+      # doesn't cause the wrong round's slot to be re-stamped.
       if candidate.nil?
         home_team_obj = find_team_by_api_name(home_name)
         if home_team_obj
-          competition = Competition.find_by(code: @code)
-          candidate = Match
+          competition = @wc_competition ||= Competition.find_by(code: @code)
+          begin
+            api_ko = m[:kickoff_at].present? ? Time.parse(m[:kickoff_at].to_s).utc : nil
+          rescue ArgumentError, TypeError
+            api_ko = nil
+          end
+          scope = Match
             .where(competition: competition, status: "scheduled", group_stage: nil)
             .where("home_team_id = ? OR away_team_id = ?", home_team_obj.id, home_team_obj.id)
-            .order(:kickoff_at)
-            .first
+          scope = scope.where(kickoff_at: (api_ko - 4.hours)..(api_ko + 4.hours)) if api_ko
+          candidate = scope.order(:kickoff_at).first
         end
       end
 
       if candidate
-        home_team_obj = find_team_by_api_name(home_name)
+        home_team_obj ||= find_team_by_api_name(home_name)
         away_team_obj = find_team_by_api_name(away_name)
         updates = {}
         updates[:home_team_id] = home_team_obj.id if home_team_obj
@@ -797,8 +809,12 @@ class WorldCupSync
         updates[:external_id]  = api_ext_id
         # Always fix kickoff when teams change — the slot had wrong data
         if m[:kickoff_at].present?
-          api_ko = Time.parse(m[:kickoff_at].to_s).utc rescue nil
-          updates[:kickoff_at] = api_ko if api_ko
+          begin
+            api_ko = Time.parse(m[:kickoff_at].to_s).utc
+            updates[:kickoff_at] = api_ko
+          rescue ArgumentError, TypeError
+            nil
+          end
         end
         # Evict any OTHER record that holds this ext_id before assigning it
         Match.where(external_id: api_ext_id).where.not(id: candidate.id).update_all(external_id: nil)
@@ -810,6 +826,11 @@ class WorldCupSync
     end
 
     return false unless match
+
+    # Pessimistic lock — mirrors sync_match_from_live — prevents two concurrent
+    # SyncTodayMatchesJob + SyncLiveScoresJob runs from both reading was_finished=false
+    # and both firing fulltime notifications.
+    match.lock!
 
     was_live     = match.status == "live"
     was_finished = match.status == "finished"
@@ -850,7 +871,11 @@ class WorldCupSync
     # stored. Covers group-stage matches imported with wrong placeholder dates
     # (e.g. June 27 when the actual kickoff is June 26).
     if force && m[:kickoff_at].present?
-      api_kickoff = Time.parse(m[:kickoff_at].to_s).utc rescue nil
+      begin
+        api_kickoff = Time.parse(m[:kickoff_at].to_s).utc
+      rescue ArgumentError, TypeError
+        api_kickoff = nil
+      end
       if api_kickoff && match.kickoff_at&.utc&.to_i != api_kickoff.to_i
         log("  Correcting kickoff for #{home_name} vs #{away_name}: #{match.kickoff_at&.iso8601} → #{api_kickoff.iso8601}")
         attrs[:kickoff_at] = api_kickoff
@@ -864,9 +889,9 @@ class WorldCupSync
       # come through the today-sync path rather than the live-feed path (e.g.
       # server restart mid-match or match absent from the live API feed).
       # Suppress for old matches: the heal job re-syncs historical dates and
-      # could otherwise flood users with goal alerts for games from yesterday.
-      recent_for_goal = match.kickoff_at.nil? || match.kickoff_at > 5.hours.ago
-      scored = recent_for_goal && match.competition&.code == "WC" &&
+      # could otherwise flood users with goal/fulltime alerts for yesterday's games.
+      recent_kickoff = match.kickoff_at.nil? || match.kickoff_at > 5.hours.ago
+      scored = recent_kickoff && match.competition&.code == "WC" &&
                (home_score.to_i + away_score.to_i) > (old_home + old_away)
       broadcast_score(match, m[:minute], notify: scored)
     end
@@ -877,11 +902,8 @@ class WorldCupSync
     # block would re-enter on every pass and re-notify — spamming "Final" alerts
     # for a match that ended an hour ago. The dedup key is a secondary safety net.
     just_finished = status == "finished" && !was_finished
-    # Only notify for matches that kicked off recently. The heal job re-syncs all
-    # historical dates and can flip old stuck-"live" matches to "finished" —
-    # without this guard every heal triggers fulltime alerts for yesterday's games.
-    recent_match = match.kickoff_at.nil? || match.kickoff_at > 5.hours.ago
-    if just_finished && recent_match && match.competition&.code == "WC"
+    recent_kickoff ||= match.kickoff_at.nil? || match.kickoff_at > 5.hours.ago
+    if just_finished && recent_kickoff && match.competition&.code == "WC"
       dedup_key  = "fulltime_notified_#{match.id}"
       claim_key  = "fulltime_notifying_#{match.id}"
       # Atomically claim the notification slot to prevent two concurrent syncs

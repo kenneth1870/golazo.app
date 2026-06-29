@@ -45,7 +45,7 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
           ? <span className="match-status-ft">{t("status.ft")}</span>
           : <span className="match-status-time">
               {showDate && <span className="match-date">{formatMatchDate(match.kickoff_at, i18n.language)}</span>}
-              {formatKickoff(match.kickoff_at, i18n.language)}
+              {formatKickoff(match.kickoff_at)}
             </span>
         }
       </div>
