@@ -363,7 +363,7 @@ export default function HomePage() {
               </div>
             </div>
           )}
-          <div className="row no-gutters">
+          <div className="row no-gutters" style={{ rowGap: 16 }}>
             {(latestNews.length > 0 ? latestNews : newsError ? [] : [null, null, null]).map((post, i) => (
               <NewsCard key={post?.id ?? i} post={post} index={i} />
             ))}
