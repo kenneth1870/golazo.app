@@ -186,7 +186,8 @@ module Api
 
         date_scope = ->(s) { s.where(kickoff_at: local_day_range(date, tz)) }
 
-        authoritative = date_scope.call(base.where(status: %w[live finished]))
+        authoritative = date_scope.call(base.where(status: %w[live finished])
+                                           .where("home_team_id IS NOT NULL AND away_team_id IS NOT NULL"))
         # Only include overdue scheduled matches that have both teams known — otherwise
         # knockout placeholders with no teams appear as blank "vs" rows.
         overdue       = date_scope.call(
@@ -220,9 +221,11 @@ module Api
           .joins(:competition)
           .where(competitions: { code: "WC" })
           .where(kickoff_at: local_day_range(date, tz))
-          # Hide scheduled knockout placeholders whose teams aren't determined yet —
-          # they show as blank "vs" rows. Live/finished matches always pass through.
-          .where("status != 'scheduled' OR (home_team_id IS NOT NULL AND away_team_id IS NOT NULL)")
+          # Only show matches where both teams are confirmed. Knockout placeholder
+          # slots with a null team should never appear — the API feed covers live
+          # matches, and a stale slot erroneously set to "live" would show as a
+          # duplicate alongside the real record.
+          .where("home_team_id IS NOT NULL AND away_team_id IS NOT NULL")
           .includes(:home_team, :away_team, :competition)
           .order(:kickoff_at)
           .map { |m| normalize_db(m) }
