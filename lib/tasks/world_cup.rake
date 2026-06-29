@@ -39,4 +39,20 @@ namespace :golazo do
 
   desc "Load the full WC schedule (group fixtures + knockout bracket)"
   task load_schedule: %i[load_group_fixtures load_knockout]
+
+  desc "Heal all WC match data (re-syncs every date, restamps scrambled external_ids)"
+  task heal_all: :environment do
+    sync = WorldCupSync.new(competition_code: "WC")
+    fixed = sync.resync_all_wc_match_dates
+    resolved = sync.resolve_knockout_from_api
+    RecalculateStandingsJob.perform_now
+    puts "Done — #{fixed} match(es) corrected, #{resolved} knockout slot(s) resolved"
+  end
+
+  desc "Force-sync today and tomorrow (busts cache, restamps teams)"
+  task sync_force_today: :environment do
+    sync = WorldCupSync.new(competition_code: "WC")
+    sync.force_sync_dates([ Date.today, Date.today + 1 ])
+    puts "Done"
+  end
 end
