@@ -319,8 +319,8 @@ export default function HomePage() {
 
   return (
     <>
-      {/* ── Hero — compact when WC matches are scheduled/live today ── */}
-      <Hero nextMatch={nextMatch} liveCount={liveCount} compact={todayWC.length > 0 || liveCount > 0} />
+      {/* ── Hero — always show full hero with rotating backgrounds ── */}
+      <Hero nextMatch={nextMatch} liveCount={liveCount} />
 
       {/* ── Today's matches / Live ── */}
       <div className="container" style={{ paddingTop: 24, paddingBottom: 0 }}>
