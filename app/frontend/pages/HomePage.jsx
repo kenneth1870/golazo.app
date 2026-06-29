@@ -233,23 +233,36 @@ function TodayMatchesSection({ todayMatches, navigate, t }) {
 }
 
 // ─── News card (no fallback arcade images) ────────────────────────────────────
-function NewsCard({ post, index }) {
-  const placeholderColors = ["#1a1f2e", "#1a1420", "#0f1a1a"]
-  const placeholderEmojis = ["⚽", "🏆", "🗞️"]
-  const bg = placeholderColors[index % placeholderColors.length]
+const PLACEHOLDER_COLORS = ["#1a1f2e", "#1a1420", "#0f1a1a"]
+const PLACEHOLDER_EMOJIS = ["⚽", "🏆", "🗞️"]
 
+function NewsThumbnail({ post, index }) {
+  const bg    = PLACEHOLDER_COLORS[index % PLACEHOLDER_COLORS.length]
+  const emoji = PLACEHOLDER_EMOJIS[index % PLACEHOLDER_EMOJIS.length]
+  const placeholderStyle = {
+    aspectRatio: "16/9", background: bg, borderRadius: "8px 8px 0 0",
+    display: "flex", alignItems: "flex-start", justifyContent: "flex-start",
+    padding: 16, fontSize: "1.4rem", opacity: 0.55,
+  }
+  if (!post.image) return <div style={placeholderStyle}>{emoji}</div>
+  return (
+    <>
+      <img
+        src={post.image} alt={post.title || ""} className="img-fluid"
+        onError={e => { e.target.style.display = "none"; e.target.nextElementSibling.style.display = "flex" }}
+      />
+      <div style={{ ...placeholderStyle, display: "none" }}>{emoji}</div>
+    </>
+  )
+}
+
+function NewsCard({ post, index }) {
   return (
     <div className="col-md-4">
       <Link to={post?.id ? `/news/${post.id}` : "#"} style={{ display: "block", textDecoration: "none", color: "inherit", pointerEvents: post ? "auto" : "none" }}>
         <div className="post-entry">
           {post ? (
-            post.image ? (
-              <img src={post.image} alt={post.title || ""} className="img-fluid" onError={e => { e.target.style.display = "none"; e.target.nextSibling?.style && (e.target.nextSibling.style.display = "flex") }} />
-            ) : (
-              <div style={{ aspectRatio: "16/9", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.5rem", borderRadius: "8px 8px 0 0" }}>
-                {placeholderEmojis[index % placeholderEmojis.length]}
-              </div>
-            )
+            <NewsThumbnail post={post} index={index} />
           ) : (
             <div className="loading-shimmer" style={{ aspectRatio: "16/9", borderRadius: "8px 8px 0 0" }} />
           )}
