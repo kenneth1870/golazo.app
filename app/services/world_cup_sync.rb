@@ -863,7 +863,10 @@ class WorldCupSync
       # Fire a goal notification when the score increases — covers matches that
       # come through the today-sync path rather than the live-feed path (e.g.
       # server restart mid-match or match absent from the live API feed).
-      scored = match.competition&.code == "WC" &&
+      # Suppress for old matches: the heal job re-syncs historical dates and
+      # could otherwise flood users with goal alerts for games from yesterday.
+      recent_for_goal = match.kickoff_at.nil? || match.kickoff_at > 5.hours.ago
+      scored = recent_for_goal && match.competition&.code == "WC" &&
                (home_score.to_i + away_score.to_i) > (old_home + old_away)
       broadcast_score(match, m[:minute], notify: scored)
     end
@@ -874,7 +877,11 @@ class WorldCupSync
     # block would re-enter on every pass and re-notify — spamming "Final" alerts
     # for a match that ended an hour ago. The dedup key is a secondary safety net.
     just_finished = status == "finished" && !was_finished
-    if just_finished && match.competition&.code == "WC"
+    # Only notify for matches that kicked off recently. The heal job re-syncs all
+    # historical dates and can flip old stuck-"live" matches to "finished" —
+    # without this guard every heal triggers fulltime alerts for yesterday's games.
+    recent_match = match.kickoff_at.nil? || match.kickoff_at > 5.hours.ago
+    if just_finished && recent_match && match.competition&.code == "WC"
       dedup_key  = "fulltime_notified_#{match.id}"
       claim_key  = "fulltime_notifying_#{match.id}"
       # Atomically claim the notification slot to prevent two concurrent syncs
