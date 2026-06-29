@@ -46,30 +46,51 @@ module Api
           db_home  = local_match.home_team&.name.to_s.downcase
           db_away  = local_match.away_team&.name.to_s.downcase
 
-          # Allow for minor name differences (e.g. "Korea Republic" vs "South Korea")
-          names_match = api_home.split.any? { |w| db_home.include?(w) } &&
-                        api_away.split.any? { |w| db_away.include?(w) }
+          # Patch TBD slots in API response with the DB team when we know who it is.
+          # Knockout fixtures often show TBD until the bracket is officially confirmed
+          # by the provider, even though our DB already has the correct team stamped.
+          if local_match.home_team && (api_home == "tbd" || api_home.blank?)
+            data[:fixture]["teams"]["home"] = {
+              "id" => local_match.home_team.external_id || local_match.home_team.id,
+              "name" => local_match.home_team.name, "logo" => local_match.home_team.flag_url, "winner" => false
+            }
+            api_home = local_match.home_team.name.downcase
+          end
+          if local_match.away_team && (api_away == "tbd" || api_away.blank?)
+            data[:fixture]["teams"]["away"] = {
+              "id" => local_match.away_team.external_id || local_match.away_team.id,
+              "name" => local_match.away_team.name, "logo" => local_match.away_team.flag_url, "winner" => false
+            }
+            api_away = local_match.away_team.name.downcase
+          end
 
-          unless names_match
-            # ID namespace mismatch (football-data.org vs API-Football).
-            # Try to resolve the correct fixture via team-name + kickoff search.
-            if local_match.home_team && local_match.away_team && local_match.kickoff_at
-              resolved = ApiSportsClient.new.match_detail(
-                home_name:  local_match.home_team.name,
-                away_name:  local_match.away_team.name,
-                kickoff_at: local_match.kickoff_at,
-              )
-              if resolved&.dig(:fixture, "teams").present?
-                sync_db_from_resolved(local_match, resolved)
-                resolved[:fixture]["fixture"]["db_id"] = local_match.id
-                broadcast_if_changed(external_id, resolved, local_match: local_match)
-                return render json: resolved
+          # Allow for minor name differences (e.g. "Korea Republic" vs "South Korea").
+          # Skip validation when a DB team is still TBD/unknown — nothing to compare against.
+          if db_home.present? && db_away.present?
+            names_match = api_home.split.any? { |w| db_home.include?(w) } &&
+                          api_away.split.any? { |w| db_away.include?(w) }
+
+            unless names_match
+              # ID namespace mismatch (football-data.org vs API-Football).
+              # Try to resolve the correct fixture via team-name + kickoff search.
+              if local_match.home_team && local_match.away_team && local_match.kickoff_at
+                resolved = ApiSportsClient.new.match_detail(
+                  home_name:  local_match.home_team.name,
+                  away_name:  local_match.away_team.name,
+                  kickoff_at: local_match.kickoff_at,
+                )
+                if resolved&.dig(:fixture, "teams").present?
+                  sync_db_from_resolved(local_match, resolved)
+                  resolved[:fixture]["fixture"]["db_id"] = local_match.id
+                  broadcast_if_changed(external_id, resolved, local_match: local_match)
+                  return render json: resolved
+                end
               end
+              # ApiSportsClient also failed — serve local DB data as last resort
+              data = local_match_as_fixture(local_match)
+              data[:fixture]["fixture"]["db_id"] = local_match.id
+              return render json: data
             end
-            # ApiSportsClient also failed — serve local DB data as last resort
-            data = local_match_as_fixture(local_match)
-            data[:fixture]["fixture"]["db_id"] = local_match.id
-            return render json: data
           end
         end
 

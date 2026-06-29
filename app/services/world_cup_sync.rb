@@ -643,6 +643,16 @@ class WorldCupSync
     status_short  = raw[:status_short]
 
     match = find_match_by_teams(home_name, away_name)
+
+    # Fallback: find by external_id when team-name join misses (e.g. a knockout
+    # slot where away_team_id is still NULL — INNER JOIN skips it).
+    if match.nil? && raw[:external_id].present?
+      match = Match.where(
+        "status IN ('scheduled','live') OR (status = 'finished' AND kickoff_at > ?)",
+        48.hours.ago
+      ).find_by(external_id: raw[:external_id])
+    end
+
     return false unless match
 
     match.lock!
