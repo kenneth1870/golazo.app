@@ -461,7 +461,7 @@ export default function HomePage() {
                   <div className="widget-title">
                     <h3>{t("home.nextMatch")}</h3>
                   </div>
-                  <div className="widget-body mb-3">
+                  <div className="widget-body mb-1">
                     <div className="widget-vs">
                       <div className="d-flex align-items-center justify-content-around justify-content-between w-100">
                         <div className="team-1 text-center">
@@ -482,9 +482,9 @@ export default function HomePage() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-center widget-vs-contents mb-4">
+                  <div className="text-center widget-vs-contents mb-2">
                     <h4>{nextMatch.round || nextMatch.group_stage}</h4>
-                    <p className="mb-5">
+                    <p className="mb-2">
                       <span className="d-block">
                         {nextMatch.kickoff_at
                           ? new Date(nextMatch.kickoff_at).toLocaleString(i18n.language || undefined, { month: "long", day: "numeric", year: "numeric" })

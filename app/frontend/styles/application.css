@@ -1051,7 +1051,7 @@ a:hover{color:var(--accent);opacity:.85}
 }
 
 /* ─── Latest News strip (HomePage) ──────────────────── */
-.latest-news{padding:60px 0;background:var(--bg)}
+.latest-news{padding:clamp(24px,5vw,60px) 0;background:var(--bg)}
 .post-entry{
   position:relative;overflow:hidden;
   border-radius:12px;cursor:pointer;
