@@ -3,10 +3,8 @@ import { useTranslation } from "react-i18next"
 import { translateLeague } from "../i18n/leagueNames"
 import { translateTeam } from "../i18n/teamNames"
 
-function formatKickoff(utcDate, locale) {
-  return new Date(utcDate).toLocaleTimeString(locale || undefined, {
-    hour: "2-digit", minute: "2-digit", timeZoneName: "short"
-  })
+function formatKickoff(utcDate) {
+  return new Date(utcDate).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
 }
 
 function MatchRow({ match, onClick }) {

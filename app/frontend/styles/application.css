@@ -536,10 +536,10 @@ a:hover{color:var(--accent);opacity:.85}
   .match-row--clickable:hover{background:var(--surface2);transform:translateX(2px)}
 }
 .match-row--clickable:active{background:var(--surface2)}
-.match-row__status{width:70px;flex-shrink:0;text-align:center}
+.match-row__status{width:80px;flex-shrink:0;text-align:center}
 .match-status-live{color:var(--accent);font-size:.72rem;font-weight:800;letter-spacing:.05em;display:flex;align-items:center;justify-content:center;gap:4px}
 .match-status-ft{color:var(--muted);font-size:.72rem;font-weight:700;letter-spacing:.05em}
-.match-status-time{color:var(--text);font-size:.85rem;font-weight:700;font-variant-numeric:tabular-nums}
+.match-status-time{color:var(--text);font-size:.82rem;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .match-date{display:block;font-size:.65rem;color:var(--muted);margin-bottom:2px}
 .match-row__teams{flex:1;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
 .match-row__team{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden}
@@ -564,7 +564,7 @@ a:hover{color:var(--accent);opacity:.85}
 .match-row__meta{font-size:.7rem;color:var(--muted);text-align:right;flex-shrink:0;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:576px){
   .match-row{padding:10px 12px;gap:6px}
-  .match-row__status{width:44px}
+  .match-row__status{width:70px}
   .match-row__teams{gap:6px}
   .team-name{font-size:.78rem}
   .flag-xs{width:22px;height:22px}

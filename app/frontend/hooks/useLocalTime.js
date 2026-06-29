@@ -1,6 +1,7 @@
-export function formatKickoff(utcDate, locale) {
+// Always "2:30 PM" / "7:00 AM" — avoids Spanish "p. m." with dots that wrap
+export function formatKickoff(utcDate) {
   if (!utcDate) return "TBD"
-  return new Date(utcDate).toLocaleTimeString(locale || undefined, { hour: "numeric", minute: "2-digit", hour12: true })
+  return new Date(utcDate).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
 }
 
 export function formatMatchDate(utcDate, locale) {

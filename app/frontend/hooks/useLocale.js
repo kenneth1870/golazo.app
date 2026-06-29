@@ -54,7 +54,7 @@ export function useFormatter(timezone) {
   return {
     time: (utcDate) => {
       if (!utcDate) return "TBD"
-      return new Date(utcDate).toLocaleTimeString(locale, {
+      return new Date(utcDate).toLocaleTimeString("en-US", {
         hour: "numeric", minute: "2-digit", hour12: true,
         timeZone: timezone,
       })
