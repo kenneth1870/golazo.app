@@ -6,12 +6,13 @@ class MatchEventNotificationJob < ApplicationJob
   # live there.
 
   EVENT_EMOJIS = {
-    "goal"      => "⚽",
-    "kickoff"   => "🏁",
-    "halftime"  => "⏸",
-    "fulltime"  => "✅",
-    "red_card"  => "🟥",
-    "prematch"  => "⏰"
+    "goal"           => "⚽",
+    "goal_disallowed" => "🚫",
+    "kickoff"        => "🏁",
+    "halftime"       => "⏸",
+    "fulltime"       => "✅",
+    "red_card"       => "🟥",
+    "prematch"       => "⏰"
   }.freeze
 
   # Subscribers per delivery job. Small enough that batches run in parallel
@@ -67,7 +68,10 @@ class MatchEventNotificationJob < ApplicationJob
 
     # Filter by per-subscriber event preferences before building localized copy.
     # Empty prefs (default) = receives all events; explicit list = opt-in subset.
-    subs = subs.select { |sub| sub.receives_event?(event_type) }
+    # "goal_disallowed" rides on the "goal" preference — anyone who wants goal
+    # alerts wants to know when one gets overturned too.
+    pref_event_type = event_type == "goal_disallowed" ? "goal" : event_type
+    subs = subs.select { |sub| sub.receives_event?(pref_event_type) }
     return if subs.empty?
 
     # Build the localized payload once per locale (copy is identical for every
@@ -143,6 +147,19 @@ class MatchEventNotificationJob < ApplicationJob
         ].sample
       end
       [ "⚽ #{home} #{score} #{away}", body ]
+    when "goal_disallowed"
+      min_tag = minute ? " al #{minute}'" : ""
+      body = if scorer
+        [
+          "🚫 El gol de #{scorer}#{min_tag} fue anulado tras revisión del VAR 📺",
+          "🟡📺 VAR anula el gol de #{scorer}#{min_tag} ❌",
+          "❌ Gol de #{scorer} cancelado después del VAR#{min_tag} 📺",
+          "📺 Tras el VAR, el gol de #{scorer}#{min_tag} no fue válido 🚫"
+        ].sample
+      else
+        "🚫 Gol anulado tras revisión del VAR 📺"
+      end
+      [ "🚫 #{home} #{score} #{away}", body ]
     when "kickoff"
       min_str = minute ? " · #{minute}'" : ""
       [ "🏁 #{home} vs #{away}#{min_str}", "¡Comenzó el partido!" ]
@@ -215,6 +232,19 @@ class MatchEventNotificationJob < ApplicationJob
         ].sample
       end
       [ "⚽ #{home} #{score} #{away}", body ]
+    when "goal_disallowed"
+      min_tag = minute ? " in the #{minute}'" : ""
+      body = if scorer
+        [
+          "🚫 #{scorer}'s goal#{min_tag} was disallowed after VAR review 📺",
+          "🟡📺 VAR overturns #{scorer}'s goal#{min_tag} ❌",
+          "❌ #{scorer}'s goal#{min_tag} ruled out after VAR 📺",
+          "📺 No goal — VAR disallows #{scorer}'s strike#{min_tag} 🚫"
+        ].sample
+      else
+        "🚫 Goal disallowed after VAR review 📺"
+      end
+      [ "🚫 #{home} #{score} #{away}", body ]
     when "kickoff"
       min_str = minute ? " · #{minute}'" : ""
       [ "🏁 #{home} vs #{away}#{min_str}", "Kick-off — the match has started!" ]

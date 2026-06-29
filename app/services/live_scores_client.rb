@@ -625,6 +625,16 @@ class LiveScoresClient
       var_disallowed: begin
         evts = f["events"] || []
         evts.any? { |e| e["type"] == "Goal" && e.dig("detail") == "Goal Disallowed" }
+      end,
+      var_disallowed_scorer: begin
+        evts = f["events"] || []
+        disallowed = evts.select { |e| e["type"] == "Goal" && e.dig("detail") == "Goal Disallowed" }.last
+        disallowed&.dig("player", "name").presence
+      end,
+      var_disallowed_reason: begin
+        evts = f["events"] || []
+        disallowed = evts.select { |e| e["type"] == "Goal" && e.dig("detail") == "Goal Disallowed" }.last
+        disallowed&.dig("comments").presence
       end
     }
   end

@@ -739,6 +739,19 @@ class WorldCupSync
     old_total = match.home_score.to_i + match.away_score.to_i
     new_total = home_score.to_i + away_score.to_i
 
+    # VAR disallowed a goal: fire a dedicated "anulado" alert instead of staying
+    # silent. Dedup'd per scorer so a disallowed-goal event lingering in the
+    # fixture's event list (it doesn't expire once it's appeared) doesn't
+    # re-fire the same alert on every subsequent poll.
+    if raw[:var_disallowed] && raw[:var_disallowed_scorer]
+      dedup = "var_disallowed_notified_#{match.id}_#{raw[:var_disallowed_scorer]}"
+      if Rails.cache.write(dedup, true, expires_in: 2.hours, unless_exist: true)
+        fire_notification(match, "goal_disallowed",
+          home_score: match.home_score.to_i, away_score: match.away_score.to_i,
+          minute: minute, scorer: raw[:var_disallowed_scorer])
+      end
+    end
+
     # Anti-spam flap guard: ignore a downward total during live play. Providers
     # occasionally dip a score for one cycle and restore it the next; persisting
     # the dip would make the recovery look like a fresh goal and fire a duplicate
