@@ -27,7 +27,7 @@ class SyncTodayMatchesJob < ApplicationJob
     cache_key = "sync_today_force_kickoff_v1_#{Date.today.iso8601}"
     unless Rails.cache.exist?(cache_key)
       Rails.cache.write(cache_key, true, expires_in: 23.hours)
-      sync.force_sync_dates([Date.today, Date.today + 1])
+      sync.force_sync_dates([ Date.today, Date.today + 1 ])
     end
   end
 end
