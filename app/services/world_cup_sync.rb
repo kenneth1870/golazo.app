@@ -1070,11 +1070,11 @@ class WorldCupSync
       return false
     end
 
-    # Never notify more than 210 min past kickoff for finished matches — covers
-    # 90' + HT + 30' ET + stoppage. Skip this check for live matches: their
-    # status is authoritative proof the game is in progress, so a wrong kickoff_at
-    # in the DB (common during R32/knockout when dates shift) must not silence goals.
-    if match.kickoff_at.present? && match.status != "live"
+    # Never notify more than 210 min past kickoff — covers 90' + HT + 30' ET +
+    # stoppage. Skip for live matches (goal) and fulltime transitions: the live
+    # status and the just-finished transition are authoritative, so a wrong
+    # kickoff_at (common during R32/knockout date corrections) must not silence them.
+    if match.kickoff_at.present? && match.status != "live" && event_type.to_s != "fulltime"
       if Time.current > match.kickoff_at + 210.minutes
         elapsed = ((Time.current - match.kickoff_at) / 60).round
         log("Suppressed late notification (#{event_type}) for #{match.id} (#{match.home_team&.name} vs #{match.away_team&.name}) — #{elapsed} min since kickoff, outside notification window")

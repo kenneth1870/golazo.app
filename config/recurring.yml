@@ -40,5 +40,5 @@ production:
 
   heal_wc_matches:
     class: ResyncAllWcMatchesJob
-    schedule: "every day at 7:00 am"
+    schedule: "every 3 hours"
     queue: default
