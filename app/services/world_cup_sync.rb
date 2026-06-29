@@ -712,7 +712,7 @@ class WorldCupSync
         Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
         Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
       end
-      broadcast_score(match, minute, minute_extra: minute_extra, notify: false)
+      broadcast_score(match, minute, minute_extra: minute_extra, event_type: "kickoff", notify: true)
       return true
     end
 
@@ -1070,12 +1070,11 @@ class WorldCupSync
       return false
     end
 
-    if match.kickoff_at.present?
-      # Never notify more than 210 min past kickoff — covers 90' + HT + 30' ET
-      # + stoppage. Anything later is a stuck sync or manual correction, not a
-      # live event. Calendar-date comparisons are intentionally avoided: evening
-      # US matches routinely cross midnight UTC while still in the first half,
-      # and a date check would falsely suppress in-progress goal notifications.
+    # Never notify more than 210 min past kickoff for finished matches — covers
+    # 90' + HT + 30' ET + stoppage. Skip this check for live matches: their
+    # status is authoritative proof the game is in progress, so a wrong kickoff_at
+    # in the DB (common during R32/knockout when dates shift) must not silence goals.
+    if match.kickoff_at.present? && match.status != "live"
       if Time.current > match.kickoff_at + 210.minutes
         elapsed = ((Time.current - match.kickoff_at) / 60).round
         log("Suppressed late notification (#{event_type}) for #{match.id} (#{match.home_team&.name} vs #{match.away_team&.name}) — #{elapsed} min since kickoff, outside notification window")
