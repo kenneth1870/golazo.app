@@ -43,8 +43,11 @@ module Api
         home_away = all.map { |m|
           "#{normalize_team_name(m.dig(:home_team, :name))}|#{normalize_team_name(m.dig(:away_team, :name))}"
         }.to_set
+        # Only inject DB matches that are live or scheduled — finished matches not in the
+        # API response are from a different date whose kickoff bled into today's range.
         to_add    = wc_db.reject do |m|
-          existing.include?(m[:external_id]&.to_s) ||
+          m[:status].to_s == "finished" ||
+            existing.include?(m[:external_id]&.to_s) ||
             home_away.include?("#{normalize_team_name(m.dig(:home_team, :name))}|#{normalize_team_name(m.dig(:away_team, :name))}")
         end
         all = (all + to_add).sort_by { |m| m[:kickoff_at].to_s } unless to_add.empty?
