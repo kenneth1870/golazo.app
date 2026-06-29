@@ -55,7 +55,7 @@ export function useFormatter(timezone) {
     time: (utcDate) => {
       if (!utcDate) return "TBD"
       return new Date(utcDate).toLocaleTimeString(locale, {
-        hour: "2-digit", minute: "2-digit",
+        hour: "numeric", minute: "2-digit", hour12: true,
         timeZone: timezone,
       })
     },
@@ -70,7 +70,7 @@ export function useFormatter(timezone) {
       if (!utcDate) return "TBD"
       return new Date(utcDate).toLocaleString(locale, {
         month: "short", day: "numeric",
-        hour: "2-digit", minute: "2-digit",
+        hour: "numeric", minute: "2-digit", hour12: true,
         timeZone: timezone,
       })
     },
@@ -78,7 +78,7 @@ export function useFormatter(timezone) {
       if (!utcDate) return "TBD"
       return new Date(utcDate).toLocaleString(locale, {
         weekday: "long", month: "long", day: "numeric", year: "numeric",
-        hour: "2-digit", minute: "2-digit",
+        hour: "numeric", minute: "2-digit", hour12: true,
         timeZoneName: "short",
         timeZone: timezone,
       })

@@ -1,6 +1,6 @@
 export function formatKickoff(utcDate, locale) {
   if (!utcDate) return "TBD"
-  return new Date(utcDate).toLocaleTimeString(locale || undefined, { hour: "2-digit", minute: "2-digit" })
+  return new Date(utcDate).toLocaleTimeString(locale || undefined, { hour: "numeric", minute: "2-digit", hour12: true })
 }
 
 export function formatMatchDate(utcDate, locale) {
@@ -12,7 +12,7 @@ export function formatMatchDateTime(utcDate, locale) {
   if (!utcDate) return "TBD"
   return new Date(utcDate).toLocaleString(locale || undefined, {
     month: "short", day: "numeric",
-    hour: "2-digit", minute: "2-digit"
+    hour: "numeric", minute: "2-digit", hour12: true,
   })
 }
 
@@ -20,7 +20,7 @@ export function formatFull(utcDate, locale) {
   if (!utcDate) return "TBD"
   return new Date(utcDate).toLocaleString(locale || undefined, {
     weekday: "long", month: "long", day: "numeric", year: "numeric",
-    hour: "2-digit", minute: "2-digit", timeZoneName: "short"
+    hour: "numeric", minute: "2-digit", hour12: true, timeZoneName: "short",
   })
 }
 
