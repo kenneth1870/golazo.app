@@ -764,8 +764,51 @@ class WorldCupSync
     status     = m[:status]
     home_score = m.dig(:home, :score)
     away_score = m.dig(:away, :score)
+    api_ext_id = m[:external_id]
 
     match = find_match_by_teams(home_name, away_name)
+
+    # Fallback: find by external_id and re-stamp teams — covers knockout slots
+    # seeded with wrong placeholder opponents (e.g. "Germany vs DR Congo" when
+    # the actual Round of 32 match is Germany vs Paraguay).
+    if match.nil? && api_ext_id.present?
+      candidate = Match.find_by(external_id: api_ext_id)
+
+      # Second fallback: find a scheduled knockout slot for the home team when
+      # the external_id itself is unassigned (can happen after earlier evictions).
+      if candidate.nil?
+        home_team_obj = find_team_by_api_name(home_name)
+        if home_team_obj
+          competition = Competition.find_by(code: @code)
+          candidate = Match
+            .where(competition: competition, status: "scheduled", group_stage: nil)
+            .where("home_team_id = ? OR away_team_id = ?", home_team_obj.id, home_team_obj.id)
+            .order(:kickoff_at)
+            .first
+        end
+      end
+
+      if candidate
+        home_team_obj = find_team_by_api_name(home_name)
+        away_team_obj = find_team_by_api_name(away_name)
+        updates = {}
+        updates[:home_team_id] = home_team_obj.id if home_team_obj
+        updates[:away_team_id] = away_team_obj.id if away_team_obj
+        updates[:external_id]  = api_ext_id
+        # Always fix kickoff when teams change — the slot had wrong data
+        if m[:kickoff_at].present?
+          api_ko = Time.parse(m[:kickoff_at].to_s).utc rescue nil
+          updates[:kickoff_at] = api_ko if api_ko
+        end
+        # Evict any OTHER record that holds this ext_id before assigning it
+        Match.where(external_id: api_ext_id).where.not(id: candidate.id).update_all(external_id: nil)
+        log("  Restamping ext=#{api_ext_id}: #{candidate.home_team&.name} vs #{candidate.away_team&.name} → #{home_name} vs #{away_name}")
+        candidate.update_columns(updates)
+        candidate.reload
+        match = candidate
+      end
+    end
+
     return false unless match
 
     was_live     = match.status == "live"
@@ -785,7 +828,6 @@ class WorldCupSync
     downward_live = !force && status == "live" &&
                     (home_score.to_i + away_score.to_i) < (old_home + old_away)
 
-    api_ext_id = m[:external_id]
     attrs = { status: status }
     unless status == "scheduled" || downward_live
       attrs[:home_score] = home_score unless home_score.nil?
@@ -798,7 +840,10 @@ class WorldCupSync
     end
     # Self-heal: update external_id when the DB has a stale one (e.g. seeded
     # from a different API source) so broadcasts and grade! use the right ID.
+    # Evict any OTHER record that incorrectly holds this external_id first —
+    # otherwise the unique constraint raises and the whole update is aborted.
     if api_ext_id.present? && match.external_id.to_s != api_ext_id.to_s
+      Match.where(external_id: api_ext_id).where.not(id: match.id).update_all(external_id: nil)
       attrs[:external_id] = api_ext_id
     end
     # Force-heal: correct kickoff date when the API says it differs from what's

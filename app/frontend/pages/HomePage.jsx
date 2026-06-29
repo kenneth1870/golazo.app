@@ -306,16 +306,14 @@ export default function HomePage() {
   const todayWC                      = useTodayWC()
   const { news: latestNews, newsError, retryNews } = useLatestNews()
 
-  const todayWCIds = new Set(todayWC.map(m => m.external_id).filter(Boolean))
-  const todayStr = new Date().toLocaleDateString("en-CA")
-  const upcomingFuture = upcomingMatches.filter(m =>
-    !todayWCIds.has(m.external_id) &&
-    (!m.kickoff_at || new Date(m.kickoff_at).toLocaleDateString("en-CA") !== todayStr)
-  )
+  // Always show the next scheduled match regardless of live matches.
+  const nextMatch = upcomingMatches.find(m => !m.kickoff_at || new Date(m.kickoff_at) > new Date())
 
-  const nextMatch = liveWC.length === 0
-    ? upcomingMatches.find(m => !m.kickoff_at || new Date(m.kickoff_at) > new Date())
-    : null
+  // Everything after the featured next match — shown in the "Próximos Partidos" table.
+  // Includes today's remaining scheduled matches so they don't disappear from the list.
+  const upcomingFuture = nextMatch
+    ? upcomingMatches.filter(m => m.id !== nextMatch.id)
+    : upcomingMatches
 
   return (
     <>
