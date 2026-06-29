@@ -450,7 +450,7 @@ export default function HomePage() {
       </div>
 
       {/* ── Next match widget + upcoming ── */}
-      <div className="site-section bg-dark">
+      {(nextMatch || upcomingFuture.length > 0) && <div className="site-section bg-dark">
         <div className="container">
           <div className="row">
 
@@ -586,7 +586,8 @@ export default function HomePage() {
 
           </div>
         </div>
-      </div>
+      </div>}
+
     </>
   )
 }

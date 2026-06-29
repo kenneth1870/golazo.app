@@ -191,7 +191,7 @@ export default function Hero({ nextMatch, liveCount = 0, compact = false }) {
         `,
       }} />
 
-      <div className="container" style={{ position: "relative", padding: "60px 15px 52px" }}>
+      <div className="container" style={{ position: "relative", padding: "clamp(28px, 6vw, 60px) 15px clamp(24px, 5vw, 52px)" }}>
         <div className="row align-items-center">
           <div className="col-12 col-lg-7">
 
