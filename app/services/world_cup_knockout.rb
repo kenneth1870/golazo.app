@@ -20,9 +20,9 @@
 # until the combination is resolved at end of group stage.
 class WorldCupKnockout
   ROUND_DATES = {
-    "Round of 32"   => Date.new(2026, 6, 28),
-    "Round of 16"   => Date.new(2026, 7,  4),
-    "Quarter Final" => Date.new(2026, 7,  9),
+    "Round of 32"   => Date.new(2026, 7,  1),
+    "Round of 16"   => Date.new(2026, 7,  5),
+    "Quarter Final" => Date.new(2026, 7, 10),
     "Semi Final"    => Date.new(2026, 7, 14),
     "3rd Place"     => Date.new(2026, 7, 18),
     "Final"         => Date.new(2026, 7, 19)
@@ -104,7 +104,12 @@ class WorldCupKnockout
       match.round      = defn[:round]
       match.group_stage = nil
       match.status    ||= "scheduled"
-      match.kickoff_at ||= defn[:date].in_time_zone("UTC")
+      # Set or correct kickoff_at for unfinished matches that haven't been matched
+      # to an API fixture yet (external_id nil = still a placeholder). Once an
+      # external_id is set by resolve_knockout_from_api, leave the real kickoff alone.
+      if match.status != "finished" && match.external_id.nil?
+        match.kickoff_at = defn[:date].in_time_zone("UTC")
+      end
       unless match.status == "finished"
         match.home_slot = defn[:home_slot]
         match.away_slot = defn[:away_slot]
