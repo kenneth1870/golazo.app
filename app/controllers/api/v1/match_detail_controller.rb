@@ -186,7 +186,9 @@ module Api
           events: data[:events]&.length.to_i
         }
 
-        score_changed = prev.present? && (prev[:h] != current[:h] || prev[:a] != current[:a])
+        # Use .to_i so a pre-match cache entry with h:nil/a:nil doesn't produce a
+        # spurious "score changed" when the game kicks off at 0-0 (nil != 0 is true).
+        score_changed = prev.present? && (prev[:h].to_i != current[:h].to_i || prev[:a].to_i != current[:a].to_i)
 
         # Also consider the score stale when API differs from DB — catches the case
         # where no one has viewed the detail page since the goal, so prev is nil.
@@ -206,7 +208,8 @@ module Api
         # When the API shows a new score, sync it immediately to the list view
         # (TodayPage/HomePage) without waiting for the next WorldCupSync cycle.
         # Triggers on score_changed (subsequent loads) OR db_stale (first load after a goal).
-        if (score_changed || db_stale) && local_match && current[:h] && current[:a]
+        if (score_changed || db_stale) && local_match && current[:h] && current[:a] &&
+           (current[:h].to_i + current[:a].to_i) > 0
           minute = data.dig(:fixture, "fixture", "status", "elapsed")
           ActionCable.server.broadcast("live_scores", {
             type:        "live_score_update",

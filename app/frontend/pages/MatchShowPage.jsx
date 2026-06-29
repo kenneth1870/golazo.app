@@ -410,6 +410,7 @@ function translateRound(round, t) {
   const rs = round.match(/^Regular Season\s*-\s*(\d+)$/i)
   if (rs) return t("match.roundRegularSeason", { n: rs[1] })
   const keys = {
+    "Round of 32":    "match.roundOf32",
     "Round of 16":    "match.roundOf16",
     "Quarter-finals": "match.roundQuarterFinal",
     "Semi-finals":    "match.roundSemiFinal",
