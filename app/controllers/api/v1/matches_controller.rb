@@ -25,7 +25,13 @@ module Api
         else scope.order(kickoff_at: :asc).limit(200)
         end
 
-        render json: scope.map { |m|
+        seen = {}
+        records = scope.select { |m|
+          key = m.external_id.presence || "db-#{m.id}"
+          seen.key?(key) ? false : (seen[key] = true)
+        }
+
+        render json: records.map { |m|
           m.as_json(
             only:    %i[id external_id status kickoff_at home_score away_score home_slot away_slot bracket_pos group_stage round],
             include: {

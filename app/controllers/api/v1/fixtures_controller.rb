@@ -6,13 +6,19 @@ module Api
         tz      = sanitize_tz(params[:tz])
         matches = Match
           .where(kickoff_at: local_day_range(date, tz))
+          .where.not(status: "finished")
           # Hide scheduled knockout placeholders with no teams yet — they carry
           # placeholder kickoff dates that bleed into adjacent date buckets and
-          # render as slot codes (e.g. "2A vs 2B"). Live/finished always pass.
+          # render as slot codes (e.g. "2A vs 2B"). Live always passes.
           .where("status != 'scheduled' OR (home_team_id IS NOT NULL AND away_team_id IS NOT NULL)")
           .includes(:home_team, :away_team, :competition)
           .order(:kickoff_at)
           .limit(100)
+        seen = {}
+        matches = matches.select { |m|
+          key = m.external_id.presence || "db-#{m.id}"
+          seen.key?(key) ? false : (seen[key] = true)
+        }
         render json: matches.map { |m|
           m.as_json(
             only:    %i[id external_id status kickoff_at home_score away_score round group_stage bracket_pos],

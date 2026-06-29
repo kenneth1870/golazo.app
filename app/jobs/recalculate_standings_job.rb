@@ -48,6 +48,13 @@ class RecalculateStandingsJob < ApplicationJob
     Rails.cache.delete("wc_assists_v1_WC")
     Rails.cache.delete("wc_yellow_cards_v1_WC")
     Rails.cache.delete("wc_red_cards_v1_WC")
+    # Also bust per-fixture event caches for matches that finished recently so the
+    # scorer aggregate doesn't serve 24h-stale events for a just-completed match.
+    Match.where(competition: wc, status: "finished")
+         .where(kickoff_at: 48.hours.ago..)
+         .where.not(external_id: nil)
+         .pluck(:external_id)
+         .each { |fid| Rails.cache.delete("wc_fixture_events_v1_#{fid}") }
     Rails.cache.write("standings_last_recalculated_at", Time.current.iso8601, expires_in: 2.days)
     ActionCable.server.broadcast("standings_updates", { type: "standings_updated", competition: "WC" })
   ensure

@@ -22,8 +22,10 @@ function slotLabel(slot, t) {
   if (wr) return `${wr[1] === "1" ? t("bracket.winner") : t("bracket.runnerUp")} ${wr[2]}`
   const th = slot.match(/^T(\d+)$/)
   if (th) return `${t("bracket.third")} #${th[1]}`
-  if (/^W\d+$/.test(slot)) return t("bracket.winner")
-  if (/^L\d+$/.test(slot)) return t("bracket.loser")
+  const wm = slot.match(/^W(\d+)$/)
+  if (wm) return `${t("bracket.winner")} M${wm[1]}`
+  const lm = slot.match(/^L(\d+)$/)
+  if (lm) return `${t("bracket.loser")} M${lm[1]}`
   return "TBD"
 }
 

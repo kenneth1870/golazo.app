@@ -182,6 +182,15 @@ class WorldCupSync
   # Full heal: re-fetches every WC match date from the API (busting all date
   # caches first), writes correct scores/statuses bypassing the flap guard,
   # and broadcasts corrections to connected clients. Safe to run at any time.
+  def force_sync_dates(dates)
+    dates.each do |d|
+      %W[live_scores_date_v15_#{d.iso8601}_utc live_scores_date_v15_#{d.iso8601}_ today_api_#{d.iso8601}].each { |k| Rails.cache.delete(k) }
+      api_matches = @api.matches_for_date(d)
+      log("force_sync_dates #{d}: #{api_matches.size} matches")
+      api_matches.each { |m| sync_match_from_normalized(m, force: true) }
+    end
+  end
+
   def resync_all_wc_match_dates
     wc = Competition.find_by(code: @code)
     return log("Competition #{@code} not found") unless wc
@@ -883,6 +892,11 @@ class WorldCupSync
     # Pre-warm AI match summary cache after match finishes (5 min delay)
     if status == "finished" && match.id.present?
       GenerateMatchSummaryJob.set(wait: 5.minutes).perform_later(match_id: match.id)
+    end
+
+    # Resolve next-round knockout slots when a WC knockout match finishes
+    if status == "finished" && !match.group_stage && match.competition&.code == "WC"
+      ResolveKnockoutSlotsJob.set(wait: 2.minutes).perform_later
     end
 
     true

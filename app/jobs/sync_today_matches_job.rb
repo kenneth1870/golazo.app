@@ -18,6 +18,16 @@ class SyncTodayMatchesJob < ApplicationJob
       Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
       Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
     end
-    WorldCupSync.new.sync_today
+    sync = WorldCupSync.new
+    sync.sync_today
+
+    # Once per day, force-sync today + tomorrow so any match stored with a
+    # wrong kickoff date gets corrected. force: true makes sync_match_from_normalized
+    # also update kickoff_at when the API returns a different time.
+    cache_key = "sync_today_force_kickoff_v1_#{Date.today.iso8601}"
+    unless Rails.cache.exist?(cache_key)
+      Rails.cache.write(cache_key, true, expires_in: 23.hours)
+      sync.force_sync_dates([Date.today, Date.today + 1])
+    end
   end
 end

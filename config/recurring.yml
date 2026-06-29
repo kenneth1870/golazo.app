@@ -37,3 +37,8 @@ production:
     class: PruneSolidCacheJob
     schedule: "every 30 minutes"
     queue: default
+
+  heal_wc_matches:
+    class: ResyncAllWcMatchesJob
+    schedule: "every day at 7:00 am"
+    queue: default
