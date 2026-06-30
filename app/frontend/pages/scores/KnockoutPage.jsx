@@ -6,17 +6,16 @@ import { usePageMeta } from "../../hooks/usePageMeta"
 import { useState, useEffect, useRef } from "react"
 
 // Humanizes a knockout slot code: "1A" → "Winner A", "T3" → "3rd #3", etc.
+// Match-number references (W9, L9) aren't meaningful to users since match
+// numbers appear nowhere else in the UI — show a generic "to be defined"
+// label for those instead, matching how other World Cup trackers do it.
 function slotLabel(slot, t) {
-  if (!slot) return "TBD"
+  if (!slot) return t("bracket.tbd")
   const wr = slot.match(/^([12])([A-L])$/)
   if (wr) return `${wr[1] === "1" ? t("bracket.winner") : t("bracket.runnerUp")} ${wr[2]}`
   const th = slot.match(/^T(\d+)$/)
-  if (th) return `${t("bracket.third")} #${th[1]}`
-  const wm = slot.match(/^W(\d+)$/)
-  if (wm) return `${t("bracket.winner")} M${wm[1]}`
-  const lm = slot.match(/^L(\d+)$/)
-  if (lm) return `${t("bracket.loser")} M${lm[1]}`
-  return "TBD"
+  if (th) return t("bracket.thirdPlace")
+  return t("bracket.tbd")
 }
 
 function matchDateLabel(kickoff, status, t, locale) {
@@ -71,7 +70,7 @@ function MatchSlot({ match, onClick }) {
   if (!match) {
     return (
       <div className="bracket-slot bracket-slot--empty">
-        <span className="bracket-slot__tbd">TBD</span>
+        <span className="bracket-slot__tbd">{t("bracket.tbd")}</span>
       </div>
     )
   }
