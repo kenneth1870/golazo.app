@@ -638,6 +638,8 @@ class WorldCupSync
 
     home_score    = raw.dig(:home, :score)
     away_score    = raw.dig(:away, :score)
+    home_pen      = raw.dig(:home, :pen_score)
+    away_pen      = raw.dig(:away, :pen_score)
     minute        = raw[:minute]
     minute_extra  = raw[:minute_extra]
     status_short  = raw[:status_short]
@@ -664,6 +666,8 @@ class WorldCupSync
     if finished_shorts.include?(status_short)
       was_not_finished = match.status != "finished"
       finish_attrs = { status: "finished", home_score: home_score, away_score: away_score }
+      finish_attrs[:home_pen_score] = home_pen if home_pen
+      finish_attrs[:away_pen_score] = away_pen if away_pen
       if match.group_stage.blank?
         group = match.home_team&.group.presence || match.away_team&.group.presence
         finish_attrs[:group_stage] = group if group

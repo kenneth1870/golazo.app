@@ -609,12 +609,14 @@ class LiveScoresClient
         name:      f.dig("teams", "home", "name"),
         logo:      f.dig("teams", "home", "logo"),
         score:     f.dig("goals", "home"),
+        pen_score: f.dig("score", "penalty", "home"),
         red_cards: nil
       },
       away: {
         name:      f.dig("teams", "away", "name"),
         logo:      f.dig("teams", "away", "logo"),
         score:     f.dig("goals", "away"),
+        pen_score: f.dig("score", "penalty", "away"),
         red_cards: nil
       },
       last_scorer: begin

@@ -561,6 +561,7 @@ a:hover{color:var(--accent);opacity:.85}
 }
 .score-pill--live{background:rgba(238,30,70,.18);color:#fff;border:1px solid rgba(238,30,70,.4);box-shadow:0 0 12px rgba(238,30,70,.2)}
 .score-pill--vs{color:var(--muted);font-size:.75rem;font-weight:600;letter-spacing:.05em}
+.score-pill__pen{display:block;font-size:.6rem;font-weight:600;color:var(--muted);text-align:center;letter-spacing:.02em;margin-top:2px;white-space:nowrap}
 .match-row__meta{font-size:.7rem;color:var(--muted);text-align:right;flex-shrink:0;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:576px){
   .match-row{padding:10px 12px;gap:6px}

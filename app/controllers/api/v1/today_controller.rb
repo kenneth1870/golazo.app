@@ -36,6 +36,7 @@ module Api
           end
           next m unless db_m
           m.merge(home_score: db_m[:home_score], away_score: db_m[:away_score],
+                  home_pen_score: db_m[:home_pen_score], away_pen_score: db_m[:away_pen_score],
                   status: db_m[:status])
         end
 
@@ -270,8 +271,10 @@ module Api
           status:      m[:status],
           minute:      m[:minute],
           kickoff_at:  m[:kickoff_at],
-          home_score:  m.dig(:home, :score),
-          away_score:  m.dig(:away, :score),
+          home_score:     m.dig(:home, :score),
+          away_score:     m.dig(:away, :score),
+          home_pen_score: m.dig(:home, :pen_score),
+          away_pen_score: m.dig(:away, :pen_score),
           round:       nil,
           group_stage: nil,
           competition: {
@@ -305,14 +308,16 @@ module Api
 
       def normalize_db(m)
         {
-          id:          "db_#{m.id}",
-          external_id: m.external_id,
-          status:      m.status,
-          minute:      nil,
-          kickoff_at:  m.kickoff_at&.iso8601,
-          home_score:  m.home_score,
-          away_score:  m.away_score,
-          round:       m.round,
+          id:           "db_#{m.id}",
+          external_id:  m.external_id,
+          status:       m.status,
+          minute:       nil,
+          kickoff_at:   m.kickoff_at&.iso8601,
+          home_score:   m.home_score,
+          away_score:   m.away_score,
+          home_pen_score: m.home_pen_score,
+          away_pen_score: m.away_pen_score,
+          round:        m.round,
           group_stage: m.group_stage,
           competition: m.competition ? {
             id:      m.competition.id,

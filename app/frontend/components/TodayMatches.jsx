@@ -52,14 +52,19 @@ function MatchRow({ match, onClick }) {
       {/* Score */}
       <div style={{ width: 72, textAlign: "center", flexShrink: 0 }}>
         {hasScore ? (
-          <span style={{
-            fontWeight: 900, fontSize: "1.05rem",
-            color: isLive ? "#ee1e46" : "var(--text)",
-            background: "var(--surface2)",
-            padding: "3px 10px", borderRadius: 4
-          }}>
-            {match.home_score} – {match.away_score}
-          </span>
+          <>
+            <span style={{
+              fontWeight: 900, fontSize: "1.05rem",
+              color: isLive ? "#ee1e46" : "var(--text)",
+              background: "var(--surface2)",
+              padding: "3px 10px", borderRadius: 4
+            }}>
+              {match.home_score} – {match.away_score}
+            </span>
+            {match.home_pen_score != null && match.away_pen_score != null && (
+              <span className="score-pill__pen">({match.home_pen_score} – {match.away_pen_score} pen)</span>
+            )}
+          </>
         ) : (
           <span style={{ color: "var(--muted)", fontSize: "0.85rem" }}>vs</span>
         )}

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_30_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_30_200001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -88,6 +88,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_200000) do
   end
 
   create_table "matches", force: :cascade do |t|
+    t.integer "away_pen_score"
     t.integer "away_score"
     t.string "away_slot"
     t.bigint "away_team_id"
@@ -96,6 +97,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_200000) do
     t.datetime "created_at", null: false
     t.integer "external_id"
     t.string "group_stage"
+    t.integer "home_pen_score"
     t.integer "home_score"
     t.string "home_slot"
     t.bigint "home_team_id"

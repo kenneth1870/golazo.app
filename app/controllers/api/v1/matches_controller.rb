@@ -33,7 +33,7 @@ module Api
 
         render json: records.map { |m|
           m.as_json(
-            only:    %i[id external_id status kickoff_at home_score away_score home_slot away_slot bracket_pos group_stage round],
+            only:    %i[id external_id status kickoff_at home_score away_score home_pen_score away_pen_score home_slot away_slot bracket_pos group_stage round],
             include: {
               home_team:   { only: %i[id name code flag_url] },
               away_team:   { only: %i[id name code flag_url] },
