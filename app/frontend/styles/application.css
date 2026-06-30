@@ -1361,6 +1361,10 @@ a:hover{color:var(--accent);opacity:.85}
 .bracket-slot--finished{opacity:.9}
 .bracket-slot--empty{background:var(--surface);border:1px dashed rgba(255,255,255,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;min-height:68px}
 .bracket-slot__tbd{font-size:.65rem;color:#444;font-style:italic}
+.bracket-slot__qmark{font-size:1rem;font-weight:800;color:rgba(255,255,255,.18)}
+.bracket-slot--unresolved{opacity:.6}
+.bracket-slot__team--tbd{justify-content:center;padding:10px}
+.bracket-slot__qmark-icon{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.06);font-size:.7rem;font-weight:800;color:rgba(255,255,255,.35)}
 .bracket-slot__header{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 10px 3px;border-bottom:1px solid var(--border);background:var(--surface2)}
 .bracket-slot__date{font-size:.6rem;color:var(--muted);font-weight:600;white-space:nowrap}
 .bracket-slot__badge{font-size:.55rem;font-weight:700;color:#888;background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;white-space:nowrap}
@@ -1385,8 +1389,8 @@ a:hover{color:var(--accent);opacity:.85}
 .bracket-mirrored{display:flex;align-items:stretch;min-width:max-content;padding:8px 4px}
 .bracket-half{display:flex;align-items:stretch}
 /* Slightly narrower columns inside the mirrored layout */
-.bracket-half .bracket-round{min-width:155px}
-@media(min-width:768px){.bracket-half .bracket-round{min-width:175px}}
+.bracket-half .bracket-round{min-width:130px}
+@media(min-width:768px){.bracket-half .bracket-round{min-width:150px}}
 
 /* Right half: suppress the default right-side vertical connectors */
 .bracket-half--right .bracket-round .bracket-round__slot-wrap:nth-child(odd)::after{content:none}

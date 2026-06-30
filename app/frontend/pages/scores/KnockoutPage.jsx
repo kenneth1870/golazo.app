@@ -70,12 +70,31 @@ function MatchSlot({ match, onClick }) {
   if (!match) {
     return (
       <div className="bracket-slot bracket-slot--empty">
-        <span className="bracket-slot__tbd">{t("bracket.tbd")}</span>
+        <span className="bracket-slot__qmark">?</span>
       </div>
     )
   }
 
+  // A slot with neither team confirmed yet is pure scaffolding — its
+  // placeholder kickoff date carries no information, so skip the header
+  // and render two compact "?" rows instead of repeating "A definir" text.
+  const isUnresolved = !match.home_team?.name && !match.away_team?.name
   const dateLabel = matchDateLabel(match?.kickoff_at, match?.status, t, i18n.language)
+  const showHeader = !isUnresolved && dateLabel
+
+  if (isUnresolved) {
+    return (
+      <div className="bracket-slot bracket-slot--unresolved">
+        <div className="bracket-slot__team bracket-slot__team--tbd">
+          <span className="bracket-slot__qmark-icon">?</span>
+        </div>
+        <div className="bracket-slot__divider" />
+        <div className="bracket-slot__team bracket-slot__team--tbd">
+          <span className="bracket-slot__qmark-icon">?</span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -83,7 +102,7 @@ function MatchSlot({ match, onClick }) {
       onClick={match.external_id ? onClick : undefined}
       style={{ cursor: match.external_id ? "pointer" : "default" }}
     >
-      {dateLabel && (
+      {showHeader && (
         <div className="bracket-slot__header">
           <span className="bracket-slot__date">{dateLabel}</span>
           {isFinished && (
