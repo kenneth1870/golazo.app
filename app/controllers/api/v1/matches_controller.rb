@@ -20,7 +20,7 @@ module Api
         when "today"
           tz   = sanitize_tz(params[:tz])
           range = tz ? local_day_range(Date.today, tz) : Time.current.beginning_of_day..Time.current.end_of_day
-          scope.where(kickoff_at: range).where("external_id IS NOT NULL OR group_stage IS NOT NULL").order(:kickoff_at)
+          scope.where(kickoff_at: range).order(:kickoff_at)
         when "upcoming" then scope.upcoming.limit(30)
         else scope.order(kickoff_at: :asc).limit(200)
         end
