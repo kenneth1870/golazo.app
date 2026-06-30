@@ -129,7 +129,11 @@ class FixR16DuplicatesAndEnglandR32 < ActiveRecord::Migration[8.1]
     end
 
     # ── Fix 4: Let resolve_knockout fill any newly-cleared R16 TBD slots ───
-    sync.resolve_knockout_from_api
+    begin
+      sync.resolve_knockout_from_api
+    rescue ActiveRecord::RecordNotUnique => e
+      Rails.logger.info("[Fix] resolve_knockout_from_api skipped: #{e.message}")
+    end
 
     Rails.logger.info("[Fix] Done")
   end

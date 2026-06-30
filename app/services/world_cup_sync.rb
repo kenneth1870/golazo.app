@@ -373,6 +373,9 @@ class WorldCupSync
       kickoff = fx.dig("fixture", "date")
       venue   = fx.dig("fixture", "venue", "name")
 
+      # Evict any other slot already holding this external_id before assigning
+      Match.where(external_id: fixture_id).where.not(id: slot.id).update_all(external_id: nil)
+
       slot.update!(
         home_team:   home_team,
         away_team:   away_team,
