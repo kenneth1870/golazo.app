@@ -150,7 +150,8 @@ export default function ScorersPage() {
     setLoading(true)
     fetch(t.endpoint)
       .then(r => r.json())
-      .then(rows => {
+      .then(json => {
+        const rows = Array.isArray(json) ? json : []
         cache[tabKey] = { rows, ts: Date.now() }
         setData(prev => ({ ...prev, [tabKey]: rows }))
       })
