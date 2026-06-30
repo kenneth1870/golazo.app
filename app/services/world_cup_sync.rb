@@ -748,7 +748,8 @@ class WorldCupSync
       if Rails.cache.write(dedup, true, expires_in: 2.hours, unless_exist: true)
         fire_notification(match, "goal_disallowed",
           home_score: match.home_score.to_i, away_score: match.away_score.to_i,
-          minute: minute, scorer: raw[:var_disallowed_scorer])
+          minute: minute, scorer: raw[:var_disallowed_scorer],
+          reason: raw[:var_disallowed_reason])
       end
     end
 
@@ -1155,7 +1156,7 @@ class WorldCupSync
       scorer: scorer)
   end
 
-  def fire_notification(match, event_type, home_score: nil, away_score: nil, minute: nil, scorer: nil)
+  def fire_notification(match, event_type, home_score: nil, away_score: nil, minute: nil, scorer: nil, reason: nil)
     # Defense-in-depth: a full-time alert must never go out before a match could
     # plausibly be over. A 90' match runs ≥ ~100 min after kickoff (45 + half-time
     # + 45 + stoppage); extra time ends even later. So suppress "fulltime" if
@@ -1189,6 +1190,7 @@ class WorldCupSync
       away_score: away_score,
       minute:     minute,
       scorer:     scorer,
+      reason:     reason,
       match_url:  "/matches/#{match.external_id || "db-#{match.id}"}"
     )
     true

@@ -19,7 +19,7 @@ class MatchEventNotificationJob < ApplicationJob
   # across workers; large enough to avoid per-job overhead dominating.
   BATCH_SIZE = 100
 
-  def perform(event_type:, match_id:, home_name:, away_name:, home_score: nil, away_score: nil, match_url: nil, minute: nil, scorer: nil)
+  def perform(event_type:, match_id:, home_name:, away_name:, home_score: nil, away_score: nil, match_url: nil, minute: nil, scorer: nil, reason: nil)
     event_type = event_type.to_s
 
     if ENV["VAPID_PUBLIC_KEY"].blank? || ENV["VAPID_PRIVATE_KEY"].blank?
@@ -81,7 +81,7 @@ class MatchEventNotificationJob < ApplicationJob
     subs.group_by { |sub| %w[es en].include?(sub.locale) ? sub.locale : "es" }.each do |locale, locale_subs|
       home_t = TeamNameTranslator.translate(home_name, locale)
       away_t = TeamNameTranslator.translate(away_name, locale)
-      title, body = build_copy(locale, event_type, home_t, away_t, score_str, minute, scorer)
+      title, body = build_copy(locale, event_type, home_t, away_t, score_str, minute, scorer, reason)
 
       payload = {
         title:    title,
@@ -102,13 +102,22 @@ class MatchEventNotificationJob < ApplicationJob
 
   private
 
-  def build_copy(locale, event_type, home, away, score, minute, scorer = nil)
-    locale == "en" ? build_copy_en(event_type, home, away, score, minute, scorer)
-                   : build_copy_es(event_type, home, away, score, minute, scorer)
+  def build_copy(locale, event_type, home, away, score, minute, scorer = nil, reason = nil)
+    locale == "en" ? build_copy_en(event_type, home, away, score, minute, scorer, reason)
+                   : build_copy_es(event_type, home, away, score, minute, scorer, reason)
   end
 
+  VAR_REASONS_ES = {
+    "foul"             => "Falta",
+    "offside"          => "Fuera de juego",
+    "handball"         => "Mano",
+    "violent conduct"  => "Conducta violenta",
+    "var review"       => "Revisión VAR",
+    "goal disallowed"  => "Gol Anulado"
+  }.freeze
+
   # Spanish copy — the app's default audience.
-  def build_copy_es(event_type, home, away, score, minute, scorer = nil)
+  def build_copy_es(event_type, home, away, score, minute, scorer = nil, reason = nil)
     case event_type
     when "goal"
       min_tag = minute ? " #{minute}'" : ""
@@ -148,18 +157,13 @@ class MatchEventNotificationJob < ApplicationJob
       end
       [ "⚽ #{home} #{score} #{away}", body ]
     when "goal_disallowed"
-      min_tag = minute ? " al #{minute}'" : ""
-      body = if scorer
-        [
-          "🚫 El gol de #{scorer}#{min_tag} fue anulado tras revisión del VAR 📺",
-          "🟡📺 VAR anula el gol de #{scorer}#{min_tag} ❌",
-          "❌ Gol de #{scorer} cancelado después del VAR#{min_tag} 📺",
-          "📺 Tras el VAR, el gol de #{scorer}#{min_tag} no fue válido 🚫"
-        ].sample
-      else
-        "🚫 Gol anulado tras revisión del VAR 📺"
-      end
-      [ "🚫 #{home} #{score} #{away}", body ]
+      reason_es = VAR_REASONS_ES[reason.to_s.downcase] || reason || "VAR"
+      parts = []
+      parts << "#{minute}'" if minute
+      parts << "📹"
+      parts << scorer if scorer
+      parts << "Gol Anulado - #{reason_es}"
+      [ "🚫 #{home} #{score} #{away}", parts.join(" ") ]
     when "kickoff"
       min_str = minute ? " · #{minute}'" : ""
       [ "🏁 #{home} vs #{away}#{min_str}", "¡Comenzó el partido!" ]
@@ -193,7 +197,7 @@ class MatchEventNotificationJob < ApplicationJob
     end
   end
 
-  def build_copy_en(event_type, home, away, score, minute, scorer = nil)
+  def build_copy_en(event_type, home, away, score, minute, scorer = nil, reason = nil)
     case event_type
     when "goal"
       min_tag = minute ? " #{minute}'" : ""
@@ -233,18 +237,13 @@ class MatchEventNotificationJob < ApplicationJob
       end
       [ "⚽ #{home} #{score} #{away}", body ]
     when "goal_disallowed"
-      min_tag = minute ? " in the #{minute}'" : ""
-      body = if scorer
-        [
-          "🚫 #{scorer}'s goal#{min_tag} was disallowed after VAR review 📺",
-          "🟡📺 VAR overturns #{scorer}'s goal#{min_tag} ❌",
-          "❌ #{scorer}'s goal#{min_tag} ruled out after VAR 📺",
-          "📺 No goal — VAR disallows #{scorer}'s strike#{min_tag} 🚫"
-        ].sample
-      else
-        "🚫 Goal disallowed after VAR review 📺"
-      end
-      [ "🚫 #{home} #{score} #{away}", body ]
+      reason_en = reason.presence || "VAR"
+      parts = []
+      parts << "#{minute}'" if minute
+      parts << "📹"
+      parts << scorer if scorer
+      parts << "Goal Disallowed - #{reason_en}"
+      [ "🚫 #{home} #{score} #{away}", parts.join(" ") ]
     when "kickoff"
       min_str = minute ? " · #{minute}'" : ""
       [ "🏁 #{home} vs #{away}#{min_str}", "Kick-off — the match has started!" ]

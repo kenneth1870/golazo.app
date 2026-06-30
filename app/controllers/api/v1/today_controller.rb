@@ -190,10 +190,12 @@ module Api
                                            .where("home_team_id IS NOT NULL AND away_team_id IS NOT NULL"))
         # Only include overdue scheduled matches that have both teams known — otherwise
         # knockout placeholders with no teams appear as blank "vs" rows.
+        # Also skip midnight-UTC placeholders (see fetch_db_matches).
         overdue       = date_scope.call(
           base.where(status: "scheduled")
               .where("kickoff_at < ?", Time.current)
               .where("home_team_id IS NOT NULL AND away_team_id IS NOT NULL")
+              .where("kickoff_at != date_trunc('day', kickoff_at)")
         )
 
         (authoritative.to_a + overdue.to_a).map { |m| normalize_db(m) }.uniq { |m| m[:id] }
@@ -226,6 +228,13 @@ module Api
           # matches, and a stale slot erroneously set to "live" would show as a
           # duplicate alongside the real record.
           .where("home_team_id IS NOT NULL AND away_team_id IS NOT NULL")
+          # Exclude scheduled matches with a midnight-UTC placeholder kickoff.
+          # Knockout bracket slots are pre-seeded at 00:00:00 UTC before real
+          # dates are confirmed; in western timezones that midnight converts to the
+          # previous calendar day, causing them to bleed onto today's list.
+          # The heal job writes the real time once the API publishes it, after
+          # which these matches appear on their correct date automatically.
+          .where("status != 'scheduled' OR kickoff_at != date_trunc('day', kickoff_at)")
           .includes(:home_team, :away_team, :competition)
           .order(:kickoff_at)
           .map { |m| normalize_db(m) }
