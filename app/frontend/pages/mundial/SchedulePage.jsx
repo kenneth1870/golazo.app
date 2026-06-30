@@ -61,7 +61,7 @@ function FixtureCard({ match, onClick }) {
     ? new Date(match.kickoff_at).toLocaleDateString(i18n.language, { day: "2-digit", month: "2-digit", year: "2-digit", timeZone: "UTC" })
     : "—"
   const timeStr = match.kickoff_at
-    ? new Date(match.kickoff_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    ? new Date(match.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
     : "TBD"
 
   return (

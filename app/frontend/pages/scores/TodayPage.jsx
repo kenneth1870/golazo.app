@@ -141,7 +141,7 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
   const expandable  = (isLive || isFinished) && clickable
 
   const kickoffTime = match.kickoff_at
-    ? new Date(match.kickoff_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    ? new Date(match.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
     : "TBD"
 
   const handleTap = () => {

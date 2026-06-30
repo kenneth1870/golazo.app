@@ -1360,6 +1360,10 @@ a:hover{color:var(--accent);opacity:.85}
 .bracket-slot--finished{opacity:.9}
 .bracket-slot--empty{background:var(--surface);border:1px dashed rgba(255,255,255,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;min-height:68px}
 .bracket-slot__tbd{font-size:.65rem;color:#444;font-style:italic}
+.bracket-slot__header{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 10px 3px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.bracket-slot__date{font-size:.6rem;color:var(--muted);font-weight:600;white-space:nowrap}
+.bracket-slot__badge{font-size:.55rem;font-weight:700;color:#888;background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;white-space:nowrap}
+.bracket-slot__badge--live{color:var(--accent);background:rgba(238,30,70,.12)}
 .bracket-slot__team{display:flex;align-items:center;gap:7px;padding:8px 10px}
 .bracket-slot__name{flex:1;font-size:.75rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bracket-slot__name--winner{color:#fff;font-weight:800}

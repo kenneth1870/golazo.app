@@ -40,7 +40,7 @@ function ReminderButton({ match }) {
     if (reminded) removeReminder(matchId)
     else await addReminder(match)
   }
-  const kickoffLabel = new Date(match.kickoff_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  const kickoffLabel = new Date(match.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
 
   return (
     <button

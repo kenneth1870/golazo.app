@@ -28,7 +28,7 @@ function normalizeMatch(m) {
 function ResultRow({ match, onMatchClick }) {
   const { t, i18n } = useTranslation()
   const kickoffTime = match.kickoff_at
-    ? new Date(match.kickoff_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    ? new Date(match.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
     : ""
   const hasScore = match.home_score !== null && match.away_score !== null
 

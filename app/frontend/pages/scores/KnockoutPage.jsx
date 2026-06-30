@@ -19,6 +19,29 @@ function slotLabel(slot, t) {
   return "TBD"
 }
 
+function matchDateLabel(kickoff, status, t, locale) {
+  if (!kickoff) return null
+  const d   = new Date(kickoff)
+  const now = new Date()
+  const diffDays = Math.round((d.setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / 86400000)
+  const time = new Date(kickoff).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+
+  let dayLabel
+  if (diffDays === 0)       dayLabel = t("time.today")
+  else if (diffDays === -1) dayLabel = t("time.yesterday")
+  else if (diffDays === 1)  dayLabel = t("time.tomorrow")
+  else {
+    const weekday = new Date(kickoff).toLocaleDateString(locale, { weekday: "short" })
+    const mday    = new Date(kickoff).toLocaleDateString(locale, { day: "numeric", month: "numeric" })
+    dayLabel = `${weekday}, ${mday}`
+  }
+
+  if (status === "finished") {
+    return dayLabel
+  }
+  return `${dayLabel}, ${time}`
+}
+
 function MatchSlot({ match, onClick }) {
   const { t, i18n } = useTranslation()
   const isLive     = match?.status === "live"
@@ -45,12 +68,27 @@ function MatchSlot({ match, onClick }) {
     )
   }
 
+  const dateLabel = matchDateLabel(match?.kickoff_at, match?.status, t, i18n.language)
+
   return (
     <div
       className={`bracket-slot${isLive ? " bracket-slot--live" : ""}${isFinished ? " bracket-slot--finished" : ""}${flash ? " bracket-slot--score-updated" : ""}`}
       onClick={match.external_id ? onClick : undefined}
       style={{ cursor: match.external_id ? "pointer" : "default" }}
     >
+      {dateLabel && (
+        <div className="bracket-slot__header">
+          <span className="bracket-slot__date">{dateLabel}</span>
+          {isFinished && (
+            <span className="bracket-slot__badge">{t("status.ft")}</span>
+          )}
+          {isLive && (
+            <span className="bracket-slot__badge bracket-slot__badge--live">
+              {match.minute ? `${match.minute}'` : t("status.live")}
+            </span>
+          )}
+        </div>
+      )}
       <div className="bracket-slot__team">
         {match.home_team?.flag_url && (
           <img src={match.home_team.flag_url} alt="" className="flag-xs"
