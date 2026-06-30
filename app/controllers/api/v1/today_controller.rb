@@ -130,18 +130,30 @@ module Api
         api_matches = fetch_api_matches(date)
         db_matches  = fetch_db_matches(date, tz)
 
-        # Index API matches by normalised home+away pair for dedup
-        api_keys = api_matches.each_with_object(Set.new) do |m, s|
+        # Index API matches by normalised home+away pair for dedup.
+        # Also track individual team names so phantom knockout slots with wrong
+        # opponents (e.g. "France vs DR Congo" when the real match is "France vs Sweden")
+        # don't slip through just because the exact pair doesn't match.
+        api_keys  = Set.new
+        api_teams = Set.new
+        api_matches.each do |m|
           h = normalize_team_name(m.dig(:home_team, :name))
           a = normalize_team_name(m.dig(:away_team, :name))
-          s << "#{h}|#{a}"
+          api_keys  << "#{h}|#{a}"
+          api_teams << h
+          api_teams << a
         end
 
-        # Include DB matches that don't already appear in the API response
+        # Include DB matches that don't already appear in the API response.
+        # Knockout placeholder matches (group_stage nil) are additionally excluded
+        # when either of their teams already appears in an API match — these are
+        # stale bracket slots that got stamped with wrong opponents.
         db_only = db_matches.reject do |m|
           h = normalize_team_name(m.dig(:home_team, :name))
           a = normalize_team_name(m.dig(:away_team, :name))
-          api_keys.include?("#{h}|#{a}")
+          next true if api_keys.include?("#{h}|#{a}")
+          knockout = m[:group_stage].nil?
+          knockout && (api_teams.include?(h) || api_teams.include?(a))
         end
 
         api_matches + db_only
