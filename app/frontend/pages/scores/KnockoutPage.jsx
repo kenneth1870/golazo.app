@@ -47,6 +47,14 @@ function MatchSlot({ match, onClick }) {
   const isLive     = match?.status === "live"
   const isFinished = match?.status === "finished"
   const hasScore   = match?.home_score !== null && match?.away_score !== null
+  const homeWon    = isFinished && hasScore && (
+    match.home_score > match.away_score ||
+    (match.home_score === match.away_score && match.home_pen_score != null && match.home_pen_score > match.away_pen_score)
+  )
+  const awayWon    = isFinished && hasScore && (
+    match.away_score > match.home_score ||
+    (match.home_score === match.away_score && match.away_pen_score != null && match.away_pen_score > match.home_pen_score)
+  )
   const [flash, setFlash] = useState(false)
   const prevScore  = useRef({ h: match?.home_score, a: match?.away_score })
 
@@ -80,7 +88,12 @@ function MatchSlot({ match, onClick }) {
         <div className="bracket-slot__header">
           <span className="bracket-slot__date">{dateLabel}</span>
           {isFinished && (
-            <span className="bracket-slot__badge">{t("status.ft")}</span>
+            <span className="bracket-slot__badge">
+              {t("status.ft")}
+              {match.home_pen_score != null && match.away_pen_score != null && (
+                <span style={{ marginLeft: 4, opacity: 0.75 }}>· Pens</span>
+              )}
+            </span>
           )}
           {isLive && (
             <span className="bracket-slot__badge bracket-slot__badge--live">
@@ -94,12 +107,15 @@ function MatchSlot({ match, onClick }) {
           <img src={match.home_team.flag_url} alt="" className="flag-xs"
             onError={e => (e.target.style.display = "none")} />
         )}
-        <span className={`bracket-slot__name${isFinished && match.home_score > match.away_score ? " bracket-slot__name--winner" : ""}${match.home_team?.name ? "" : " bracket-slot__name--tbd"}`}>
+        <span className={`bracket-slot__name${homeWon ? " bracket-slot__name--winner" : ""}${match.home_team?.name ? "" : " bracket-slot__name--tbd"}`}>
           {match.home_team?.name ? translateTeam(match.home_team.name, i18n.language) : slotLabel(match.home_slot, t)}
         </span>
         {hasScore && (
           <span className={`bracket-slot__score${isLive ? " bracket-slot__score--live" : ""}`}>
             {match.home_score}
+            {match.home_pen_score != null && (
+              <span className="bracket-slot__pen">({match.home_pen_score})</span>
+            )}
           </span>
         )}
       </div>
@@ -109,12 +125,15 @@ function MatchSlot({ match, onClick }) {
           <img src={match.away_team.flag_url} alt="" className="flag-xs"
             onError={e => (e.target.style.display = "none")} />
         )}
-        <span className={`bracket-slot__name${isFinished && match.away_score > match.home_score ? " bracket-slot__name--winner" : ""}${match.away_team?.name ? "" : " bracket-slot__name--tbd"}`}>
+        <span className={`bracket-slot__name${awayWon ? " bracket-slot__name--winner" : ""}${match.away_team?.name ? "" : " bracket-slot__name--tbd"}`}>
           {match.away_team?.name ? translateTeam(match.away_team.name, i18n.language) : slotLabel(match.away_slot, t)}
         </span>
         {hasScore && (
           <span className={`bracket-slot__score${isLive ? " bracket-slot__score--live" : ""}`}>
             {match.away_score}
+            {match.away_pen_score != null && (
+              <span className="bracket-slot__pen">({match.away_pen_score})</span>
+            )}
           </span>
         )}
       </div>

@@ -1370,6 +1370,7 @@ a:hover{color:var(--accent);opacity:.85}
 .bracket-slot__name--winner{color:#fff;font-weight:800}
 .bracket-slot__score{font-size:.85rem;font-weight:900;color:#fff;min-width:18px;text-align:center}
 .bracket-slot__score--live{color:var(--accent)}
+.bracket-slot__pen{font-size:.65rem;font-weight:700;color:var(--muted);margin-left:3px}
 .bracket-slot__divider{height:1px;background:var(--border);margin:0 10px}
 .bracket-slot__live-bar{display:flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(238,30,70,.1);font-size:.6rem;color:var(--accent)}
 
