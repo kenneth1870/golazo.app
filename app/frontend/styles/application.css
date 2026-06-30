@@ -1370,6 +1370,58 @@ a:hover{color:var(--accent);opacity:.85}
 
 .bracket-third-place{margin-top:32px;text-align:center}
 .bracket-placeholder{text-align:center;padding:40px 0}
+
+/* ─── Mirrored bracket (FIFA-style two-sided layout) ─── */
+.bracket-mirrored-wrap{overflow-x:auto;padding-bottom:16px;-webkit-overflow-scrolling:touch;
+  -webkit-mask-image:linear-gradient(to right,black 85%,transparent 100%);
+  mask-image:linear-gradient(to right,black 85%,transparent 100%)}
+@media(min-width:768px){.bracket-mirrored-wrap{-webkit-mask-image:none;mask-image:none}}
+.bracket-mirrored{display:flex;align-items:stretch;min-width:max-content;padding:8px 4px}
+.bracket-half{display:flex;align-items:stretch}
+/* Slightly narrower columns inside the mirrored layout */
+.bracket-half .bracket-round{min-width:155px}
+@media(min-width:768px){.bracket-half .bracket-round{min-width:175px}}
+
+/* Right half: suppress the default right-side vertical connectors */
+.bracket-half--right .bracket-round .bracket-round__slot-wrap:nth-child(odd)::after{content:none}
+/* Right half: add left-side vertical connectors for all rounds except the innermost SF */
+.bracket-half--right .bracket-round:not(:first-child) .bracket-round__slot-wrap:nth-child(odd)::after{
+  content:"";position:absolute;z-index:0;pointer-events:none;
+  top:50%;left:-14px;right:auto;width:2px;height:100%;
+  background:var(--border)
+}
+/* Left half SF (last-child): restore both-side stubs so the right stub bridges to center */
+.bracket-half--left .bracket-round:last-child .bracket-round__slot-wrap::before{
+  left:-14px;right:-14px;width:auto
+}
+/* Right half SF (first-child): restore both-side stubs so the left stub bridges to center */
+.bracket-half--right .bracket-round:first-child .bracket-round__slot-wrap::before{
+  left:-14px;right:-14px;width:auto
+}
+
+/* Center panel */
+.bracket-center{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-width:185px;flex-shrink:0;
+  padding:20px 12px;margin:8px 14px;
+  background:linear-gradient(160deg,rgba(238,30,70,.07) 0%,rgba(0,0,0,0) 100%);
+  border:1px solid rgba(238,30,70,.25);border-radius:12px;
+  position:relative;z-index:2
+}
+.bracket-center__trophy{font-size:2.2rem;margin-bottom:6px;filter:drop-shadow(0 0 8px rgba(238,30,70,.35))}
+.bracket-center__title{
+  font-size:.58rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);text-align:center;margin-bottom:14px
+}
+.bracket-center__match{width:100%}
+.bracket-center__round-label{
+  font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(238,30,70,.7);text-align:center;margin-top:10px
+}
+
+/* Bronze medal / 3rd place */
+.bracket-bronze{text-align:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.bracket-bronze__match{max-width:240px;margin:8px auto 0}
 .bracket-placeholder__icon{font-size:2.5rem;margin-bottom:12px}
 .bracket-placeholder h3{font-size:1.1rem;font-weight:700;margin-bottom:8px}
 .bracket-preview{display:flex;gap:10px;justify-content:center;margin-top:24px;overflow-x:auto;padding-bottom:8px}

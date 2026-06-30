@@ -472,7 +472,8 @@
     "roundOf16": "Octavos de Final",
     "quarterFinals": "Cuartos de Final",
     "semiFinals": "Semifinales",
-    "final": "Final"
+    "final": "Final",
+    "worldChampion": "Campeón del Mundo"
   },
   "push": {
     "getAlerts": "Alertas de goles",

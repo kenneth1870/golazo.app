@@ -472,7 +472,8 @@
     "roundOf16": "Round of 16",
     "quarterFinals": "Quarter Finals",
     "semiFinals": "Semi Finals",
-    "final": "Final"
+    "final": "Final",
+    "worldChampion": "World Champion"
   },
   "push": {
     "getAlerts": "Get goal alerts",
