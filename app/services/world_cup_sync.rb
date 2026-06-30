@@ -834,25 +834,43 @@ class WorldCupSync
       if candidate
         home_team_obj ||= find_team_by_api_name(home_name)
         away_team_obj = find_team_by_api_name(away_name)
-        updates = {}
-        updates[:home_team_id] = home_team_obj.id if home_team_obj
-        updates[:away_team_id] = away_team_obj.id if away_team_obj
-        updates[:external_id]  = api_ext_id
-        # Always fix kickoff when teams change — the slot had wrong data
-        if m[:kickoff_at].present?
-          begin
-            api_ko = Time.parse(m[:kickoff_at].to_s).utc
-            updates[:kickoff_at] = api_ko
-          rescue ArgumentError, TypeError
-            nil
-          end
+
+        # Guard: don't restamp a slot with a team that has already finished a
+        # different match in the same round — a team can't play the same round
+        # twice. The date feed can return stale/wrong pairings for upcoming
+        # knockout fixtures (e.g. re-listing an eliminated team's old opponent),
+        # which previously corrupted already-resolved slots like a team that
+        # already advanced via penalties getting re-assigned to a phantom match.
+        already_played = [ home_team_obj, away_team_obj ].compact.any? do |team|
+          Match.where(competition: candidate.competition, round: candidate.round, status: "finished")
+               .where.not(id: candidate.id)
+               .where("home_team_id = ? OR away_team_id = ?", team.id, team.id)
+               .exists?
         end
-        # Evict any OTHER record that holds this ext_id before assigning it
-        Match.where(external_id: api_ext_id).where.not(id: candidate.id).update_all(external_id: nil)
-        log("  Restamping ext=#{api_ext_id}: #{candidate.home_team&.name} vs #{candidate.away_team&.name} → #{home_name} vs #{away_name}")
-        candidate.update_columns(updates)
-        candidate.reload
-        match = candidate
+
+        if already_played
+          log("  Skipping restamp for ext=#{api_ext_id}: #{home_name} vs #{away_name} — a team already finished this round elsewhere")
+        else
+          updates = {}
+          updates[:home_team_id] = home_team_obj.id if home_team_obj
+          updates[:away_team_id] = away_team_obj.id if away_team_obj
+          updates[:external_id]  = api_ext_id
+          # Always fix kickoff when teams change — the slot had wrong data
+          if m[:kickoff_at].present?
+            begin
+              api_ko = Time.parse(m[:kickoff_at].to_s).utc
+              updates[:kickoff_at] = api_ko
+            rescue ArgumentError, TypeError
+              nil
+            end
+          end
+          # Evict any OTHER record that holds this ext_id before assigning it
+          Match.where(external_id: api_ext_id).where.not(id: candidate.id).update_all(external_id: nil)
+          log("  Restamping ext=#{api_ext_id}: #{candidate.home_team&.name} vs #{candidate.away_team&.name} → #{home_name} vs #{away_name}")
+          candidate.update_columns(updates)
+          candidate.reload
+          match = candidate
+        end
       end
     end
 
@@ -885,8 +903,13 @@ class WorldCupSync
       attrs[:home_score] = home_score unless home_score.nil?
       attrs[:away_score] = away_score unless away_score.nil?
     end
-    # Backfill group_stage if missing — covers matches created before fixtures import
-    if match.group_stage.nil?
+    # Backfill group_stage if missing — covers matches created before fixtures import.
+    # Only for genuine group-stage matches (no round set): knockout matches have
+    # `round` populated ("Round of 32", etc.) and must keep group_stage nil — the
+    # bracket page filters on `!group_stage` to find knockout matches, so stamping
+    # a team's original group letter here makes a finished R32 match vanish from
+    # the bracket entirely.
+    if match.group_stage.nil? && match.round.blank?
       inferred_group = match.home_team&.group.presence || match.away_team&.group.presence
       attrs[:group_stage] = inferred_group if inferred_group
     end
