@@ -193,7 +193,12 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
           </div>
           <div className="match-row__score">
             {hasScore
-              ? <span className={`score-pill${isLive ? " score-pill--live" : ""}`}>{match.home_score} – {match.away_score}</span>
+              ? <>
+                  <span className={`score-pill${isLive ? " score-pill--live" : ""}`}>{match.home_score} – {match.away_score}</span>
+                  {match.home_pen_score != null && match.away_pen_score != null && (
+                    <span className="score-pill__pen">({match.home_pen_score} – {match.away_pen_score} pen)</span>
+                  )}
+                </>
               : <span className="score-pill score-pill--vs">vs</span>
             }
           </div>
