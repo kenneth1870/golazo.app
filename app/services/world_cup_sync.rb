@@ -835,20 +835,41 @@ class WorldCupSync
         home_team_obj ||= find_team_by_api_name(home_name)
         away_team_obj = find_team_by_api_name(away_name)
 
-        # Guard: don't restamp a slot with a team that has already finished a
+        # Guard 1: never restamp a knockout slot from a group-stage fixture.
+        # If the incoming kickoff is before R32 start (June 28) but the
+        # candidate is a knockout round, the date feed is returning an old
+        # group-stage match — skip to prevent e.g. a June 23 England fixture
+        # from clobbering England's July 1 R32 slot.
+        r32_start = Time.utc(2026, 6, 28)
+        begin
+          incoming_ko = m[:kickoff_at].present? ? Time.parse(m[:kickoff_at].to_s).utc : nil
+        rescue ArgumentError, TypeError
+          incoming_ko = nil
+        end
+        group_stage_date = candidate.round.present? && incoming_ko && incoming_ko < r32_start
+
+        # Guard 2: never assign an ext_id that already belongs to a group-stage
+        # match — same protection from the other direction.
+        group_stage_ext = api_ext_id.present? &&
+                          Match.where(external_id: api_ext_id).where.not(group_stage: nil).exists?
+
+        # Guard 3: don't restamp a slot with a team that has already finished a
         # different match in the same round — a team can't play the same round
         # twice. The date feed can return stale/wrong pairings for upcoming
-        # knockout fixtures (e.g. re-listing an eliminated team's old opponent),
-        # which previously corrupted already-resolved slots like a team that
-        # already advanced via penalties getting re-assigned to a phantom match.
-        already_played = [ home_team_obj, away_team_obj ].compact.any? do |team|
-          Match.where(competition: candidate.competition, round: candidate.round, status: "finished")
-               .where.not(id: candidate.id)
-               .where("home_team_id = ? OR away_team_id = ?", team.id, team.id)
-               .exists?
-        end
+        # knockout fixtures (e.g. re-listing an eliminated team's old opponent).
+        already_played = !group_stage_date && !group_stage_ext &&
+                         [ home_team_obj, away_team_obj ].compact.any? do |team|
+                           Match.where(competition: candidate.competition, round: candidate.round, status: "finished")
+                                .where.not(id: candidate.id)
+                                .where("home_team_id = ? OR away_team_id = ?", team.id, team.id)
+                                .exists?
+                         end
 
-        if already_played
+        if group_stage_date
+          log("  Skipping restamp for ext=#{api_ext_id}: #{home_name} vs #{away_name} — group-stage kickoff (#{incoming_ko&.to_date}) cannot restamp knockout slot")
+        elsif group_stage_ext
+          log("  Skipping restamp for ext=#{api_ext_id}: #{home_name} vs #{away_name} — ext_id belongs to a group-stage match")
+        elsif already_played
           log("  Skipping restamp for ext=#{api_ext_id}: #{home_name} vs #{away_name} — a team already finished this round elsewhere")
         else
           updates = {}
