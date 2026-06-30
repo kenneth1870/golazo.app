@@ -6,7 +6,7 @@ class FixR32GroupStageFixtures < ActiveRecord::Migration[8.1]
   #   pos=8  England   vs Ghana     ext=1489402  June 23  (GS)
   #   pos=9  USA       vs Paraguay  ext=1489370  June 12  (GS)
   #   pos=16 Australia vs Turkey    ext=1539001  June 14  (GS)
-  GROUP_STAGE_EXT_IDS = [1_489_374, 1_489_402, 1_489_370, 1_539_001].freeze
+  GROUP_STAGE_EXT_IDS = [ 1_489_374, 1_489_402, 1_489_370, 1_539_001 ].freeze
 
   STATUS_MAP = {
     "FT"  => "finished",
@@ -18,7 +18,7 @@ class FixR32GroupStageFixtures < ActiveRecord::Migration[8.1]
     "HT"  => "live",
     "2H"  => "live",
     "ET"  => "live",
-    "P"   => "live",
+    "P"   => "live"
   }.freeze
 
   def up
@@ -57,7 +57,7 @@ class FixR32GroupStageFixtures < ActiveRecord::Migration[8.1]
     # so we can match regardless of whether the API lists the team as home/away.
     r32_slots_by_team = {}
     Match.where(competition: competition, round: "Round of 32").each do |slot|
-      [slot.home_team_id, slot.away_team_id].compact.each do |tid|
+      [ slot.home_team_id, slot.away_team_id ].compact.each do |tid|
         r32_slots_by_team[tid] ||= []
         r32_slots_by_team[tid] << slot
       end
