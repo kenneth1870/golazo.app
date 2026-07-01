@@ -375,18 +375,18 @@ class WorldCupSync
         next
       end
 
-      # Locate this fixture's slot. Home team is the reliable key — it's unique
-      # within a round and survives the ext_id scrambling / wrong-opponent drift
-      # that plagued pos 13–16. Fall back to away team, a lingering ext_id, then
-      # the first fully-empty slot (a round whose winners are still filling in).
-      # Never match group-stage rows.
+      # NON-DESTRUCTIVE: only fill a genuinely EMPTY slot, or update an
+      # EXACT-pair match. Never overwrite a slot that already holds a different
+      # pairing — matching by home team alone and rewriting was what repeatedly
+      # scrambled the bracket (teams drifting off ext_ids, duplicate teams).
+      # Deliberate corrections to a wrong pairing are done via migration, not by
+      # this recurring heal job. Never match group-stage rows.
       scope = Match.where(competition: competition, round: db_round, group_stage: nil)
-      slot  = scope.find_by(home_team_id: home_team.id) ||
-              scope.find_by(away_team_id: away_team.id) ||
-              scope.find_by(external_id: fixture_id) ||
-              scope.where(home_team_id: nil, away_team_id: nil).order(:bracket_pos).first
+      exact = scope.find_by(home_team_id: home_team.id, away_team_id: away_team.id)
+      empty = exact ? nil : scope.where(home_team_id: nil, away_team_id: nil).order(:bracket_pos).first
+      slot  = exact || empty
       unless slot
-        log("  No slot for '#{db_round}' — #{home_api} vs #{away_api} skipped")
+        skipped += 1
         next
       end
 
@@ -395,17 +395,21 @@ class WorldCupSync
       kickoff      = fx.dig("fixture", "date")
       venue        = fx.dig("fixture", "venue", "name")
 
-      # Evict any other slot already holding this external_id before assigning
-      # (pos 13–16 carried each other's fixture ids after the drift).
-      Match.where(external_id: fixture_id).where.not(id: slot.id).update_all(external_id: nil)
+      # Evict this external_id from any other row before assigning (unique index).
+      if slot.external_id.to_s != fixture_id.to_s
+        Match.where(external_id: fixture_id).where.not(id: slot.id).update_all(external_id: nil)
+      end
 
       attrs = {
-        home_team_id:   home_team.id,
-        away_team_id:   away_team.id,
         external_id:    fixture_id,
         home_pen_score: fx.dig("score", "penalty", "home"),
         away_pen_score: fx.dig("score", "penalty", "away")
       }
+      # Only set teams when filling an empty slot; exact matches already have them.
+      if empty
+        attrs[:home_team_id] = home_team.id
+        attrs[:away_team_id] = away_team.id
+      end
       attrs[:kickoff_at] = Time.parse(kickoff) if kickoff.present?
       attrs[:venue]      = venue if venue.present?
       attrs[:status]     = status_short == "NS" ? "scheduled" : (finished ? "finished" : slot.status)
