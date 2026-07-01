@@ -115,6 +115,10 @@ class MatchEventNotificationJob < ApplicationJob
     end
 
     Rails.logger.info("[PushNotification] Enqueued #{event_type} delivery for #{subs.size} subscribers")
+  rescue => e
+    Rails.logger.error("[PushNotification] Unexpected error for #{event_type} match #{match_id}: #{e.class}: #{e.message}")
+    Rails.logger.error(e.backtrace.first(5).join("\n"))
+    raise
   end
 
   private

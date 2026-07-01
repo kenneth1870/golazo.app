@@ -21,7 +21,7 @@ class DeliverPushJob < ApplicationJob
     return if ENV["VAPID_PUBLIC_KEY"].blank? || ENV["VAPID_PRIVATE_KEY"].blank?
 
     vapid = {
-      subject:     ENV["VAPID_SUBJECT"],
+      subject:     ENV.fetch("VAPID_SUBJECT", "mailto:admin@golazo.app"),
       public_key:  ENV["VAPID_PUBLIC_KEY"],
       private_key: ENV["VAPID_PRIVATE_KEY"]
     }
