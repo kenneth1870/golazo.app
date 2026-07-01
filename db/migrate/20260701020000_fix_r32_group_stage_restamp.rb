@@ -15,8 +15,12 @@ class FixR32GroupStageRestamp < ActiveRecord::Migration[8.1]
     # (pre-June-28 kickoffs, or ext_ids already belonging to group-stage
     # matches). This shows up as pos=8 England finished June 23 and pos=7
     # Mexico vs Sweden (Sweden already has a pos=5 R32 match).
+    # Only knockout matches — group_stage must be nil AND round must be a knockout term.
+    # Using `group_stage: nil` prevents us from touching group-stage matches whose
+    # round field is "Matchday 1", "Matchday 2", etc. (they also have a non-blank round).
     corrupted = Match
       .where(competition: competition)
+      .where(group_stage: nil)
       .where.not(round: [ nil, "" ])
       .where(
         "kickoff_at < ? OR external_id IN (?)",
