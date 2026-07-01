@@ -4,12 +4,14 @@ import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useState, useEffect, useRef } from "react"
 
-// Layout constants
-const SLOT_H  = 104    // px — height of one R32 slot (×8 = TOTAL_H)
-const CARD_W  = 162    // px — match card width
-const CONN_W  = 44     // px — SVG connector width between columns
-const CTR_W   = 210    // px — center Final column
-const TOTAL_H = SLOT_H * 8   // 832px
+// Layout constants — kept compact so the full bracket fits on most desktops
+const SLOT_H     = 90     // px — height of one R32 slot (×8 = TOTAL_H)
+const CARD_W     = 140    // px — match card width
+const CONN_W     = 32     // px — SVG connector width between columns
+const CTR_W      = 168    // px — center Final column
+const TOTAL_H    = SLOT_H * 8                          // 720px
+const BRACKET_W  = CARD_W * 8 + CONN_W * 8 + CTR_W   // 1448px total
+const MOBILE_BP  = 640    // px — below this use scroll, above use auto-scale
 
 // FIFA match number: bracket_pos 1 → P73, 2 → P74 … 32 → P104
 const pNum = (pos) => pos ? `P${pos + 72}` : null
@@ -260,16 +262,22 @@ export default function KnockoutPage() {
   const navigate = useNavigate()
   const onMatchClick = (extId) => navigate(`/matches/${extId}`)
 
-  // Auto-scale the 1858px bracket to fill available width
+  // Mobile: horizontal scroll. Desktop: auto-scale to fill width.
   const containerRef = useRef(null)
-  const [scale, setScale] = useState(1)
+  const [scale, setScale]     = useState(1)
+  const [isMobile, setIsMobile] = useState(false)
   useEffect(() => {
-    const BRACKET_W = 1858
     const node = containerRef.current
     if (!node) return
     const update = () => {
       const w = node.clientWidth
-      setScale(w >= BRACKET_W ? 1 : w / BRACKET_W)
+      if (w <= MOBILE_BP) {
+        setIsMobile(true)
+        setScale(1)
+      } else {
+        setIsMobile(false)
+        setScale(w >= BRACKET_W ? 1 : w / BRACKET_W)
+      }
     }
     update()
     const ro = new ResizeObserver(update)
@@ -351,12 +359,14 @@ export default function KnockoutPage() {
         </div>
       </div>
 
-      {/* Full-width bracket — scales down to fit viewport, no horizontal scroll */}
+      {/* Full-width bracket — desktop: auto-scale; mobile: horizontal scroll */}
       <div ref={containerRef} style={{ width: "100%", padding: "0 8px", boxSizing: "border-box" }}>
-        <div style={{
+        {/* scroll shell only on mobile */}
+        <div style={isMobile ? { overflowX: "auto", WebkitOverflowScrolling: "touch", paddingBottom: 16 } : {}}>
+        <div style={isMobile ? { width: BRACKET_W } : {
           transformOrigin: "top left",
           transform: scale < 1 ? `scale(${scale})` : "none",
-          width: 1858,
+          width: BRACKET_W,
           marginBottom: scale < 1 ? `${-(BRACKET_INNER_H * (1 - scale))}px` : 0,
         }}>
           <LabelBar labels={leftLabels} />
@@ -424,6 +434,7 @@ export default function KnockoutPage() {
             </div>
           )}
         </div>
+        </div>{/* end scroll shell */}
       </div>
     </div>
   )
