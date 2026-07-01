@@ -361,7 +361,7 @@ export default function TeamShowPage() {
             <div className="empty-state" style={{ marginTop: 40 }}>
               <div className="empty-state__icon">📅</div>
               <h3>{t("noMatches")}</h3>
-              <p>{t("scores.noFixtures")}</p>
+              <p>{t("home.noUpcoming")}</p>
             </div>
           )}
         </>}

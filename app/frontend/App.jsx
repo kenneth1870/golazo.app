@@ -26,7 +26,6 @@ import TodayPage  from "./pages/scores/TodayPage"
 
 // Secondary — lazy-loaded so they don't bloat the initial bundle
 const ResultsPage     = lazy(() => import("./pages/scores/ResultsPage"))
-const FixturesPage    = lazy(() => import("./pages/scores/FixturesPage"))
 const GroupStagePage  = lazy(() => import("./pages/scores/GroupStagePage"))
 const KnockoutPage    = lazy(() => import("./pages/scores/KnockoutPage"))
 const GroupsPage      = lazy(() => import("./pages/GroupsPage"))
@@ -174,7 +173,6 @@ export default function App() {
               <Route path="/scores" element={<ScoresPage />}>
                 <Route index element={<Navigate to="/scores/today" replace />} />
                 <Route path="today"    element={<TodayPage />} />
-                <Route path="fixtures" element={<FixturesPage />} />
                 <Route path="live"     element={<Navigate to="/scores/today" replace />} />
                 <Route path="results"  element={<ResultsPage />} />
                 <Route path="groups"   element={<GroupStagePage />} />
@@ -218,7 +216,7 @@ export default function App() {
               <Route path="/world-cup-2026/groups"    element={<Navigate to="/scores/groups"    replace />} />
               <Route path="/world-cup-2026/bracket"   element={<Navigate to="/scores/knockout"  replace />} />
               <Route path="/world-cup-2026/results"   element={<Navigate to="/scores/results"   replace />} />
-              <Route path="/world-cup-2026/fixtures"  element={<Navigate to="/scores/fixtures"  replace />} />
+              <Route path="/world-cup-2026/fixtures"  element={<Navigate to="/scores/today"     replace />} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

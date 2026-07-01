@@ -539,7 +539,7 @@ export default function HomePage() {
                     </thead>
                     <tbody>
                       {upcomingFuture.slice(0, 8).map(m => (
-                        <tr key={m.id} style={{ cursor: "pointer" }} onClick={() => navigate("/scores/fixtures")}>
+                        <tr key={m.id} style={{ cursor: "pointer" }} onClick={() => navigate("/scores/today")}>
                           <td style={{ fontSize: "0.75rem", color: "gray" }}>
                             {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString(i18n.language || undefined, { month: "short", day: "numeric" }) : "TBD"}
                           </td>
@@ -566,7 +566,7 @@ export default function HomePage() {
                 {/* Mobile rows */}
                 <div className="d-md-none widget-body p-0">
                   {upcomingFuture.slice(0, 6).map(m => (
-                    <div key={m.id} className="match-row match-row--clickable" onClick={() => navigate("/scores/fixtures")}>
+                    <div key={m.id} className="match-row match-row--clickable" onClick={() => navigate("/scores/today")}>
                       <div className="match-row__status">
                         <span className="match-status-time" style={{ fontSize: "0.65rem" }}>
                           {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString(i18n.language || undefined, { month: "short", day: "numeric" }) : "TBD"}
@@ -593,7 +593,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="text-center mt-3">
-                  <Link to="/scores/fixtures" style={{ fontSize: "0.82rem", color: "var(--accent)", fontWeight: 700, textDecoration: "none" }}>
+                  <Link to="/scores/today" style={{ fontSize: "0.82rem", color: "var(--accent)", fontWeight: 700, textDecoration: "none" }}>
                     {t("home.fullSchedule")}
                   </Link>
                 </div>

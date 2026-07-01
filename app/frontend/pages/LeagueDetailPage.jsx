@@ -225,7 +225,6 @@ export default function LeagueDetailPage() {
               <h3>{t("noMatches")}</h3>
               <p>
                 {tab === "today"    ? t("time.noMatches", { date: t("time.today").toLowerCase() }) :
-                 tab === "fixtures" ? t("scores.noFixtures") :
                  t("scores.noResults")}
               </p>
             </div>

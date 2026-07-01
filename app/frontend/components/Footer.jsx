@@ -90,7 +90,6 @@ export default function Footer() {
               <li><Link to="/scores/today">{t("time.today")}</Link></li>
               <li><Link to="/scores/live">{t("nav.live")}</Link></li>
               <li><Link to="/scores/results">{t("nav.results")}</Link></li>
-              <li><Link to="/scores/fixtures">{t("nav.fixtures")}</Link></li>
               <li><Link to="/scores/groups">{t("nav.groupStage")}</Link></li>
               <li><Link to="/scores/knockout">{t("nav.knockout")}</Link></li>
             </ul>

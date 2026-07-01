@@ -14,7 +14,6 @@ class PageMeta
   RULES = [
     [ "/scores/live",      "Live Matches",      "World Cup 2026 matches live right now — scores, goals and the minute, updating in real time." ],
     [ "/scores/results",   "Results",           "Full-time results from the FIFA World Cup 2026." ],
-    [ "/scores/fixtures",  "Fixtures",          "Upcoming FIFA World Cup 2026 fixtures — dates, kickoff times and venues." ],
     [ "/scores/groups",    "Group Standings",   "Live group-stage standings for the FIFA World Cup 2026." ],
     [ "/scores/knockout",  "Knockout Bracket",  "The FIFA World Cup 2026 knockout bracket — Round of 32 through the Final." ],
     [ "/scores/today",     "Today's Matches",   "Every FIFA World Cup 2026 match on today, with live scores." ],

@@ -13,7 +13,6 @@ class SitemapController < ApplicationController
       /scores/today
       /scores/live
       /scores/results
-      /scores/fixtures
       /scores/groups
       /scores/knockout
       /mundial/teams

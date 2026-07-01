@@ -50,7 +50,6 @@ Rails.application.routes.draw do
       patch "score_predictions/update_name", to: "score_predictions#update_name"
       get  "score_predictions/:match_id",    to: "score_predictions#show"
       post "score_predictions/:match_id",    to: "score_predictions#create"
-      get "fixtures",         to: "fixtures#index"
       get "results",      to: "results#index"
       get "news",         to: "news#index"
       get "news/:id",         to: "news#show"

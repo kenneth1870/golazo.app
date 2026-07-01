@@ -746,7 +746,7 @@ export default function TodayPage() {
                 </div>
                 <div style={{ textAlign: "center", marginTop: 12, paddingBottom: 8 }}>
                   <button
-                    onClick={() => navigate("/scores/fixtures")}
+                    onClick={() => navigate("/scores/today")}
                     style={{
                       background: "none", border: "1px solid var(--border)", borderRadius: 20,
                       color: "var(--muted)", fontSize: "0.75rem", padding: "6px 18px", cursor: "pointer",

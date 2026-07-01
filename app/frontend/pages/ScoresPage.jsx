@@ -14,7 +14,6 @@ export default function ScoresPage() {
   const TABS = [
     { path: "/scores/today",    label: t("scores.tabToday",   t("time.today")),        live: liveCount > 0 },
     { path: "/scores/results",  label: t("scores.tabResults",  t("nav.results"))  },
-    { path: "/scores/fixtures", label: t("scores.tabFixtures", t("nav.fixtures")) },
     { path: "/scores/groups",   label: t("scores.tabGroups",   t("nav.groupStage")) },
     { path: "/scores/knockout", label: t("scores.tabBracket",  t("nav.knockout"))  },
   ]
