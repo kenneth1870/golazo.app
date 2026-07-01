@@ -126,7 +126,10 @@ class MatchEventNotificationJob < ApplicationJob
   }.freeze
 
   # Infers goal context from the new score so messages can react to the moment.
-  # Returns :opener, :equalizer, :comeback, :go_ahead, :extending, or :generic.
+  # Returns :opener, :equalizer, :go_ahead, :extending, or :generic.
+  # "go_ahead" = just took the lead from level (h-a==1 means team was level before this goal).
+  # "extending" = already had a lead and increased it (h-a>=2).
+  # True comeback narrative requires match history we don't have, so we don't label it.
   def goal_context(home_score, away_score, home_name, away_name, subscriber_team)
     return :generic unless home_score && away_score
     h = home_score.to_i
@@ -136,11 +139,11 @@ class MatchEventNotificationJob < ApplicationJob
     if h == a
       :equalizer
     elsif subscriber_team == home_name
-      total == 2 && h > a ? :go_ahead : h > a ? (h - a == 1 ? :comeback : :extending) : :generic
+      h > a ? (h - a == 1 ? :go_ahead : :extending) : :generic
     elsif subscriber_team == away_name
-      total == 2 && a > h ? :go_ahead : a > h ? (a - h == 1 ? :comeback : :extending) : :generic
+      a > h ? (a - h == 1 ? :go_ahead : :extending) : :generic
     else
-      h == a ? :equalizer : :generic
+      :generic
     end
   end
 
@@ -159,8 +162,6 @@ class MatchEventNotificationJob < ApplicationJob
     case event_type
     when "goal"
       ctx = goal_context(home_score, away_score, home, away, subscriber_team)
-      min_str = minute ? "#{minute}'" : nil
-      who = scorer || "Goool"
 
       body = case ctx
       when :opener
@@ -199,18 +200,6 @@ class MatchEventNotificationJob < ApplicationJob
         else
           [ "¡EMPATE! ⚖️ Partido igualado", "¡Lo empataron! Todo vivo 🔥", "¡Tablas! El partido sigue abierto 😤" ].sample
         end
-      when :comeback
-        if scorer && minute
-          [
-            "¡SE LO DAN VUELTA! #{scorer} al #{minute}' 🤯",
-            "#{scorer} y la remontada está servida · #{minute}' 💪",
-            "¡REMONTADA! #{scorer} en el #{minute}' — esto es fútbol 🔥",
-            "¡NO PUEDE SER! #{scorer} voltea el partido al #{minute}' 😱",
-            "#{minute}' · #{scorer} · ¡Del perdedor al ganador! 🤯"
-          ].sample
-        else
-          [ "¡REMONTADA EN MARCHA! 🤯", "¡Lo dan vuelta! Increíble 💪", "¡Esto se volteó! 😱" ].sample
-        end
       when :go_ahead
         if scorer && minute
           [
@@ -218,10 +207,12 @@ class MatchEventNotificationJob < ApplicationJob
             "#{scorer} pone el partido a favor · #{minute}' 💥",
             "¡GOL DE LA VENTAJA! #{scorer} · #{minute}' 🔥",
             "#{minute}' · #{scorer} y se adelantan 😤",
-            "¡Ahí está el que manda! #{scorer} al #{minute}' ⚡"
+            "¡Ahí está el que manda! #{scorer} al #{minute}' ⚡",
+            "¡SE LO DAN VUELTA! #{scorer} al #{minute}' 🤯",
+            "#{scorer} y la remontada está servida · #{minute}' 💪"
           ].sample
         else
-          [ "¡SE VAN ADELANTE! 🚀", "¡Toman la delantera! 💥", "¡Gol de la ventaja! 🔥" ].sample
+          [ "¡SE VAN ADELANTE! 🚀", "¡Toman la delantera! 💥", "¡Gol de la ventaja! 🔥", "¡SE LO DAN VUELTA! 🤯" ].sample
         end
       when :extending
         if scorer && minute
@@ -256,8 +247,6 @@ class MatchEventNotificationJob < ApplicationJob
       [ "⚽ #{home} #{score} #{away}", body ]
 
     when "fulltime"
-      h = home_score.to_i
-      a = away_score.to_i
       result = fulltime_result(home_score, away_score, home, away, subscriber_team)
 
       body = case result
