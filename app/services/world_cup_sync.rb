@@ -748,7 +748,9 @@ class WorldCupSync
       match.update!(finish_attrs)
       if was_not_finished && match.competition&.code == "WC"
         dedup_key = "fulltime_notified_#{match.id}"
-        unless Rails.cache.read(dedup_key)
+        if Rails.cache.read(dedup_key)
+          log("Fulltime notification already sent for #{match.id} (#{home_name} vs #{away_name}) — dedup_key set, skipping")
+        else
           # Only mark as notified if the alert actually went out (the early-FT
           # guard in fire_notification may suppress it), so a real full-time can
           # still fire later.
@@ -776,14 +778,18 @@ class WorldCupSync
     # near or past full time and the "2H" status is almost certainly API lag
     # (the feed takes 1-3 min to flip from "2H" to "FT" after the whistle).
     # Reverting at 90' would leave the match stuck as "live" for minutes after
-    # the game ends. Deliberately keep the full-time dedup key so a flapping
-    # feed near the end can't fire a second "Final" alert.
+    # the game ends.
     if match.status == "finished"
       elapsed = minute.to_i
       if elapsed < 85
         match.update!(status: "live", home_score: home_score, away_score: away_score)
         log("Reverted falsely-finished #{match.id} (#{home_name} vs #{away_name}) back to live (#{elapsed}')")
         broadcast_score(match, minute, minute_extra: minute_extra, notify: false)
+        # Clear the fulltime dedup key so the real finish can still notify.
+        # The early-FT guard usually prevents the key from being set on a false
+        # finish, but if kickoff_at is slightly off the guard may not fire.
+        # Keeping the key here would silently block the real fulltime alert.
+        Rails.cache.delete("fulltime_notified_#{match.id}")
       else
         log("Ignoring self-heal for #{match.id} (#{home_name} vs #{away_name}) at #{elapsed}' — API lag after FT")
       end
