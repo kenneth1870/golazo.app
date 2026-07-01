@@ -288,10 +288,35 @@ class WorldCupSync
         next
       end
 
-      if match.external_id != fixture_id
-        match.update_column(:external_id, fixture_id)
+      updates = {}
+      updates[:external_id] = fixture_id if match.external_id != fixture_id
+
+      # Heal kickoff_at from API — fixes matches seeded with wrong placeholder dates.
+      raw_kickoff = fx.dig("fixture", "date")
+      if raw_kickoff.present?
+        api_kickoff = Time.parse(raw_kickoff).utc rescue nil
+        if api_kickoff && match.kickoff_at && (match.kickoff_at - api_kickoff).abs > 300
+          updates[:kickoff_at] = api_kickoff
+        end
+      end
+
+      # Heal status and scores for finished group stage matches.
+      api_short  = fx.dig("fixture", "status", "short")
+      api_status = STATUS_MAP[api_short]
+      if api_status == "finished" && match.status != "finished"
+        home_score = fx.dig("goals", "home")
+        away_score = fx.dig("goals", "away")
+        if home_score && away_score
+          updates[:status]     = "finished"
+          updates[:home_score] = home_score
+          updates[:away_score] = away_score
+        end
+      end
+
+      if updates.any?
+        match.update_columns(updates)
         updated_matches += 1
-        log("  #{home_api} vs #{away_api} → fixture_id #{fixture_id}")
+        log("  #{home_api} vs #{away_api} → #{updates.keys.join(', ')}")
       end
     end
 

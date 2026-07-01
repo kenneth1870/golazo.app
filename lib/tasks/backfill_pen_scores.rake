@@ -30,3 +30,20 @@ namespace :matches do
     puts "Done. Updated #{updated} matches."
   end
 end
+
+namespace :wc do
+  desc "Heal group stage match dates, statuses and standings from API-Football"
+  task heal_group_data: :environment do
+    puts "Busting standings cache..."
+    Rails.cache.delete("standings_WC")
+    Rails.cache.delete("standings_WC_best_thirds")
+
+    puts "Running sync_external_ids_from_api_football (heals kickoff + status + scores)..."
+    WorldCupSync.new.sync_external_ids_from_api_football
+
+    puts "Recalculating standings..."
+    RecalculateStandingsJob.perform_now
+
+    puts "Done."
+  end
+end
