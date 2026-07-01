@@ -81,7 +81,16 @@ class MatchEventNotificationJob < ApplicationJob
     subs.group_by { |sub| %w[es en].include?(sub.locale) ? sub.locale : "es" }.each do |locale, locale_subs|
       home_t = TeamNameTranslator.translate(home_name, locale)
       away_t = TeamNameTranslator.translate(away_name, locale)
-      title, body = build_copy(locale, event_type, home_t, away_t, score_str, minute, scorer, reason)
+
+      # Derive the "perspective team" from the first subscriber's followed teams
+      # that is actually playing in this match. Falls back to nil (neutral copy).
+      followed = locale_subs.first&.team_names&.find { |t|
+        t.casecmp?(home_name) || t.casecmp?(away_name)
+      }
+      followed_t = followed ? TeamNameTranslator.translate(followed, locale) : nil
+
+      title, body = build_copy(locale, event_type, home_t, away_t, score_str, minute, scorer, reason,
+                               subscriber_team: followed_t, home_score: home_score, away_score: away_score)
 
       payload = {
         title:    title,
@@ -102,9 +111,9 @@ class MatchEventNotificationJob < ApplicationJob
 
   private
 
-  def build_copy(locale, event_type, home, away, score, minute, scorer = nil, reason = nil)
-    locale == "en" ? build_copy_en(event_type, home, away, score, minute, scorer, reason)
-                   : build_copy_es(event_type, home, away, score, minute, scorer, reason)
+  def build_copy(locale, event_type, home, away, score, minute, scorer = nil, reason = nil, subscriber_team: nil, home_score: nil, away_score: nil)
+    opts = { subscriber_team: subscriber_team, home_score: home_score, away_score: away_score }
+    build_copy_es(event_type, home, away, score, minute, scorer, reason, **opts)
   end
 
   VAR_REASONS_ES = {
@@ -116,165 +125,202 @@ class MatchEventNotificationJob < ApplicationJob
     "goal disallowed"  => "Gol Anulado"
   }.freeze
 
+  # Infers goal context from the new score so messages can react to the moment.
+  # Returns :opener, :equalizer, :comeback, :go_ahead, :extending, or :generic.
+  def goal_context(home_score, away_score, home_name, away_name, subscriber_team)
+    return :generic unless home_score && away_score
+    h = home_score.to_i
+    a = away_score.to_i
+    total = h + a
+    return :opener if total == 1
+    if h == a
+      :equalizer
+    elsif subscriber_team == home_name
+      total == 2 && h > a ? :go_ahead : h > a ? (h - a == 1 ? :comeback : :extending) : :generic
+    elsif subscriber_team == away_name
+      total == 2 && a > h ? :go_ahead : a > h ? (a - h == 1 ? :comeback : :extending) : :generic
+    else
+      h == a ? :equalizer : :generic
+    end
+  end
+
+  # Infers fulltime result from the subscriber's perspective.
+  def fulltime_result(home_score, away_score, home_name, away_name, subscriber_team)
+    return :draw unless home_score && away_score
+    h = home_score.to_i
+    a = away_score.to_i
+    return :draw if h == a
+    winner = h > a ? home_name : away_name
+    subscriber_team == winner ? :win : :loss
+  end
+
   # Spanish copy — the app's default audience.
-  def build_copy_es(event_type, home, away, score, minute, scorer = nil, reason = nil)
+  def build_copy_es(event_type, home, away, score, minute, scorer = nil, reason = nil, subscriber_team: nil, home_score: nil, away_score: nil)
     case event_type
     when "goal"
-      min_tag = minute ? " #{minute}'" : ""
-      body = if scorer && minute
+      ctx = goal_context(home_score, away_score, home, away, subscriber_team)
+      min_str = minute ? "#{minute}'" : nil
+      who = scorer || "Goool"
+
+      body = case ctx
+      when :opener
+        if scorer && minute
+          [
+            "¡PRIMERO EN MARCAR! #{scorer} al #{minute}' 🚀",
+            "#{scorer} rompe el cero en el #{minute}' ⚽",
+            "¡Arranca el marcador! #{scorer} · #{minute}' 🔥",
+            "El primero es de #{scorer} · #{minute}' 💥",
+            "¡ABRIÓ EL PARTIDO! #{scorer} al #{minute}' 😱"
+          ].sample
+        elsif minute
+          [
+            "¡SE ABRIÓ EL MARCADOR! · #{minute}' 🚀",
+            "El primero llegó al #{minute}' ⚽",
+            "¡Cero eliminado! Gol al #{minute}' 🔥"
+          ].sample
+        else
+          ["¡Llegó el primero! ⚽", "¡Se abrió el marcador! 🔥", "¡GOOOL de apertura! 😱"].sample
+        end
+      when :equalizer
+        if scorer && minute
+          [
+            "¡LO EMPATAN! #{scorer} al #{minute}' 😤",
+            "#{scorer} pone las tablas · #{minute}' ⚖️",
+            "¡Igualan! #{scorer} en el #{minute}' — esto se pone bueno 👀",
+            "¡EMPATE! #{scorer} · #{minute}' · El partido vive 🔥",
+            "#{minute}' · #{scorer} y a empezar de nuevo 😅"
+          ].sample
+        elsif minute
+          [
+            "¡EMPATAN AL #{minute}'! 😤",
+            "¡Igualan el partido! #{minute}' ⚖️",
+            "#{minute}' · ¡Todo igual! Partido abierto 🔥"
+          ].sample
+        else
+          ["¡EMPATE! ⚖️ Partido igualado", "¡Lo empataron! Todo vivo 🔥", "¡Tablas! El partido sigue abierto 😤"].sample
+        end
+      when :comeback
+        if scorer && minute
+          [
+            "¡SE LO DAN VUELTA! #{scorer} al #{minute}' 🤯",
+            "#{scorer} y la remontada está servida · #{minute}' 💪",
+            "¡REMONTADA! #{scorer} en el #{minute}' — esto es fútbol 🔥",
+            "¡NO PUEDE SER! #{scorer} voltea el partido al #{minute}' 😱",
+            "#{minute}' · #{scorer} · ¡Del perdedor al ganador! 🤯"
+          ].sample
+        else
+          ["¡REMONTADA EN MARCHA! 🤯", "¡Lo dan vuelta! Increíble 💪", "¡Esto se volteó! 😱"].sample
+        end
+      when :go_ahead
+        if scorer && minute
+          [
+            "¡SE VAN ARRIBA! #{scorer} al #{minute}' 🚀",
+            "#{scorer} pone el partido a favor · #{minute}' 💥",
+            "¡GOL DE LA VENTAJA! #{scorer} · #{minute}' 🔥",
+            "#{minute}' · #{scorer} y se adelantan 😤",
+            "¡Ahí está el que manda! #{scorer} al #{minute}' ⚡"
+          ].sample
+        else
+          ["¡SE VAN ADELANTE! 🚀", "¡Toman la delantera! 💥", "¡Gol de la ventaja! 🔥"].sample
+        end
+      when :extending
+        if scorer && minute
+          [
+            "¡MÁS! #{scorer} al #{minute}' — esto ya es goleada 🔥",
+            "#{scorer} sigue sumando · #{minute}' 💥",
+            "#{minute}' · #{scorer} · ¡No paran! 😤",
+            "¡Otro más de #{scorer} al #{minute}'! 🎯",
+            "#{scorer} y la diferencia crece · #{minute}' 😬"
+          ].sample
+        else
+          ["¡AMPLÍAN LA VENTAJA! 💥", "¡Otro más! 🔥", "¡No paran de marcar! 😤"].sample
+        end
+      else
+        if scorer && minute
+          [
+            "¡GOLAZO de #{scorer} al #{minute}'! 🔥",
+            "#{scorer} la manda al fondo · #{minute}' 💥",
+            "¡#{scorer} marca al #{minute}'! 😱",
+            "#{minute}' · ¡Que golazo de #{scorer}! 🎯",
+            "#{scorer} no perdona en el #{minute}' ⚡"
+          ].sample
+        elsif scorer
+          ["¡GOLAZO de #{scorer}! 🔥", "¡#{scorer} la manda adentro! 💥", "GOL de #{scorer} · EN VIVO ⚽"].sample
+        elsif minute
+          ["¡GOL al #{minute}'! 🔥", "#{minute}' · ¡GOOOL! 😱", "¡Gol en el #{minute}'! ⚽"].sample
+        else
+          ["¡GOL! ⚽", "¡Goool! 🔥", "¡Llegó el gol! 💥"].sample
+        end
+      end
+
+      [ "⚽ #{home} #{score} #{away}", body ]
+
+    when "fulltime"
+      h = home_score.to_i
+      a = away_score.to_i
+      result = fulltime_result(home_score, away_score, home, away, subscriber_team)
+
+      body = case result
+      when :win
         [
-          "¡GOLAZO de #{scorer} al #{minute}'! 🔥",
-          "#{scorer} la manda al fondo en el #{minute}' 💥",
-          "¡#{scorer} marca en el #{minute}'! ⚽",
-          "GOL de #{scorer} · #{minute}' · ¡QUÉ GOLAZO! 🎯",
-          "#{minute}' · ¡Que golazo de #{scorer}! 😱",
-          "¡Ahí está! #{scorer} anota al #{minute}' 🔥",
-          "#{scorer} no perdona en el #{minute}'! ⚡",
-          "#{minute}' — #{scorer} con todo 💥"
+          "¡GANARON! 🏆 Así se hace",
+          "¡Victoria! 💪 Los 3 puntos son suyos",
+          "¡Se lo merecían! ¡Ganaron! 🎉",
+          "¡TRIUNFO! Qué partidazo 🔥",
+          "¡Sí señor! Victoria merecida 💥",
+          "¡TRES PUNTOS! Nada más que agregar 🏆",
+          "¡Ganaron y bien! El equipo respondió 💪"
         ].sample
-      elsif scorer
+      when :loss
         [
-          "¡GOLAZO de #{scorer}! 🔥",
-          "#{scorer} anota · EN VIVO ⚽",
-          "¡#{scorer} la manda adentro! 💥",
-          "GOL de #{scorer}#{min_tag} · ¡EN VIVO! 🎯"
-        ].sample
-      elsif minute
-        [
-          "¡GOL al #{minute}'! · EN VIVO 🔥",
-          "¡Gol en el #{minute}'! ⚽ EN VIVO",
-          "#{minute}' · ¡GOOOL! 😱",
-          "¡Se armó! Gol al #{minute}' 💥",
-          "#{minute}' — ¡Gol en el partido! 🔥"
+          "No se pudo... 💔 Así es el fútbol",
+          "Que amarga derrota 😔",
+          "Se fue... pero hay que levantar la cabeza 💪",
+          "No era el día. Hay que seguir 😞",
+          "Duro golpe. La próxima será 💔",
+          "Perdieron, pero el fútbol siempre vuelve 🙏",
+          "Ay no... a digerir y a pensar en lo que sigue 😤"
         ].sample
       else
         [
-          "¡GOL! · EN VIVO ⚽",
-          "¡Goool! 🔥 EN VIVO",
-          "¡Se abrió el marcador! ⚽",
-          "¡Llegó el gol! 💥"
+          "Empate. Un punto es un punto 🤷",
+          "¡Cómo sufrimos! Pero un punto suma 😅",
+          "Tablas. El resultado lo dice todo... o nada 🤔",
+          "Un punto que puede saber a mucho o a poco 👀",
+          "Empate y a reflexionar 🧠",
+          "Ni para unos ni para otros. Empate justo ⚖️",
+          "¡Partido peleado! Se reparten los puntos 🤝"
         ].sample
       end
-      [ "⚽ #{home} #{score} #{away}", body ]
-    when "goal_disallowed"
-      reason_es = VAR_REASONS_ES[reason.to_s.downcase] || reason || "VAR"
-      parts = []
-      parts << "#{minute}'" if minute
-      parts << "📹"
-      parts << scorer if scorer
-      parts << "Gol Anulado - #{reason_es}"
-      [ "🚫 #{home} #{score} #{away}", parts.join(" ") ]
-    when "kickoff"
-      min_str = minute ? " · #{minute}'" : ""
-      [ "🏁 #{home} vs #{away}#{min_str}", "¡Comenzó el partido!" ]
-    when "halftime"
-      [ "⏸ Medio tiempo · #{home} #{score} #{away}", "Nos vemos en 15 minutos." ]
-    when "fulltime"
-      [ "✅ Final · #{home} #{score} #{away}", "¡Final del partido!" ]
-    when "red_card"
-      [ "🟥 ¡Tarjeta roja! #{home} vs #{away}", minute ? "#{minute}' · ¡Tarjeta roja!" : "¡Tarjeta roja mostrada!" ]
+
+      [ "✅ Final · #{home} #{score} #{away}", body ]
+
     when "prematch"
       bodies = [
-        "¡Ya falta poco! ¿Estás listo?",
-        "¡Calentando motores! El partido arranca pronto ⚡",
-        "¡Ponte cómodo, que ya empieza! 👀",
-        "¡Que no te agarre desprevenido! Arranca en nada.",
-        "¡Hora de ponerse el uniforme! ⚽",
-        "¿Ya tienes los snacks listos? Empieza pronto.",
-        "¡El momento se acerca! ¿Listo para el partido?",
-        "¡Atención! El partido está por comenzar.",
-        "¡Deja lo que estás haciendo, esto es más importante! 😄",
-        "¡Silencio en la cancha! Partido en unos minutos.",
-        "¿Quién crees que gana? Pronto lo sabremos 👀",
-        "¡Los jugadores ya están en el túnel!",
-        "Momento de concentración. ¡Arranca el partido!",
-        "¡La pelota está por rodar! No te lo pierdas.",
-        "Dale, que ya están saliendo al campo ⚡"
+        "¡Esto es lo que esperábamos! Arranca en minutos ⚽",
+        "¿Ya estás listo? El partido no espera 👀",
+        "¡A los puestos! Que ya sale la pelota 🚀",
+        "¡Momento de verdad! #{home} vs #{away} está por comenzar 🔥",
+        "Los nervios ya están. El partido, también ⚡",
+        "¡Deja todo! Hay partido 😤",
+        "Calentando... ¿quién crees que gana? 👀",
+        "¡Se acerca la hora! Los jugadores ya calientan 💪",
+        "¿Snacks listos? Porque esto arranca ya 🍟⚽",
+        "¡El momento llegó! Prepárate para sufrir (o gozar) 😅",
+        "¡Atención! Esto no lo puedes perderte 📺",
+        "Ya están en el túnel. En minutos, fútbol puro ⚡",
+        "¡PARTIDAZO a la vista! #{home} vs #{away} 🔥",
+        "¿Nervios? Normal. En minutos empieza 💥",
+        "El árbitro ya tiene el balón. ¡Que comience! ⚽",
+        "¡Silbatazo inicial en minutos! ¿Listo para gritar? 😱",
+        "Deja el trabajo, deja la tele, deja todo — hay partido 😄",
+        "Esta noche (o este día) es de fútbol. ¡Arrancan! 🏟️"
       ]
       [ "⏰ #{home} vs #{away}", bodies.sample ]
+
     else
       [ "#{home} vs #{away}", "" ]
     end
   end
 
-  def build_copy_en(event_type, home, away, score, minute, scorer = nil, reason = nil)
-    case event_type
-    when "goal"
-      min_tag = minute ? " #{minute}'" : ""
-      body = if scorer && minute
-        [
-          "GOAL! #{scorer} in the #{minute}' 🔥",
-          "#{scorer} finds the net — #{minute}' ⚽",
-          "What a goal from #{scorer}! #{minute}' 💥",
-          "#{scorer} puts it away · #{minute}' 🎯",
-          "#{minute}' · #{scorer} scores! 😱",
-          "#{scorer} doesn't miss — #{minute}' ⚡",
-          "#{minute}' — #{scorer} with the finish! 🔥",
-          "Golazo! #{scorer} · #{minute}' 💥"
-        ].sample
-      elsif scorer
-        [
-          "GOAL from #{scorer}! 🔥",
-          "#{scorer} scores#{min_tag} · LIVE ⚽",
-          "#{scorer} puts it in the net! 💥",
-          "Golazo! #{scorer}#{min_tag} 🎯"
-        ].sample
-      elsif minute
-        [
-          "GOAL in the #{minute}'! · LIVE 🔥",
-          "It's in! #{minute}' · LIVE ⚽",
-          "#{minute}' — GOAL! 😱",
-          "Net bulges at #{minute}'! 💥",
-          "#{minute}' · They've scored! 🔥"
-        ].sample
-      else
-        [
-          "GOAL! · LIVE ⚽",
-          "They've scored! 🔥 LIVE",
-          "It's in the net! ⚽",
-          "GOOOAL! 💥"
-        ].sample
-      end
-      [ "⚽ #{home} #{score} #{away}", body ]
-    when "goal_disallowed"
-      reason_en = reason.presence || "VAR"
-      parts = []
-      parts << "#{minute}'" if minute
-      parts << "📹"
-      parts << scorer if scorer
-      parts << "Goal Disallowed - #{reason_en}"
-      [ "🚫 #{home} #{score} #{away}", parts.join(" ") ]
-    when "kickoff"
-      min_str = minute ? " · #{minute}'" : ""
-      [ "🏁 #{home} vs #{away}#{min_str}", "Kick-off — the match has started!" ]
-    when "halftime"
-      [ "⏸ Half-time · #{home} #{score} #{away}", "See you in 15 minutes." ]
-    when "fulltime"
-      [ "✅ Full-time · #{home} #{score} #{away}", "That's the final whistle!" ]
-    when "red_card"
-      [ "🟥 Red card! #{home} vs #{away}", minute ? "#{minute}' · Red card shown!" : "Red card shown!" ]
-    when "prematch"
-      bodies = [
-        "Almost time — are you ready? ⚡",
-        "Get your game face on! Kick-off is near.",
-        "Warming up! The match is about to start.",
-        "Don't miss it — kick-off is almost here!",
-        "Got your snacks ready? It starts soon 👀",
-        "Time to focus — the match is nearly on!",
-        "Settle in, it's almost kick-off time! ⚽",
-        "The wait is almost over. Let's go!",
-        "Drop what you're doing — this is more important 😄",
-        "The tunnel walk is happening. Time to watch!",
-        "Who do you think wins this one? Find out soon 👀",
-        "Players are on the pitch. It's nearly time!",
-        "Clear your schedule — football is on.",
-        "The referee's about to blow the whistle. You in?",
-        "This is the one. Don't miss kick-off ⚽",
-        "Grab a seat — it's almost showtime!"
-      ]
-      [ "⏰ #{home} vs #{away}", bodies.sample ]
-    else
-      [ "#{home} vs #{away}", "" ]
-    end
-  end
 end
