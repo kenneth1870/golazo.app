@@ -16,7 +16,7 @@ class FixBracketPosAndR16Order < ActiveRecord::Migration[8.0]
     %w[RSA CAN],  %w[GER PAR],  %w[NED MAR],  %w[BRA JPN],
     %w[FRA SWE],  %w[CIV NOR],  %w[MEX ECU],  %w[ENG COD],
     %w[USA BIH],  %w[BEL SEN],  %w[POR CRO],  %w[ESP AUT],
-    %w[SUI ALG],  %w[ARG CPV],  %w[COL GHA],  %w[AUS EGY],
+    %w[SUI ALG],  %w[ARG CPV],  %w[COL GHA],  %w[AUS EGY]
   ].each_with_index.map { |(h, a), i| { home: h, away: a, pos: i + 1 } }
 
   def up
