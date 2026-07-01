@@ -30,6 +30,9 @@ module Api
         render json: VENUES.map { |v|
           v.merge(matches: serialize_venue_matches(matches_by_venue, v[:name]))
         }
+      rescue => e
+        Rails.logger.error("[VenuesController#index] #{e.message}")
+        render json: VENUES
       end
 
       def show
@@ -107,7 +110,8 @@ module Api
       end
 
       def serialize_match_list(matches)
-        matches.map { |m|
+        matches.filter_map { |m|
+          next unless m.home_team && m.away_team
           {
             id:          m.id,
             external_id: m.external_id,

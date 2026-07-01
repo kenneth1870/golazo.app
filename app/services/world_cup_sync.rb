@@ -368,19 +368,6 @@ class WorldCupSync
       away_team = find_team_by_api_name(away_api)
       next unless home_team && away_team
 
-      # If DB already has this fixture with teams, just ensure external_id is set
-      existing = Match.find_by(
-        home_team: home_team, away_team: away_team, competition: competition
-      )
-      if existing
-        if existing.external_id.to_s != fixture_id.to_s
-          existing.update_column(:external_id, fixture_id)
-          log("  Updated ext_id for #{home_api} vs #{away_api} → #{fixture_id}")
-        end
-        skipped += 1
-        next
-      end
-
       # Map API round string to our round name
       db_round = round_map.find { |pat, _| api_round =~ pat }&.last
       unless db_round
@@ -388,29 +375,52 @@ class WorldCupSync
         next
       end
 
-      # Find an unassigned TBD slot for this round
-      slot = Match.where(competition: competition, round: db_round, home_team_id: nil).first
+      # Locate this fixture's slot. Home team is the reliable key — it's unique
+      # within a round and survives the ext_id scrambling / wrong-opponent drift
+      # that plagued pos 13–16. Fall back to away team, a lingering ext_id, then
+      # the first fully-empty slot (a round whose winners are still filling in).
+      # Never match group-stage rows.
+      scope = Match.where(competition: competition, round: db_round, group_stage: nil)
+      slot  = scope.find_by(home_team_id: home_team.id) ||
+              scope.find_by(away_team_id: away_team.id) ||
+              scope.find_by(external_id: fixture_id) ||
+              scope.where(home_team_id: nil, away_team_id: nil).order(:bracket_pos).first
       unless slot
-        log("  No TBD slot left for round '#{db_round}' — #{home_api} vs #{away_api} skipped")
+        log("  No slot for '#{db_round}' — #{home_api} vs #{away_api} skipped")
         next
       end
 
-      kickoff = fx.dig("fixture", "date")
-      venue   = fx.dig("fixture", "venue", "name")
+      status_short = fx.dig("fixture", "status", "short").to_s
+      finished     = %w[FT AET PEN].include?(status_short)
+      kickoff      = fx.dig("fixture", "date")
+      venue        = fx.dig("fixture", "venue", "name")
 
       # Evict any other slot already holding this external_id before assigning
+      # (pos 13–16 carried each other's fixture ids after the drift).
       Match.where(external_id: fixture_id).where.not(id: slot.id).update_all(external_id: nil)
 
-      slot.update!(
-        home_team:   home_team,
-        away_team:   away_team,
-        external_id: fixture_id,
-        kickoff_at:  kickoff.present? ? Time.parse(kickoff) : slot.kickoff_at,
-        venue:       venue.presence || slot.venue,
-        status:      fx.dig("fixture", "status", "short") == "NS" ? "scheduled" : slot.status,
-      )
-      log("  Resolved #{db_round}: #{home_api} vs #{away_api} @ #{kickoff} (fixture #{fixture_id})")
-      resolved += 1
+      attrs = {
+        home_team_id:   home_team.id,
+        away_team_id:   away_team.id,
+        external_id:    fixture_id,
+        home_pen_score: fx.dig("score", "penalty", "home"),
+        away_pen_score: fx.dig("score", "penalty", "away")
+      }
+      attrs[:kickoff_at] = Time.parse(kickoff) if kickoff.present?
+      attrs[:venue]      = venue if venue.present?
+      attrs[:status]     = status_short == "NS" ? "scheduled" : (finished ? "finished" : slot.status)
+      attrs[:home_score] = fx.dig("goals", "home") if finished
+      attrs[:away_score] = fx.dig("goals", "away") if finished
+
+      # Only write when something actually differs — keeps the heal job quiet and
+      # idempotent instead of rewriting correct rows every run.
+      if attrs.any? { |k, v| slot.public_send(k) != v }
+        slot.update!(attrs)
+        log("  Resolved #{db_round} pos=#{slot.bracket_pos}: #{home_api} vs #{away_api} (fixture #{fixture_id})")
+        resolved += 1
+      else
+        skipped += 1
+      end
     end
 
     log("resolve_knockout done — #{resolved} resolved, #{skipped} already matched")

@@ -15,7 +15,7 @@ export default function VenuesPage() {
   useEffect(() => {
     fetch("/api/v1/venues")
       .then(r => r.json())
-      .then(setVenues)
+      .then(data => setVenues(Array.isArray(data) ? data : []))
       .finally(() => setLoading(false))
   }, [])
 
