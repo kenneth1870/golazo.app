@@ -20,7 +20,7 @@ export default function MundialPage() {
 
   return (
     <div>
-      <div className="page-hero page-hero--mundial" style={{ backgroundImage: "url('/images/hero_5.jpg')" }}>
+      <div className="page-hero page-hero--mundial" style={{ backgroundImage: "url('/images/hero_2.jpg')", backgroundPosition: "center 40%" }}>
         <div className="container">
           <div className="mundial-hero-content">
             <img src="/images/SOCCER.png" alt="WC 2026" style={{ height: 60, marginBottom: 16 }} onError={e => e.target.style.display='none'} />

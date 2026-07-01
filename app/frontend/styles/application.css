@@ -438,7 +438,9 @@ a:hover{color:var(--accent);opacity:.85}
 .page-hero__title{font-size:clamp(1.8rem,5vw,3rem);font-weight:900;color:#fff;margin:0}
 .page-hero__sub{color:rgba(255,255,255,.65);margin-top:8px;font-size:.9rem}
 .mundial-hero-content{text-align:center}
-@media(max-width:768px){.page-hero{min-height:160px}}
+.page-hero--mundial{min-height:280px}
+.page-hero--mundial::before{background:linear-gradient(to bottom,rgba(0,0,0,.72) 0%,rgba(5,10,30,.52) 50%,rgba(0,0,0,.78) 100%)}
+@media(max-width:768px){.page-hero{min-height:160px}.page-hero--mundial{min-height:200px}}
 /* Hero countdown: hide weeks on mobile to save space */
 @media(max-width:600px){.hero-countdown__wks{display:none!important}}
 /* Compact hero height on mobile — 100vh is too tall */

@@ -732,6 +732,21 @@ class WorldCupSync
 
     match.lock!
 
+    # Heal kickoff_at from the live feed so the 30-min early-FT guard in
+    # fire_notification uses the correct start time. Knockout matches are
+    # often seeded with placeholder dates; without this they'd stay wrong
+    # until resolve_knockout_from_api runs and the guard would suppress FT alerts.
+    if raw[:kickoff_at].present?
+      begin
+        feed_kickoff = Time.parse(raw[:kickoff_at].to_s).utc
+        if match.kickoff_at.nil? || (match.kickoff_at.utc - feed_kickoff).abs > 300
+          match.update_column(:kickoff_at, feed_kickoff)
+        end
+      rescue ArgumentError, TypeError
+        nil
+      end
+    end
+
     # API sometimes returns FT/AET/PEN while the fixture is still briefly in the
     # live feed. Treat any finished status_short as a finalisation event so the
     # match doesn't stay stuck as "live" waiting for check_wc_matches_just_finished.
@@ -1295,13 +1310,13 @@ class WorldCupSync
   end
 
   def fire_notification(match, event_type, home_score: nil, away_score: nil, minute: nil, scorer: nil, reason: nil)
-    # Defense-in-depth: a full-time alert must never go out before a match could
-    # plausibly be over. A 90' match runs ≥ ~100 min after kickoff (45 + half-time
-    # + 45 + stoppage); extra time ends even later. So suppress "fulltime" if
-    # kickoff was < 100 min ago, regardless of what any feed/heuristic claims —
-    # this blocks premature "match ended" pushes from bad data or feed flaps.
+    # Defense-in-depth: suppress a "fulltime" push if the match kicked off less
+    # than 30 minutes ago — a genuine FT is impossible that early. This is a
+    # narrow guard so stale kickoff_at data (common on newly-resolved knockout
+    # slots) cannot silence real end-of-match alerts. The primary dedup system
+    # (fulltime_notified_* key + just_finished transition) handles the rest.
     if event_type.to_s == "fulltime" && match.kickoff_at.present? &&
-        match.kickoff_at > 100.minutes.ago
+        match.kickoff_at > 30.minutes.ago
       log("Suppressed early fulltime for #{match.id} (#{match.home_team&.name} vs #{match.away_team&.name}) — only #{((Time.current - match.kickoff_at) / 60).round} min since kickoff")
       return false
     end
