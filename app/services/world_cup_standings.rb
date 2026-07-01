@@ -68,7 +68,7 @@ class WorldCupStandings
   def compute_groups
     stats = accumulate(finished_group_matches)
 
-    Team.where.not(group: nil).group_by(&:group).sort.to_h.transform_values do |teams|
+    Team.where.not(group: [ nil, "" ]).group_by(&:group).sort.to_h.transform_values do |teams|
       rank_group(teams, stats)
     end
   end
