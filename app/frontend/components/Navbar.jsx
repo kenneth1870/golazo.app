@@ -150,31 +150,11 @@ const MundialMegaMenu = memo(function MundialMegaMenu({ t }) {
           <span className="mega-menu__link-icon">⚽</span> {t("nav.topScorers")}
         </NavLink>
         <div className="mega-menu__divider" />
-        <NavLink to="/scores/groups"    className={({ isActive }) => `mega-menu__link${isActive ? " active" : ""}`}>
+        <NavLink to="/mundial/groups"   className={({ isActive }) => `mega-menu__link${isActive ? " active" : ""}`}>
           <span className="mega-menu__link-icon">📊</span> {t("nav.groupStage")}
         </NavLink>
-        <NavLink to="/scores/knockout"  className={({ isActive }) => `mega-menu__link${isActive ? " active" : ""}`}>
+        <NavLink to="/mundial/knockout" className={({ isActive }) => `mega-menu__link${isActive ? " active" : ""}`}>
           <span className="mega-menu__link-icon">🏆</span> {t("nav.knockout")}
-        </NavLink>
-      </div>
-
-      <div className="mega-menu__col mega-menu__col--groups">
-        <div className="mega-menu__section-label">
-          {t("nav.groups")}
-        </div>
-        <div className="mega-menu__group-grid">
-          {GROUPS.map(g => (
-            <NavLink
-              key={g}
-              to={`/groups/${g}`}
-              className={({ isActive }) => `mega-menu__group-pill${isActive ? " active" : ""}`}
-            >
-              {g}
-            </NavLink>
-          ))}
-        </div>
-        <NavLink to="/groups" className="mega-menu__all-groups-link">
-          {t("footer.allGroups")} →
         </NavLink>
       </div>
     </div>
