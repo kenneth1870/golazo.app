@@ -259,22 +259,23 @@ export default function KnockoutPage() {
 
   const knockout = matches.filter(m => !m.group_stage)
   const hasData  = knockout.length > 0
-  const byPos    = (a, b) => (a.bracket_pos ?? 0) - (b.bracket_pos ?? 0)
 
-  function getRound(key) {
-    return knockout.filter(m => m.round?.toLowerCase() === key.toLowerCase()).sort(byPos)
-  }
+  // FIFA 2026 WC bracket draw — exact visual slot order per round column.
+  // These position arrays encode the seeding structure so adjacent pairs always
+  // feed into the same next-round match via the H-fork SVG connector.
+  const byPos = Object.fromEntries(knockout.map(m => [m.bracket_pos, m]))
+  const slot  = p => byPos[p] ?? null
 
-  function half(arr, n) { return [arr.slice(0, n), arr.slice(n)] }
-
-  const [r32L, r32R] = half(getRound("Round of 32"),   8)
-  const [r16L, r16R] = half(getRound("Round of 16"),   4)
-  const [qfL,  qfR]  = half(getRound("Quarter Final"), 2)
-  const [sfL,  sfR]  = half(getRound("Semi Final"),    1)
-  const finalM       = getRound("Final")[0] ?? null
-  const thirdM       = knockout.find(m =>
-    m.round?.toLowerCase().includes("3rd") || m.round?.toLowerCase().includes("third")
-  ) ?? null
+  const r32L = [2, 5, 1, 3, 11, 12, 9, 10].map(slot)
+  const r32R = [4, 6, 7, 8, 14, 16, 13, 15].map(slot)
+  const r16L = [17, 18, 21, 22].map(slot)
+  const r16R = [19, 20, 23, 24].map(slot)
+  const qfL  = [25, 26].map(slot)
+  const qfR  = [27, 28].map(slot)
+  const sfL  = [slot(29)]
+  const sfR  = [slot(30)]
+  const finalM = slot(32)
+  const thirdM = slot(31)
 
   if (loading) {
     return (
