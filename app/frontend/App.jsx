@@ -193,6 +193,8 @@ export default function App() {
                   <Route path=":slug" element={<VenueShowPage />} />
                 </Route>
                 <Route path="scorers"  element={<ScorersPage />} />
+                <Route path="groups"   element={<GroupStagePage />} />
+                <Route path="knockout" element={<KnockoutPage />} />
               </Route>
 
               <Route path="/teams/:id"     element={<TeamShowPage />} />
@@ -213,8 +215,8 @@ export default function App() {
               <Route path="/world-cup-2026/schedule"  element={<Navigate to="/mundial/schedule" replace />} />
               <Route path="/world-cup-2026/venues"    element={<Navigate to="/mundial/venues"   replace />} />
               <Route path="/world-cup-2026/scorers"   element={<Navigate to="/mundial/scorers"  replace />} />
-              <Route path="/world-cup-2026/groups"    element={<Navigate to="/scores/groups"    replace />} />
-              <Route path="/world-cup-2026/bracket"   element={<Navigate to="/scores/knockout"  replace />} />
+              <Route path="/world-cup-2026/groups"    element={<Navigate to="/mundial/groups"   replace />} />
+              <Route path="/world-cup-2026/bracket"   element={<Navigate to="/mundial/knockout" replace />} />
               <Route path="/world-cup-2026/results"   element={<Navigate to="/scores/results"   replace />} />
               <Route path="/world-cup-2026/fixtures"  element={<Navigate to="/scores/today"     replace />} />
 

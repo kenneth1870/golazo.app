@@ -10,12 +10,12 @@ export default function MundialPage() {
   )
 
   const TABS = [
-    { path: "/mundial/teams",    label: t("mundial.tabNavTeams",    t("nav.teams")) },
     { path: "/mundial/schedule", label: t("mundial.tabNavSchedule", t("nav.schedule")) },
-    { path: "/mundial/venues",   label: t("mundial.tabNavVenues",   t("nav.venues")) },
+    { path: "/mundial/groups",   label: t("mundial.tabNavGroups",   t("scores.groupStage")) },
+    { path: "/mundial/knockout", label: t("mundial.tabNavKnockout", t("scores.knockout")) },
     { path: "/mundial/scorers",  label: t("mundial.tabNavStats",    t("nav.topScorers")) },
-    { path: "/scores/groups",    label: t("mundial.tabNavGroups",   t("scores.groupStage")), external: true },
-    { path: "/scores/knockout",  label: t("mundial.tabNavKnockout", t("scores.knockout")),   external: true },
+    { path: "/mundial/teams",    label: t("mundial.tabNavTeams",    t("nav.teams")) },
+    { path: "/mundial/venues",   label: t("mundial.tabNavVenues",   t("nav.venues")) },
   ]
 
   return (
@@ -37,8 +37,7 @@ export default function MundialPage() {
               <NavLink
                 key={tab.path}
                 to={tab.path}
-                end={!tab.external}
-                className={({ isActive }) => `tab-link${isActive && !tab.external ? " tab-link--active" : ""}`}
+                className={({ isActive }) => `tab-link${isActive ? " tab-link--active" : ""}`}
               >
                 {tab.label}
               </NavLink>
