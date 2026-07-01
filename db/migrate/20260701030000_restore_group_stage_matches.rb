@@ -77,6 +77,10 @@ class RestoreGroupStageMatches < ActiveRecord::Migration[8.1]
     end
 
     Rails.logger.info("[RestoreGroupStage] Restored #{restored} group-stage matches")
+
+    Rails.cache.delete("standings_WC")
+    Rails.cache.delete("standings_WC_best_thirds")
+    Rails.logger.info("[RestoreGroupStage] Standings cache busted")
     Rails.logger.info("[RestoreGroupStage] Done")
   end
 
