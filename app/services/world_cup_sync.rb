@@ -393,9 +393,24 @@ class WorldCupSync
         log("  Corrected drifted teams on ext=#{fixture_id} → #{home_api} vs #{away_api}")
       end
 
-      exact = scope.find_by(home_team_id: home_team.id, away_team_id: away_team.id)
-      empty = exact ? nil : scope.where(home_team_id: nil, away_team_id: nil).order(:bracket_pos).first
-      slot  = exact || empty
+      # If this fixture's ext_id is already on the right slot, use it directly —
+      # don't fall through to the team-name lookup which can find a duplicate slot
+      # and cause the same team pair to appear in two bracket positions.
+      needs_teams = false
+      if holder
+        slot = holder
+      else
+        exact = scope.find_by(home_team_id: home_team.id, away_team_id: away_team.id)
+        # Only fill an empty slot if this team pair isn't already in the bracket.
+        # This prevents two different API fixtures for the same teams (e.g. duplicate
+        # entries) from being placed in two separate positions.
+        if exact
+          slot = exact
+        else
+          slot = scope.where(home_team_id: nil, away_team_id: nil).order(:bracket_pos).first
+          needs_teams = slot.present?
+        end
+      end
       unless slot
         skipped += 1
         next
@@ -416,8 +431,8 @@ class WorldCupSync
         home_pen_score: fx.dig("score", "penalty", "home"),
         away_pen_score: fx.dig("score", "penalty", "away")
       }
-      # Only set teams when filling an empty slot; exact matches already have them.
-      if empty
+      # Only set teams when filling an empty slot; exact/holder matches already have them.
+      if needs_teams
         attrs[:home_team_id] = home_team.id
         attrs[:away_team_id] = away_team.id
       end
@@ -436,6 +451,11 @@ class WorldCupSync
       else
         skipped += 1
       end
+    rescue ActiveRecord::RecordNotUnique
+      # Two concurrent ResolveKnockoutSlotsJob runs raced to assign this
+      # fixture_id to the same empty slot. The other job already committed it;
+      # nothing to do for this fixture.
+      log("  Skipped #{fixture_id} (concurrent job already assigned it)")
     end
 
     log("resolve_knockout done — #{resolved} resolved, #{skipped} already matched")

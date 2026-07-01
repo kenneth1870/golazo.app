@@ -224,9 +224,14 @@ class WorldCupKnockout
     pos  = slot[1..].to_i
     feeder = @competition.matches.find_by(bracket_pos: pos)
     return nil unless feeder&.status == "finished" && feeder.home_score && feeder.away_score
-    return nil if feeder.home_score == feeder.away_score
 
-    home_won = feeder.home_score > feeder.away_score
+    if feeder.home_score != feeder.away_score
+      home_won = feeder.home_score > feeder.away_score
+    elsif feeder.home_pen_score && feeder.away_pen_score
+      home_won = feeder.home_pen_score > feeder.away_pen_score
+    else
+      return nil
+    end
     case kind
     when "W" then home_won ? feeder.home_team : feeder.away_team
     when "L" then home_won ? feeder.away_team : feeder.home_team
