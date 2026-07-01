@@ -1440,6 +1440,54 @@ a:hover{color:var(--accent);opacity:.85}
 .bracket-preview__slots{display:flex;flex-direction:column;gap:6px}
 .bracket-preview__slot{height:40px;background:var(--surface);border:1px dashed rgba(255,255,255,.08);border-radius:6px}
 
+/* ── bk2: FIFA-style knockout bracket v2 ─────────────────────────────── */
+.bk2-scroll{overflow-x:auto;padding-bottom:20px;-webkit-overflow-scrolling:touch;
+  -webkit-mask-image:linear-gradient(to right,black 88%,transparent 100%);
+  mask-image:linear-gradient(to right,black 88%,transparent 100%)}
+@media(min-width:900px){.bk2-scroll{-webkit-mask-image:none;mask-image:none}}
+
+/* Card */
+@keyframes bk2Flash{0%{background:rgba(16,185,129,.25)}100%{background:var(--surface)}}
+@keyframes bk2Pulse{0%,100%{box-shadow:0 0 0 0 rgba(238,30,70,0)}50%{box-shadow:0 0 0 4px rgba(238,30,70,.22)}}
+.bk2-card{background:var(--surface);border:1px solid var(--border);border-radius:7px;overflow:hidden;transition:border-color .2s,background .2s;width:100%}
+.bk2-card--click{cursor:pointer}
+.bk2-card--click:hover{border-color:rgba(238,30,70,.45);background:var(--surface2)}
+.bk2-card--live{border-color:rgba(238,30,70,.5)!important;animation:bk2Pulse 2s ease-in-out infinite}
+.bk2-card--done{opacity:.92}
+.bk2-card--flash{animation:bk2Flash .85s ease-out}
+.bk2-card--empty{opacity:.35}
+
+/* Header */
+.bk2-hdr{display:flex;align-items:center;gap:4px;padding:3px 8px;
+  font-size:.56rem;font-weight:700;letter-spacing:.04em;color:var(--muted);
+  background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap}
+.bk2-hdr--live{color:var(--accent)}
+.bk2-hdr--done{color:var(--muted)}
+.bk2-hdr-pen{margin-left:3px;opacity:.65;font-weight:600}
+
+/* Team row */
+.bk2-row{display:flex;align-items:center;gap:6px;padding:6px 8px}
+.bk2-row--win{}
+.bk2-row--dim{opacity:.45}
+.bk2-flag{width:19px;height:14px;object-fit:cover;border-radius:2px;flex-shrink:0}
+.bk2-flag-ph{display:inline-block;width:19px;height:14px;flex-shrink:0;background:rgba(255,255,255,.07);border-radius:2px}
+.bk2-code{flex:1;font-size:.68rem;font-weight:700;color:var(--text);letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bk2-code--tbd{color:rgba(255,255,255,.25);font-weight:600;font-size:.62rem}
+.bk2-score-area{display:flex;align-items:center;gap:3px;flex-shrink:0;min-width:20px;justify-content:flex-end}
+.bk2-pen{font-size:.58rem;font-weight:700;color:var(--muted)}
+.bk2-score{font-size:.84rem;font-weight:900;color:var(--muted);min-width:14px;text-align:center}
+.bk2-score--win{color:var(--text)}
+.bk2-score--live{color:var(--accent)}
+.bk2-div{height:1px;background:var(--border);margin:0 8px}
+
+/* P-number label */
+.bk2-pnum{font-size:.52rem;font-weight:700;letter-spacing:.07em;color:rgba(255,255,255,.22);text-align:center;margin-bottom:3px}
+
+/* 3rd place */
+.bk2-bronze{margin-top:28px;padding-top:20px;border-top:1px solid var(--border);text-align:center}
+.bk2-bronze__label{font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.bk2-bronze__card{max-width:200px;margin:0 auto}
+
 @media(max-width:576px){
   .col-6{flex:0 0 50%;max-width:50%}
   .venue-card{padding:14px}
