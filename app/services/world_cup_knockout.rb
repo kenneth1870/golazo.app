@@ -197,6 +197,9 @@ class WorldCupKnockout
       next if m.status == "finished"
       # API-resolved slots are authoritative — don't overwrite with feeders.
       next if m.external_id.present?
+      # R16 pairings are not reliably modelled in R16_PAIRINGS for 2026 WC
+      # cross-bracket format. Trust resolve_knockout_from_api exclusively.
+      next if m.round == "Round of 16"
 
       home = team_for_feeder_slot(m.home_slot)
       away = team_for_feeder_slot(m.away_slot)
