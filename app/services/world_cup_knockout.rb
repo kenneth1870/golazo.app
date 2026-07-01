@@ -157,15 +157,26 @@ class WorldCupKnockout
     thirds     = standings.best_thirds(8)
     all_done   = all_groups_complete?
 
+    # Teams already locked into API-confirmed R32 slots must not appear in a
+    # second slot. Our R32_SLOTS ordering doesn't perfectly match the actual
+    # 2026 WC bracket, so the computed seeding for unfilled slots can produce
+    # teams that the API has already placed elsewhere.
+    confirmed_team_ids = @competition.matches
+                                     .where(round: "Round of 32")
+                                     .where.not(external_id: nil)
+                                     .pluck(:home_team_id, :away_team_id)
+                                     .flatten.compact.to_set
+
     @competition.matches.where(round: "Round of 32").find_each do |m|
       next if m.status == "finished"
-      # A slot tied to a real API fixture is authoritative — the API knows the
-      # exact pairing (including the third-placed opponents this class can only
-      # approximate). Never overwrite it with computed seeding.
       next if m.external_id.present?
 
       home = team_for_group_slot(m.home_slot, qualifiers, thirds, all_done)
       away = team_for_group_slot(m.away_slot, qualifiers, thirds, all_done)
+
+      # Suppress any team the API has already confirmed in another R32 slot
+      home = nil if home && confirmed_team_ids.include?(home.id)
+      away = nil if away && confirmed_team_ids.include?(away.id)
 
       m.update!(home_team: home, away_team: away) if home != m.home_team || away != m.away_team
     end
