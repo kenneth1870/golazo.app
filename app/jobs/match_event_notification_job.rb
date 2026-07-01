@@ -27,6 +27,14 @@ class MatchEventNotificationJob < ApplicationJob
       return
     end
 
+    # Only send notifications for events that have meaningful copy.
+    # Kickoff/halftime/red_card fall through to an empty-body notification that
+    # overwrites prematch/goal alerts in the device tray (same match tag).
+    unless %w[goal prematch fulltime].include?(event_type)
+      Rails.logger.info("[PushNotification] Skipping #{event_type} — not a notifiable event type")
+      return
+    end
+
     # Guard for full-time: re-check DB status at the moment of sending so the
     # push only goes out when the match is actually finished. The external API
     # sets status="finished" only after the final whistle, so trusting the DB
