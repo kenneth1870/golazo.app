@@ -1,4 +1,4 @@
-const CACHE_NAME = "golazo-v3"
+const CACHE_NAME = "golazo-v4"
 const TODAY_API  = "/api/v1/today"
 const OFFLINE_URLS = ["/", TODAY_API]
 
@@ -70,6 +70,29 @@ self.addEventListener("push", (event) => {
       group:    "golazo-matches",
       data:     { path: d.url, match_id: d.match_id },
     })
+  )
+})
+
+// ── Push subscription rotation (Chrome/Android FCM token refresh) ──
+// When the browser rotates the push endpoint, migrate team prefs from the
+// old subscription to the new one so the user keeps their notifications.
+self.addEventListener("pushsubscriptionchange", (event) => {
+  event.waitUntil(
+    self.registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: event.oldSubscription?.options?.applicationServerKey,
+    }).then((newSub) => {
+      return fetch("/api/v1/push_subscriptions/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          endpoint:     newSub.endpoint,
+          p256dh:       newSub.toJSON().keys?.p256dh,
+          auth:         newSub.toJSON().keys?.auth,
+          old_endpoint: event.oldSubscription?.endpoint,
+        }),
+      })
+    }).catch(() => {})
   )
 })
 
