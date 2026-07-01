@@ -382,6 +382,17 @@ class WorldCupSync
       # Deliberate corrections to a wrong pairing are done via migration, not by
       # this recurring heal job. Never match group-stage rows.
       scope = Match.where(competition: competition, round: db_round, group_stage: nil)
+
+      # Self-heal: whichever slot carries this fixture's external_id MUST hold
+      # this fixture's teams — the ext_id is a unique, authoritative key. If the
+      # standings rebuild overwrote the teams while the ext_id stayed put, fix
+      # them here. This cannot mis-pair (one ext_id → exactly one fixture).
+      holder = scope.find_by(external_id: fixture_id)
+      if holder && (holder.home_team_id != home_team.id || holder.away_team_id != away_team.id)
+        holder.update!(home_team_id: home_team.id, away_team_id: away_team.id)
+        log("  Corrected drifted teams on ext=#{fixture_id} → #{home_api} vs #{away_api}")
+      end
+
       exact = scope.find_by(home_team_id: home_team.id, away_team_id: away_team.id)
       empty = exact ? nil : scope.where(home_team_id: nil, away_team_id: nil).order(:bracket_pos).first
       slot  = exact || empty

@@ -159,6 +159,10 @@ class WorldCupKnockout
 
     @competition.matches.where(round: "Round of 32").find_each do |m|
       next if m.status == "finished"
+      # A slot tied to a real API fixture is authoritative — the API knows the
+      # exact pairing (including the third-placed opponents this class can only
+      # approximate). Never overwrite it with computed seeding.
+      next if m.external_id.present?
 
       home = team_for_group_slot(m.home_slot, qualifiers, thirds, all_done)
       away = team_for_group_slot(m.away_slot, qualifiers, thirds, all_done)
@@ -191,6 +195,8 @@ class WorldCupKnockout
     @competition.matches.knockout.where.not(round: "Round of 32")
                 .order(:bracket_pos).each do |m|
       next if m.status == "finished"
+      # API-resolved slots are authoritative — don't overwrite with feeders.
+      next if m.external_id.present?
 
       home = team_for_feeder_slot(m.home_slot)
       away = team_for_feeder_slot(m.away_slot)
