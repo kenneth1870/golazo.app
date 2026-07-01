@@ -870,6 +870,15 @@ class WorldCupSync
         home_team_obj ||= find_team_by_api_name(home_name)
         away_team_obj = find_team_by_api_name(away_name)
 
+        # Guard 0: never restamp a KNOCKOUT slot from the date feed. Knockout
+        # pairings are owned exclusively by resolve_knockout_from_api (keyed by
+        # home team against the full fixture list). The date-feed restamp guesses
+        # a slot by fuzzy home-team + kickoff proximity, which repeatedly
+        # scrambled the bracket (teams drifting off their external_ids, duplicate
+        # teams across slots). resolve_knockout_from_api runs in the same heal
+        # job right after this and sets knockout teams authoritatively.
+        knockout_candidate = candidate.round.present? && candidate.group_stage.nil?
+
         # Guard 1: never restamp a knockout slot from a group-stage fixture.
         # If the incoming kickoff is before R32 start (June 28) but the
         # candidate is a knockout round, the date feed is returning an old
@@ -900,7 +909,9 @@ class WorldCupSync
                                 .exists?
                          end
 
-        if group_stage_date
+        if knockout_candidate
+          log("  Skipping restamp for ext=#{api_ext_id}: #{home_name} vs #{away_name} — knockout pairings are owned by resolve_knockout_from_api")
+        elsif group_stage_date
           log("  Skipping restamp for ext=#{api_ext_id}: #{home_name} vs #{away_name} — group-stage kickoff (#{incoming_ko&.to_date}) cannot restamp knockout slot")
         elsif group_stage_ext
           log("  Skipping restamp for ext=#{api_ext_id}: #{home_name} vs #{away_name} — ext_id belongs to a group-stage match")

@@ -179,7 +179,7 @@ class MatchEventNotificationJob < ApplicationJob
             "¡Cero eliminado! Gol al #{minute}' 🔥"
           ].sample
         else
-          ["¡Llegó el primero! ⚽", "¡Se abrió el marcador! 🔥", "¡GOOOL de apertura! 😱"].sample
+          [ "¡Llegó el primero! ⚽", "¡Se abrió el marcador! 🔥", "¡GOOOL de apertura! 😱" ].sample
         end
       when :equalizer
         if scorer && minute
@@ -197,7 +197,7 @@ class MatchEventNotificationJob < ApplicationJob
             "#{minute}' · ¡Todo igual! Partido abierto 🔥"
           ].sample
         else
-          ["¡EMPATE! ⚖️ Partido igualado", "¡Lo empataron! Todo vivo 🔥", "¡Tablas! El partido sigue abierto 😤"].sample
+          [ "¡EMPATE! ⚖️ Partido igualado", "¡Lo empataron! Todo vivo 🔥", "¡Tablas! El partido sigue abierto 😤" ].sample
         end
       when :comeback
         if scorer && minute
@@ -209,7 +209,7 @@ class MatchEventNotificationJob < ApplicationJob
             "#{minute}' · #{scorer} · ¡Del perdedor al ganador! 🤯"
           ].sample
         else
-          ["¡REMONTADA EN MARCHA! 🤯", "¡Lo dan vuelta! Increíble 💪", "¡Esto se volteó! 😱"].sample
+          [ "¡REMONTADA EN MARCHA! 🤯", "¡Lo dan vuelta! Increíble 💪", "¡Esto se volteó! 😱" ].sample
         end
       when :go_ahead
         if scorer && minute
@@ -221,7 +221,7 @@ class MatchEventNotificationJob < ApplicationJob
             "¡Ahí está el que manda! #{scorer} al #{minute}' ⚡"
           ].sample
         else
-          ["¡SE VAN ADELANTE! 🚀", "¡Toman la delantera! 💥", "¡Gol de la ventaja! 🔥"].sample
+          [ "¡SE VAN ADELANTE! 🚀", "¡Toman la delantera! 💥", "¡Gol de la ventaja! 🔥" ].sample
         end
       when :extending
         if scorer && minute
@@ -233,7 +233,7 @@ class MatchEventNotificationJob < ApplicationJob
             "#{scorer} y la diferencia crece · #{minute}' 😬"
           ].sample
         else
-          ["¡AMPLÍAN LA VENTAJA! 💥", "¡Otro más! 🔥", "¡No paran de marcar! 😤"].sample
+          [ "¡AMPLÍAN LA VENTAJA! 💥", "¡Otro más! 🔥", "¡No paran de marcar! 😤" ].sample
         end
       else
         if scorer && minute
@@ -245,11 +245,11 @@ class MatchEventNotificationJob < ApplicationJob
             "#{scorer} no perdona en el #{minute}' ⚡"
           ].sample
         elsif scorer
-          ["¡GOLAZO de #{scorer}! 🔥", "¡#{scorer} la manda adentro! 💥", "GOL de #{scorer} · EN VIVO ⚽"].sample
+          [ "¡GOLAZO de #{scorer}! 🔥", "¡#{scorer} la manda adentro! 💥", "GOL de #{scorer} · EN VIVO ⚽" ].sample
         elsif minute
-          ["¡GOL al #{minute}'! 🔥", "#{minute}' · ¡GOOOL! 😱", "¡Gol en el #{minute}'! ⚽"].sample
+          [ "¡GOL al #{minute}'! 🔥", "#{minute}' · ¡GOOOL! 😱", "¡Gol en el #{minute}'! ⚽" ].sample
         else
-          ["¡GOL! ⚽", "¡Goool! 🔥", "¡Llegó el gol! 💥"].sample
+          [ "¡GOL! ⚽", "¡Goool! 🔥", "¡Llegó el gol! 💥" ].sample
         end
       end
 
@@ -322,5 +322,4 @@ class MatchEventNotificationJob < ApplicationJob
       [ "#{home} vs #{away}", "" ]
     end
   end
-
 end
