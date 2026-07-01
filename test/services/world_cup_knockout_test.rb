@@ -55,19 +55,19 @@ class WorldCupKnockoutTest < ActiveSupport::TestCase
     assert_nil @wc.matches.find_by(bracket_pos: 7).away_team, "T3 slot needs all groups complete"
   end
 
-  test "winners propagate from R32 into R16" do
+  test "R16 slots are NOT propagated from R32 (API provides real fixtures)" do
     t = %w[KO1 KO2 KO3 KO4].map { |c| team(c) }
     builder = WorldCupKnockout.new(competition: @wc)
     builder.ensure_fixtures!
 
-    # R16_PAIRINGS[1] = [1, 3] → bracket_pos 18 feeds from winners of R32 pos 1 and 3
     @wc.matches.find_by(bracket_pos: 1).update!(home_team: t[0], away_team: t[1], status: "finished", home_score: 2, away_score: 0)
     @wc.matches.find_by(bracket_pos: 3).update!(home_team: t[2], away_team: t[3], status: "finished", home_score: 0, away_score: 1)
 
     builder.rebuild!
 
-    r16 = @wc.matches.find_by(bracket_pos: 18) # W1 vs W3
-    assert_equal "KO1", r16.home_team.code
-    assert_equal "KO4", r16.away_team.code
+    # R16 slots must stay empty — resolve_knockout_from_api fills them from real API fixtures.
+    r16 = @wc.matches.find_by(bracket_pos: 18)
+    assert_nil r16.home_team, "R16 should not be propagated from R32"
+    assert_nil r16.away_team, "R16 should not be propagated from R32"
   end
 end
