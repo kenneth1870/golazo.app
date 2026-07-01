@@ -14,11 +14,14 @@ const TOTAL_H = SLOT_H * 8   // 832px
 // FIFA match number: bracket_pos 1 → P73, 2 → P74 … 32 → P104
 const pNum = (pos) => pos ? `P${pos + 72}` : null
 
-// Display code for a team (3-letter) or a slot label like "W17"
+// Display code for a team (3-letter) or a slot label.
+// Converts internal W{bracket_pos} refs → W{P_number} (W11 → W83, W17 → W89…)
+// so unresolved slots match the official FIFA P-number format.
 function teamCode(team, slot) {
   if (team?.code) return team.code.toUpperCase()
   if (!slot) return "?"
-  // Only show W/L slot references for later rounds — looks cleaner
+  const m = slot.match(/^([WL])(\d+)$/)
+  if (m) return `${m[1]}${parseInt(m[2]) + 72}`
   return slot
 }
 
@@ -257,6 +260,23 @@ export default function KnockoutPage() {
   const navigate = useNavigate()
   const onMatchClick = (extId) => navigate(`/matches/${extId}`)
 
+  // Auto-scale the 1858px bracket to fill available width
+  const containerRef = useRef(null)
+  const [scale, setScale] = useState(1)
+  useEffect(() => {
+    const BRACKET_W = 1858
+    const node = containerRef.current
+    if (!node) return
+    const update = () => {
+      const w = node.clientWidth
+      setScale(w >= BRACKET_W ? 1 : w / BRACKET_W)
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(node)
+    return () => ro.disconnect()
+  }, [])
+
   const knockout = matches.filter(m => !m.group_stage)
   const hasData  = knockout.length > 0
 
@@ -316,6 +336,9 @@ export default function KnockoutPage() {
     { text: t("bracket.r32"),           w: CARD_W  },
   ]
 
+  // Approximate total bracket height for margin compensation when scaled
+  const BRACKET_INNER_H = 36 + TOTAL_H + (thirdM ? 148 : 0)
+
   return (
     <div className="site-section">
       <div className="container">
@@ -326,15 +349,20 @@ export default function KnockoutPage() {
             fontSize: "0.78rem", fontWeight: 700, textDecoration: "none",
           }}>🏆 {t("bracket.predictorLink")}</Link>
         </div>
+      </div>
 
-        <div className="bracket-scroll-hint">← {t("bracket.swipeHint") || "desliza para ver"} →</div>
-
-        {/* Scroll wrapper */}
-        <div className="bk2-scroll">
+      {/* Full-width bracket — scales down to fit viewport, no horizontal scroll */}
+      <div ref={containerRef} style={{ width: "100%", padding: "0 8px", boxSizing: "border-box" }}>
+        <div style={{
+          transformOrigin: "top left",
+          transform: scale < 1 ? `scale(${scale})` : "none",
+          width: 1858,
+          marginBottom: scale < 1 ? `${-(BRACKET_INNER_H * (1 - scale))}px` : 0,
+        }}>
           <LabelBar labels={leftLabels} />
 
           {/* ── Main bracket row ── */}
-          <div style={{ display: "flex", alignItems: "stretch", minWidth: "max-content" }}>
+          <div style={{ display: "flex", alignItems: "stretch" }}>
 
             {/* LEFT: R32 → R16 → QF → SF */}
             <RoundCol matches={r32L} count={8} onMatchClick={onMatchClick} showPNum />
@@ -354,7 +382,7 @@ export default function KnockoutPage() {
               gap: 8, padding: "0 14px",
               background: "linear-gradient(160deg, rgba(238,30,70,.07), transparent)",
               border: "1px solid rgba(238,30,70,.22)",
-              borderRadius: 12, margin: "0 0",
+              borderRadius: 12,
             }}>
               <div style={{ fontSize: "1.9rem", filter: "drop-shadow(0 0 8px rgba(238,30,70,.4))" }}>🏆</div>
               <MatchCard
