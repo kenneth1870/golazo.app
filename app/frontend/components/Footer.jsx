@@ -2,7 +2,6 @@ import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import LanguageSwitcher from "./LanguageSwitcher"
 
-const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
 const SOCIAL = [
   {
@@ -105,23 +104,6 @@ export default function Footer() {
               <li><Link to="/mundial/scorers">{t("nav.topScorers")}</Link></li>
               <li><Link to="/news">{t("nav.news")}</Link></li>
             </ul>
-          </div>
-
-          {/* ── Groups ── */}
-          <div className="footer-col">
-            <h4 className="footer-col__title">
-              {t("nav.groups")}
-              <Link to="/groups" style={{ marginLeft: "auto", fontSize: "0.68rem", color: "var(--accent)", fontWeight: 600, textDecoration: "none" }}>
-                {t("footer.allGroups")}
-              </Link>
-            </h4>
-            <div className="footer-group-grid">
-              {GROUPS.map(g => (
-                <Link key={g} to={`/groups/${g}`} className="footer-group-pill">
-                  {g}
-                </Link>
-              ))}
-            </div>
           </div>
 
         </div>
