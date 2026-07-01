@@ -54,7 +54,7 @@ class RecalculateStandingsJob < ApplicationJob
          .where(kickoff_at: 48.hours.ago..)
          .where.not(external_id: nil)
          .pluck(:external_id)
-         .each { |fid| Rails.cache.delete("wc_fixture_events_v1_#{fid}") }
+         .each { |fid| Rails.cache.delete("wc_fixture_events_v2_#{fid}") }
     Rails.cache.write("standings_last_recalculated_at", Time.current.iso8601, expires_in: 2.days)
     ActionCable.server.broadcast("standings_updates", { type: "standings_updated", competition: "WC" })
   ensure

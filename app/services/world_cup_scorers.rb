@@ -121,7 +121,7 @@ class WorldCupScorers
   end
 
   def self.fetch_events(fixture_id)
-    cached = Rails.cache.read("wc_fixture_events_v1_#{fixture_id}")
+    cached = Rails.cache.read("wc_fixture_events_v2_#{fixture_id}")
     return cached unless cached.nil?
 
     detail = client.match_detail(fixture_id)
@@ -139,7 +139,13 @@ class WorldCupScorers
       }
     end || []
 
-    Rails.cache.write("wc_fixture_events_v1_#{fixture_id}", events, expires_in: FIXTURE_EVENTS_TTL)
+    # Only lock events in for 24 h once the match is truly final. A fixture that
+    # was still live when first fetched must NOT cache its partial events for a
+    # whole day — that froze Messi at 5 goals when he'd already scored 6. For a
+    # non-final (or unknown) fixture use a short TTL so the next request re-reads.
+    finished = Match.find_by(external_id: fixture_id)&.status == "finished"
+    ttl      = finished ? FIXTURE_EVENTS_TTL : 2.minutes
+    Rails.cache.write("wc_fixture_events_v2_#{fixture_id}", events, expires_in: ttl)
     events
   rescue => e
     Rails.logger.error("[WorldCupScorers] events for #{fixture_id}: #{e.message}")

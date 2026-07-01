@@ -232,7 +232,7 @@ class WorldCupSync
     if wc
       Match.where(competition: wc, status: "finished").where.not(external_id: nil)
            .pluck(:external_id).each do |fid|
-        Rails.cache.delete("wc_fixture_events_v1_#{fid}")
+        Rails.cache.delete("wc_fixture_events_v2_#{fid}")
         Rails.cache.delete("live_scores_detail_v5_#{fid}")
       end
     end
@@ -1062,7 +1062,7 @@ class WorldCupSync
       # events from the API on the next scorer aggregation — prevents a
       # stale/empty event cache from zeroing out a player's goal tally.
       if match.external_id.present?
-        Rails.cache.delete("wc_fixture_events_v1_#{match.external_id}")
+        Rails.cache.delete("wc_fixture_events_v2_#{match.external_id}")
         Rails.cache.delete("live_scores_detail_v5_#{match.external_id}")
       end
 
@@ -1324,7 +1324,7 @@ class WorldCupSync
       "wc_red_cards_v1_WC"
     ]
     if match&.external_id.present?
-      keys << "wc_fixture_events_v1_#{match.external_id}"
+      keys << "wc_fixture_events_v2_#{match.external_id}"
       keys << "live_scores_detail_v5_#{match.external_id}"
     end
     keys.each { |k| Rails.cache.delete(k) }
