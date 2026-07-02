@@ -294,7 +294,7 @@ export default function KnockoutPage() {
   const slot  = p => byPos[p] ?? null
 
   const r32L = [2, 5, 1, 3, 11, 12, 9, 10].map(slot)
-  const r32R = [4, 6, 7, 8, 13, 15, 14, 16].map(slot)
+  const r32R = [4, 6, 7, 8, 14, 16, 13, 15].map(slot)
   const r16L = [17, 18, 21, 22].map(slot)
   const r16R = [19, 20, 23, 24].map(slot)
   const qfL  = [25, 26].map(slot)
