@@ -160,7 +160,9 @@ function Connector({ leftCount, rightCount }) {
   const bigCount   = Math.max(leftCount, rightCount)
   const smallCount = Math.min(leftCount, rightCount)
   const bigH       = TOTAL_H / bigCount
-  const MX         = CONN_W / 2
+  // Place junction at 1/3 from the big (outer) side so short stubs near R32
+  // make convergence direction obvious; long single line goes toward center.
+  const MX         = converging ? CONN_W / 3 : CONN_W * 2 / 3
 
   const segs = []
   for (let j = 0; j < smallCount; j++) {
