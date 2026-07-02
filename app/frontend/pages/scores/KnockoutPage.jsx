@@ -377,11 +377,11 @@ export default function KnockoutPage() {
             {/* LEFT: R32 → R16 → QF → SF */}
             <RoundCol matches={r32L} count={8} onMatchClick={onMatchClick} showPNum />
             <Connector leftCount={8} rightCount={4} />
-            <RoundCol matches={r16L} count={4} onMatchClick={onMatchClick} />
+            <RoundCol matches={r16L} count={4} onMatchClick={onMatchClick} showPNum />
             <Connector leftCount={4} rightCount={2} />
-            <RoundCol matches={qfL}  count={2} onMatchClick={onMatchClick} />
+            <RoundCol matches={qfL}  count={2} onMatchClick={onMatchClick} showPNum />
             <Connector leftCount={2} rightCount={1} />
-            <RoundCol matches={sfL}  count={1} onMatchClick={onMatchClick} />
+            <RoundCol matches={sfL}  count={1} onMatchClick={onMatchClick} showPNum />
             <Connector leftCount={1} rightCount={1} />
 
             {/* CENTER: Final */}
@@ -406,11 +406,11 @@ export default function KnockoutPage() {
 
             {/* RIGHT: SF → QF → R16 → R32 */}
             <Connector leftCount={1} rightCount={1} />
-            <RoundCol matches={sfR}  count={1} onMatchClick={onMatchClick} />
+            <RoundCol matches={sfR}  count={1} onMatchClick={onMatchClick} showPNum />
             <Connector leftCount={1} rightCount={2} />
-            <RoundCol matches={qfR}  count={2} onMatchClick={onMatchClick} />
+            <RoundCol matches={qfR}  count={2} onMatchClick={onMatchClick} showPNum />
             <Connector leftCount={2} rightCount={4} />
-            <RoundCol matches={r16R} count={4} onMatchClick={onMatchClick} />
+            <RoundCol matches={r16R} count={4} onMatchClick={onMatchClick} showPNum />
             <Connector leftCount={4} rightCount={8} />
             <RoundCol matches={r32R} count={8} onMatchClick={onMatchClick} showPNum />
 
