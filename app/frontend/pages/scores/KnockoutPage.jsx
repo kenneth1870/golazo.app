@@ -269,7 +269,7 @@ export default function KnockoutPage() {
     const node = containerRef.current
     if (!node) return
     const update = () => {
-      const w = node.clientWidth
+      const w = node.clientWidth - 16   // subtract 8px left + 8px right padding
       if (w <= MOBILE_BP) {
         setIsMobile(true)
         setScale(1)
