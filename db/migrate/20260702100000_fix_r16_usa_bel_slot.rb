@@ -14,8 +14,8 @@ class FixR16UsaBelSlot < ActiveRecord::Migration[8.0]
     usa = Team.find_by(code: "USA")
     bel = Team.find_by(code: "BEL")
 
-    has_usa_bel_in_21 = [pos21.home_team_id, pos21.away_team_id].sort ==
-                        [usa&.id, bel&.id].sort
+    has_usa_bel_in_21 = [ pos21.home_team_id, pos21.away_team_id ].sort ==
+                        [ usa&.id, bel&.id ].sort
 
     unless has_usa_bel_in_21
       say "pos 21 does not have USA/BEL — skipping (already fixed)"
@@ -35,7 +35,7 @@ class FixR16UsaBelSlot < ActiveRecord::Migration[8.0]
       home_score:     pos21.home_score,
       away_score:     pos21.away_score,
       home_pen_score: pos21.home_pen_score,
-      away_pen_score: pos21.away_pen_score,
+      away_pen_score: pos21.away_pen_score
     }
 
     # Clear pos 21 of ext_id first (unique index)
