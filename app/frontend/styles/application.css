@@ -1466,6 +1466,7 @@ a:hover{color:var(--accent);opacity:.85}
 .bk2-hdr--live{color:var(--accent)}
 .bk2-hdr--done{color:var(--muted)}
 .bk2-hdr-pen{margin-left:3px;opacity:.65;font-weight:600}
+.bk2-hdr-pnum{margin-left:auto;opacity:.5;font-size:.52rem;letter-spacing:.05em}
 
 /* Team row */
 .bk2-row{display:flex;align-items:center;gap:6px;padding:6px 8px}
@@ -1483,7 +1484,6 @@ a:hover{color:var(--accent);opacity:.85}
 .bk2-div{height:1px;background:var(--border);margin:0 8px}
 
 /* P-number label */
-.bk2-pnum{font-size:.52rem;font-weight:700;letter-spacing:.07em;color:rgba(255,255,255,.22);text-align:center;margin-bottom:3px}
 
 /* 3rd place */
 .bk2-bronze{margin-top:28px;padding-top:20px;border-top:1px solid var(--border);text-align:center}

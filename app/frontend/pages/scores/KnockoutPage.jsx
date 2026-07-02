@@ -52,7 +52,7 @@ function TeamRow({ team, slot, score, penScore, isWinner, isLive, dim }) {
 }
 
 // ── Match card ──────────────────────────────────────────────────────────────
-function MatchCard({ match, onClick }) {
+function MatchCard({ match, onClick, pLabel }) {
   const { t, i18n } = useTranslation()
   const [flash, setFlash] = useState(false)
   const prev = useRef({ h: match?.home_score, a: match?.away_score })
@@ -105,13 +105,14 @@ function MatchCard({ match, onClick }) {
       className={`bk2-card${isLive ? " bk2-card--live" : ""}${isFinished ? " bk2-card--done" : ""}${flash ? " bk2-card--flash" : ""}${match.external_id ? " bk2-card--click" : ""}`}
       onClick={match.external_id ? onClick : undefined}
     >
-      {header && (
-        <div className={`bk2-hdr${header.live ? " bk2-hdr--live" : ""}${header.done ? " bk2-hdr--done" : ""}`}>
-          {header.live && <span className="live-dot" />}
-          {header.text}
-          {hasPen && isFinished && !header.live && (
+      {(header || pLabel) && (
+        <div className={`bk2-hdr${header?.live ? " bk2-hdr--live" : ""}${header?.done ? " bk2-hdr--done" : ""}`}>
+          {header?.live && <span className="live-dot" />}
+          {header?.text}
+          {hasPen && isFinished && !header?.live && (
             <span className="bk2-hdr-pen">· Pens</span>
           )}
+          {pLabel && <span className="bk2-hdr-pnum">{pLabel}</span>}
         </div>
       )}
       <TeamRow
@@ -202,12 +203,10 @@ function RoundCol({ matches, count, onMatchClick, showPNum }) {
         return (
           <div key={m?.id ?? `e-${i}`}
             style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "3px 0" }}>
-            {showPNum && m?.bracket_pos && (
-              <div className="bk2-pnum">{pNum(m.bracket_pos)}</div>
-            )}
             <MatchCard
               match={m}
               onClick={() => m?.external_id && onMatchClick(m.external_id)}
+              pLabel={showPNum && m?.bracket_pos ? pNum(m.bracket_pos) : null}
             />
           </div>
         )
@@ -398,10 +397,8 @@ export default function KnockoutPage() {
               <MatchCard
                 match={finalM}
                 onClick={() => finalM?.external_id && onMatchClick(finalM.external_id)}
+                pLabel={finalM?.bracket_pos ? pNum(finalM.bracket_pos) : null}
               />
-              {finalM?.bracket_pos && (
-                <div className="bk2-pnum" style={{ marginTop: 2 }}>{pNum(finalM.bracket_pos)}</div>
-              )}
             </div>
 
             {/* RIGHT: SF → QF → R16 → R32 */}
@@ -424,12 +421,8 @@ export default function KnockoutPage() {
                 <MatchCard
                   match={thirdM}
                   onClick={() => thirdM?.external_id && onMatchClick(thirdM.external_id)}
+                  pLabel={thirdM?.bracket_pos ? pNum(thirdM.bracket_pos) : null}
                 />
-                {thirdM?.bracket_pos && (
-                  <div className="bk2-pnum" style={{ marginTop: 4, textAlign: "center" }}>
-                    {pNum(thirdM.bracket_pos)}
-                  </div>
-                )}
               </div>
             </div>
           )}
