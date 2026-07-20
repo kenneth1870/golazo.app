@@ -223,7 +223,7 @@ module Api
         client = LiveScoresClient.new
         client.matches_for_date(Date.today)
               .concat((1..7).flat_map { |i| client.matches_for_date(Date.today + i) })
-              .select { |m| AppFocus::FEATURED_CLUB_CODES.include?(league_code(m[:league_id])) }
+              .select { |m| AppFocus.allowed_league?(m[:league_id]) }
               .select { |m| m[:status] == "scheduled" }
               .uniq { |m| m[:external_id] }
               .sort_by { |m| m[:kickoff_at].to_s }

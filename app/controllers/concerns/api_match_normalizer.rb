@@ -60,16 +60,7 @@ module ApiMatchNormalizer
   end
 
   def filter_matches_for_focus(matches)
-    matches.select do |m|
-      code = league_code(m[:league_id].to_i)
-      if AppFocus.wc_paused?
-        code != "WC"
-      elsif AppFocus.wc_primary? && !AppFocus.clubs_primary?
-        code == "WC"
-      else
-        true
-      end
-    end
+    matches.select { |m| AppFocus.allowed_league?(m[:league_id]) }
   end
 
   def filter_matches_for_competition(matches, code)

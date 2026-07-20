@@ -39,38 +39,21 @@ class LiveScoresClient
     "ABD"  => "postponed"
   }.freeze
 
-  # API-Football v3 league IDs we care about (men's senior only)
+  # Trimmed list — friendlies and minor cups removed; AppFocus.allowed_league_ids
+  # is the source of truth for what we show in clubs mode.
   FEATURED_LEAGUES = Set.new([
     1,    # FIFA World Cup
     2,    # UEFA Champions League
-    3,    # UEFA Europa League
-    848,  # UEFA Conference League
-    531,  # UEFA Super Cup
     39,   # Premier League
     140,  # La Liga
     78,   # Bundesliga
     135,  # Serie A
     61,   # Ligue 1
-    88,   # Eredivisie
-    94,   # Primeira Liga
-    262,  # Liga MX
-    71,   # Brasileirão Serie A
-    128,  # Argentine Liga Profesional
-    253,  # MLS
-    179,  # Scottish Premiership
-    203,  # Süper Lig
-    41,   # Championship (England)
-    13,   # Copa Libertadores
-    11,   # Copa Sudamericana
-    6,    # Copa América
-    15,   # FIFA Club World Cup
-    10,   # International Friendlies (Men)
-    667,  # Friendlies Clubs
-    777,  # FIFA World Cup - Qualification CONCACAF
-    780,  # FIFA World Cup - Qualification CONMEBOL
-    29,   # AFC Asian Cup
-    4    # Euro Championship
+    253   # MLS
   ]).freeze
+
+  # Always excluded — low-value fixtures that waste API quota in caches/UI.
+  FRIENDLY_LEAGUE_IDS = Set.new([ 10, 667 ]).freeze
 
   # Regex that matches youth (U17/U20/U21/U23) and women's competitions by name.
   EXCLUDED_LEAGUE_PATTERN = /
@@ -567,22 +550,28 @@ class LiveScoresClient
 
   def featured_league?(match)
     lid       = match[:league_id].to_i
-    country   = match[:league_country].to_s
     league    = match[:league_name].to_s
     home_team = match.dig(:home, :name).to_s
     away_team = match.dig(:away, :name).to_s
 
-    # Exclude youth/women by name first so U21/U18 international friendlies are
-    # caught even when the league name is just "International Friendlies".
+    return false if FRIENDLY_LEAGUE_IDS.include?(lid)
+    return false if league.match?(/friendlies?\b/i)
+
     check = "#{league} #{home_team} #{away_team}"
     return false if check.match?(EXCLUDED_LEAGUE_PATTERN)
 
-    # Allow every senior international/continental competition: World Cup,
-    # Copa América, AFCON, AFC, regional friendlies (Philippines vs Myanmar → "Asia"),
-    # WC qualifiers, Nations Leagues, etc. Covers far more than country == "World" alone.
-    return true if INTERNATIONAL_REGIONS.any? { |r| country.casecmp?(r) }
+    return AppFocus.allowed_league?(lid) if AppFocus.wc_paused?
 
-    # Allow featured club leagues by explicit ID (UCL, Premier League, etc.)
+    return true if lid == AppFocus.league_id_for("WC")
+
+    return true if AppFocus.allowed_league?(lid)
+
+    # WC / both mode: senior internationals (qualifiers, continental cups) — not club friendlies.
+    country = match[:league_country].to_s
+    if INTERNATIONAL_REGIONS.any? { |r| country.casecmp?(r) } && !league.match?(/friendlies?\b/i)
+      return true
+    end
+
     FEATURED_LEAGUES.include?(lid)
   end
 

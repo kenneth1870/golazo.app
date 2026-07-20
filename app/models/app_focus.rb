@@ -39,6 +39,26 @@ module AppFocus
 
   FEATURED_CLUB_CODES = %w[PL LAL BL1 SA L1 UCL MLS].freeze
 
+  # League IDs we surface in the product — everything else is ignored.
+  def featured_league_ids
+    FEATURED_CLUB_CODES.filter_map { |code| league_id_for(code) }
+  end
+
+  def allowed_league_ids
+    case FOCUS
+    when "wc"
+      [ league_id_for("WC") ].compact
+    when "both"
+      featured_league_ids + [ league_id_for("WC") ].compact
+    else
+      featured_league_ids
+    end
+  end
+
+  def allowed_league?(league_id)
+    allowed_league_ids.include?(league_id.to_i)
+  end
+
   def league_id_for(code)
     LEAGUE_IDS[code.to_s.upcase]
   end
