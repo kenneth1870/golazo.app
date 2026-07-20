@@ -16,7 +16,8 @@ end
   { code: "L1",  name: "Ligue 1",               country: "France",     type: "league", logo: "https://crests.football-data.org/FL1.png", ext: 61  },
   { code: "UCL", name: "UEFA Champions League", country: "Europe",     type: "cup",    logo: "https://crests.football-data.org/CL.png",  ext: 2   },
   { code: "MLS", name: "Major League Soccer",   country: "USA/Canada", type: "league", logo: "https://flagcdn.com/w80/us.png",           ext: 253 },
-  { code: "CRC", name: "Liga Tica",             country: "Costa Rica", type: "league", logo: "https://media.api-sports.io/football/leagues/162.png", ext: 162 }
+  { code: "CRC", name: "Liga Tica",             country: "Costa Rica", type: "league", logo: "https://media.api-sports.io/football/leagues/162.png", ext: 162 },
+  { code: "LMX", name: "Liga MX",               country: "Mexico",     type: "league", logo: "https://media.api-sports.io/football/leagues/262.png", ext: 262 }
 ].each do |l|
   comp = Competition.find_or_create_by!(code: l[:code]) do |c|
     c.name             = l[:name]

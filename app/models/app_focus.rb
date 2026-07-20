@@ -35,13 +35,14 @@ module AppFocus
     "UCL" => 2,
     "MLS" => 253,
     "CRC" => 162,
+    "LMX" => 262,
     "WC"  => 1
   }.freeze
 
-  FEATURED_CLUB_CODES = %w[PL LAL BL1 SA L1 UCL MLS CRC].freeze
+  FEATURED_CLUB_CODES = %w[PL LAL BL1 SA L1 UCL MLS CRC LMX].freeze
 
   # Top domestic leagues — used for empty-day previews (no UCL qualifiers).
-  DOMESTIC_CLUB_CODES = %w[PL LAL BL1 SA L1 MLS CRC].freeze
+  DOMESTIC_CLUB_CODES = %w[PL LAL BL1 SA L1 MLS CRC LMX].freeze
 
   EXCLUDED_ROUND_PATTERN = /qualif|preliminary|play.?off|\b1st round\b|\b2nd round\b|\b3rd round\b/i.freeze
 
@@ -85,5 +86,15 @@ module AppFocus
 
   def league_id_for(code)
     LEAGUE_IDS[code.to_s.upcase]
+  end
+
+  # API-Football season year for standings/fixtures requests.
+  def season_for(code, on: Date.current)
+    year  = on.year
+    month = on.month
+    case code.to_s.upcase
+    when "MLS", "LMX" then year
+    else month >= 7 ? year : year - 1
+    end
   end
 end

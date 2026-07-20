@@ -57,6 +57,8 @@ const LEAGUES = [
   { code: "L1",  name: "Ligue 1",             flag: "🇫🇷" },
   { code: "UCL", name: "Champions League",    flag: "⭐" },
   { code: "MLS", name: "MLS",                 flag: "🇺🇸" },
+  { code: "LMX", name: "Liga MX",             flag: "🇲🇽" },
+  { code: "CRC", name: "Liga Tica",           flag: "🇨🇷" },
   { code: "WC",  name: "World Cup 2026",      flag: "🌍" },
 ]
 

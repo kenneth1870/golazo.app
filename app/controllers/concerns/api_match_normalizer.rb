@@ -10,7 +10,8 @@ module ApiMatchNormalizer
     140 => "LAL",
     61  => "L1",
     253 => "MLS",
-    162 => "CRC"
+    162 => "CRC",
+    262 => "LMX"
   }.freeze
 
   LEAGUE_CANONICAL_NAMES = {
@@ -22,7 +23,8 @@ module ApiMatchNormalizer
     135 => "Serie A",
     61  => "Ligue 1",
     253 => "Major League Soccer",
-    162 => "Liga Tica"
+    162 => "Liga Tica",
+    262 => "Liga MX"
   }.freeze
 
   private
@@ -69,6 +71,10 @@ module ApiMatchNormalizer
     league_id = AppFocus.league_id_for(code)
     return [] unless league_id
 
-    matches.select { |m| m[:league_id].to_i == league_id }
+    matches.select { |m| m[:league_id].to_i == league_id && !AppFocus.excluded_match?(m) }
+  end
+
+  def competition_code_param
+    (params[:competition_code] || params[:code]).to_s.upcase
   end
 end

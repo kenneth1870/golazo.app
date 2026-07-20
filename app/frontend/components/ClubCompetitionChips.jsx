@@ -9,6 +9,7 @@ export const CLUB_CHIPS = [
   { label: "🇫🇷 Ligue 1",          path: "/leagues/L1" },
   { label: "⭐ Champions League", path: "/leagues/UCL" },
   { label: "🇨🇷 Liga Tica",       path: "/leagues/CRC" },
+  { label: "🇲🇽 Liga MX",         path: "/leagues/LMX" },
 ]
 
 export default function ClubCompetitionChips({ compact = false }) {

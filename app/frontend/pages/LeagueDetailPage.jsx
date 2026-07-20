@@ -87,6 +87,18 @@ function StandingsTable({ standings, t, i18n }) {
   )
 }
 
+function startOfToday() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+function startOfTomorrow() {
+  const d = startOfToday()
+  d.setDate(d.getDate() + 1)
+  return d
+}
+
 export default function LeagueDetailPage() {
   const { t, i18n } = useTranslation()
   const { code } = useParams()
@@ -97,8 +109,12 @@ export default function LeagueDetailPage() {
   const [standings, setStandings]     = useState([])
   const [tab, setTab]                 = useState("today")
   const [loading, setLoading]         = useState(true)
+  const [tabLoading, setTabLoading]   = useState(false)
 
   const tabParam = tab === "standings" ? null : tab
+
+  const hasUpcoming = (ms) => ms.some(m => m.status === "scheduled" && new Date(m.kickoff_at) >= startOfTomorrow())
+  const hasResults  = (ms) => ms.some(m => m.status === "finished")
 
   const loadMatches = useCallback(() => {
     if (!code || tab === "standings") return Promise.resolve()
@@ -123,19 +139,18 @@ export default function LeagueDetailPage() {
       setMatches(ms)
       const flat = flattenStandings(standData)
       setStandings(flat)
-      const now = new Date(); now.setHours(0, 0, 0, 0)
-      const tmrw = new Date(now); tmrw.setDate(tmrw.getDate() + 1)
+      const now = startOfToday()
+      const tmrw = startOfTomorrow()
       const hasLiveOrToday = ms.some(m => m.status === "live" || (new Date(m.kickoff_at) >= now && new Date(m.kickoff_at) < tmrw))
-      const hasUpcoming    = ms.some(m => m.status === "scheduled" && new Date(m.kickoff_at) >= tmrw)
-      const hasResults     = ms.some(m => m.status === "finished")
-      if (!hasLiveOrToday && hasUpcoming) setTab("fixtures")
-      else if (!hasLiveOrToday && !hasUpcoming && hasResults) setTab("results")
+      if (!hasLiveOrToday && hasResults(ms)) setTab("results")
+      else if (!hasLiveOrToday && hasUpcoming(ms)) setTab("fixtures")
     }).finally(() => setLoading(false))
   }, [code])
 
   useEffect(() => {
     if (loading || tab === "standings") return
-    loadMatches()
+    setTabLoading(true)
+    loadMatches().finally(() => setTabLoading(false))
   }, [tab, loadMatches, loading])
 
   const applyLiveScore = useCallback((d) => {
@@ -160,20 +175,14 @@ export default function LeagueDetailPage() {
       : null
   )
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
+  const today = startOfToday()
+  const tomorrow = startOfTomorrow()
 
-  const todayMatches    = matches.filter(m => {
+  const todayMatches = matches.filter(m => {
     const d = new Date(m.kickoff_at)
     return d >= today && d < tomorrow
   })
-  const upcoming        = matches.filter(m => m.status === "scheduled" && new Date(m.kickoff_at) >= tomorrow)
-    .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
-  const results         = matches.filter(m => m.status === "finished")
-    .sort((a, b) => new Date(b.kickoff_at) - new Date(a.kickoff_at))
-  const liveMatches     = matches.filter(m => m.status === "live")
+  const liveMatches  = matches.filter(m => m.status === "live")
 
   const TABS = [
     { key: "today",      label: t("time.today") },
@@ -184,8 +193,8 @@ export default function LeagueDetailPage() {
 
   const displayedMatches =
     tab === "today"    ? [...liveMatches, ...todayMatches.filter(m => m.status !== "live")] :
-    tab === "fixtures" ? upcoming :
-                         results
+    tab === "standings" ? [] :
+    matches
 
   if (loading) {
     return (
@@ -259,12 +268,15 @@ export default function LeagueDetailPage() {
         <div className="container">
           {tab === "standings" ? (
             <StandingsTable standings={standings} t={t} i18n={i18n} />
+          ) : tabLoading ? (
+            <div className="loading-shimmer" style={{ height: 240, borderRadius: 12 }} />
           ) : displayedMatches.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state__icon">📅</div>
               <h3>{t("noMatches")}</h3>
               <p>
                 {tab === "today"    ? t("time.noMatches", { date: t("time.today").toLowerCase() }) :
+                 tab === "fixtures" ? t("home.noUpcoming") :
                  t("scores.noResults")}
               </p>
             </div>

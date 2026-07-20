@@ -105,7 +105,7 @@ module Api
         league_id = AppFocus.league_id_for(competition_code)
         return {} unless league_id
 
-        season = current_season_for(competition_code)
+        season = LiveScoresClient.new.current_season_for_league(league_id, competition_code)
         rows   = LiveScoresClient.new.league_standings(league_id, season)
         return {} if rows.blank?
 
@@ -129,13 +129,6 @@ module Api
       rescue => e
         Rails.logger.error("[StandingsController] API standings failed: #{e.message}")
         {}
-      end
-
-      def current_season_for(competition_code)
-        # European leagues: season spans two calendar years (e.g. 2025 for 2025/26).
-        month = Date.today.month
-        year  = Date.today.year
-        competition_code == "MLS" ? year : (month >= 7 ? year : year - 1)
       end
     end
   end

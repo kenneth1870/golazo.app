@@ -50,7 +50,8 @@ class LiveScoresClient
     135,  # Serie A
     61,   # Ligue 1
     253,  # MLS
-    162   # Liga Tica (Costa Rica Primera División)
+    162,  # Liga Tica (Costa Rica Primera División)
+    262   # Liga MX
   ]).freeze
 
   # Always excluded — low-value fixtures that waste API quota in caches/UI.
@@ -136,6 +137,39 @@ class LiveScoresClient
     end
   rescue => e
     Rails.logger.error("[LiveScoresClient] matches_for_date(#{date}): #{e.message}")
+    []
+  end
+
+  # Fixtures for one league over a date range — avoids the shared per-day cache
+  # missing newly-added leagues and cuts API noise vs fetching every match on each day.
+  def current_season_for_league(league_id, code)
+    Rails.cache.fetch("league_current_season_v1_#{league_id}", expires_in: 12.hours, race_condition_ttl: 30.seconds) do
+      data    = get("leagues", id: league_id)
+      current = data.dig("response", 0, "seasons")&.find { |s| s["current"] }
+      current&.dig("year") || AppFocus.season_for(code)
+    end
+  rescue => e
+    Rails.logger.warn("[LiveScoresClient] current_season_for_league(#{league_id}): #{e.message}")
+    AppFocus.season_for(code)
+  end
+
+  def matches_for_league(league_id, from:, to:, code:, timezone: "UTC")
+    from   = from.to_date
+    to     = to.to_date
+    season = current_season_for_league(league_id, code)
+    tz_key = timezone.gsub(/[^A-Za-z0-9_\/+-]/, "_").downcase
+    ttl    = to < Date.today ? 24.hours : 5.minutes
+
+    Rails.cache.fetch(
+      "live_scores_league_v1_#{league_id}_#{season}_#{from.iso8601}_#{to.iso8601}_#{tz_key}",
+      expires_in: ttl, race_condition_ttl: 30.seconds
+    ) do
+      data = get("fixtures", league: league_id, season: season,
+                         from: from.iso8601, to: to.iso8601, timezone: timezone)
+      (data.dig("response") || []).filter_map { |f| normalize_fixture(f) }
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] matches_for_league(#{league_id}): #{e.message}")
     []
   end
 
