@@ -28,7 +28,7 @@ function ArticleSkeleton() {
 export default function NewsShowPage() {
   const { id }      = useParams()
   const { t, i18n } = useTranslation()
-  const { clubsPrimary } = useAppFocus()
+  const { clubs_primary: clubsPrimary } = useAppFocus()
   const navigate = useNavigate()
   const lang     = i18n.language.split("-")[0]
   const [article, setArticle]   = useState(null)

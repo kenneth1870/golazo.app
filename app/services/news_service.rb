@@ -116,9 +116,11 @@ class NewsService
     # Store the FULL merged pool in cache — don't truncate inside the block.
     # Different callers (index: 60, show/content: 60, sitemap: 200) all read
     # from the same pool and slice with .first(limit) after the cache hit.
-    all_items = Rails.cache.fetch("news_feed_v8_#{lang}", expires_in: 30.minutes, race_condition_ttl: 30.seconds) do
+    all_items = Rails.cache.fetch(news_cache_key(lang), expires_in: 30.minutes, race_condition_ttl: 30.seconds) do
+      espn_urls = (ESPN_API_ENDPOINTS[espn_lang] || [])
+      espn_urls = espn_urls.sort_by { |url| url.include?("fifa.world") ? 1 : 0 } if AppFocus.wc_paused?
       # ESPN JSON API first — items with images win deduplication by link.
-      espn_threads = (ESPN_API_ENDPOINTS[espn_lang] || [])
+      espn_threads = espn_urls
                        .map { |url| Thread.new { fetch_espn_api(url, lang: espn_lang) } }
       # RSS feeds second — breadth supplement; image-less but ensures older
       # ESPN articles stay findable even after they age out of the API window.
@@ -542,5 +544,10 @@ class NewsService
   rescue => e
     Rails.logger.warn("[NewsService] parse error: #{e.message}")
     nil
+  end
+
+  def news_cache_key(lang)
+    suffix = AppFocus.wc_paused? ? "clubs_v9" : "v8"
+    "news_feed_#{suffix}_#{lang}"
   end
 end

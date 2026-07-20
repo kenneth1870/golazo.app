@@ -61,9 +61,19 @@ export default function SearchBar({ onClose }) {
   const go = useCallback((result) => {
     if (!result?.id) return
     if (result.type === "team") {
-      navigate(`/teams/${result.id}`)
+      if (String(result.id).startsWith("club-") && result.league_code) {
+        navigate(`/leagues/${result.league_code}`)
+      } else if (!String(result.id).startsWith("club-")) {
+        navigate(`/teams/${result.id}`)
+      } else {
+        navigate("/leagues")
+      }
     } else if (result.type === "match") {
-      navigate(`/matches/db-${result.id}`)
+      if (result.external_id) {
+        navigate(`/matches/${result.external_id}`)
+      } else {
+        navigate(`/matches/db-${result.id}`)
+      }
     }
     onClose()
   }, [navigate, onClose])
@@ -106,7 +116,7 @@ export default function SearchBar({ onClose }) {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Search"
+        aria-label={t("search.title", "Search")}
         style={{
           position: "fixed", top: "10%", left: "50%", transform: "translateX(-50%)",
           width: "min(560px, 92vw)", zIndex: 3001,
@@ -164,7 +174,11 @@ export default function SearchBar({ onClose }) {
                     <FlagOrInitials name={r.code || r.name} flagUrl={r.flag_url} size={32} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 700, color: "var(--text)", fontSize: "0.9rem" }}>{r.name}</div>
-                      {r.group && <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{t("nav.group", { letter: r.group })}</div>}
+                      {r.group
+                        ? <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{t("nav.group", { letter: r.group })}</div>
+                        : r.league_code
+                          ? <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{r.league_code}</div>
+                          : null}
                     </div>
                     <span style={{ fontSize: "0.68rem", color: "var(--muted)", background: "var(--surface2)", padding: "2px 7px", borderRadius: 4 }}>{t("table.team")}</span>
                   </>

@@ -421,7 +421,7 @@ function translateRound(round, t) {
   return keys[round] ? t(keys[round]) : round
 }
 
-function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, onNotif, notifEnabled, notifSupported, events }) {
+function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, onNotif, notifEnabled, notifSupported, events, clubsPrimary = false }) {
   const { t, i18n } = useTranslation()
   const [copied, setCopied] = useState(false)
   const [venueImg, setVenueImg] = useState(null)
@@ -640,6 +640,13 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
         <div className="scoreboard__footer">
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {fixture?.fixture?.venue?.name && (
+              clubsPrimary ? (
+                <span className="scoreboard__venue">
+                  📍 {fixture.fixture.venue.name}
+                  {fixture.fixture.venue.city ? `, ${fixture.fixture.venue.city}` : ""}
+                  {venueCap ? <span style={{ opacity: .5, marginLeft: 6 }}>· 🏟️ {venueCap.toLocaleString()}</span> : null}
+                </span>
+              ) : (
               <Link
                 to={`/mundial/venues/${fixture.fixture.venue.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`}
                 className="scoreboard__venue"
@@ -649,6 +656,7 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
                 {fixture.fixture.venue.city ? `, ${fixture.fixture.venue.city}` : ""}
                 {venueCap ? <span style={{ opacity: .5, marginLeft: 6 }}>· 🏟️ {venueCap.toLocaleString()}</span> : null}
               </Link>
+              )
             )}
             {fixture?.fixture?.referee && (
               <span className="scoreboard__venue" style={{ fontSize: ".68rem" }}>
@@ -2268,6 +2276,7 @@ export default function MatchShowPage() {
             liveMinute={liveMinute}
             liveExtra={apiExtra}
             matchId={id}
+            clubsPrimary={clubsPrimary}
             notifEnabled={notifSupported && pushSubscribed && matchTeamsNotified}
             notifSupported={notifSupported}
             onNotif={() => pushSubscribed && addTeams([homeTeamRaw, awayTeamRaw].filter(Boolean))}

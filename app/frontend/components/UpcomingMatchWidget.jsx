@@ -2,9 +2,11 @@ import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { formatFull } from "../hooks/useLocalTime"
 import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
+import { useAppFocus } from "../hooks/useAppFocus"
 
 export default function UpcomingMatchWidget({ match, onClick }) {
   const { i18n } = useTranslation()
+  const { clubs_primary: clubsPrimary } = useAppFocus()
 
   const kickoff = formatFull(match.kickoff_at, i18n.language)
 
@@ -42,12 +44,14 @@ export default function UpcomingMatchWidget({ match, onClick }) {
         <p>
           <span className="d-block">{kickoff}</span>
           {match.venue
-            ? <Link
-                to={`/mundial/venues/${match.venue.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`}
-                style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 700 }}
-              >
-                📍 {match.venue}
-              </Link>
+            ? (clubsPrimary
+                ? <span style={{ color: "var(--muted)" }}>📍 {match.venue}</span>
+                : <Link
+                    to={`/mundial/venues/${match.venue.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`}
+                    style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 700 }}
+                  >
+                    📍 {match.venue}
+                  </Link>)
             : null
           }
         </p>

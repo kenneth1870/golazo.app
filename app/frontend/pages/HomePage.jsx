@@ -18,6 +18,31 @@ import ClubCompetitionChips from "../components/ClubCompetitionChips"
 import { useStandingsChannel } from "../hooks/useStandingsChannel"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
 
+function useFavoriteFixtures(enabled) {
+  const [fixtures, setFixtures] = useState([])
+
+  useEffect(() => {
+    if (!enabled) { setFixtures([]); return }
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    fetch(`/api/v1/today?tz=${encodeURIComponent(tz)}`)
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      .then(all => {
+        if (!Array.isArray(all)) return
+        const sorted = all
+          .filter(m => m.status === "live" || m.status === "scheduled" || m.upcoming_preview)
+          .sort((a, b) => {
+            if (a.status === "live" && b.status !== "live") return -1
+            if (b.status === "live" && a.status !== "live") return 1
+            return new Date(a.kickoff_at || 0) - new Date(b.kickoff_at || 0)
+          })
+        setFixtures(sorted)
+      })
+      .catch(() => {})
+  }, [enabled])
+
+  return fixtures
+}
+
 function useTodayMatches(wcOnly = false) {
   const [matches, setMatches] = useState([])
   const loadRef = useRef(null)
@@ -99,10 +124,12 @@ function useLatestNews() {
 // ─── Favorite team card ───────────────────────────────────────────────────────
 function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
   const { i18n } = useTranslation()
+  const favName = (fav.name || "").toLowerCase()
+  const matchesTeam = (name) => name && (name.toLowerCase() === favName || translateTeam(name, i18n.language)?.toLowerCase() === favName)
   const favMatches = upcomingMatches.filter(m =>
-    m.home_team?.name === fav.name || m.away_team?.name === fav.name
+    matchesTeam(m.home_team?.name) || matchesTeam(m.away_team?.name)
   )
-  const next = favMatches[0]
+  const next = favMatches.find(m => m.status === "live") || favMatches[0]
 
   return (
     <div style={{
@@ -121,7 +148,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
       {next ? (
         <div
           style={{ marginLeft: "auto", cursor: "pointer", textAlign: "right" }}
-          onClick={() => navigate(next.external_id ? `/matches/${next.external_id}` : `/matches/db-${next.id}`)}
+          onClick={() => navigateToMatch(navigate, next)}
         >
           <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>
             {next.status === "live" ? t("home.playingNow") : t("hero.nextMatch")}
@@ -322,6 +349,8 @@ export default function HomePage() {
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: clubsPrimary ? undefined : "WC" })
   useLiveScoresChannel(patchLiveScore)
   const todayMatches                 = useTodayMatches(!clubsPrimary)
+  const favFixtures                  = useFavoriteFixtures(clubsPrimary && !!fav)
+  const favUpcoming                  = clubsPrimary ? favFixtures : upcomingMatches
   const { news: latestNews, newsError, retryNews } = useLatestNews()
 
   // Prefer the next match with a known future kickoff; only fall back to TBD
@@ -368,7 +397,7 @@ export default function HomePage() {
           <FavoriteTeamPicker />
         </div>
         {fav && (
-          <FavoriteTeamCard fav={fav} upcomingMatches={upcomingMatches} navigate={navigate} t={t} />
+          <FavoriteTeamCard fav={fav} upcomingMatches={favUpcoming} navigate={navigate} t={t} />
         )}
       </div>
 
