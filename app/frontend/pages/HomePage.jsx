@@ -11,6 +11,7 @@ import { useStructuredData } from "../hooks/useStructuredData"
 import { formatKickoff } from "../hooks/useLocalTime"
 import { translateTeam } from "../i18n/teamNames"
 import { clubTeamPath } from "../utils/clubTeamPath"
+import { matchTeamName } from "../utils/matchTeamName"
 import { navIdFor, navigateToMatch } from "../utils/matchDetailCache"
 import Hero from "../components/Hero"
 import MatchCard from "../components/MatchCard"
@@ -107,6 +108,8 @@ function useTodayMatches(wcOnly = false) {
   return matches
 }
 
+const FEATURED_NEWS_LEAGUES = [ "CRC", "LMX", "PL", "LAL" ]
+
 function useLatestNews(leagueCodes = []) {
   const { i18n } = useTranslation()
   const [news, setNews]   = useState([])
@@ -127,20 +130,16 @@ function useLatestNews(leagueCodes = []) {
   return { news, newsError: error, retryNews: load }
 }
 
-function teamMatches(teamName, favName) {
-  if (!teamName || !favName) return false
-  return teamName.toLowerCase().trim() === favName.toLowerCase().trim()
-}
-
-// ─── Favorite team card ───────────────────────────────────────────────────────
 function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
   const { i18n } = useTranslation()
-  const favName = (fav.name || "").toLowerCase()
-  const matchesTeam = (name) => name && (name.toLowerCase() === favName || translateTeam(name, i18n.language)?.toLowerCase() === favName)
+  const matchesTeam = (name) => matchTeamName(name, fav.name, i18n.language)
   const favMatches = upcomingMatches.filter(m =>
     matchesTeam(m.home_team?.name) || matchesTeam(m.away_team?.name)
   )
   const next = favMatches.find(m => m.status === "live") || favMatches[0]
+  const teamHref = fav.league_code
+    ? clubTeamPath(fav.league_code, fav.name)
+    : (/^\d+$/.test(String(fav.id)) ? `/teams/${fav.id}` : null)
 
   return (
     <div style={{
@@ -152,8 +151,8 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
         {fav.flag_url && <img src={fav.flag_url} alt={fav.name} className="logo-sm" onError={e => (e.target.style.display="none")} />}
         <div>
           <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>{t("home.yourTeam")}</div>
-          {fav.league_code ? (
-            <Link to={clubTeamPath(fav.league_code, fav.name)} style={{ fontWeight: 800, color: "var(--text)", fontSize: "1rem", textDecoration: "none" }}>
+          {teamHref ? (
+            <Link to={teamHref} style={{ fontWeight: 800, color: "var(--text)", fontSize: "1rem", textDecoration: "none" }}>
               {translateTeam(fav.name, i18n.language) || fav.name}
             </Link>
           ) : (
@@ -295,10 +294,11 @@ function TodayMatchesSection({ todayMatches, navigate, t, clubsPrimary = false }
 
 // ─── Your matches (followed teams) ────────────────────────────────────────────
 function YourMatchesSection({ todayMatches, favoriteTeamNames, navigate, t }) {
+  const { i18n } = useTranslation()
   const yourMatches = favoriteTeamNames.length > 0
     ? todayMatches.filter(m =>
         favoriteTeamNames.some(name =>
-          teamMatches(m.home_team?.name, name) || teamMatches(m.away_team?.name, name)
+          matchTeamName(m.home_team?.name, name, i18n.language) || matchTeamName(m.away_team?.name, name, i18n.language)
         )
       )
     : []
@@ -416,7 +416,8 @@ export default function HomePage() {
   const newsLeagues = clubsPrimary
     ? [...new Set(favoriteCompetitions.map(f => f.code).filter(Boolean))]
     : []
-  const { news: latestNews, newsError, retryNews } = useLatestNews(newsLeagues)
+  const newsLeagueFilter = newsLeagues.length > 0 ? newsLeagues : (clubsPrimary ? FEATURED_NEWS_LEAGUES : [])
+  const { news: latestNews, newsError, retryNews } = useLatestNews(newsLeagueFilter)
 
   // Prefer the next match with a known future kickoff; only fall back to TBD
   // if nothing has a time yet (avoids showing a placeholder knockout slot in hero).
@@ -428,7 +429,7 @@ export default function HomePage() {
   // "Próximos Partidos" table — everything after nextMatch, excluding today's
   // matches (those are already shown in the TodayMatchesSection above).
   const todayStr = new Date().toLocaleDateString("en-CA")
-  const upcomingFuture = clubsPrimary ? [] : upcomingMatches.filter(m =>
+  const upcomingFuture = upcomingMatches.filter(m =>
     m.id !== nextMatch?.id &&
     m.kickoff_at &&
     new Date(m.kickoff_at).toLocaleDateString("en-CA") !== todayStr
@@ -516,6 +517,82 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* ── Quick-links: clubs hub ── */}
+      {clubsPrimary && (
+        <div className="site-section" style={{ paddingTop: 32, paddingBottom: 40 }}>
+          <div className="container">
+            <div className="row">
+              <div className="col-md-6" style={{ marginBottom: 20 }}>
+                <div style={{
+                  background: "linear-gradient(135deg, rgba(238,30,70,.1) 0%, rgba(238,30,70,.03) 100%)",
+                  border: "1px solid rgba(238,30,70,.2)", borderRadius: 14, padding: "20px 24px",
+                }}>
+                  <div style={{ fontSize: ".62rem", fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 8 }}>
+                    {t("home.clubCompetitions")}
+                  </div>
+                  <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", marginBottom: 12 }}>
+                    {t("home.liveScoresWorldwide")}
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {[
+                      { label: `📅 ${t("time.today")}`, path: "/scores/today" },
+                      { label: `📊 ${t("nav.results")}`, path: "/scores/results" },
+                      { label: `🏆 ${t("nav.allLeagues")}`, path: "/leagues" },
+                      { label: `⚔️ ${t("teamComparison.compare")}`, path: "/compare/teams" },
+                      { label: `📰 ${t("nav.news")}`, path: "/news" },
+                    ].map(({ label, path }) => (
+                      <Link key={path} to={path} style={{
+                        display: "inline-block",
+                        background: "var(--surface2)", border: "1px solid var(--border)",
+                        borderRadius: 8, padding: "6px 12px",
+                        fontSize: ".7rem", fontWeight: 700, color: "var(--text)", textDecoration: "none",
+                      }}>
+                        {label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-6" style={{ marginBottom: 20 }}>
+                <div style={{
+                  background: "var(--surface)", border: "1px solid var(--border)",
+                  borderRadius: 14, padding: "20px 24px",
+                }}>
+                  <div style={{ fontSize: ".62rem", fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 8 }}>
+                    {t("leagues.archived", "Archived")}
+                  </div>
+                  <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", marginBottom: 12 }}>
+                    <Link to="/world-cup-2026" style={{ color: "inherit", textDecoration: "none" }}>
+                      {t("nav.mundial")}
+                    </Link>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {[
+                      { label: `🏆 ${t("nav.mundialShort")}`, path: "/world-cup-2026" },
+                      { label: `📅 ${t("nav.schedule")}`, path: "/mundial/schedule" },
+                      { label: `📊 ${t("nav.groups")}`, path: "/scores/groups" },
+                      { label: `🏆 ${t("nav.knockout")}`, path: "/scores/knockout" },
+                      { label: `⭐ ${t("mundial.tabGoals")}`, path: "/mundial/scorers" },
+                      { label: `🏟️ ${t("nav.venues")}`, path: "/mundial/venues" },
+                      { label: `👥 ${t("nav.teams")}`, path: "/mundial/teams" },
+                    ].map(({ label, path }) => (
+                      <Link key={path} to={path} style={{
+                        display: "inline-block",
+                        background: "var(--surface2)", border: "1px solid var(--border)",
+                        borderRadius: 8, padding: "6px 12px",
+                        fontSize: ".7rem", fontWeight: 700, color: "var(--text)", textDecoration: "none",
+                      }}>
+                        {label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Quick-links section: World Cup + Competitions (WC mode only) ── */}
       {!clubsPrimary && <div className="site-section" style={{ paddingTop: 32, paddingBottom: 40 }}>
         <div className="container">
@@ -565,7 +642,7 @@ export default function HomePage() {
       </div>}
 
       {/* ── Next match widget + upcoming ── */}
-      {(nextMatch || upcomingFuture.length > 0) && !clubsPrimary && <div className="site-section bg-dark">
+      {(nextMatch || upcomingFuture.length > 0) && <div className="site-section bg-dark">
         <div className="container">
           <div className="row">
 

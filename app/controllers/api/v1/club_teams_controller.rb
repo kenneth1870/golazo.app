@@ -63,8 +63,7 @@ module Api
         return {} unless league_id
 
         client = LiveScoresClient.new
-        season = client.current_season_for_league(league_id, code)
-        rows   = client.league_standings(league_id, season)
+        rows   = client.league_standings_for_code(code)
         return {} if rows.blank?
 
         flat = rows.map do |r|

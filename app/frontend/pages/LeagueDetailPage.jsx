@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
@@ -9,6 +9,8 @@ import { usePageMeta } from "../hooks/usePageMeta"
 import { navigateToMatch, navIdFor } from "../utils/matchDetailCache"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
 import { clubTeamPath } from "../utils/clubTeamPath"
+import { matchTeamName } from "../utils/matchTeamName"
+import { leagueHeroStyle } from "../utils/leagueHeroImages"
 
 function flattenStandings(data) {
   if (Array.isArray(data)) return data
@@ -16,7 +18,7 @@ function flattenStandings(data) {
   return []
 }
 
-function StandingsTable({ standings, t, i18n, leagueCode }) {
+function StandingsTable({ standings, t, i18n, leagueCode, favoriteTeamNames = [] }) {
   if (!standings || standings.length === 0) return null
 
   // Group by group_name if present
@@ -51,8 +53,12 @@ function StandingsTable({ standings, t, i18n, leagueCode }) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map(s => (
-                  <tr key={s.id ?? s.rank}>
+                {rows.map(s => {
+                  const followed = favoriteTeamNames.some(name =>
+                    matchTeamName(s.team?.name, name, i18n.language)
+                  )
+                  return (
+                  <tr key={s.id ?? s.rank} style={followed ? { background: "rgba(238,30,70,.08)" } : undefined}>
                     <td style={{ color: "#888" }}>{s.rank}</td>
                     <td>
                       <div className="d-flex align-items-center" style={{ gap: 8 }}>
@@ -90,7 +96,8 @@ function StandingsTable({ standings, t, i18n, leagueCode }) {
                     </td>
                     <td><strong style={{ color: "var(--text)" }}>{s.points}</strong></td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -130,15 +137,33 @@ export default function LeagueDetailPage() {
   const { t, i18n } = useTranslation()
   const { code } = useParams()
   const navigate = useNavigate()
-  const { isFavorite, toggleFavorite } = useFavorites()
+  const { isFavorite, toggleFavorite, favoriteTeamNames } = useFavorites()
   const [competition, setCompetition] = useState(null)
   const [matches, setMatches]         = useState([])
   const [standings, setStandings]     = useState([])
   const [tab, setTab]                 = useState("today")
   const [loading, setLoading]         = useState(true)
   const [tabLoading, setTabLoading]   = useState(false)
+  const [standingsLoading, setStandingsLoading] = useState(false)
+  const [standingsError, setStandingsError]     = useState(false)
 
   const favKey = competition?.code ?? code
+  const heroRef = useRef({ code: null, style: null })
+  if (heroRef.current.code !== code) {
+    heroRef.current = { code, style: leagueHeroStyle(code) }
+  }
+  const heroStyle = heroRef.current.style
+
+  const loadStandings = useCallback(() => {
+    if (!code) return Promise.resolve()
+    setStandingsError(false)
+    setStandingsLoading(true)
+    return fetch(`/api/v1/standings?competition=${code}`)
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      .then(data => setStandings(flattenStandings(data)))
+      .catch(() => { setStandings([]); setStandingsError(true) })
+      .finally(() => setStandingsLoading(false))
+  }, [code])
 
   const tabParam = tab === "standings" ? null : tab
 
@@ -161,7 +186,7 @@ export default function LeagueDetailPage() {
     Promise.all([
       fetch(`/api/v1/competitions/${code}`).then(r => r.json()),
       fetch(`/api/v1/competitions/${code}/fixtures?tab=today&tz=${encodeURIComponent(tz)}`).then(r => r.ok ? r.json() : []),
-      fetch(`/api/v1/standings?competition=${code}`).then(r => r.json()).catch(() => []),
+      fetch(`/api/v1/standings?competition=${code}`).then(r => r.ok ? r.json() : {}).catch(() => ({})),
     ]).then(([comp, matchData, standData]) => {
       setCompetition(comp)
       const ms = Array.isArray(matchData) ? matchData : []
@@ -175,6 +200,11 @@ export default function LeagueDetailPage() {
       else if (!hasLiveOrToday && hasUpcoming(ms)) setTab("fixtures")
     }).finally(() => setLoading(false))
   }, [code])
+
+  useEffect(() => {
+    if (loading || tab !== "standings") return
+    loadStandings()
+  }, [tab, loading, loadStandings])
 
   useEffect(() => {
     if (loading || tab === "standings") return
@@ -222,7 +252,7 @@ export default function LeagueDetailPage() {
     { key: "today",      label: t("time.today") },
     { key: "fixtures",   label: t("nav.fixtures") },
     { key: "results",    label: t("nav.results") },
-    ...(standings.length > 0 ? [{ key: "standings", label: t("nav.standings", "Standings") }] : []),
+    { key: "standings",  label: t("nav.standings", "Standings") },
   ]
 
   const displayedMatches =
@@ -233,7 +263,7 @@ export default function LeagueDetailPage() {
   if (loading) {
     return (
       <div>
-        <div className="page-hero" style={{ backgroundImage: "url('/images/hero_5.jpg')" }}>
+        <div className="page-hero" style={heroStyle}>
           <div className="container"><h1 className="page-hero__title">{t("loading")}</h1></div>
         </div>
         <div className="site-section container">
@@ -245,7 +275,7 @@ export default function LeagueDetailPage() {
 
   return (
     <div>
-      <div className="page-hero" style={{ backgroundImage: "url('/images/hero_5.jpg')" }}>
+      <div className="page-hero" style={heroStyle}>
         <div className="container">
           <div className="d-flex align-items-center" style={{ gap: 16 }}>
             {competition?.logo && (
@@ -305,7 +335,23 @@ export default function LeagueDetailPage() {
       <div className="site-section">
         <div className="container">
           {tab === "standings" ? (
-            <StandingsTable standings={standings} t={t} i18n={i18n} leagueCode={code} />
+            standingsLoading ? (
+              <div className="loading-shimmer" style={{ height: 240, borderRadius: 12 }} />
+            ) : standings.length > 0 ? (
+              <StandingsTable standings={standings} t={t} i18n={i18n} leagueCode={code} favoriteTeamNames={favoriteTeamNames} />
+            ) : (
+              <div className="empty-state">
+                <div className="empty-state__icon">📊</div>
+                <h3>{t("nav.standings", "Standings")}</h3>
+                <p>{standingsError ? t("error.tryAgain", "Couldn't load standings.") : t("leagues.noStandings", "Standings not available yet for this competition.")}</p>
+                <button
+                  className="btn btn-sm btn-outline-light mt-3"
+                  onClick={loadStandings}
+                >
+                  {t("error.retry", "Retry")}
+                </button>
+              </div>
+            )
           ) : tabLoading ? (
             <div className="loading-shimmer" style={{ height: 240, borderRadius: 12 }} />
           ) : displayedMatches.length === 0 ? (

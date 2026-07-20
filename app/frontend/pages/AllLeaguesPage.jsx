@@ -203,7 +203,7 @@ export default function AllLeaguesPage() {
                     liveCount={liveByCode[c.code] ?? 0}
                     lang={i18n.language}
                     t={t}
-                    onClick={() => navigate(c.code === "WC" ? "/mundial/teams" : `/leagues/${c.code}`)}
+                    onClick={() => navigate(c.code === "WC" ? "/world-cup-2026" : `/leagues/${c.code}`)}
                   />
                 ))}
               </div>

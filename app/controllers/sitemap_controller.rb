@@ -10,11 +10,16 @@ class SitemapController < ApplicationController
     @static_urls = if AppFocus.wc_paused?
       %w[
         /
+        /world-cup-2026
         /scores/today
         /scores/results
         /news
         /leagues
         /compare/teams
+        /mundial/teams
+        /mundial/schedule
+        /mundial/venues
+        /mundial/scorers
       ]
     else
       %w[

@@ -14,8 +14,7 @@ class ClubStandingsCacheTest < ActiveSupport::TestCase
     ]
 
     fake_client = Class.new do
-      define_method(:current_season_for_league) { |_league_id, _code| 2025 }
-      define_method(:league_standings) { |_league_id, _season| rows }
+      define_method(:league_standings_for_code) { |_code| rows }
     end
 
     with_fake_live_client(fake_client) do

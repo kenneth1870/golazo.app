@@ -1,4 +1,5 @@
 import { useMatches, patchLiveScore } from "../../hooks/useMatches"
+import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../../hooks/usePageMeta"

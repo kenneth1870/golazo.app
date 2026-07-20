@@ -538,7 +538,7 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
         </Link>
       )
     }
-    if (!clubsPrimary && team?.id) {
+    if (team?.id) {
       return (
         <Link to={`/teams/${team.id}`} className={cls} style={{ textDecoration: "none", color: "inherit" }}>
           {name}

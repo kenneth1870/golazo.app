@@ -11,8 +11,7 @@ class ClubStandingsCache
     return unless league_id
 
     client = LiveScoresClient.new
-    season = client.current_season_for_league(league_id, competition_code)
-    rows   = client.league_standings(league_id, season)
+    rows   = client.league_standings_for_code(competition_code)
     return if rows.blank?
 
     flat = rows.map do |r|

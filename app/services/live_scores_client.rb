@@ -153,10 +153,10 @@ class LiveScoresClient
     AppFocus.season_for(code)
   end
 
-  def matches_for_league(league_id, from:, to:, code:, timezone: "UTC")
+  def matches_for_league(league_id, from:, to:, code:, timezone: "UTC", season: nil)
     from   = from.to_date
     to     = to.to_date
-    season = current_season_for_league(league_id, code)
+    season = season || current_season_for_league(league_id, code)
     tz_key = timezone.gsub(/[^A-Za-z0-9_\/+-]/, "_").downcase
     ttl    = to < Date.today ? 24.hours : 5.minutes
 
@@ -271,6 +271,21 @@ class LiveScoresClient
   rescue => e
     Rails.logger.error("[LiveScoresClient] standings: #{e.message}")
     []
+  end
+
+  # Current season first; falls back to previous when empty (off-season / UCL group stage).
+  def league_standings_for_code(code)
+    league_id = AppFocus.league_id_for(code)
+    return [] unless league_id
+
+    season = current_season_for_league(league_id, code)
+    rows   = league_standings(league_id, season)
+    return rows if rows.present?
+
+    prev = season.to_i - 1
+    return [] if prev < 2000
+
+    league_standings(league_id, prev)
   end
 
   # Top scorers for a league/season. Returns raw API-Football response array.

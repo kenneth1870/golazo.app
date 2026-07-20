@@ -6,9 +6,24 @@ class PageMeta
   Meta = Struct.new(:title, :description, :type, :image, :json_ld, keyword_init: true)
 
   SITE         = "Golazo — Mundial 2026".freeze
+  SITE_CLUBS   = "Golazo · Live Football".freeze
   DEFAULT_DESC = "Live scores, real-time stats, and every goal from the FIFA World Cup 2026 — USA · Canada · Mexico.".freeze
+  DEFAULT_DESC_CLUBS = "Live scores, fixtures and standings for Premier League, La Liga, Liga Tica, Liga MX and top competitions.".freeze
   DEFAULT_IMG  = "/images/bg_3.jpg".freeze
   BASE_URL     = "https://golazo.app".freeze
+
+  CLUBS_RULE_DESCS = {
+    "/scores/live"     => "Live scores from top leagues worldwide — updating in real time.",
+    "/scores/results"  => "Full-time results from Premier League, La Liga, Liga MX and more.",
+    "/scores/today"    => "Today's live scores and fixtures across top leagues worldwide.",
+    "/leagues"         => "Live scores from top leagues and competitions worldwide.",
+    "/compare/teams"   => "Compare club team standings side by side on Golazo.",
+    "/news"            => "Latest football news from Liga Tica, Liga MX, Premier League and more.",
+    "/matches"         => "Match center — lineups, live stats, events and head-to-head.",
+    "/teams"           => "Club team profile — fixtures, results and standings on Golazo.",
+    "/players"         => "Player stats — goals, assists, minutes and more on Golazo.",
+    "/mundial"         => "Archived FIFA World Cup 2026 hub — teams, schedule and stats."
+  }.freeze
 
   # [path-prefix, title, description] — most specific first.
   RULES = [
@@ -25,6 +40,7 @@ class PageMeta
     [ "/mundial/scorers",  "Top Scorers",       "The FIFA World Cup 2026 top scorers race." ],
     [ "/mundial",          "Mundial 2026",      DEFAULT_DESC ],
     [ "/leagues",          "Leagues",           "Live scores from top leagues and competitions worldwide." ],
+    [ "/compare/teams",    "Compare Teams",     "Compare club team standings side by side on Golazo." ],
     [ "/leaderboard",      "Prediction Leaderboard", "See who's winning the Golazo score-prediction leaderboard for World Cup 2026." ],
     [ "/predictor",        "Bracket Predictor", "Predict the FIFA World Cup 2026 knockout bracket." ],
     [ "/news",             "Football News",     "The latest FIFA World Cup 2026 and international football news." ],
@@ -32,6 +48,21 @@ class PageMeta
     [ "/teams",            "Team Profile",      "FIFA World Cup 2026 team profile — squad, fixtures and results." ],
     [ "/players",          "Player Profile",    "FIFA World Cup 2026 player stats — goals, assists, minutes and more." ]
   ].freeze
+
+  def self.site_name
+    AppFocus.wc_paused? ? SITE_CLUBS : SITE
+  end
+
+  def self.default_description
+    AppFocus.wc_paused? ? DEFAULT_DESC_CLUBS : DEFAULT_DESC
+  end
+
+  def self.rule_description(rule)
+    return rule[2] unless AppFocus.wc_paused?
+
+    CLUBS_RULE_DESCS[rule[0]] || rule[2]
+  end
+  private_class_method :rule_description
 
   def self.for(path)
     path = path.to_s
@@ -58,6 +89,10 @@ class PageMeta
       return for_league(m[1])
     end
 
+    if (m = path.match(%r{\A/leagues/([A-Z0-9]+)/teams/([^/]+)\z}i))
+      return for_club_team(m[1], m[2])
+    end
+
     if (m = path.match(%r{\A/news/([a-zA-Z0-9]+)\z}))
       return for_news(m[1])
     end
@@ -66,8 +101,8 @@ class PageMeta
 
     # ── Section-level rules ─────────────────────────────────────────────
     rule  = RULES.find { |prefix, _| path == prefix || path.start_with?("#{prefix}/") }
-    title = rule ? "#{rule[1]} — #{SITE}" : SITE
-    desc  = rule ? rule[2] : DEFAULT_DESC
+    title = rule ? "#{rule[1]} — #{site_name}" : site_name
+    desc  = rule ? rule_description(rule) : default_description
     type  = path.start_with?("/news/", "/matches/") ? "article" : "website"
 
     Meta.new(title: title, description: desc, type: type, image: DEFAULT_IMG, json_ld: nil)
@@ -79,10 +114,12 @@ class PageMeta
     Rails.cache.fetch("page_meta_home", expires_in: 30.seconds, race_condition_ttl: 5.seconds) { build_home_meta }
   rescue => e
     Rails.logger.error("[PageMeta.for_home] #{e.message}")
-    Meta.new(title: SITE, description: DEFAULT_DESC, type: "website", image: DEFAULT_IMG, json_ld: nil)
+    Meta.new(title: site_name, description: default_description, type: "website", image: DEFAULT_IMG, json_ld: nil)
   end
 
   def self.build_home_meta
+    return build_clubs_home_meta if AppFocus.wc_paused?
+
     wc_scope = Match.joins(:competition).where(competitions: { code: "WC" }).includes(:home_team, :away_team)
 
     # Priority 1 — live matches right now
@@ -94,7 +131,7 @@ class PageMeta
       score = "#{first.home_score}–#{first.away_score}"
       more  = live.size > 1 ? " +#{live.size - 1} more" : ""
       return Meta.new(
-        title:       "🔴 LIVE: #{home} #{score} #{away}#{more} — #{SITE}",
+        title:       "🔴 LIVE: #{home} #{score} #{away}#{more} — #{site_name}",
         description: "#{live.size} match#{"es" if live.size > 1} live now at the FIFA World Cup 2026. " \
                      "Follow every goal in real time on Golazo.",
         type:        "website",
@@ -116,7 +153,7 @@ class PageMeta
       away  = first.away_team&.name || "TBD"
       more  = today.size > 1 ? " +#{today.size - 1} more today" : ""
       return Meta.new(
-        title:       "#{home} vs #{away}#{more} — #{SITE}",
+        title:       "#{home} vs #{away}#{more} — #{site_name}",
         description: "#{today.size} World Cup match#{"es" if today.size > 1} today. " \
                      "Live scores, goals and stats on Golazo — FIFA World Cup 2026.",
         type:        "website",
@@ -126,9 +163,52 @@ class PageMeta
     end
 
     # Fallback — no matches today
-    Meta.new(title: SITE, description: DEFAULT_DESC, type: "website", image: DEFAULT_IMG, json_ld: nil)
+    Meta.new(title: site_name, description: default_description, type: "website", image: DEFAULT_IMG, json_ld: nil)
   end
-  private_class_method :build_home_meta
+
+  def self.build_clubs_home_meta
+    scope = Match.joins(:competition).where.not(competitions: { code: "WC" })
+                 .includes(:home_team, :away_team)
+
+    live = scope.where(status: "live").order(:kickoff_at).limit(3).to_a
+    if live.any?
+      first = live.first
+      home  = first.home_team&.name || "TBD"
+      away  = first.away_team&.name || "TBD"
+      score = "#{first.home_score}–#{first.away_score}"
+      more  = live.size > 1 ? " +#{live.size - 1} more" : ""
+      return Meta.new(
+        title:       "🔴 LIVE: #{home} #{score} #{away}#{more} — #{site_name}",
+        description: "#{live.size} match#{"es" if live.size > 1} live now. Follow every goal in real time on Golazo.",
+        type:        "website",
+        image:       DEFAULT_IMG,
+        json_ld:     nil
+      )
+    end
+
+    window = (Time.current.beginning_of_day - 1.hour)..(Time.current.end_of_day + 1.hour)
+    today  = scope.where(kickoff_at: window)
+                  .where(status: %w[scheduled finished])
+                  .order(:kickoff_at)
+                  .limit(4)
+                  .to_a
+    if today.any?
+      first = today.first
+      home  = first.home_team&.name || "TBD"
+      away  = first.away_team&.name || "TBD"
+      more  = today.size > 1 ? " +#{today.size - 1} more today" : ""
+      return Meta.new(
+        title:       "#{home} vs #{away}#{more} — #{site_name}",
+        description: "#{today.size} match#{"es" if today.size > 1} today. Live scores, goals and stats on Golazo.",
+        type:        "website",
+        image:       DEFAULT_IMG,
+        json_ld:     nil
+      )
+    end
+
+    Meta.new(title: site_name, description: default_description, type: "website", image: DEFAULT_IMG, json_ld: nil)
+  end
+  private_class_method :build_home_meta, :build_clubs_home_meta
 
   def self.for_match(raw_id)
     # /matches/db-42  → look up by internal primary key
@@ -177,7 +257,7 @@ class PageMeta
     json_ld.compact!
 
     Meta.new(
-      title:       "#{title} — #{SITE}",
+      title:       "#{title} — #{site_name}",
       description: desc,
       type:        "article",
       image:       match.home_team&.flag_url || DEFAULT_IMG,
@@ -211,7 +291,7 @@ class PageMeta
     }.compact
 
     Meta.new(
-      title:       "#{title} — #{SITE}",
+      title:       "#{title} — #{site_name}",
       description: desc,
       type:        "website",
       image:       team.flag_url || DEFAULT_IMG,
@@ -223,14 +303,32 @@ class PageMeta
   end
 
   def self.for_player(id)
-    # Players come from external API, not local DB — use generic meta
+    desc = AppFocus.wc_paused? ?
+      "Player stats — goals, assists, minutes and more on Golazo." :
+      "FIFA World Cup 2026 player stats — goals, assists, minutes and more on Golazo."
     Meta.new(
-      title:       "Player Profile — #{SITE}",
-      description: "FIFA World Cup 2026 player stats — goals, assists, minutes and more on Golazo.",
+      title:       "Player Profile — #{site_name}",
+      description: desc,
       type:        "website",
       image:       DEFAULT_IMG,
       json_ld:     nil
     )
+  end
+
+  def self.for_club_team(code, slug)
+    comp = Competition.find_by(code: code.upcase)
+    name = slug.tr("-", " ").titleize
+    comp_name = comp&.name || code.upcase
+    Meta.new(
+      title:       "#{name} — #{site_name}",
+      description: "#{name} fixtures, results and #{comp_name} standings on Golazo.",
+      type:        "website",
+      image:       comp&.logo || DEFAULT_IMG,
+      json_ld:     nil
+    )
+  rescue => e
+    Rails.logger.error("[PageMeta.for_club_team] #{e.message}")
+    default_meta
   end
 
   def self.for_league(code)
@@ -241,7 +339,7 @@ class PageMeta
     desc  = "Live scores, standings and results for #{comp.name} on Golazo."
 
     Meta.new(
-      title:       "#{title} — #{SITE}",
+      title:       "#{title} — #{site_name}",
       description: desc,
       type:        "website",
       image:       comp.logo || DEFAULT_IMG,
@@ -280,7 +378,7 @@ class PageMeta
     desc  = "#{venue[:name]} in #{venue[:city]}, #{venue[:country]} hosts FIFA World Cup 2026 matches. " \
             "Fixtures, results and venue details on Golazo."
 
-    Meta.new(title: "#{title} — #{SITE}", description: desc, type: "website", image: DEFAULT_IMG, json_ld: nil)
+    Meta.new(title: "#{title} — #{site_name}", description: desc, type: "website", image: DEFAULT_IMG, json_ld: nil)
   rescue => e
     Rails.logger.error("[PageMeta.for_venue] #{e.message}")
     default_meta
@@ -293,8 +391,10 @@ class PageMeta
     end
 
     return Meta.new(
-      title:       "Football News — #{SITE}",
-      description: "The latest FIFA World Cup 2026 and international football news on Golazo.",
+      title:       "Football News — #{site_name}",
+      description: AppFocus.wc_paused? ?
+        "The latest football news from top leagues on Golazo." :
+        "The latest FIFA World Cup 2026 and international football news on Golazo.",
       type:        "article",
       image:       DEFAULT_IMG,
       json_ld:     nil
@@ -320,7 +420,7 @@ class PageMeta
     }.compact
 
     Meta.new(
-      title:       "#{title} — #{SITE}",
+      title:       "#{title} — #{site_name}",
       description: desc.truncate(160),
       type:        "article",
       image:       image,
@@ -329,8 +429,10 @@ class PageMeta
   rescue => e
     Rails.logger.error("[PageMeta.for_news] #{e.message}")
     Meta.new(
-      title:       "Football News — #{SITE}",
-      description: "The latest FIFA World Cup 2026 and international football news on Golazo.",
+      title:       "Football News — #{site_name}",
+      description: AppFocus.wc_paused? ?
+        "The latest football news from top leagues on Golazo." :
+        "The latest FIFA World Cup 2026 and international football news on Golazo.",
       type:        "article",
       image:       DEFAULT_IMG,
       json_ld:     nil
@@ -338,7 +440,7 @@ class PageMeta
   end
 
   def self.default_meta
-    Meta.new(title: SITE, description: DEFAULT_DESC, type: "website", image: DEFAULT_IMG, json_ld: nil)
+    Meta.new(title: site_name, description: default_description, type: "website", image: DEFAULT_IMG, json_ld: nil)
   end
   private_class_method :default_meta
 end

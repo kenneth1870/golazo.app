@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
@@ -10,6 +10,7 @@ import { syncTeamFollowToPush } from "../utils/favoritePush"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { navigateToMatch, navIdFor } from "../utils/matchDetailCache"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
+import { leagueHeroStyle } from "../utils/leagueHeroImages"
 
 export default function ClubTeamPage() {
   const { t, i18n } = useTranslation()
@@ -20,6 +21,12 @@ export default function ClubTeamPage() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState("upcoming")
+  const heroKey = `${code}|${slug}`
+  const heroRef = useRef({ key: null, style: null })
+  if (heroRef.current.key !== heroKey) {
+    heroRef.current = { key: heroKey, style: leagueHeroStyle(code, slug) }
+  }
+  const heroStyle = heroRef.current.style
 
   const team = data?.team
   const displayName = team ? (translateTeam(team.name, i18n.language) ?? team.name) : null
@@ -57,7 +64,7 @@ export default function ClubTeamPage() {
   if (loading) {
     return (
       <div>
-        <div className="page-hero" style={{ backgroundImage: "url('/images/hero_5.jpg')" }}>
+        <div className="page-hero" style={heroStyle}>
           <div className="container"><h1 className="page-hero__title">{t("loading")}</h1></div>
         </div>
         <div className="site-section container">
@@ -99,7 +106,7 @@ export default function ClubTeamPage() {
 
   return (
     <div>
-      <div className="page-hero" style={{ backgroundImage: "url('/images/hero_5.jpg')" }}>
+      <div className="page-hero" style={heroStyle}>
         <div className="container">
           <div className="d-flex align-items-center" style={{ gap: 16, flexWrap: "wrap" }}>
             {team.flag_url && (

@@ -78,15 +78,14 @@ module Api
       def standings_from_db(competition_code)
         scope = Standing.includes(:team, :competition)
                         .for_competition(competition_code)
-                        .where.not(group_name: [ nil, "" ])
-                        .order(:group_name, :rank)
+                        .order(Arel.sql("COALESCE(NULLIF(group_name, ''), 'Overall')"), :rank)
         return {} unless scope.exists?
 
         flat = scope.map { |s|
           {
             id:            s.id,
             rank:          s.rank,
-            group_name:    s.group_name&.sub(/\AGroup\s+/i, ""),
+            group_name:    (s.group_name.presence || "Overall").sub(/\AGroup\s+/i, ""),
             team:          { id: s.team.id, name: s.team.name, code: s.team.code, flag_url: s.team.flag_url },
             played:        s.played,
             won:           s.won,
@@ -105,8 +104,7 @@ module Api
         league_id = AppFocus.league_id_for(competition_code)
         return {} unless league_id
 
-        season = LiveScoresClient.new.current_season_for_league(league_id, competition_code)
-        rows   = LiveScoresClient.new.league_standings(league_id, season)
+        rows   = LiveScoresClient.new.league_standings_for_code(competition_code)
         return {} if rows.blank?
 
         flat = rows.map do |r|

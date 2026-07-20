@@ -95,14 +95,14 @@ export default function SearchBar({ onClose }) {
   }, [results, focused, go, onClose])
 
   const statusLabel = (r) => {
-    if (r.status === "live")     return <span style={{ color: "#ee1e46", fontSize: "0.68rem", fontWeight: 800 }}>● LIVE</span>
-    if (r.status === "finished") return <span style={{ color: "var(--muted)", fontSize: "0.68rem" }}>FT</span>
+    if (r.status === "live")     return <span style={{ color: "#ee1e46", fontSize: "0.68rem", fontWeight: 800 }}>● {t("status.live")}</span>
+    if (r.status === "finished") return <span style={{ color: "var(--muted)", fontSize: "0.68rem" }}>{t("status.ft")}</span>
     if (r.kickoff_at) {
       const d = new Date(r.kickoff_at)
       const label = d.toLocaleDateString([], { month: "short", day: "numeric" }) + " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       return <span style={{ color: "#10b981", fontSize: "0.68rem", fontWeight: 600 }}>{label}</span>
     }
-    return <span style={{ color: "var(--muted)", fontSize: "0.68rem" }}>TBD</span>
+    return <span style={{ color: "var(--muted)", fontSize: "0.68rem" }}>{t("time.tbd")}</span>
   }
 
   return (

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague, translateCountry } from "../../i18n/leagueNames"
 import { translateTeam } from "../../i18n/teamNames"
@@ -13,6 +13,7 @@ import { prefetchMatchDetail, navIdFor, navigateToMatch } from "../../utils/matc
 import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 import { useAppFocus } from "../../hooks/useAppFocus"
 import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
+import { matchTeamName } from "../../utils/matchTeamName"
 
 // ─── Helpers ──────────────────────────────────────────
 function toISO(date) {
@@ -359,7 +360,7 @@ function EmptyState({ label, t }) {
 const PULL_THRESHOLD = 64
 
 export default function TodayPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { clubs_primary: clubsPrimary } = useAppFocus()
   usePageMeta(
     t("time.today"),
@@ -570,14 +571,9 @@ export default function TodayPage() {
     return aLive - bLive || (a[0]?.competition?.name ?? "").localeCompare(b[0]?.competition?.name ?? "")
   }), [byComp])
 
-  // Exact team name matcher — avoids "Real" matching "Real Salt Lake", "Real Betis", etc.
-  function teamMatches(teamName, favName) {
-    if (!teamName || !favName) return false
-    return teamName.toLowerCase().trim() === favName.toLowerCase().trim()
-  }
   function matchInvolvesAnyFav(m) {
     return favoriteTeamNames.some(name =>
-      teamMatches(m.home_team?.name, name) || teamMatches(m.away_team?.name, name)
+      matchTeamName(m.home_team?.name, name, i18n.language) || matchTeamName(m.away_team?.name, name, i18n.language)
     )
   }
 
@@ -591,8 +587,8 @@ export default function TodayPage() {
 
   const favLiveMatch = !alertDismissed && favTeam ? todayMatches.find(m =>
     m.status === "live" && (
-      teamMatches(m.home_team?.name, favTeam.name) ||
-      teamMatches(m.away_team?.name, favTeam.name)
+      matchTeamName(m.home_team?.name, favTeam.name, i18n.language) ||
+      matchTeamName(m.away_team?.name, favTeam.name, i18n.language)
     )
   ) : null
 
@@ -728,12 +724,22 @@ export default function TodayPage() {
             <div className="empty-state__icon" aria-hidden="true">⭐</div>
             <h3>{t("scores.myTeams")}</h3>
             <p>{t("scores.yourMatches")} — {t("time.noMatches", { date: label })}</p>
-            <button
-              onClick={() => setFilterMyTeams(false)}
-              style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 8, padding: "7px 18px", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer", marginTop: 12 }}
-            >
-              {t("scores.filterAll")}
-            </button>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginTop: 12 }}>
+              <button
+                onClick={() => setFilterMyTeams(false)}
+                style={{ background: "var(--accent)", color: "#fff", border: "none", borderRadius: 8, padding: "7px 18px", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer" }}
+              >
+                {t("scores.filterAll")}
+              </button>
+              {clubsPrimary && (
+                <Link
+                  to="/leagues"
+                  style={{ background: "var(--surface2)", color: "var(--text)", border: "1px solid var(--border)", borderRadius: 8, padding: "7px 18px", fontWeight: 700, fontSize: "0.8rem", textDecoration: "none" }}
+                >
+                  {t("nav.allLeagues")}
+                </Link>
+              )}
+            </div>
           </div>
         ) : groups.length === 0 ? (
           <>

@@ -53,7 +53,7 @@ export default function Footer() {
               <li><Link to="/leagues">{t("nav.allLeagues")}</Link></li>
               <li><Link to="/compare/teams">{t("teamComparison.title")}</Link></li>
               {clubsPrimary && (
-                <li><Link to="/mundial/teams">{t("nav.mundial")}</Link></li>
+                <li><Link to="/world-cup-2026">{t("nav.mundial")}</Link></li>
               )}
               {NAV_LEAGUES.map(({ key, path }) => (
                 <li key={path}><Link to={path}>{t(key)}</Link></li>
