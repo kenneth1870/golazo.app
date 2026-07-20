@@ -66,24 +66,27 @@ function AndroidBanner({ onInstall, onDismiss }) {
 // ── Main component ────────────────────────────────────
 // Note: iOS Safari install instructions are handled by IosInstallGuide.jsx.
 // This component only handles the Android/Chrome beforeinstallprompt flow.
-export default function InstallPrompt() {
+export default function InstallPrompt({ paused = false }) {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [showAndroid, setShowAndroid]       = useState(false)
 
   useEffect(() => {
+    if (paused) return
     // iOS Safari is handled by IosInstallGuide — skip here to avoid double prompts
     if (isIosSafari()) return
     if (isStandalone()) return
     if (wasDismissed()) return
+    const onboardedAt = parseInt(storageGet("golazo_onboarded_at") || "0", 10)
+    if (onboardedAt && Date.now() - onboardedAt < 60 * 60 * 1000) return
 
     const handler = e => {
       e.preventDefault()
       setDeferredPrompt(e)
-      setTimeout(() => setShowAndroid(true), 8000)
+      setTimeout(() => setShowAndroid(true), 12000)
     }
     window.addEventListener("beforeinstallprompt", handler)
     return () => window.removeEventListener("beforeinstallprompt", handler)
-  }, [])
+  }, [paused])
 
   function dismiss() {
     storageSet(DISMISSED_KEY, Date.now().toString())

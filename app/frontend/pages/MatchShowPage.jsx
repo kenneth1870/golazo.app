@@ -23,6 +23,8 @@ import { useVisiblePolling } from "../hooks/useVisiblePolling"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { getCachedMatchDetail, setCachedMatchDetail, navIdFor } from "../utils/matchDetailCache"
 import { getMatchColor } from "../utils/teamColors"
+import { clubTeamPath } from "../utils/clubTeamPath"
+import { leagueCodeFromApiId } from "../utils/leagueCodes"
 import { sourceColor } from "../utils/sourceColors"
 import { storageGet, storageSet } from "../utils/safeStorage"
 import { fetchWithTimeout } from "../utils/fetchWithTimeout"
@@ -525,6 +527,37 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
       })
     : null
 
+  const leagueCode = leagueCodeFromApiId(fixture?.league?.id)
+
+  function TeamNameLink({ team, name, isWinner }) {
+    const cls = `scoreboard__team-name${isWinner ? " scoreboard__team-name--winner" : ""}`
+    if (clubsPrimary && team?.name && leagueCode) {
+      return (
+        <Link to={clubTeamPath(leagueCode, team.name)} className={cls} style={{ textDecoration: "none", color: "inherit" }}>
+          {name}
+        </Link>
+      )
+    }
+    if (!clubsPrimary && team?.id) {
+      return (
+        <Link to={`/teams/${team.id}`} className={cls} style={{ textDecoration: "none", color: "inherit" }}>
+          {name}
+        </Link>
+      )
+    }
+    return <div className={cls}>{name}</div>
+  }
+
+  const competitionRow = (
+    <>
+      <SafeImg src={fixture?.league?.logo} style={{ width: 18, height: 18, objectFit: "contain" }} />
+      <span>{translateLeague(fixture?.league?.name, i18n.language)}</span>
+      {fixture?.league?.round && (
+        <span className="scoreboard__round">{translateRound(fixture.league.round, t)}</span>
+      )}
+    </>
+  )
+
   return (
     <div
       className="scoreboard"
@@ -550,13 +583,13 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
       <div className="container scoreboard__inner" style={{ maxWidth: 740 }}>
 
         {/* Competition row */}
-        <div className="scoreboard__competition">
-          <SafeImg src={fixture?.league?.logo} style={{ width: 18, height: 18, objectFit: "contain" }} />
-          <span>{translateLeague(fixture?.league?.name, i18n.language)}</span>
-          {fixture?.league?.round && (
-            <span className="scoreboard__round">{translateRound(fixture.league.round, t)}</span>
-          )}
-        </div>
+        {leagueCode ? (
+          <Link to={`/leagues/${leagueCode}`} className="scoreboard__competition" style={{ textDecoration: "none", color: "inherit" }}>
+            {competitionRow}
+          </Link>
+        ) : (
+          <div className="scoreboard__competition">{competitionRow}</div>
+        )}
 
         {/* Status pill */}
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
@@ -605,9 +638,7 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
         <div className="scoreboard__teams">
           <div className="scoreboard__team">
             <FlagOrInitials name={home?.name} src={home?.logo} size={76} />
-            <div className={`scoreboard__team-name${isFT && home?.winner ? " scoreboard__team-name--winner" : ""}`}>
-              {homeName}
-            </div>
+            <TeamNameLink team={home} name={homeName} isWinner={isFT && home?.winner} />
           </div>
 
           <div className="scoreboard__score-block">
@@ -630,9 +661,7 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
 
           <div className="scoreboard__team scoreboard__team--away">
             <FlagOrInitials name={away?.name} src={away?.logo} size={76} />
-            <div className={`scoreboard__team-name${isFT && away?.winner ? " scoreboard__team-name--winner" : ""}`}>
-              {awayName}
-            </div>
+            <TeamNameLink team={away} name={awayName} isWinner={isFT && away?.winner} />
           </div>
         </div>
 
@@ -2363,7 +2392,7 @@ export default function MatchShowPage() {
 
         {tab === "preview" && (
           <>
-            {hasFixture && isNS && (
+            {hasFixture && isNS && !clubsPrimary && (
               <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} kickoffAt={kickoffAt} t={t} />
             )}
             <MatchPreviewPanel
@@ -2382,7 +2411,7 @@ export default function MatchShowPage() {
               <MatchReactions matchId={id} compact={["1H","HT","2H","ET","BT","P"].includes(statusShort)} />
             </div>
 
-            {hasFixture && <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} kickoffAt={kickoffAt} t={t} />}
+            {hasFixture && !clubsPrimary && <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} kickoffAt={kickoffAt} t={t} />}
 
             {/* AI Match Summary — shown after full time */}
             {["FT","AET","PEN"].includes(statusShort) && (

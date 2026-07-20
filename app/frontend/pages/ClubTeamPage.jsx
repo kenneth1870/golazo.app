@@ -5,6 +5,8 @@ import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
 import { translateLeague, translateCountry } from "../i18n/leagueNames"
 import MatchRow from "../components/MatchRow"
 import { useFavorites } from "../hooks/useFavorites"
+import { usePushNotifications } from "../hooks/usePushNotifications"
+import { syncTeamFollowToPush } from "../utils/favoritePush"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { navigateToMatch, navIdFor } from "../utils/matchDetailCache"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
@@ -14,6 +16,7 @@ export default function ClubTeamPage() {
   const { code, slug } = useParams()
   const navigate = useNavigate()
   const { isFavorite, toggleFavorite } = useFavorites()
+  const { addTeams, subscribed } = usePushNotifications()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState("upcoming")
@@ -82,6 +85,18 @@ export default function ClubTeamPage() {
   const following = isFavorite("team", favId)
   const matches = tab === "upcoming" ? (data.upcoming || []) : (data.recent || [])
 
+  function handleFollowToggle() {
+    const willFollow = !following
+    toggleFavorite({
+      type: "team",
+      id: favId,
+      name: team.name,
+      flag_url: team.flag_url,
+      league_code: code,
+    })
+    syncTeamFollowToPush(team.name, { addTeams, subscribed, following: willFollow })
+  }
+
   return (
     <div>
       <div className="page-hero" style={{ backgroundImage: "url('/images/hero_5.jpg')" }}>
@@ -112,13 +127,7 @@ export default function ClubTeamPage() {
               )}
             </div>
             <button
-              onClick={() => toggleFavorite({
-                type: "team",
-                id: favId,
-                name: team.name,
-                flag_url: team.flag_url,
-                league_code: code,
-              })}
+              onClick={handleFollowToggle}
               style={{
                 background: following ? "rgba(238,30,70,.15)" : "var(--surface2)",
                 border: following ? "1px solid rgba(238,30,70,.4)" : "1px solid var(--border)",
@@ -185,6 +194,14 @@ export default function ClubTeamPage() {
             <div className="empty-state">
               <div className="empty-state__icon">📅</div>
               <h3>{tab === "upcoming" ? t("home.noUpcoming") : t("scores.noResults")}</h3>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginTop: 12 }}>
+                <Link to={`/leagues/${code}`} className="btn btn-primary btn-sm">{t("nav.standings")}</Link>
+                {!following && (
+                  <button className="btn btn-outline-light btn-sm" onClick={handleFollowToggle}>
+                    {t("team.follow")} {displayName}
+                  </button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="match-list">

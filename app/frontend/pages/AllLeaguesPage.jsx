@@ -173,7 +173,7 @@ export default function AllLeaguesPage() {
             <div
               className="widget-next-match mb-5"
               style={{ borderLeft: "3px solid #ee1e46", cursor: "pointer" }}
-              onClick={() => navigate("/scores/live")}
+              onClick={() => navigate("/scores/today")}
             >
               <div className="widget-title d-flex align-items-center" style={{ gap: 8 }}>
                 <span className="live-dot" />

@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useMatches, patchLiveScore } from "../hooks/useMatches"
 import { useFavoriteTeam } from "../hooks/useFavoriteTeam"
+import { useFavorites } from "../hooks/useFavorites"
 import { useLiveCount } from "../contexts/LiveContext"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { usePageMeta } from "../hooks/usePageMeta"
@@ -16,6 +17,7 @@ import MatchCard from "../components/MatchCard"
 import MatchRow from "../components/MatchRow"
 import FavoriteTeamPicker from "../components/FavoriteTeamPicker"
 import ClubCompetitionChips from "../components/ClubCompetitionChips"
+import EmptyState from "../components/EmptyState"
 import { useStandingsChannel } from "../hooks/useStandingsChannel"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
 
@@ -105,21 +107,29 @@ function useTodayMatches(wcOnly = false) {
   return matches
 }
 
-function useLatestNews() {
+function useLatestNews(leagueCodes = []) {
   const { i18n } = useTranslation()
   const [news, setNews]   = useState([])
   const [error, setError] = useState(false)
 
   const load = () => {
     setError(false)
-    fetch(`/api/v1/news?lang=${i18n.language}`)
+    const leaguesParam = leagueCodes.length
+      ? `&leagues=${encodeURIComponent(leagueCodes.join(","))}`
+      : ""
+    fetch(`/api/v1/news?lang=${i18n.language}${leaguesParam}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(data => setNews(data.slice(0, 3)))
       .catch(() => setError(true))
   }
 
-  useEffect(() => { load() }, [i18n.language]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load() }, [i18n.language, leagueCodes.join(",")]) // eslint-disable-line react-hooks/exhaustive-deps
   return { news, newsError: error, retryNews: load }
+}
+
+function teamMatches(teamName, favName) {
+  if (!teamName || !favName) return false
+  return teamName.toLowerCase().trim() === favName.toLowerCase().trim()
 }
 
 // ─── Favorite team card ───────────────────────────────────────────────────────
@@ -186,7 +196,20 @@ function TodayMatchesSection({ todayMatches, navigate, t, clubsPrimary = false }
   const rest      = all.filter(m => m.status !== "live")
   const liveCount = live.length
 
-  if (all.length === 0) return null
+  if (all.length === 0) {
+    return (
+      <EmptyState
+        icon="📅"
+        title={t("scores.noMatchesToday", "No matches today")}
+        description={clubsPrimary ? t("home.liveScoresWorldwide") : t("scores.wcSubtitle")}
+        action={
+          <Link to="/scores/today" className="btn btn-primary btn-sm" style={{ marginTop: 8 }}>
+            {t("scores.tabToday", "Today")}
+          </Link>
+        }
+      />
+    )
+  }
 
   return (
     <div style={{ marginBottom: 8 }}>
@@ -270,6 +293,37 @@ function TodayMatchesSection({ todayMatches, navigate, t, clubsPrimary = false }
   )
 }
 
+// ─── Your matches (followed teams) ────────────────────────────────────────────
+function YourMatchesSection({ todayMatches, favoriteTeamNames, navigate, t }) {
+  const yourMatches = favoriteTeamNames.length > 0
+    ? todayMatches.filter(m =>
+        favoriteTeamNames.some(name =>
+          teamMatches(m.home_team?.name, name) || teamMatches(m.away_team?.name, name)
+        )
+      )
+    : []
+
+  if (yourMatches.length === 0) return null
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{
+        display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
+        fontSize: "0.75rem", fontWeight: 700, color: "#ee1e46", textTransform: "uppercase", letterSpacing: 1,
+      }}>
+        <span>★</span> {t("scores.yourMatches")}
+      </div>
+      <div style={{ background: "var(--surface)", borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)" }}>
+        {yourMatches.map((m, i) => (
+          <div key={m.id} style={{ borderBottom: i < yourMatches.length - 1 ? "1px solid var(--border)" : "none" }}>
+            <MatchRow match={m} showDate={false} onClick={() => navigateToMatch(navigate, m)} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── News card (no fallback arcade images) ────────────────────────────────────
 const PLACEHOLDER_COLORS = ["#1a1f2e", "#1a1420", "#0f1a1a"]
 const PLACEHOLDER_EMOJIS = ["⚽", "🏆", "🗞️"]
@@ -333,6 +387,7 @@ export default function HomePage() {
   const navigate    = useNavigate()
   const liveCount  = useLiveCount()
   const [fav]      = useFavoriteTeam()
+  const { favoriteCompetitions, favoriteTeamNames } = useFavorites()
   const { clubs_primary: clubsPrimary } = useAppFocus()
 
   usePageMeta(
@@ -358,7 +413,10 @@ export default function HomePage() {
   const todayMatches                 = useTodayMatches(!clubsPrimary)
   const favFixtures                  = useFavoriteFixtures(clubsPrimary && !!fav)
   const favUpcoming                  = clubsPrimary ? favFixtures : upcomingMatches
-  const { news: latestNews, newsError, retryNews } = useLatestNews()
+  const newsLeagues = clubsPrimary
+    ? [...new Set(favoriteCompetitions.map(f => f.code).filter(Boolean))]
+    : []
+  const { news: latestNews, newsError, retryNews } = useLatestNews(newsLeagues)
 
   // Prefer the next match with a known future kickoff; only fall back to TBD
   // if nothing has a time yet (avoids showing a placeholder knockout slot in hero).
@@ -393,6 +451,14 @@ export default function HomePage() {
           t={t}
           clubsPrimary={clubsPrimary}
         />
+        {clubsPrimary && favoriteTeamNames.length > 0 && (
+          <YourMatchesSection
+            todayMatches={todayMatches}
+            favoriteTeamNames={favoriteTeamNames}
+            navigate={navigate}
+            t={t}
+          />
+        )}
       </div>
 
       {/* ── Favorite team section ── */}
@@ -403,8 +469,21 @@ export default function HomePage() {
           </span>
           <FavoriteTeamPicker />
         </div>
-        {fav && (
+        {fav ? (
           <FavoriteTeamCard fav={fav} upcomingMatches={favUpcoming} navigate={navigate} t={t} />
+        ) : (
+          <EmptyState
+            icon="★"
+            title={t("home.followTeam")}
+            description={t(clubsPrimary ? "news.forYouEmptyHintClubs" : "news.forYouEmptyHint")}
+            action={
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginTop: 8 }}>
+                {clubsPrimary && (
+                  <Link to="/leagues" className="btn btn-outline-light btn-sm">{t("nav.leagues")}</Link>
+                )}
+              </div>
+            }
+          />
         )}
       </div>
 

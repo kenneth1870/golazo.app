@@ -391,7 +391,7 @@ export default function Navbar() {
 
               {/* Live Matches */}
               <NavLink to="/scores/today" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
-                {t("nav.liveMatches")}
+                {t(clubsPrimary ? "time.today" : "nav.liveMatches")}
                 {liveCount > 0 && <span className="live-dot" style={{ marginLeft: 5, verticalAlign: "middle" }} />}
               </NavLink>
 

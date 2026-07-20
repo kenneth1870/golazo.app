@@ -133,7 +133,6 @@ export default function NewsPage() {
   const followedTeamNames = favoriteTeams.map(f => f.name)
   const followedCompNames = favoriteCompetitions.map(f => f.name)
   const forYouArticles = articles.filter(a => isRelevantTo(a, followedTeamNames, followedCompNames, i18n.language))
-  const hasForYou      = followedTeamNames.length > 0 || followedCompNames.length > 0
 
   // Which pool to show depending on active tab
   const pool = tab === "foryou" ? forYouArticles : (
@@ -169,26 +168,24 @@ export default function NewsPage() {
         <div className="container">
           <div className="tab-bar__inner" style={{ overflowX: "auto" }}>
 
-            {/* For You tab — only shown if user has favorites */}
-            {hasForYou && (
-              <button
-                className={`tab-link${tab === "foryou" ? " tab-link--active" : ""}`}
-                onClick={() => { setTab("foryou"); setSource(null) }}
-                style={{ display: "flex", alignItems: "center", gap: 5 }}
-              >
-                <span style={{ fontSize: "0.85rem" }}>⭐</span>
-                {t("news.forYou", "For You")}
-                {forYouArticles.length > 0 && (
-                  <span style={{
-                    background: "var(--accent,#ee1e46)", color: "#fff",
-                    borderRadius: 10, fontSize: "0.62rem", padding: "1px 6px",
-                    fontWeight: 700, lineHeight: 1.4,
-                  }}>
-                    {forYouArticles.length}
-                  </span>
-                )}
-              </button>
-            )}
+            {/* For You tab — always visible; empty state guides new users */}
+            <button
+              className={`tab-link${tab === "foryou" ? " tab-link--active" : ""}`}
+              onClick={() => { setTab("foryou"); setSource(null) }}
+              style={{ display: "flex", alignItems: "center", gap: 5 }}
+            >
+              <span style={{ fontSize: "0.85rem" }}>⭐</span>
+              {t("news.forYou", "For You")}
+              {forYouArticles.length > 0 && (
+                <span style={{
+                  background: "var(--accent,#ee1e46)", color: "#fff",
+                  borderRadius: 10, fontSize: "0.62rem", padding: "1px 6px",
+                  fontWeight: 700, lineHeight: 1.4,
+                }}>
+                  {forYouArticles.length}
+                </span>
+              )}
+            </button>
 
 
             {/* "All news" button when in For You mode */}
@@ -215,6 +212,12 @@ export default function NewsPage() {
               <p style={{ color: "var(--muted,#888)", maxWidth: 300, textAlign: "center" }}>
                 {t(clubsPrimary ? "news.forYouEmptyHintClubs" : "news.forYouEmptyHint")}
               </p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginTop: 12 }}>
+                {clubsPrimary && (
+                  <Link to="/leagues" className="btn btn-primary btn-sm">{t("nav.leagues")}</Link>
+                )}
+                <Link to="/" className="btn btn-outline-light btn-sm">{t("home.followTeam")}</Link>
+              </div>
             </div>
           </div>
         </div>

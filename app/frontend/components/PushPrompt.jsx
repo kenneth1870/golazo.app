@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { usePushNotifications } from "../hooks/usePushNotifications"
+import { storageGet } from "../utils/safeStorage"
 
 const DISMISSED_KEY = "golazo_push_dismissed_at"
 const DISMISS_TTL_MS = 24 * 60 * 60 * 1000 // re-prompt after 1 day
+const ONBOARDING_GRACE_MS = 60 * 60 * 1000
 
-// Shown after a user views the page for 3 seconds.
+// Shown after a user views the page for a few seconds.
 // Asks to enable goal alerts, optionally scoped to a favorite team.
-export default function PushPrompt({ favoriteTeamName = null }) {
+export default function PushPrompt({ favoriteTeamName = null, paused = false }) {
   const { t } = useTranslation()
   const { supported, permission, subscribed, loading, subscribe, needsIosInstall } = usePushNotifications()
   const [visible, setVisible] = useState(false)
@@ -15,9 +17,12 @@ export default function PushPrompt({ favoriteTeamName = null }) {
   const [errMsg,  setErrMsg]  = useState(null)
 
   useEffect(() => {
+    if (paused) return
     if (!supported && !needsIosInstall) return
     if (permission === "denied") return
     if (subscribed) return
+    const onboardedAt = parseInt(storageGet("golazo_onboarded_at") || "0", 10)
+    if (onboardedAt && Date.now() - onboardedAt < ONBOARDING_GRACE_MS) return
     // Migrate old permanent flag (value "1") to a timestamped key
     const oldKey = "golazo_push_dismissed"
     if (localStorage.getItem(oldKey)) {
@@ -26,11 +31,11 @@ export default function PushPrompt({ favoriteTeamName = null }) {
     }
     const dismissedAt = parseInt(localStorage.getItem(DISMISSED_KEY) || "0", 10)
     if (dismissedAt && Date.now() - dismissedAt < DISMISS_TTL_MS) return
-    const timer = setTimeout(() => setVisible(true), 1000)
+    const timer = setTimeout(() => setVisible(true), 5000)
     return () => clearTimeout(timer)
-  }, [supported, needsIosInstall, permission, subscribed])
+  }, [supported, needsIosInstall, permission, subscribed, paused])
 
-  if (!visible || subscribed || done) return null
+  if (paused || !visible || subscribed || done) return null
   if (permission === "denied") return null
 
   const dismiss = () => {

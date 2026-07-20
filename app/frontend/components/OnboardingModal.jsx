@@ -22,8 +22,10 @@ import { usePushNotifications } from "../hooks/usePushNotifications"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { isIosSafari, isStandalone } from "../utils/platform"
 import { translateTeam } from "../i18n/teamNames"
+import { loadClubTeams } from "../utils/loadClubTeams"
 
 const ONBOARDED_KEY = "golazo_onboarded"
+const ONBOARDED_AT_KEY = "golazo_onboarded_at"
 
 // Top WC 2026 nations — hardcoded so onboarding works offline / before API loads
 // Flags from flagcdn.com (supports CORS, cached by SW)
@@ -79,6 +81,7 @@ export function useOnboarding() {
   }, [])
   const dismiss = useCallback(() => {
     storageSet(ONBOARDED_KEY, "1")
+    storageSet(ONBOARDED_AT_KEY, Date.now().toString())
     setShow(false)
   }, [])
   return { show, dismiss }
@@ -98,15 +101,21 @@ export default function OnboardingModal({ onDismiss }) {
   const [notifLoading, setNotifLoading] = useState(false)
   const [animating, setAnimating]     = useState(false)
   const [dragY, setDragY]             = useState(0)
+  const [clubTeams, setClubTeams]       = useState([])
   const dragStart                     = useRef(null)
+
+  useEffect(() => {
+    if (clubsPrimary) loadClubTeams(setClubTeams)
+  }, [clubsPrimary])
 
   const onIosSafari  = isIosSafari()
   const onIosPwa     = onIosSafari && isStandalone()
 
   const toggleTeam = (team) => {
+    const key = team.id ?? team.name
     setTeams(prev =>
-      prev.some(t => t.id === team.id)
-        ? prev.filter(t => t.id !== team.id)
+      prev.some(t => (t.id ?? t.name) === key)
+        ? prev.filter(t => (t.id ?? t.name) !== key)
         : [...prev, team]
     )
   }
@@ -125,14 +134,19 @@ export default function OnboardingModal({ onDismiss }) {
   }
 
   const finish = () => {
-    // Persist selected teams
     selectedTeams.forEach(team => {
-      addFavorite({ type: "team", id: team.id, name: team.name, flag_url: team.flag })
+      addFavorite({
+        type: "team",
+        id: team.id ?? team.name,
+        name: team.name,
+        flag_url: team.flag ?? team.flag_url,
+        league_code: team.league_code,
+      })
     })
-    // Persist selected leagues
     selectedLeagues.forEach(league => {
       addFavorite({ type: "competition", id: league.code, name: t(league.key), code: league.code })
     })
+    storageSet(ONBOARDED_AT_KEY, Date.now().toString())
     onDismiss()
   }
 
@@ -183,7 +197,62 @@ export default function OnboardingModal({ onDismiss }) {
       ),
       cta: null, // language buttons advance automatically
     },
-    ...(clubsPrimary ? [] : [{
+    ...(clubsPrimary ? [{
+      key: "clubTeams",
+      title: t("onboarding.pickClubTeams", "Pick your clubs"),
+      subtitle: t("onboarding.pickClubTeamsSub", "We'll personalise your news feed and alerts."),
+      content: (
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8,
+          maxHeight: 340, overflowY: "auto", marginTop: 16, paddingRight: 4,
+        }}>
+          {clubTeams.map(team => {
+            const key = team.id ?? team.name
+            const selected = selectedTeams.some(t => (t.id ?? t.name) === key)
+            return (
+              <button
+                key={key}
+                onClick={() => toggleTeam(team)}
+                style={{
+                  display: "flex", flexDirection: "column", alignItems: "center",
+                  gap: 6, padding: "10px 4px", borderRadius: 12, cursor: "pointer",
+                  background: selected ? "rgba(238,30,70,.18)" : "var(--surface2, #1a1a1a)",
+                  border: `1px solid ${selected ? "var(--accent,#ee1e46)" : "var(--border,#2a2a2a)"}`,
+                  transition: "all .15s",
+                }}
+              >
+                {team.flag_url ? (
+                  <img
+                    src={team.flag_url} alt={team.name}
+                    style={{ width: 32, height: 32, objectFit: "contain" }}
+                    onError={e => { e.target.style.display = "none" }}
+                  />
+                ) : (
+                  <span style={{ fontSize: "1.4rem" }}>⚽</span>
+                )}
+                <span style={{
+                  fontSize: "0.62rem", color: selected ? "var(--accent,#ee1e46)" : "var(--muted,#888)",
+                  textAlign: "center", lineHeight: 1.2, fontWeight: selected ? 600 : 400,
+                }}>
+                  {translateTeam(team.name, i18n.language) || team.name}
+                </span>
+                {selected && (
+                  <span style={{ fontSize: "0.6rem", color: "var(--accent,#ee1e46)", fontWeight: 700 }}>✓</span>
+                )}
+              </button>
+            )
+          })}
+          {clubTeams.length === 0 && (
+            <div style={{ gridColumn: "1 / -1", textAlign: "center", color: "var(--muted)", fontSize: "0.82rem", padding: 24 }}>
+              {t("loading")}
+            </div>
+          )}
+        </div>
+      ),
+      cta: t("onboarding.continue", "Continue"),
+      ctaAction: goNext,
+      skip: true,
+    }] : [{
       key: "teams",
       title: t("onboarding.pickTeams", "Pick your teams"),
       subtitle: t("onboarding.pickTeamsSub", "We'll personalize your news feed and alerts."),

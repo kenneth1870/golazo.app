@@ -20,6 +20,7 @@ import { useFavorites } from "./hooks/useFavorites"
 import { usePushNotifications } from "./hooks/usePushNotifications"
 import { useAppFocus } from "./hooks/useAppFocus"
 import { isIosSafari, isStandalone } from "./utils/platform"
+import { storageGet } from "./utils/safeStorage"
 
 // Critical path — loaded eagerly (always needed on first paint)
 import HomePage   from "./pages/HomePage"
@@ -76,6 +77,8 @@ function PageLoader() {
 // Re-prompts after 30 days in case a subscription has lapsed.
 const PUSH_AUTO_KEY = "golazo_push_auto"
 const PUSH_AUTO_TTL = 30 * 24 * 60 * 60 * 1000
+const ONBOARDED_KEY = "golazo_onboarded"
+const ONBOARDING_GRACE_MS = 60 * 60 * 1000
 
 function useAutoSubscribePush() {
   const { push_enabled: pushEnabled = false } = useAppFocus()
@@ -85,6 +88,9 @@ function useAutoSubscribePush() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return
     if (subscribed) return
     if (isIosSafari() && !isStandalone()) return // needs PWA install first
+    if (storageGet(ONBOARDED_KEY) !== "1") return
+    const onboardedAt = parseInt(storageGet("golazo_onboarded_at") || "0", 10)
+    if (onboardedAt && Date.now() - onboardedAt < ONBOARDING_GRACE_MS) return
 
     const permission = Notification.permission
 
@@ -166,8 +172,8 @@ export default function App() {
       <ScrollToTop />
       <Navbar />
       {showOnboarding && <OnboardingModal onDismiss={dismissOnboarding} />}
-      <PushPrompt favoriteTeamName={favTeamName} />
-      <IosInstallGuide />
+      <PushPrompt favoriteTeamName={favTeamName} paused={showOnboarding} />
+      <IosInstallGuide paused={showOnboarding} />
 
       <main key={location.pathname} className="main-content page-transition">
         <ErrorBoundary>
@@ -235,7 +241,7 @@ export default function App() {
       <Footer />
       <ConsentBanner />
       <BottomNav />
-      <InstallPrompt />
+      <InstallPrompt paused={showOnboarding} />
     </div>
   )
 }

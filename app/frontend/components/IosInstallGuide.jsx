@@ -45,18 +45,21 @@ const STEPS = [
   },
 ]
 
-export default function IosInstallGuide() {
+export default function IosInstallGuide({ paused = false }) {
   const { t } = useTranslation()
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
+    if (paused) return
     if (!isIosSafari()) return
     if (isStandalone()) return
     if (storageGet(SHOWN_KEY)) return
+    const onboardedAt = parseInt(storageGet("golazo_onboarded_at") || "0", 10)
+    if (onboardedAt && Date.now() - onboardedAt < 60 * 60 * 1000) return
 
-    const timer = setTimeout(() => setVisible(true), 1500)
+    const timer = setTimeout(() => setVisible(true), 4000)
     return () => clearTimeout(timer)
-  }, [])
+  }, [paused])
 
   function dismiss() {
     storageSet(SHOWN_KEY, "1")

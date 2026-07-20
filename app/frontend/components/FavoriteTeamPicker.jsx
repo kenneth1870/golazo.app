@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { useFavoriteTeam } from "../hooks/useFavoriteTeam"
 import { useAppFocus } from "../hooks/useAppFocus"
-import { NAV_LEAGUES } from "./ClubCompetitionChips"
+import { usePushNotifications } from "../hooks/usePushNotifications"
 import { resolveTeamLogo } from "../i18n/teamNames"
+import { loadClubTeams } from "../utils/loadClubTeams"
+import { syncTeamFollowToPush } from "../utils/favoritePush"
 
 function FlagOrInitial({ src, name }) {
   const [err, setErr] = useState(false)
@@ -23,35 +25,11 @@ function FlagOrInitial({ src, name }) {
   )
 }
 
-const CLUB_LEAGUE_CODES = NAV_LEAGUES.map(l => l.path.split("/").pop())
-
-function loadClubTeams(setTeams) {
-  Promise.all(
-    CLUB_LEAGUE_CODES.map(code =>
-      fetch(`/api/v1/standings?competition=${code}`)
-        .then(r => r.ok ? r.json().then(data => ({ code, data })) : { code, data: {} })
-    )
-  )
-    .then(pairs => {
-      const seen = new Set()
-      const teams = []
-      pairs.forEach(({ code, data }) => {
-        Object.values(data || {}).flat().forEach(row => {
-          const t = row?.team
-          if (!t?.name || seen.has(t.name)) return
-          seen.add(t.name)
-          teams.push({ id: t.name, name: t.name, flag_url: t.flag_url, group: null, code: t.code, league_code: code })
-        })
-      })
-      setTeams(teams.sort((a, b) => a.name.localeCompare(b.name)))
-    })
-    .catch(() => {})
-}
-
 export default function FavoriteTeamPicker() {
   const { t } = useTranslation()
   const { clubs_primary: clubsPrimary } = useAppFocus()
   const [fav, setFav]     = useFavoriteTeam()
+  const { addTeams, subscribed } = usePushNotifications()
   const [teams, setTeams] = useState([])
   const [open, setOpen]   = useState(false)
   const [query, setQuery] = useState("")
@@ -86,6 +64,7 @@ export default function FavoriteTeamPicker() {
 
   function pick(team) {
     setFav({ id: team.id, name: team.name, flag_url: team.flag_url, group: team.group, league_code: team.league_code })
+    syncTeamFollowToPush(team.name, { addTeams, subscribed, following: true })
     setOpen(false)
     setQuery("")
   }
@@ -98,8 +77,9 @@ export default function FavoriteTeamPicker() {
         aria-expanded={open}
         style={{
           display: "flex", alignItems: "center", gap: 8,
-          background: "rgba(255,255,255,.07)", border: "1px solid rgba(255,255,255,.15)",
-          borderRadius: 20, padding: "6px 14px", cursor: "pointer", color: "#fff",
+          background: fav ? "rgba(238,30,70,.12)" : "var(--surface2)",
+          border: fav ? "1px solid rgba(238,30,70,.35)" : "1px solid var(--border)",
+          borderRadius: 20, padding: "6px 14px", cursor: "pointer", color: "var(--text)",
           fontSize: "0.78rem", fontWeight: 600, transition: ".2s",
         }}
       >
@@ -132,7 +112,7 @@ export default function FavoriteTeamPicker() {
             aria-label={t("team.searchPlaceholder", "Buscar equipo…")}
             style={{
               width: "100%", background: "var(--surface)", border: "1px solid var(--border)",
-              borderRadius: 6, padding: "7px 10px", color: "#fff", fontSize: "0.8rem", marginBottom: 8,
+              borderRadius: 6, padding: "7px 10px", color: "var(--text)", fontSize: "0.8rem", marginBottom: 8,
             }}
           />
           <div style={{ maxHeight: 240, overflowY: "auto" }}>
@@ -152,7 +132,7 @@ export default function FavoriteTeamPicker() {
                 onClick={() => pick(tm)}
                 style={{
                   width: "100%", textAlign: "left", background: fav?.id === tm.id ? "rgba(238,30,70,.15)" : "transparent",
-                  border: "none", color: "#fff", padding: "7px 8px", borderRadius: 6, cursor: "pointer",
+                  border: "none", color: "var(--text)", padding: "7px 8px", borderRadius: 6, cursor: "pointer",
                   fontSize: "0.8rem", display: "flex", alignItems: "center", gap: 8,
                 }}
               >

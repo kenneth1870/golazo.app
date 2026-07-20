@@ -138,6 +138,8 @@ export default function LeagueDetailPage() {
   const [loading, setLoading]         = useState(true)
   const [tabLoading, setTabLoading]   = useState(false)
 
+  const favKey = competition?.code ?? code
+
   const tabParam = tab === "standings" ? null : tab
 
   const hasUpcoming = (ms) => ms.some(m => m.status === "scheduled" && new Date(m.kickoff_at) >= startOfTomorrow())
@@ -264,17 +266,17 @@ export default function LeagueDetailPage() {
             </div>
             {competition && (
               <button
-                onClick={() => toggleFavorite({ type: "competition", id: competition.id ?? code, name: competition.name, code: competition.code ?? code, flag_url: competition.logo })}
-                title={isFavorite("competition", competition.id ?? code) ? t("team.unfollowLeague") : t("team.followLeague")}
+                onClick={() => toggleFavorite({ type: "competition", id: favKey, name: competition.name, code: favKey, flag_url: competition.logo })}
+                title={isFavorite("competition", favKey) ? t("team.unfollowLeague") : t("team.followLeague")}
                 style={{
-                  background: isFavorite("competition", competition.id ?? code) ? "rgba(238,30,70,.15)" : "var(--surface2)",
-                  border: isFavorite("competition", competition.id ?? code) ? "1px solid rgba(238,30,70,.4)" : "1px solid var(--border)",
+                  background: isFavorite("competition", favKey) ? "rgba(238,30,70,.15)" : "var(--surface2)",
+                  border: isFavorite("competition", favKey) ? "1px solid rgba(238,30,70,.4)" : "1px solid var(--border)",
                   borderRadius: 20, padding: "6px 16px",
-                  color: isFavorite("competition", competition.id ?? code) ? "#ee1e46" : "var(--muted)",
+                  color: isFavorite("competition", favKey) ? "#ee1e46" : "var(--muted)",
                   fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", flexShrink: 0,
                 }}
               >
-                {isFavorite("competition", competition.id ?? code) ? t("team.following") : t("team.follow")}
+                {isFavorite("competition", favKey) ? t("team.following") : t("team.follow")}
               </button>
             )}
           </div>

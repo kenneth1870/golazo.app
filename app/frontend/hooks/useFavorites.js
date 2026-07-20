@@ -27,6 +27,10 @@ function persist(arr) {
 }
 
 // Each favorite: { type: "team"|"competition", id, name, flag_url?, code? }
+export function competitionFavId(item) {
+  return item?.code ?? item?.id
+}
+
 export function useFavorites() {
   const [favorites, setFavorites] = useState(load)
 
