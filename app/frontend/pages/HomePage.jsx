@@ -9,6 +9,7 @@ import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
 import { formatKickoff } from "../hooks/useLocalTime"
 import { translateTeam } from "../i18n/teamNames"
+import { clubTeamPath } from "../utils/clubTeamPath"
 import { navIdFor, navigateToMatch } from "../utils/matchDetailCache"
 import Hero from "../components/Hero"
 import MatchCard from "../components/MatchCard"
@@ -142,7 +143,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
         <div>
           <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>{t("home.yourTeam")}</div>
           {fav.league_code ? (
-            <Link to={`/leagues/${fav.league_code}`} style={{ fontWeight: 800, color: "var(--text)", fontSize: "1rem", textDecoration: "none" }}>
+            <Link to={clubTeamPath(fav.league_code, fav.name)} style={{ fontWeight: 800, color: "var(--text)", fontSize: "1rem", textDecoration: "none" }}>
               {translateTeam(fav.name, i18n.language) || fav.name}
             </Link>
           ) : (

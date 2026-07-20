@@ -4,7 +4,12 @@ module Api
       def index
         lang     = normalize_lang(params[:lang])
         keywords = extract_keywords(params[:q])
-        articles = NewsService.new.latest(limit: 60, lang: lang)
+        service  = NewsService.new
+        articles = service.latest(limit: 60, lang: lang)
+        if AppFocus.clubs_primary? && params[:leagues].present?
+          codes = params[:leagues].to_s.split(",").map(&:strip).reject(&:blank?).first(5)
+          articles = service.rank_for_leagues(articles, codes)
+        end
         if keywords.any?
           articles = articles.select { |a|
             text = "#{a[:title]} #{a[:summary]}".downcase

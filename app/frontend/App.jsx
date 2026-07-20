@@ -41,6 +41,7 @@ const VenueShowPage   = lazy(() => import("./pages/mundial/VenueShowPage"))
 const ScorersPage     = lazy(() => import("./pages/mundial/ScorersPage"))
 const AllLeaguesPage  = lazy(() => import("./pages/AllLeaguesPage"))
 const LeagueDetailPage = lazy(() => import("./pages/LeagueDetailPage"))
+const ClubTeamPage     = lazy(() => import("./pages/ClubTeamPage"))
 const NewsPage        = lazy(() => import("./pages/NewsPage"))
 const NewsShowPage    = lazy(() => import("./pages/NewsShowPage"))
 const MatchShowPage   = lazy(() => import("./pages/MatchShowPage"))
@@ -203,6 +204,7 @@ export default function App() {
 
               <Route path="/teams/:id"     element={<TeamShowPage />} />
               <Route path="/leagues"       element={<AllLeaguesPage />} />
+              <Route path="/leagues/:code/teams/:slug" element={<ClubTeamPage />} />
               <Route path="/leagues/:code" element={<LeagueDetailPage />} />
               <Route path="/matches/:id"   element={<MatchShowPage />} />
               <Route path="/predictor"     element={<ClubsModeRedirect to="/"><BracketPredictorPage /></ClubsModeRedirect>} />

@@ -110,20 +110,44 @@ class NewsService
   end
 
   def latest(limit: 20, lang: "en")
+    articles = cached_articles(lang)
+    articles.first(limit)
+  end
+
+  # Boost articles matching followed league keywords (clubs mode).
+  def rank_for_leagues(articles, league_codes)
+    codes = Array(league_codes).map { |c| c.to_s.upcase }.uniq
+    return articles if codes.empty?
+
+    keywords = codes.flat_map { |code| LEAGUE_NEWS_KEYWORDS[code] || [] }.uniq
+    return articles if keywords.empty?
+
+    articles.sort_by.with_index do |article, idx|
+      text = "#{article[:title]} #{article[:summary]}".downcase
+      score = keywords.count { |word| text.include?(word) }
+      [ -score, idx ]
+    end
+  end
+
+  LEAGUE_NEWS_KEYWORDS = {
+    "CRC" => [ "costa rica", "liga tica", "saprissa", "herediano", "alajuelense", "escorpiones", "zeledón", "cartaginés", "sporting fc" ],
+    "LMX" => [ "liga mx", "méxico", "mexico", "américa", "chivas", "tigres", "rayados", "cruz azul", "pumas", "toluca" ],
+    "PL"  => [ "premier league", "premier league", "manchester", "liverpool", "arsenal", "chelsea", "tottenham" ],
+    "LAL" => [ "la liga", "real madrid", "barcelona", "atlético", "atletico", "sevilla" ],
+    "MLS" => [ "mls", "major league soccer", "inter miami", "la galaxy", "lafc" ]
+  }.freeze
+
+  private
+
+  def cached_articles(lang)
     feeds     = FEEDS[lang] || FEEDS["en"]
     espn_lang = %w[en es].include?(lang) ? lang : "en"
 
-    # Store the FULL merged pool in cache — don't truncate inside the block.
-    # Different callers (index: 60, show/content: 60, sitemap: 200) all read
-    # from the same pool and slice with .first(limit) after the cache hit.
-    all_items = Rails.cache.fetch(news_cache_key(lang), expires_in: 30.minutes, race_condition_ttl: 30.seconds) do
+    Rails.cache.fetch(news_cache_key(lang), expires_in: 30.minutes, race_condition_ttl: 30.seconds) do
       espn_urls = (ESPN_API_ENDPOINTS[espn_lang] || [])
       espn_urls = espn_urls.sort_by { |url| url.include?("fifa.world") ? 1 : 0 } if AppFocus.wc_paused?
-      # ESPN JSON API first — items with images win deduplication by link.
       espn_threads = espn_urls
                        .map { |url| Thread.new { fetch_espn_api(url, lang: espn_lang) } }
-      # RSS feeds second — breadth supplement; image-less but ensures older
-      # ESPN articles stay findable even after they age out of the API window.
       rss_threads  = feeds.map { |feed| Thread.new { fetch_feed(feed[:url], feed[:source]) } }
 
       espn_items = espn_threads.flat_map { |t| result = t.join(8)&.value || []; t.kill if t.alive?; result }
@@ -133,8 +157,6 @@ class NewsService
         .uniq { |a| a[:link] }
         .sort_by { |a| a[:published_at] || Time.at(0) }.reverse
 
-      # Backfill images for ESPN articles still missing one (came from RSS supplement).
-      # Cap at 5 concurrent threads to avoid OOM on large imageless batches.
       imageless = merged.select { |a| a[:image].blank? && a[:source]&.include?("ESPN") }.first(5)
       if imageless.any?
         backfill_threads = imageless.map do |article|
@@ -155,12 +177,9 @@ class NewsService
         Rails.cache.write(key, a, expires_in: 24.hours)
       end
     end
-
-    all_items.first(limit)
   rescue => e
     Rails.logger.error("[NewsService] Feed fetch failed: #{e.message} — serving stale cache")
-    stale = Rails.cache.read("news_feed_stale_#{lang}") || []
-    stale.first(limit)
+    Rails.cache.read("news_feed_stale_#{lang}") || []
   end
 
   # Fetches and parses the full article body from the original URL.

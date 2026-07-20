@@ -32,4 +32,12 @@ module TeamDisplayNames
 
     current_url
   end
+
+  def self.slug_for(name)
+    display_name(name).to_s.parameterize
+  end
+
+  def self.matches_slug?(name, slug)
+    slug_for(name) == slug.to_s
+  end
 end

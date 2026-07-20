@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { resolveTeamLogo } from "../i18n/teamNames"
+import { clubTeamPath } from "../utils/clubTeamPath"
 
 function FlagOrInitials({ name, flagUrl, size = 24 }) {
   const [err, setErr] = useState(false)
@@ -62,7 +63,8 @@ export default function SearchBar({ onClose }) {
     if (!result?.id) return
     if (result.type === "team") {
       if (String(result.id).startsWith("club-") && result.league_code) {
-        navigate(`/leagues/${result.league_code}`)
+        const slug = result.slug || result.name
+        navigate(clubTeamPath(result.league_code, slug))
       } else if (!String(result.id).startsWith("club-")) {
         navigate(`/teams/${result.id}`)
       } else {

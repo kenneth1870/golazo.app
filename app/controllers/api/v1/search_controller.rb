@@ -103,6 +103,7 @@ module Api
               type:        "team",
               id:          "club-#{name.parameterize}",
               name:        name,
+              slug:        TeamDisplayNames.slug_for(name),
               code:        name.slice(0, 3).upcase,
               flag_url:    TeamDisplayNames.flag_url(raw_name, r.dig("team", "logo")),
               group:       nil,

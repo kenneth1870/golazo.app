@@ -112,12 +112,16 @@ export default function NewsPage() {
     setError(false)
     setSource(null)
     setVisibleCount(PAGE_SIZE)
-    fetchWithTimeout(`/api/v1/news?lang=${i18n.language}`)
+    const leagueCodes = clubsPrimary
+      ? [...new Set(favoriteCompetitions.map(f => f.code).filter(Boolean))]
+      : []
+    const leaguesParam = leagueCodes.length ? `&leagues=${encodeURIComponent(leagueCodes.join(","))}` : ""
+    fetchWithTimeout(`/api/v1/news?lang=${i18n.language}${leaguesParam}`)
       .then(r => r.json())
       .then(setArticles)
       .catch(() => { setError(true); setArticles([]) })
       .finally(() => setLoading(false))
-  }, [i18n.language])
+  }, [i18n.language, clubsPrimary, favoriteCompetitions])
 
   useEffect(() => { loadNews() }, [loadNews])
 

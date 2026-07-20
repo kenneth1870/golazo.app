@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
 import { translateLeague, translateCountry } from "../i18n/leagueNames"
@@ -8,6 +8,7 @@ import { useFavorites } from "../hooks/useFavorites"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { navigateToMatch, navIdFor } from "../utils/matchDetailCache"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
+import { clubTeamPath } from "../utils/clubTeamPath"
 
 function flattenStandings(data) {
   if (Array.isArray(data)) return data
@@ -15,7 +16,7 @@ function flattenStandings(data) {
   return []
 }
 
-function StandingsTable({ standings, t, i18n }) {
+function StandingsTable({ standings, t, i18n, leagueCode }) {
   if (!standings || standings.length === 0) return null
 
   // Group by group_name if present
@@ -64,7 +65,18 @@ function StandingsTable({ standings, t, i18n }) {
                             onError={e => (e.target.style.display = "none")}
                           />
                         )}
-                        <strong style={{ color: "var(--text)" }}>{translateTeam(s.team?.name, i18n.language)}</strong>
+                        <strong style={{ color: "var(--text)" }}>
+                          {leagueCode ? (
+                            <Link
+                              to={clubTeamPath(leagueCode, s.team?.name)}
+                              style={{ color: "inherit", textDecoration: "none" }}
+                            >
+                              {translateTeam(s.team?.name, i18n.language)}
+                            </Link>
+                          ) : (
+                            translateTeam(s.team?.name, i18n.language)
+                          )}
+                        </strong>
                       </div>
                     </td>
                     <td>{s.played}</td>
@@ -291,7 +303,7 @@ export default function LeagueDetailPage() {
       <div className="site-section">
         <div className="container">
           {tab === "standings" ? (
-            <StandingsTable standings={standings} t={t} i18n={i18n} />
+            <StandingsTable standings={standings} t={t} i18n={i18n} leagueCode={code} />
           ) : tabLoading ? (
             <div className="loading-shimmer" style={{ height: 240, borderRadius: 12 }} />
           ) : displayedMatches.length === 0 ? (
