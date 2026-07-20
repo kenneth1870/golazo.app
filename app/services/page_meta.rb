@@ -192,8 +192,14 @@ class PageMeta
     team = Team.find_by(id: id)
     return default_meta unless team
 
-    title = "#{team.name} — FIFA World Cup 2026"
-    desc  = "#{team.name} squad, fixtures, results and World Cup 2026 stats on Golazo."
+    display = TeamDisplayNames.display_name(team.name)
+    if AppFocus.wc_paused?
+      title = display
+      desc  = "#{display} — fixtures, results and standings on Golazo."
+    else
+      title = "#{display} — FIFA World Cup 2026"
+      desc  = "#{display} squad, fixtures, results and World Cup 2026 stats on Golazo."
+    end
 
     json_ld = {
       "@context" => "https://schema.org",

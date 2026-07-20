@@ -5,6 +5,7 @@ import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { navigateToMatch } from "../utils/matchDetailCache"
+import { clubTeamPath } from "../utils/clubTeamPath"
 import { useFavorites } from "../hooks/useFavorites"
 import { getTeamColor } from "../utils/teamColors"
 
@@ -50,6 +51,10 @@ export default function TeamShowPage() {
     fetch(`/api/v1/teams/${id}`)
       .then(r => r.json())
       .then(data => {
+        if (clubsPrimary && data.redirect) {
+          navigate(data.redirect, { replace: true })
+          return
+        }
         setTeam(data)
         if (data.group && !clubsPrimary) {
           fetch("/api/v1/standings?competition=WC")
@@ -63,7 +68,7 @@ export default function TeamShowPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [id, clubsPrimary])
+  }, [id, clubsPrimary, navigate])
 
   // Lazy-load squad when user taps the Squad tab
   useEffect(() => {
@@ -360,7 +365,7 @@ export default function TeamShowPage() {
           )}
 
           {/* Tournament scorers from DB */}
-          {scorers.length > 0 && (
+          {!clubsPrimary && scorers.length > 0 && (
             <section className="match-section">
               <h3 className="match-section__title">{t("team.tournamentScorers")}</h3>
               <div className="widget-body p-0">
@@ -452,7 +457,18 @@ export default function TeamShowPage() {
         {/* ── Stats tab ── */}
         {activeTab === "stats" && (
           <div>
-            {tstats.played > 0 ? (
+            {clubsPrimary ? (
+              <div className="empty-state" style={{ marginTop: 40 }}>
+                <div className="empty-state__icon">📊</div>
+                <h3>{t("team.stats")}</h3>
+                <p style={{ color: "var(--muted)" }}>{t("meta.teamDescClubs", { name: displayName })}</p>
+                {team.club_league_code && (
+                  <Link to={clubTeamPath(team.club_league_code, team.club_slug || team.name)} className="btn btn-primary btn-sm" style={{ marginTop: 12 }}>
+                    {t("nav.leagues")}
+                  </Link>
+                )}
+              </div>
+            ) : tstats.played > 0 ? (
               <>
                 <div className="widget-next-match" style={{ marginBottom: 16 }}>
                   <div className="widget-title"><h3>{t("team.tournamentStats")}</h3></div>

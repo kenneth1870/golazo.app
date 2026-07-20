@@ -7,38 +7,57 @@ class SitemapController < ApplicationController
     @base = "#{request.scheme}://#{request.host_with_port}"
 
     # Static pages
-    @static_urls = %w[
-      /
-      /world-cup-2026
-      /scores/today
-      /scores/live
-      /scores/results
-      /scores/groups
-      /scores/knockout
-      /mundial/teams
-      /mundial/schedule
-      /mundial/venues
-      /mundial/scorers
-      /groups
-      /leaderboard
-      /predictor
-      /news
-      /leagues
-    ]
+    @static_urls = if AppFocus.wc_paused?
+      %w[
+        /
+        /scores/today
+        /scores/results
+        /news
+        /leagues
+      ]
+    else
+      %w[
+        /
+        /world-cup-2026
+        /scores/today
+        /scores/live
+        /scores/results
+        /scores/groups
+        /scores/knockout
+        /mundial/teams
+        /mundial/schedule
+        /mundial/venues
+        /mundial/scorers
+        /groups
+        /leaderboard
+        /predictor
+        /news
+        /leagues
+      ]
+    end
 
     # League detail pages — Competition model
     @league_codes = Competition.where.not(code: [ nil, "" ]).pluck(:code)
+    @league_codes = @league_codes.reject { |c| c == "WC" } if AppFocus.wc_paused?
 
     # Dynamic match pages — only finished or upcoming within 30 days
-    @matches = Match.includes(:home_team, :away_team)
-                    .where(kickoff_at: 60.days.ago..30.days.from_now)
-                    .where.not(home_team_id: nil, away_team_id: nil)
-                    .select(:id, :external_id, :kickoff_at, :status, :home_team_id, :away_team_id, :updated_at)
-                    .order(:kickoff_at)
-                    .limit(500)
+    @matches = if AppFocus.wc_paused?
+      Match.none
+    else
+      Match.includes(:home_team, :away_team)
+           .where(kickoff_at: 60.days.ago..30.days.from_now)
+           .where.not(home_team_id: nil, away_team_id: nil)
+           .select(:id, :external_id, :kickoff_at, :status, :home_team_id, :away_team_id, :updated_at)
+           .order(:kickoff_at)
+           .limit(500)
+    end
 
-    # All teams
-    @teams = Team.select(:id, :name, :updated_at).order(:name)
+    # DB team pages — WC nationals only when WC is active
+    @teams = if AppFocus.wc_paused?
+      Team.where(group: [ nil, "" ]).select(:id, :name, :updated_at).order(:name)
+    else
+      Team.select(:id, :name, :updated_at).order(:name)
+    end
 
     # Recent news articles — IDs are SHA1 digests of the article link,
     # generated at parse time by NewsService. Re-use the feed cache.

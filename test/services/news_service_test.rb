@@ -11,4 +11,10 @@ class NewsServiceTest < ActiveSupport::TestCase
     ranked = NewsService.new.rank_for_leagues(articles, [ "CRC" ])
     assert_match(/Saprissa|Costa Rica/i, ranked.first[:title])
   end
+
+  test "normalize_league_codes keeps featured codes only" do
+    service = NewsService.new
+    codes = service.send(:normalize_league_codes, [ "CRC", "LMX", "WC", "nope" ])
+    assert_equal %w[CRC LMX], codes
+  end
 end

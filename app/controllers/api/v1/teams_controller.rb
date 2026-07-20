@@ -1,6 +1,19 @@
 module Api
   module V1
     class TeamsController < BaseController
+      # Seeded showcase clubs — maps short DB codes to live league pages.
+      DB_CLUB_CODE_TO_LEAGUE = {
+        "ARS" => "PL", "MCI" => "PL", "LIV" => "PL", "CHE" => "PL", "TOT" => "PL", "MUN" => "PL",
+        "NEW" => "PL", "AVL" => "PL", "BHA" => "PL", "WHU" => "PL",
+        "RMA" => "LAL", "BAR" => "LAL", "ATM" => "LAL", "SEV" => "LAL", "RSO" => "LAL", "ATH" => "LAL",
+        "VIL" => "LAL", "VAL" => "LAL",
+        "BAY" => "BL1", "BVB" => "BL1", "RBL" => "BL1", "B04" => "BL1", "SGE" => "BL1", "WOB" => "BL1",
+        "INT" => "SA", "ACM" => "SA", "JUV" => "SA", "ROM" => "SA", "NAP" => "SA", "LAZ" => "SA",
+        "ATL" => "SA", "FIO" => "SA",
+        "PSG" => "L1", "MON" => "L1", "OLM" => "L1", "OLY" => "L1", "LIL" => "L1", "NIC" => "L1",
+        "LAF" => "MLS", "MIA" => "MLS", "TIM" => "MLS", "SEA" => "MLS", "NYC" => "MLS", "ATU" => "MLS"
+      }.freeze
+
       def index
         teams = Team.order(:group, :name)
         teams = teams.where.not(group: [ nil, "" ]) if params[:competition] == "WC" || params[:wc] == "1"
@@ -9,6 +22,30 @@ module Api
 
       def show
         team = Team.find(params[:id])
+
+        if AppFocus.wc_paused?
+          payload = serialize_team(team).merge(
+            matches:          [],
+            scorers:          [],
+            tournament_stats: nil
+          )
+          if team.group.present?
+            return render json: payload.merge(wc_archived: true, redirect: "/leagues")
+          end
+
+          league_code = DB_CLUB_CODE_TO_LEAGUE[team.code]
+          if league_code
+            slug = TeamDisplayNames.slug_for(team.name)
+            return render json: payload.merge(
+              club_league_code: league_code,
+              club_slug:        slug,
+              redirect:         "/leagues/#{league_code}/teams/#{slug}"
+            )
+          end
+
+          return render json: payload.merge(redirect: "/leagues")
+        end
+
         matches = Match.where("home_team_id = ? OR away_team_id = ?", team.id, team.id)
                        .includes(:home_team, :away_team, :competition)
                        .order(:kickoff_at)

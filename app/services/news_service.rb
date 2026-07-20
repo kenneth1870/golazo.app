@@ -109,8 +109,18 @@ class NewsService
     end
   end
 
-  def latest(limit: 20, lang: "en")
+  def latest(limit: 20, lang: "en", league_codes: nil)
     articles = cached_articles(lang)
+    codes    = normalize_league_codes(league_codes)
+
+    if codes.any?
+      extra = cached_league_articles(lang, codes)
+      articles = (extra + articles).uniq { |a| a[:link] }
+      articles = rank_for_leagues(articles, codes)
+    elsif AppFocus.wc_paused?
+      articles = rank_for_leagues(articles, AppFocus::FEATURED_CLUB_CODES)
+    end
+
     articles.first(limit)
   end
 
@@ -132,9 +142,52 @@ class NewsService
   LEAGUE_NEWS_KEYWORDS = {
     "CRC" => [ "costa rica", "liga tica", "saprissa", "herediano", "alajuelense", "escorpiones", "zeledón", "cartaginés", "sporting fc" ],
     "LMX" => [ "liga mx", "méxico", "mexico", "américa", "chivas", "tigres", "rayados", "cruz azul", "pumas", "toluca" ],
-    "PL"  => [ "premier league", "premier league", "manchester", "liverpool", "arsenal", "chelsea", "tottenham" ],
-    "LAL" => [ "la liga", "real madrid", "barcelona", "atlético", "atletico", "sevilla" ],
-    "MLS" => [ "mls", "major league soccer", "inter miami", "la galaxy", "lafc" ]
+    "PL"  => [ "premier league", "manchester", "liverpool", "arsenal", "chelsea", "tottenham", "newcastle" ],
+    "LAL" => [ "la liga", "real madrid", "barcelona", "atlético", "atletico", "sevilla", "villarreal" ],
+    "BL1" => [ "bundesliga", "bayern", "dortmund", "leverkusen", "leipzig" ],
+    "SA"  => [ "serie a", "inter milan", "ac milan", "juventus", "napoli", "roma" ],
+    "L1"  => [ "ligue 1", "paris sg", "psg", "marseille", "monaco", "lyon" ],
+    "MLS" => [ "mls", "major league soccer", "inter miami", "la galaxy", "lafc" ],
+    "UCL" => [ "champions league", "uefa", "real madrid", "barcelona", "bayern" ]
+  }.freeze
+
+  # Extra RSS sources keyed by league — merged when leagues are followed or in clubs mode.
+  LEAGUE_FEEDS = {
+    "PL"  => [ { url: "https://feeds.bbci.co.uk/sport/football/premier-league/rss.xml", source: "BBC Premier League" } ],
+    "LAL" => [ { url: "https://e00-marca.uecdn.es/rss/futbol/primera-division.xml", source: "Marca La Liga" } ],
+    "LMX" => [ { url: "https://e00-marca.uecdn.es/rss/futbol/mx/mx.xml", source: "Marca Liga MX" } ],
+    "MLS" => [ { url: "https://www.goal.com/feeds/en/news", source: "Goal.com MLS" } ]
+  }.freeze
+
+  # ESPN league JSON feeds — richer than generic soccer/all in clubs mode.
+  CLUBS_ESPN_LEAGUE_URLS = {
+    "en" => [
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/news?limit=25",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/news?limit=25",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/ita.1/news?limit=25",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/ger.1/news?limit=25",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/fra.1/news?limit=25",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/news?limit=25",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/news?limit=25",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/news?limit=25"
+    ],
+    "es" => [
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/news?limit=25&lang=es",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/news?limit=25&lang=es",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/news?limit=25&lang=es",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/news?limit=25&lang=es"
+    ]
+  }.freeze
+
+  LEAGUE_ESPN_URLS = {
+    "PL"  => "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/news?limit=30",
+    "LAL" => "https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/news?limit=30",
+    "BL1" => "https://site.api.espn.com/apis/site/v2/sports/soccer/ger.1/news?limit=30",
+    "SA"  => "https://site.api.espn.com/apis/site/v2/sports/soccer/ita.1/news?limit=30",
+    "L1"  => "https://site.api.espn.com/apis/site/v2/sports/soccer/fra.1/news?limit=30",
+    "LMX" => "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/news?limit=30",
+    "MLS" => "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/news?limit=30",
+    "UCL" => "https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/news?limit=30"
   }.freeze
 
   private
@@ -146,7 +199,8 @@ class NewsService
     Rails.cache.fetch(news_cache_key(lang), expires_in: 30.minutes, race_condition_ttl: 30.seconds) do
       espn_urls = (ESPN_API_ENDPOINTS[espn_lang] || [])
       espn_urls = espn_urls.sort_by { |url| url.include?("fifa.world") ? 1 : 0 } if AppFocus.wc_paused?
-      espn_threads = espn_urls
+      espn_urls += (CLUBS_ESPN_LEAGUE_URLS[espn_lang] || []) if AppFocus.wc_paused?
+      espn_threads = espn_urls.uniq
                        .map { |url| Thread.new { fetch_espn_api(url, lang: espn_lang) } }
       rss_threads  = feeds.map { |feed| Thread.new { fetch_feed(feed[:url], feed[:source]) } }
 
@@ -180,6 +234,37 @@ class NewsService
   rescue => e
     Rails.logger.error("[NewsService] Feed fetch failed: #{e.message} — serving stale cache")
     Rails.cache.read("news_feed_stale_#{lang}") || []
+  end
+
+  def cached_league_articles(lang, league_codes)
+    codes = normalize_league_codes(league_codes)
+    return [] if codes.empty?
+
+    espn_lang = %w[en es].include?(lang) ? lang : "en"
+    cache_key = "news_league_feeds_v10_#{lang}_#{codes.join('_')}"
+
+    Rails.cache.fetch(cache_key, expires_in: 30.minutes, race_condition_ttl: 30.seconds) do
+      rss_feeds = codes.flat_map { |code| LEAGUE_FEEDS[code] || [] }.uniq { |f| f[:url] }
+      espn_urls = codes.filter_map { |code| LEAGUE_ESPN_URLS[code] }
+      espn_urls = espn_urls.map { |url| url.include?("lang=") ? url : "#{url}&lang=#{espn_lang}" } if espn_lang == "es"
+
+      espn_threads = espn_urls.uniq.map { |url| Thread.new { fetch_espn_api(url, lang: espn_lang) } }
+      rss_threads  = rss_feeds.map { |feed| Thread.new { fetch_feed(feed[:url], feed[:source]) } }
+
+      espn_items = espn_threads.flat_map { |t| result = t.join(8)&.value || []; t.kill if t.alive?; result }
+      rss_items  = rss_threads.flat_map  { |t| result = t.join(8)&.value || []; t.kill if t.alive?; result }
+
+      (espn_items + rss_items)
+        .uniq { |a| a[:link] }
+        .sort_by { |a| a[:published_at] || Time.at(0) }.reverse
+    end
+  rescue => e
+    Rails.logger.error("[NewsService] League feed fetch failed: #{e.message}")
+    []
+  end
+
+  def normalize_league_codes(raw)
+    Array(raw).map { |c| c.to_s.upcase }.select { |c| AppFocus::FEATURED_CLUB_CODES.include?(c) }.uniq
   end
 
   # Fetches and parses the full article body from the original URL.
@@ -566,7 +651,7 @@ class NewsService
   end
 
   def news_cache_key(lang)
-    suffix = AppFocus.wc_paused? ? "clubs_v9" : "v8"
+    suffix = AppFocus.wc_paused? ? "clubs_v10" : "v8"
     "news_feed_#{suffix}_#{lang}"
   end
 end
