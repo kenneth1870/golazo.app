@@ -263,7 +263,7 @@ class LiveScoresClient
   # (groups already flattened so callers can re-group by group_name if needed).
   def league_standings(league_id, season_id)
     # Standings change only when a match finishes; 30 min matches the sync job cadence.
-    Rails.cache.fetch("live_scores_standings_v2_#{league_id}_#{season_id}", expires_in: 30.minutes, race_condition_ttl: 15.seconds) do
+    Rails.cache.fetch("live_scores_standings_v3_#{league_id}_#{season_id}", expires_in: 30.minutes, race_condition_ttl: 15.seconds) do
       data = get("standings", league: league_id, season: season_id)
       groups = data.dig("response", 0, "league", "standings") || []
       groups.flatten
@@ -633,14 +633,14 @@ class LiveScoresClient
       minute_extra:   f.dig("fixture", "status", "extra"),
       venue:          f.dig("fixture", "venue", "name"),
       home: {
-        name:      f.dig("teams", "home", "name"),
+        name:      TeamDisplayNames.display_name(f.dig("teams", "home", "name")),
         logo:      f.dig("teams", "home", "logo"),
         score:     f.dig("goals", "home"),
         pen_score: f.dig("score", "penalty", "home"),
         red_cards: nil
       },
       away: {
-        name:      f.dig("teams", "away", "name"),
+        name:      TeamDisplayNames.display_name(f.dig("teams", "away", "name")),
         logo:      f.dig("teams", "away", "logo"),
         score:     f.dig("goals", "away"),
         pen_score: f.dig("score", "penalty", "away"),

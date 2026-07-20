@@ -144,6 +144,12 @@ const ES = {
   "Estonia":                "Estonia",
 }
 
+// Stale API names → current display names (all locales).
+const DISPLAY_NAMES = {
+  "Municipal Liberia":    "Escorpiones",
+  "AD Municipal Liberia": "Escorpiones",
+}
+
 /**
  * Returns the localised team name. Falls back to the original if no translation exists.
  * @param {string|null|undefined} name  – English name from the API
@@ -151,10 +157,10 @@ const ES = {
  */
 export function translateTeam(name, lang) {
   if (!name) return name
-  const base = (lang || "en").split("-")[0].toLowerCase()
-  if (base !== "es") return name
-  // Normalize to NFC so decomposed accents (e.g. "Curaçao" sent as c + ◌̧)
-  // still match the NFC keys in the map.
   const key = name.normalize ? name.normalize("NFC") : name
-  return ES[key] || name
+  const display = DISPLAY_NAMES[key] || name
+  const base = (lang || "en").split("-")[0].toLowerCase()
+  if (base !== "es") return display
+  const esKey = display.normalize ? display.normalize("NFC") : display
+  return ES[esKey] || display
 }
