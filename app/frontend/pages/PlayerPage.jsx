@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { useParams, useSearchParams, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
+import { useAppFocus } from "../hooks/useAppFocus"
 
 function StatBox({ label, value, highlight }) {
   return (
@@ -189,6 +190,7 @@ const PLAYER_TABS = ["stats", "trophies", "injuries"]
 
 export default function PlayerPage() {
   const { t }         = useTranslation()
+  const { clubs_primary: clubsPrimary } = useAppFocus()
   const { id }        = useParams()
   const [searchParams] = useSearchParams()
   const navigate      = useNavigate()
@@ -201,8 +203,12 @@ export default function PlayerPage() {
   const [error, setError]    = useState(false)
 
   usePageMeta(
-    player?.name || "Player",
-    player ? `${player.name} — stats, goals, assists at FIFA World Cup 2026` : null
+    player?.name || t("player.notFound"),
+    player
+      ? (clubsPrimary
+          ? t("meta.playerDescClubs", { name: player.name })
+          : t("meta.playerDescWC", { name: player.name }))
+      : null
   )
 
   useEffect(() => {

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import LanguageSwitcher from "./LanguageSwitcher"
 import { useAppFocus } from "../hooks/useAppFocus"
+import { NAV_LEAGUES } from "./ClubCompetitionChips"
 
 
 const SOCIAL = [
@@ -90,28 +91,29 @@ export default function Footer() {
             <h4 className="footer-col__title">{t("nav.scores")}</h4>
             <ul className="footer-links">
               <li><Link to="/scores/today">{t("time.today")}</Link></li>
-              <li><Link to="/scores/live">{t("nav.live")}</Link></li>
               <li><Link to="/scores/results">{t("nav.results")}</Link></li>
-              <li><Link to="/scores/groups">{t("nav.groupStage")}</Link></li>
-              <li><Link to="/scores/knockout">{t("nav.knockout")}</Link></li>
+              {!clubsPrimary && (
+                <>
+                  <li><Link to="/scores/groups">{t("nav.groupStage")}</Link></li>
+                  <li><Link to="/scores/knockout">{t("nav.knockout")}</Link></li>
+                </>
+              )}
             </ul>
           </div>
 
           {/* ── Leagues ── */}
           <div className="footer-col">
-            <h4 className="footer-col__title">{t("nav.leagues", "Leagues")}</h4>
+            <h4 className="footer-col__title">{t("nav.leagues")}</h4>
             <ul className="footer-links">
               <li><Link to="/leagues">{t("nav.allLeagues")}</Link></li>
-              <li><Link to="/leagues/PL">Premier League</Link></li>
-              <li><Link to="/leagues/LAL">La Liga</Link></li>
-              <li><Link to="/leagues/BL1">Bundesliga</Link></li>
-              <li><Link to="/leagues/UCL">Champions League</Link></li>
-              <li><Link to="/leagues/CRC">Liga Tica</Link></li>
-              <li><Link to="/leagues/LMX">Liga MX</Link></li>
+              {NAV_LEAGUES.map(({ key, path }) => (
+                <li key={path}><Link to={path}>{t(key)}</Link></li>
+              ))}
             </ul>
           </div>
 
           {/* ── Mundial ── */}
+          {!clubsPrimary && (
           <div className="footer-col">
             <h4 className="footer-col__title">{t("nav.mundial")}</h4>
             <ul className="footer-links">
@@ -122,6 +124,17 @@ export default function Footer() {
               <li><Link to="/news">{t("nav.news")}</Link></li>
             </ul>
           </div>
+          )}
+
+          {clubsPrimary && (
+          <div className="footer-col">
+            <h4 className="footer-col__title">{t("nav.news")}</h4>
+            <ul className="footer-links">
+              <li><Link to="/news">{t("news.allNews")}</Link></li>
+              <li><Link to="/news">{t("news.forYou")}</Link></li>
+            </ul>
+          </div>
+          )}
 
         </div>
 

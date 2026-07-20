@@ -1,7 +1,13 @@
 {
   "meta": {
     "siteClubs": "Golazo · Fútbol en Vivo",
-    "siteWorldCup": "Golazo · Mundial 2026"
+    "siteWorldCup": "Golazo · Mundial 2026",
+    "matchDescClubs": "{{home}} vs {{away}} — marcadores en vivo, alineaciones y estadísticas de {{competition}}.",
+    "matchDescWC": "{{home}} vs {{away}} — marcadores en vivo, alineaciones y estadísticas del Mundial FIFA 2026.",
+    "teamDescClubs": "{{name}} — calendario, resultados y clasificación.",
+    "teamDescWC": "{{name}} — calendario, resultados y clasificación del Mundial FIFA 2026.",
+    "playerDescClubs": "{{name}} — estadísticas, goles y asistencias.",
+    "playerDescWC": "{{name}} — estadísticas, goles y asistencias del Mundial FIFA 2026."
   },
   "nav": {
     "home": "Inicio",
@@ -72,7 +78,9 @@
     "metaTitleClubs": "Marcadores y Clasificaciones en Vivo",
     "metaDescClubs": "Marcadores en tiempo real, calendario y clasificaciones de Premier League, La Liga, Champions League y más de 100 competiciones. Gratis · Sin registro.",
     "metaDescTodayClubs": "Marcadores y partidos de hoy de Premier League, La Liga, Champions League y todas las competiciones de fútbol.",
-    "metaDescTodayWC": "Marcadores y partidos de hoy del Mundial FIFA 2026 y todas las competiciones — goles y actualizaciones en tiempo real."
+    "metaDescTodayWC": "Marcadores y partidos de hoy del Mundial FIFA 2026 y todas las competiciones — goles y actualizaciones en tiempo real.",
+    "metaTitleWC": "Marcadores en Vivo, Estadísticas y Mundial 2026",
+    "metaDescWC": "Marcadores en tiempo real, alineaciones, clasificaciones e información del Mundial FIFA 2026 y más de 100 competiciones. Gratis · Sin registro."
   },
   "clubs": {
     "pl": "Premier League",
@@ -129,6 +137,8 @@
     "metaDesc": "Marcadores en vivo, resultados y calendario de Premier League, La Liga, Champions League y más de 100 competiciones.",
     "metaDescResults": "Resultados de fútbol — partidos finalizados con goles y marcadores finales.",
     "noLiveClubs": "Ningún partido en vivo ahora",
+    "metaTitleWC": "Marcadores — Mundial 2026",
+    "metaDescWC": "Marcadores en vivo, resultados y calendario del Mundial FIFA 2026 y todas las competiciones.",
     "viewFullMatch": "Ver partido →",
     "noGoals": "Sin goles registrados",
     "goalsLoading": "Cargando..."
@@ -368,6 +378,11 @@
   "news": {
     "title": "Noticias",
     "subtitle": "Lo último del fútbol mundial",
+    "metaDesc": "Últimas noticias de fútbol — traspasos, previas de partidos y resultados.",
+    "metaDescClubs": "Últimas noticias de fútbol — Premier League, La Liga, Liga Tica, Liga MX y más.",
+    "metaDescArticle": "{{title}} — noticias del Mundial FIFA 2026 en Golazo.",
+    "metaDescArticleClubs": "{{title}} — noticias de fútbol en Golazo.",
+    "forYouEmptyHintClubs": "Sigue equipos desde sus páginas o la sección Ligas para ver sus noticias aquí.",
     "noArticles": "No se encontraron artículos",
     "all": "Todos",
     "allNews": "Todas las noticias",
@@ -462,7 +477,9 @@
     "loadMore": "Ver más ({{remaining}} restantes)",
     "changeName": "Cambiar nombre",
     "myPredictions": "Mis Predicciones",
-    "yourGuess": "Tu predicción"
+    "yourGuess": "Tu predicción",
+    "metaTitle": "Clasificación de Predicciones",
+    "metaDesc": "Quién acertó más marcadores del Mundial FIFA 2026."
   },
   "compare": {
     "title": "Predicciones vs Amigo",
@@ -477,7 +494,9 @@
     "copyLink": "Copiar enlace",
     "copied": "✓ ¡Copiado!",
     "backToLeaderboard": "← Clasificación",
-    "predicted": "Predicción: {{home}}–{{away}}"
+    "predicted": "Predicción: {{home}}–{{away}}",
+    "metaTitle": "Comparar Predicciones",
+    "metaDesc": "Compara tus predicciones del Mundial FIFA 2026 con un amigo."
   },
   "prediction": {
     "title": "🎯 Predicción de Marcador",
@@ -493,6 +512,7 @@
   },
   "bracket": {
     "title": "Predictor de Cuadro",
+    "metaDesc": "Elige al campeón del Mundial FIFA 2026 — completa el cuadro eliminatorio y comparte tu predicción.",
     "subtitle": "Haz clic en un equipo para avanzarlo. Las elecciones se guardan en la URL.",
     "share": "Compartir",
     "copied": "✓ ¡Copiado!",
@@ -591,6 +611,7 @@
   "onboarding": {
     "welcome": "¡Bienvenido a Golazo! ⚽",
     "welcomeSub": "Tu compañero del Mundial 2026. Elige tu idioma para empezar.",
+    "welcomeSubClubs": "Marcadores en vivo de las mejores ligas. Elige tu idioma para empezar.",
     "pickTeams": "Elige tus equipos",
     "pickTeamsSub": "Personalizaremos tu feed de noticias y alertas.",
     "pickLeagues": "Sigue ligas",

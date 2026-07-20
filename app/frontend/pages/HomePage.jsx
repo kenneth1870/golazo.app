@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { useMatches, patchLiveScore } from "../hooks/useMatches"
 import { useFavoriteTeam } from "../hooks/useFavoriteTeam"
 import { useLiveCount } from "../contexts/LiveContext"
+import { useAppFocus } from "../hooks/useAppFocus"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
 import { formatKickoff } from "../hooks/useLocalTime"
@@ -14,7 +15,6 @@ import MatchCard from "../components/MatchCard"
 import MatchRow from "../components/MatchRow"
 import FavoriteTeamPicker from "../components/FavoriteTeamPicker"
 import ClubCompetitionChips from "../components/ClubCompetitionChips"
-import { useAppFocus } from "../hooks/useAppFocus"
 import { useStandingsChannel } from "../hooks/useStandingsChannel"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
 
@@ -302,10 +302,8 @@ export default function HomePage() {
   const { clubs_primary: clubsPrimary } = useAppFocus()
 
   usePageMeta(
-    clubsPrimary ? t("home.metaTitleClubs") : "Golazo — Live Football Scores, Stats & World Cup 2026",
-    clubsPrimary
-      ? t("home.metaDescClubs")
-      : "Real-time live scores, lineups, standings, and match insights for the FIFA World Cup 2026 and 100+ competitions worldwide. Free · No sign-up required."
+    clubsPrimary ? t("home.metaTitleClubs") : t("home.metaTitleWC"),
+    clubsPrimary ? t("home.metaDescClubs") : t("home.metaDescWC")
   )
   useStructuredData(clubsPrimary ? null : {
     "@context": "https://schema.org",

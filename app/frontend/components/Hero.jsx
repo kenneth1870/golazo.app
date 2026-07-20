@@ -139,7 +139,7 @@ export default function Hero({ nextMatch, liveCount = 0, compact = false, clubsP
               {liveCount > 0 ? t("hero.liveBtn") : t("hero.todayBtn", "Hoy")}
             </button>
             <button className="btn btn-secondary" style={{ padding: "6px 12px", fontSize: ".7rem" }} onClick={() => navigate(clubsPrimary ? "/leagues" : "/mundial")}>
-              {clubsPrimary ? t("nav.leagues", "Leagues") : "🏆 Mundial"}
+              {clubsPrimary ? t("nav.leagues") : `🏆 ${t("nav.mundialShort")}`}
             </button>
           </div>
         </div>

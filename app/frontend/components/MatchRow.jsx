@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { formatKickoff, formatMatchDate } from "../hooks/useLocalTime"
 import { useTranslation } from "react-i18next"
-import { translateTeam } from "../i18n/teamNames"
+import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
 import { prefetchMatchDetail, navIdFor } from "../utils/matchDetailCache"
 
 function FlagOrPlaceholder({ src, name }) {
@@ -52,7 +52,7 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
 
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">
-          <FlagOrPlaceholder src={match.home_team?.flag_url} name={match.home_team?.name} />
+          <FlagOrPlaceholder src={resolveTeamLogo(match.home_team?.name, match.home_team?.flag_url)} name={match.home_team?.name} />
           <span className="team-name">
             {translateTeam(match.home_team?.name, i18n.language) || match.home_slot || t("time.tbd")}
           </span>
@@ -72,7 +72,7 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
           <span className="team-name">
             {translateTeam(match.away_team?.name, i18n.language) || match.away_slot || t("time.tbd")}
           </span>
-          <FlagOrPlaceholder src={match.away_team?.flag_url} name={match.away_team?.name} />
+          <FlagOrPlaceholder src={resolveTeamLogo(match.away_team?.name, match.away_team?.flag_url)} name={match.away_team?.name} />
         </div>
       </div>
 

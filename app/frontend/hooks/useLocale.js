@@ -46,6 +46,12 @@ function applyLangToDocument(lang) {
   document.documentElement.dir = lang === "ar" ? "rtl" : "ltr"
 }
 
+import i18n from "../i18n"
+
+function tbd() {
+  return i18n.t("time.tbd")
+}
+
 // Timezone-aware date formatters using the detected timezone
 export function useFormatter(timezone) {
   const { i18n } = useTranslation()
@@ -53,21 +59,21 @@ export function useFormatter(timezone) {
 
   return {
     time: (utcDate) => {
-      if (!utcDate) return "TBD"
+      if (!utcDate) return tbd()
       return new Date(utcDate).toLocaleTimeString("en-US", {
         hour: "numeric", minute: "2-digit", hour12: true,
         timeZone: timezone,
       })
     },
     date: (utcDate) => {
-      if (!utcDate) return "TBD"
+      if (!utcDate) return tbd()
       return new Date(utcDate).toLocaleDateString(locale, {
         weekday: "short", month: "short", day: "numeric",
         timeZone: timezone,
       })
     },
     dateTime: (utcDate) => {
-      if (!utcDate) return "TBD"
+      if (!utcDate) return tbd()
       return new Date(utcDate).toLocaleString(locale, {
         month: "short", day: "numeric",
         hour: "numeric", minute: "2-digit", hour12: true,
@@ -75,7 +81,7 @@ export function useFormatter(timezone) {
       })
     },
     fullDateTime: (utcDate) => {
-      if (!utcDate) return "TBD"
+      if (!utcDate) return tbd()
       return new Date(utcDate).toLocaleString(locale, {
         weekday: "long", month: "long", day: "numeric", year: "numeric",
         hour: "numeric", minute: "2-digit", hour12: true,

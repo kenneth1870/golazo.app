@@ -118,7 +118,7 @@ export default function ResultsPage() {
   const { clubs_primary: clubsPrimary } = useAppFocus()
   usePageMeta(
     t("nav.results"),
-    clubsPrimary ? t("scores.metaDescResults") : "FIFA World Cup 2026 results and all football match scores — completed fixtures with goals and final scores."
+    clubsPrimary ? t("scores.metaDescResults") : t("scores.metaDescWC")
   )
   const [date, setDate]       = useState(() => new Date())
   const [matches, setMatches] = useState([])

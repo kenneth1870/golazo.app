@@ -115,7 +115,11 @@ module Api
           {
             rank:          r["rank"],
             group_name:    (r["group"] || "Overall").to_s.sub(/\AGroup\s+/i, ""),
-            team:          { name: display_name, code: display_name&.slice(0, 3)&.upcase, flag_url: team["logo"] },
+            team:          {
+              name:     display_name,
+              code:     display_name&.slice(0, 3)&.upcase,
+              flag_url: TeamDisplayNames.flag_url(team["name"], team["logo"])
+            },
             played:        r["all"]["played"],
             won:           r["all"]["win"],
             drawn:         r["all"]["draw"],

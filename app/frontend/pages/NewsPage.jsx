@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { useAppFocus } from "../hooks/useAppFocus"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { fetchWithTimeout } from "../utils/fetchWithTimeout"
 import { useFavorites } from "../hooks/useFavorites"
@@ -82,7 +83,8 @@ function isRelevantTo(article, teamNames) {
 export default function NewsPage() {
   const { t, i18n }    = useTranslation()
   const { favoriteTeams, favoriteCompetitions } = useFavorites()
-  usePageMeta(t("news.title"), "Latest football news — World Cup 2026, transfers, match previews and results.")
+  const { clubs_primary: clubsPrimary } = useAppFocus()
+  usePageMeta(t("news.title"), clubsPrimary ? t("news.metaDescClubs") : t("news.metaDesc"))
 
   const [articles, setArticles]       = useState([])
   const [loading, setLoading]         = useState(true)
@@ -197,7 +199,7 @@ export default function NewsPage() {
               <div className="empty-state__icon">⭐</div>
               <h3>{t("news.forYouEmpty", "No personalised news yet")}</h3>
               <p style={{ color: "var(--muted,#888)", maxWidth: 300, textAlign: "center" }}>
-                {t("news.forYouEmptyHint", "Follow teams from team pages or the Mundial section to see their news here.")}
+                {t(clubsPrimary ? "news.forYouEmptyHintClubs" : "news.forYouEmptyHint")}
               </p>
             </div>
           </div>

@@ -12,6 +12,11 @@ export const CLUB_CHIPS = [
   { emoji: "🇲🇽", key: "clubs.lmx", path: "/leagues/LMX" },
 ]
 
+export const NAV_LEAGUES = [
+  ...CLUB_CHIPS,
+  { emoji: "🇺🇸", key: "clubs.mls", path: "/leagues/MLS" },
+]
+
 export default function ClubCompetitionChips({ compact = false }) {
   const { t } = useTranslation()
 

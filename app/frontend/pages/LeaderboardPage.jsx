@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
+import { useAppFocus } from "../hooks/useAppFocus"
 import { storageGet, storageSet } from "../utils/safeStorage"
 
 const DEVICE_KEY = "golazo_device_id"
@@ -17,7 +18,7 @@ function getDeviceId() {
 
 export default function LeaderboardPage() {
   const { t } = useTranslation()
-  usePageMeta("Prediction Leaderboard", "Top score predictors for FIFA World Cup 2026 — who called the most goals?")
+  usePageMeta(t("leaderboard.metaTitle"), t("leaderboard.metaDesc"))
   const navigate  = useNavigate()
   const [rows, setRows]             = useState([])
   const [loading, setLoading]       = useState(true)

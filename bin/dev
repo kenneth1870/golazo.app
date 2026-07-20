@@ -1,2 +1,19 @@
 #!/usr/bin/env sh
-exec foreman start -f Procfile.dev "$@"
+if command -v foreman >/dev/null 2>&1; then
+  exec foreman start -f Procfile.dev "$@"
+fi
+
+echo "foreman not found — starting Rails (:3000) and Vite (:3036) directly"
+echo "Install foreman for a single command: gem install foreman"
+
+bin/rails s -p 3000 &
+rails_pid=$!
+bin/vite dev &
+vite_pid=$!
+
+cleanup() {
+  kill "$rails_pid" "$vite_pid" 2>/dev/null
+}
+trap cleanup EXIT INT TERM
+
+wait

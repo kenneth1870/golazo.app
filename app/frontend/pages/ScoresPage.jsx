@@ -14,10 +14,10 @@ export default function ScoresPage() {
       ? t("scores.metaTitleLive", { count: liveCount })
       : clubsPrimary
         ? t("scores.metaTitle")
-        : "Scores — World Cup 2026 & All Competitions",
+        : t("scores.metaTitleWC"),
     clubsPrimary
       ? t("scores.metaDesc")
-      : "Live scores, results and fixtures for FIFA World Cup 2026 and all football competitions worldwide."
+      : t("scores.metaDescWC")
   )
 
   const TABS = [

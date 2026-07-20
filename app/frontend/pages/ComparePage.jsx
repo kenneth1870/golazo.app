@@ -33,7 +33,7 @@ export default function ComparePage() {
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  usePageMeta("Prediction Comparison", "Compare your FIFA World Cup 2026 score predictions with a friend.")
+  usePageMeta(t("compare.metaTitle"), t("compare.metaDesc"))
 
   const myDeviceId     = getDeviceId()
   const friendDeviceId = searchParams.get("friend") || ""

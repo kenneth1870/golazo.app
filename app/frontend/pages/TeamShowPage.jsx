@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam } from "../i18n/teamNames"
+import { useAppFocus } from "../hooks/useAppFocus"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { navigateToMatch } from "../utils/matchDetailCache"
 import { useFavorites } from "../hooks/useFavorites"
@@ -23,9 +24,14 @@ export default function TeamShowPage() {
   const [squadLoading, setSquadLoading] = useState(false)
   const [activeTab, setActiveTab]   = useState("overview")
 
+  const { clubs_primary: clubsPrimary } = useAppFocus()
+  const displayName = team ? (translateTeam(team.name, i18n.language) ?? team.name) : null
+
   usePageMeta(
-    team ? `${team.name} — World Cup 2026` : null,
-    team ? `${team.name} FIFA World Cup 2026 fixtures, results and group standings.` : null,
+    displayName ? (clubsPrimary ? displayName : `${displayName} — World Cup 2026`) : null,
+    displayName
+      ? (clubsPrimary ? t("meta.teamDescClubs", { name: displayName }) : t("meta.teamDescWC", { name: displayName }))
+      : null,
     { image: team?.flag_url || undefined }
   )
 

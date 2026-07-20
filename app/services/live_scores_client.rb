@@ -634,14 +634,14 @@ class LiveScoresClient
       venue:          f.dig("fixture", "venue", "name"),
       home: {
         name:      TeamDisplayNames.display_name(f.dig("teams", "home", "name")),
-        logo:      f.dig("teams", "home", "logo"),
+        logo:      TeamDisplayNames.flag_url(f.dig("teams", "home", "name"), f.dig("teams", "home", "logo")),
         score:     f.dig("goals", "home"),
         pen_score: f.dig("score", "penalty", "home"),
         red_cards: nil
       },
       away: {
         name:      TeamDisplayNames.display_name(f.dig("teams", "away", "name")),
-        logo:      f.dig("teams", "away", "logo"),
+        logo:      TeamDisplayNames.flag_url(f.dig("teams", "away", "name"), f.dig("teams", "away", "logo")),
         score:     f.dig("goals", "away"),
         pen_score: f.dig("score", "penalty", "away"),
         red_cards: nil
@@ -695,18 +695,14 @@ class LiveScoresClient
         "round"   => fx.dig("league", "round")
       },
       "teams" => {
-        "home" => {
+        "home" => team_payload(fx.dig("teams", "home", "name"), fx.dig("teams", "home", "logo")).merge(
           "id"     => fx.dig("teams", "home", "id"),
-          "name"   => fx.dig("teams", "home", "name"),
-          "logo"   => fx.dig("teams", "home", "logo"),
           "winner" => fx.dig("teams", "home", "winner")
-        },
-        "away" => {
+        ),
+        "away" => team_payload(fx.dig("teams", "away", "name"), fx.dig("teams", "away", "logo")).merge(
           "id"     => fx.dig("teams", "away", "id"),
-          "name"   => fx.dig("teams", "away", "name"),
-          "logo"   => fx.dig("teams", "away", "logo"),
           "winner" => fx.dig("teams", "away", "winner")
-        }
+        )
       },
       "goals" => {
         "home" => fx.dig("goals", "home"),
@@ -720,7 +716,7 @@ class LiveScoresClient
       {
         minute:     e.dig("time", "elapsed"),
         extra:      e.dig("time", "extra"),
-        team:       { name: e.dig("team", "name"),     logo: e.dig("team", "logo") },
+        team:       team_payload(e.dig("team", "name"), e.dig("team", "logo")),
         player:     e.dig("player", "name"),
         player_id:  e.dig("player", "id"),
         assist:     e.dig("assist", "name"),
@@ -735,7 +731,7 @@ class LiveScoresClient
   def normalize_stats(raw)
     raw.map do |td|
       {
-        team:  { name: td.dig("team", "name"), logo: td.dig("team", "logo") },
+        team:  team_payload(td.dig("team", "name"), td.dig("team", "logo")),
         stats: (td["statistics"] || []).map { |s| { type: s["type"], value: s["value"] } }
       }
     end
@@ -744,7 +740,7 @@ class LiveScoresClient
   def normalize_lineups(raw)
     raw.map do |t|
       {
-        team:      { name: t.dig("team", "name"), logo: t.dig("team", "logo"), colors: t.dig("team", "colors") },
+        team:      team_payload(t.dig("team", "name"), t.dig("team", "logo")).merge(colors: t.dig("team", "colors")),
         formation: t["formation"],
         start_xi:  (t["startXI"] || []).map { |p|
           pl = p["player"] || {}
@@ -809,6 +805,13 @@ class LiveScoresClient
       "goals" => { "home" => m.dig(:home, :score), "away" => m.dig(:away, :score) }
     }
     { fixture: fixture, events: [], stats: [], lineups: [] }
+  end
+
+  def team_payload(name, logo)
+    {
+      name: TeamDisplayNames.display_name(name),
+      logo: TeamDisplayNames.flag_url(name, logo)
+    }
   end
 
   def get(path, params = {})

@@ -133,7 +133,7 @@ function MatchCard({ match, onPick, roundIdx }) {
 
 export default function BracketPredictorPage() {
   const { t } = useTranslation()
-  usePageMeta(t("bracket.title"), "Pick your FIFA World Cup 2026 champion — fill out the knockout bracket and share your prediction.")
+  usePageMeta(t("bracket.title"), t("bracket.metaDesc"))
   const [searchParams, setSearchParams] = useSearchParams()
   const [standings, setStandings] = useState({})
   const [standingsLoading, setStandingsLoading] = useState(true)

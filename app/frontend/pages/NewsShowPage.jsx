@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
+import { useAppFocus } from "../hooks/useAppFocus"
 
 const SOURCE_COLORS = {
   "BBC Sport": "#b80000",
@@ -27,6 +28,7 @@ function ArticleSkeleton() {
 export default function NewsShowPage() {
   const { id }      = useParams()
   const { t, i18n } = useTranslation()
+  const { clubsPrimary } = useAppFocus()
   const navigate = useNavigate()
   const lang     = i18n.language.split("-")[0]
   const [article, setArticle]   = useState(null)
@@ -60,7 +62,9 @@ export default function NewsShowPage() {
   const heroImageEarly = content?.hero_image || article?.image
   usePageMeta(
     article?.title || null,
-    article?.description || (article?.title ? `${article.title} — FIFA World Cup 2026 news on Golazo.` : null),
+    article?.description || (article?.title
+      ? t(clubsPrimary ? "news.metaDescArticleClubs" : "news.metaDescArticle", { title: article.title })
+      : null),
     { type: "article", image: heroImageEarly || undefined }
   )
   useStructuredData(article ? {

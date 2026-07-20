@@ -148,6 +148,26 @@ const ES = {
 const DISPLAY_NAMES = {
   "Municipal Liberia":    "Escorpiones",
   "AD Municipal Liberia": "Escorpiones",
+  "LD Alajuelense":       "Alajuelense",
+  "CS Herediano":         "Herediano",
+  "CS Cartagines":        "Cartaginés",
+  "Deportivo Saprissa":   "Saprissa",
+  "Perez Zeledon":        "Pérez Zeledón",
+  "Sporting San Jose":    "Sporting FC",
+}
+
+const LOGO_OVERRIDES = {
+  "Municipal Liberia":    "https://media.api-sports.io/football/teams/17784.png",
+  "AD Municipal Liberia": "https://media.api-sports.io/football/teams/17784.png",
+}
+
+/**
+ * Returns the Escorpiones crest when the API still serves Municipal Liberia logos.
+ */
+export function resolveTeamLogo(name, url) {
+  if (!name) return url
+  const key = name.normalize ? name.normalize("NFC") : name
+  return LOGO_OVERRIDES[key] || url
 }
 
 /**

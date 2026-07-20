@@ -1,7 +1,13 @@
 {
   "meta": {
     "siteClubs": "Golazo · Live Football",
-    "siteWorldCup": "Golazo · World Cup 2026"
+    "siteWorldCup": "Golazo · World Cup 2026",
+    "matchDescClubs": "{{home}} vs {{away}} — live scores, lineups and stats for {{competition}}.",
+    "matchDescWC": "{{home}} vs {{away}} — live scores, lineups and stats for FIFA World Cup 2026.",
+    "teamDescClubs": "{{name}} — fixtures, results and standings.",
+    "teamDescWC": "{{name}} — FIFA World Cup 2026 fixtures, results and group standings.",
+    "playerDescClubs": "{{name}} — stats, goals and assists.",
+    "playerDescWC": "{{name}} — stats, goals and assists at FIFA World Cup 2026."
   },
   "nav": {
     "home": "Home",
@@ -72,7 +78,9 @@
     "metaTitleClubs": "Live Football Scores & Standings",
     "metaDescClubs": "Real-time live scores, fixtures, and standings for Premier League, La Liga, Champions League and 100+ competitions worldwide. Free · No sign-up required.",
     "metaDescTodayClubs": "Today's live scores and fixtures for Premier League, La Liga, Champions League and all football competitions.",
-    "metaDescTodayWC": "Today's live scores and fixtures for FIFA World Cup 2026 and all football competitions — real-time goals and updates."
+    "metaDescTodayWC": "Today's live scores and fixtures for FIFA World Cup 2026 and all football competitions — real-time goals and updates.",
+    "metaTitleWC": "Live Football Scores, Stats & World Cup 2026",
+    "metaDescWC": "Real-time live scores, lineups, standings, and match insights for FIFA World Cup 2026 and 100+ competitions worldwide. Free · No sign-up required."
   },
   "clubs": {
     "pl": "Premier League",
@@ -128,6 +136,8 @@
     "metaDesc": "Live scores, results and fixtures for Premier League, La Liga, Champions League and 100+ competitions worldwide.",
     "metaDescResults": "Football match results — completed fixtures with goals and final scores.",
     "noLiveClubs": "No matches live right now",
+    "metaTitleWC": "Scores — World Cup 2026",
+    "metaDescWC": "Live scores, results and fixtures for FIFA World Cup 2026 and all football competitions worldwide.",
     "viewFullMatch": "Full match →",
     "noGoals": "No goals recorded",
     "goalsLoading": "Loading..."
@@ -367,6 +377,11 @@
   "news": {
     "title": "News",
     "subtitle": "Football stories from around the world",
+    "metaDesc": "Latest football news — World Cup 2026, transfers, match previews and results.",
+    "metaDescClubs": "Latest football news — Premier League, La Liga, Liga Tica, Liga MX and more.",
+    "metaDescArticle": "{{title}} — FIFA World Cup 2026 news on Golazo.",
+    "metaDescArticleClubs": "{{title}} — football news on Golazo.",
+    "forYouEmptyHintClubs": "Follow teams from team pages or the Leagues section to see their news here.",
     "noArticles": "No articles found",
     "all": "All",
     "allNews": "All news",
@@ -461,7 +476,9 @@
     "loadMore": "Show more ({{remaining}} remaining)",
     "changeName": "Set Name",
     "myPredictions": "My Predictions",
-    "yourGuess": "Your guess"
+    "yourGuess": "Your guess",
+    "metaTitle": "Prediction Leaderboard",
+    "metaDesc": "Top score predictors for FIFA World Cup 2026 — who called the most goals?"
   },
   "compare": {
     "title": "Predictions vs Friend",
@@ -476,7 +493,9 @@
     "copyLink": "Copy link",
     "copied": "✓ Copied!",
     "backToLeaderboard": "← Leaderboard",
-    "predicted": "Predicted: {{home}}–{{away}}"
+    "predicted": "Predicted: {{home}}–{{away}}",
+    "metaTitle": "Prediction Comparison",
+    "metaDesc": "Compare your FIFA World Cup 2026 score predictions with a friend."
   },
   "prediction": {
     "title": "🎯 Score Prediction",
@@ -492,6 +511,7 @@
   },
   "bracket": {
     "title": "Bracket Predictor",
+    "metaDesc": "Pick your FIFA World Cup 2026 champion — fill out the knockout bracket and share your prediction.",
     "subtitle": "Click a team to advance them. Picks are saved in the URL.",
     "share": "Share",
     "copied": "✓ Copied!",
@@ -590,6 +610,7 @@
   "onboarding": {
     "welcome": "Welcome to Golazo! ⚽",
     "welcomeSub": "Your World Cup 2026 companion. Choose your language to get started.",
+    "welcomeSubClubs": "Live scores from the world's top leagues. Choose your language to get started.",
     "pickTeams": "Pick your teams",
     "pickTeamsSub": "We'll personalise your news feed and alerts.",
     "pickLeagues": "Follow leagues",

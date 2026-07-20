@@ -20,6 +20,7 @@ import MatchReactions from "../components/MatchReactions"
 import { useReminders } from "../hooks/useReminders"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 import { useVisiblePolling } from "../hooks/useVisiblePolling"
+import { useAppFocus } from "../hooks/useAppFocus"
 import { getCachedMatchDetail, setCachedMatchDetail, navIdFor } from "../utils/matchDetailCache"
 import { getMatchColor } from "../utils/teamColors"
 import { sourceColor } from "../utils/sourceColors"
@@ -1951,11 +1952,16 @@ export default function MatchShowPage() {
 
   const prevMatchNav = matchIdx > 0                    ? matchList[matchIdx - 1] : null
   const nextMatchNav = matchIdx < matchList.length - 1 ? matchList[matchIdx + 1] : null
+  const { clubs_primary: clubsPrimary } = useAppFocus()
+  const leagueLabel = translateLeague(data?.fixture?.league?.name, i18n.language) ?? data?.fixture?.league?.name ?? t("nav.leagues")
+  const metaDesc = homeName && awayName
+    ? (clubsPrimary
+        ? t("meta.matchDescClubs", { home: homeName, away: awayName, competition: leagueLabel })
+        : t("meta.matchDescWC", { home: homeName, away: awayName }))
+    : undefined
   usePageMeta(
-    homeName && awayName ? `${homeName} vs ${awayName}` : "Match",
-    homeName && awayName
-      ? `${homeName} vs ${awayName} live score, match stats, lineups and events — FIFA World Cup 2026.`
-      : undefined,
+    homeName && awayName ? `${homeName} vs ${awayName}` : t("match.summary"),
+    metaDesc,
     { type: "article", image: homeLogo || undefined }
   )
   const homeScore = data?.fixture?.goals?.home
@@ -1964,7 +1970,7 @@ export default function MatchShowPage() {
     "@context": "https://schema.org",
     "@type": "SportsEvent",
     "name": `${homeName} vs ${awayName}`,
-    "description": `FIFA World Cup 2026 match: ${homeName} vs ${awayName}`,
+    "description": metaDesc,
     "startDate": kickoffAt,
     "sport": "Soccer",
     "homeTeam": { "@type": "SportsTeam", "name": homeName },

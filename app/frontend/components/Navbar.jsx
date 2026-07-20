@@ -6,7 +6,7 @@ import SearchBar from "./SearchBar"
 import { useLiveCount } from "../contexts/LiveContext"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 import { useAppFocus } from "../hooks/useAppFocus"
-import { CLUB_CHIPS } from "./ClubCompetitionChips"
+import { NAV_LEAGUES } from "./ClubCompetitionChips"
 
 const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
@@ -138,7 +138,7 @@ const MundialMegaMenu = memo(function MundialMegaMenu({ t }) {
   return (
     <div className="mega-menu">
       <div className="mega-menu__col">
-        <div className="mega-menu__section-label">Mundial 2026</div>
+        <div className="mega-menu__section-label">{t("nav.mundial")}</div>
         <NavLink to="/mundial/teams"    className={({ isActive }) => `mega-menu__link${isActive ? " active" : ""}`}>
           <span className="mega-menu__link-icon">🏟️</span> {t("nav.teams")}
         </NavLink>
@@ -170,19 +170,9 @@ const LeaguesDropdown = memo(function LeaguesDropdown({ t }) {
         {t("nav.allLeagues")}
       </NavLink>
       <div className="dd-separator" />
-      {[
-        { label: "Premier League",     path: "/leagues/PL",  flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-        { label: "La Liga",            path: "/leagues/LAL", flag: "🇪🇸" },
-        { label: "Bundesliga",         path: "/leagues/BL1", flag: "🇩🇪" },
-        { label: "Serie A",            path: "/leagues/SA",  flag: "🇮🇹" },
-        { label: "Ligue 1",            path: "/leagues/L1",  flag: "🇫🇷" },
-        { label: "Champions League",   path: "/leagues/UCL", flag: "⭐" },
-        { label: "MLS",                path: "/leagues/MLS", flag: "🇺🇸" },
-        { label: "Liga Tica",          path: "/leagues/CRC", flag: "🇨🇷" },
-        { label: "Liga MX",            path: "/leagues/LMX", flag: "🇲🇽" },
-      ].map(({ label, path, flag }) => (
+      {NAV_LEAGUES.map(({ emoji, key, path }) => (
         <NavLink key={path} to={path} className={({ isActive }) => `dropdown-item-custom${isActive ? " active" : ""}`}>
-          <span className="dd-icon">{flag}</span> {label}
+          <span className="dd-icon">{emoji}</span> {t(key)}
         </NavLink>
       ))}
     </div>
@@ -276,8 +266,7 @@ export default function Navbar() {
   ]
   const MOBILE_LEAGUES = [
     { label: t("nav.allLeagues"), path: "/leagues" },
-    ...CLUB_CHIPS.map(({ key, path }) => ({ label: t(key), path })),
-    { label: t("clubs.mls"), path: "/leagues/MLS" },
+    ...NAV_LEAGUES.map(({ key, path }) => ({ label: t(key), path })),
   ]
 
   return (
@@ -342,7 +331,9 @@ export default function Navbar() {
             ))}
           </div>
 
-          <div className="mobile-drawer-divider">{t("nav.mundial", "Mundial 2026")}</div>
+          {!clubsPrimary && (
+            <>
+          <div className="mobile-drawer-divider">{t("nav.mundial")}</div>
 
           {/* Mundial section */}
           <div className="mobile-link-group">
@@ -352,16 +343,18 @@ export default function Navbar() {
               </NavLink>
             ))}
             <NavLink to="/scores/groups" className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
-              {t("nav.groupStage", "Fase de Grupos")}
+              {t("nav.groupStage")}
             </NavLink>
             <NavLink to="/scores/knockout" className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
-              {t("nav.knockout", "Eliminatorias")}
+              {t("nav.knockout")}
             </NavLink>
           </div>
+            </>
+          )}
 
           {!clubsPrimary && (
             <>
-          <div className="mobile-drawer-divider">{t("nav.groups", "Grupos")}</div>
+          <div className="mobile-drawer-divider">{t("nav.groups")}</div>
           <MobileGroupGrid />
             </>
           )}
@@ -411,14 +404,16 @@ export default function Navbar() {
                 <LeaguesDropdown t={t} />
               </div>
 
-              {/* Mundial 2026 (mega-menu) */}
+              {/* Mundial 2026 (mega-menu) — archived in clubs mode */}
+              {!clubsPrimary && (
               <div className="nav-item has-mega">
                 <NavLink to="/mundial" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
-                  Mundial 2026
+                  {t("nav.mundial")}
                   <span className="nav-chevron">▼</span>
                 </NavLink>
                 <MundialMegaMenu t={t} />
               </div>
+              )}
 
               <NavLink to="/news" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
                 {t("nav.news")}

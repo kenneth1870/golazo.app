@@ -21,6 +21,7 @@ import { useFavorites } from "../hooks/useFavorites"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { isIosSafari, isStandalone } from "../utils/platform"
+import { translateTeam } from "../i18n/teamNames"
 
 const ONBOARDED_KEY = "golazo_onboarded"
 
@@ -49,17 +50,17 @@ const WC_TEAMS = [
   { id: 778, name: "Ecuador",       flag: "https://flagcdn.com/w40/ec.png" },
 ]
 
-const LEAGUES = [
-  { code: "PL",  name: "Premier League",      flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-  { code: "LAL", name: "La Liga",             flag: "🇪🇸" },
-  { code: "BL1", name: "Bundesliga",          flag: "🇩🇪" },
-  { code: "SA",  name: "Serie A",             flag: "🇮🇹" },
-  { code: "L1",  name: "Ligue 1",             flag: "🇫🇷" },
-  { code: "UCL", name: "Champions League",    flag: "⭐" },
-  { code: "MLS", name: "MLS",                 flag: "🇺🇸" },
-  { code: "LMX", name: "Liga MX",             flag: "🇲🇽" },
-  { code: "CRC", name: "Liga Tica",           flag: "🇨🇷" },
-  { code: "WC",  name: "World Cup 2026",      flag: "🌍" },
+const LEAGUE_DEFS = [
+  { code: "PL",  key: "clubs.pl",  flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
+  { code: "LAL", key: "clubs.lal", flag: "🇪🇸" },
+  { code: "BL1", key: "clubs.bl1", flag: "🇩🇪" },
+  { code: "SA",  key: "clubs.sa",  flag: "🇮🇹" },
+  { code: "L1",  key: "clubs.l1",  flag: "🇫🇷" },
+  { code: "UCL", key: "clubs.ucl", flag: "⭐" },
+  { code: "MLS", key: "clubs.mls", flag: "🇺🇸" },
+  { code: "LMX", key: "clubs.lmx", flag: "🇲🇽" },
+  { code: "CRC", key: "clubs.crc", flag: "🇨🇷" },
+  { code: "WC",  key: "nav.mundial", flag: "🌍" },
 ]
 
 const LANGS = [
@@ -87,7 +88,7 @@ export default function OnboardingModal({ onDismiss }) {
   const { t, i18n } = useTranslation()
   const { addFavorite, favorites } = useFavorites()
   const { subscribe } = usePushNotifications()
-  const { push_enabled: pushEnabled = false } = useAppFocus()
+  const { push_enabled: pushEnabled = false, clubs_primary: clubsPrimary = true } = useAppFocus()
 
   const [step, setStep]               = useState(0)
   const [selectedTeams, setTeams]     = useState([])
@@ -130,7 +131,7 @@ export default function OnboardingModal({ onDismiss }) {
     })
     // Persist selected leagues
     selectedLeagues.forEach(league => {
-      addFavorite({ type: "competition", id: league.code, name: league.name, code: league.code })
+      addFavorite({ type: "competition", id: league.code, name: t(league.key), code: league.code })
     })
     onDismiss()
   }
@@ -151,11 +152,13 @@ export default function OnboardingModal({ onDismiss }) {
     }
   }
 
+  const visibleLeagues = LEAGUE_DEFS.filter(l => !clubsPrimary || l.code !== "WC")
+
   const steps = [
     {
       key: "welcome",
       title: t("onboarding.welcome", "Welcome to Golazo! ⚽"),
-      subtitle: t("onboarding.welcomeSub", "Your World Cup 2026 companion. Choose your language to get started."),
+      subtitle: t(clubsPrimary ? "onboarding.welcomeSubClubs" : "onboarding.welcomeSub"),
       content: (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", marginTop: 24 }}>
           {LANGS.map(lang => (
@@ -180,7 +183,7 @@ export default function OnboardingModal({ onDismiss }) {
       ),
       cta: null, // language buttons advance automatically
     },
-    {
+    ...(clubsPrimary ? [] : [{
       key: "teams",
       title: t("onboarding.pickTeams", "Pick your teams"),
       subtitle: t("onboarding.pickTeamsSub", "We'll personalize your news feed and alerts."),
@@ -212,7 +215,7 @@ export default function OnboardingModal({ onDismiss }) {
                   fontSize: "0.62rem", color: selected ? "var(--accent,#ee1e46)" : "var(--muted,#888)",
                   textAlign: "center", lineHeight: 1.2, fontWeight: selected ? 600 : 400,
                 }}>
-                  {team.name}
+                  {translateTeam(team.name, i18n.language) || team.name}
                 </span>
                 {selected && (
                   <span style={{ fontSize: "0.6rem", color: "var(--accent,#ee1e46)", fontWeight: 700 }}>✓</span>
@@ -225,14 +228,14 @@ export default function OnboardingModal({ onDismiss }) {
       cta: t("onboarding.continue", "Continue"),
       ctaAction: goNext,
       skip: true,
-    },
+    }]),
     {
       key: "leagues",
       title: t("onboarding.pickLeagues", "Follow leagues"),
       subtitle: t("onboarding.pickLeaguesSub", "Get scores and news for your favourite competitions."),
       content: (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 16, justifyContent: "center" }}>
-          {LEAGUES.map(league => {
+          {visibleLeagues.map(league => {
             const selected = selectedLeagues.some(l => l.code === league.code)
             return (
               <button
@@ -249,7 +252,7 @@ export default function OnboardingModal({ onDismiss }) {
                 }}
               >
                 <span>{league.flag}</span>
-                {league.name}
+                {t(league.key)}
                 {selected && <span style={{ color: "var(--accent,#ee1e46)", fontWeight: 700 }}>✓</span>}
               </button>
             )
