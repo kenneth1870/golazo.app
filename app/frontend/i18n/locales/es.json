@@ -331,6 +331,7 @@
   "teamComparison": {
     "title": "Comparativa de Equipos",
     "subtitle": "Compara dos equipos del Mundial 2026 lado a lado",
+    "subtitleClubs": "Compara clasificación y forma de dos clubes",
     "homeTeam": "Equipo Local",
     "awayTeam": "Equipo Visitante",
     "selectTeam": "Seleccionar equipo…",

@@ -138,6 +138,16 @@ export default function ClubTeamPage() {
             >
               {following ? t("team.following") : t("team.follow")}
             </button>
+            <Link
+              to={`/compare/teams?home=${code}/${slug}`}
+              style={{
+                background: "var(--surface2)", border: "1px solid var(--border)",
+                borderRadius: 20, padding: "6px 16px", color: "var(--text)",
+                fontSize: "0.78rem", fontWeight: 700, textDecoration: "none", flexShrink: 0,
+              }}
+            >
+              ⚔️ {t("teamComparison.compare")}
+            </Link>
           </div>
         </div>
       </div>

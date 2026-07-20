@@ -216,7 +216,7 @@ export default function App() {
               <Route path="/predictor"     element={<ClubsModeRedirect to="/"><BracketPredictorPage /></ClubsModeRedirect>} />
               <Route path="/leaderboard"   element={<ClubsModeRedirect to="/"><LeaderboardPage /></ClubsModeRedirect>} />
               <Route path="/compare"       element={<ClubsModeRedirect to="/"><ComparePage /></ClubsModeRedirect>} />
-              <Route path="/compare/teams" element={<ClubsModeRedirect to="/leagues"><TeamComparisonPage /></ClubsModeRedirect>} />
+              <Route path="/compare/teams" element={<TeamComparisonPage />} />
               <Route path="/players/:id"   element={<PlayerPage />} />
               <Route path="/news"          element={<NewsPage />} />
               <Route path="/news/:id"      element={<NewsShowPage />} />

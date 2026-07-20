@@ -330,6 +330,7 @@
   "teamComparison": {
     "title": "Team Comparison",
     "subtitle": "Compare two World Cup 2026 teams side by side",
+    "subtitleClubs": "Compare league standings and form for any two clubs",
     "homeTeam": "Home Team",
     "awayTeam": "Away Team",
     "selectTeam": "Select team…",

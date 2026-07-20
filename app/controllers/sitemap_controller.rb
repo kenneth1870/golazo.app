@@ -55,10 +55,12 @@ class SitemapController < ApplicationController
 
     # DB team pages — WC nationals only when WC is active
     @teams = if AppFocus.wc_paused?
-      Team.where(group: [ nil, "" ]).select(:id, :name, :updated_at).order(:name)
+      Team.none
     else
       Team.select(:id, :name, :updated_at).order(:name)
     end
+
+    @club_team_urls = SitemapClubTeams.urls
 
     # Recent news articles — IDs are SHA1 digests of the article link,
     # generated at parse time by NewsService. Re-use the feed cache.

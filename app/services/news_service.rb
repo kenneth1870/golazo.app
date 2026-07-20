@@ -156,7 +156,8 @@ class NewsService
     "PL"  => [ { url: "https://feeds.bbci.co.uk/sport/football/premier-league/rss.xml", source: "BBC Premier League" } ],
     "LAL" => [ { url: "https://e00-marca.uecdn.es/rss/futbol/primera-division.xml", source: "Marca La Liga" } ],
     "LMX" => [ { url: "https://e00-marca.uecdn.es/rss/futbol/mx/mx.xml", source: "Marca Liga MX" } ],
-    "MLS" => [ { url: "https://www.goal.com/feeds/en/news", source: "Goal.com MLS" } ]
+    "MLS" => [ { url: "https://www.goal.com/feeds/en/news", source: "Goal.com MLS" } ],
+    "CRC" => [ { url: "https://www.nacion.com/rss/deportes", source: "La Nación Deportes" } ]
   }.freeze
 
   # ESPN league JSON feeds — richer than generic soccer/all in clubs mode.
@@ -169,13 +170,15 @@ class NewsService
       "https://site.api.espn.com/apis/site/v2/sports/soccer/fra.1/news?limit=25",
       "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/news?limit=25",
       "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/news?limit=25",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/crc.1/news?limit=25",
       "https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/news?limit=25"
     ],
     "es" => [
       "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/news?limit=25&lang=es",
       "https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/news?limit=25&lang=es",
       "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/news?limit=25&lang=es",
-      "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/news?limit=25&lang=es"
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/news?limit=25&lang=es",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/crc.1/news?limit=25&lang=es"
     ]
   }.freeze
 
@@ -187,7 +190,8 @@ class NewsService
     "L1"  => "https://site.api.espn.com/apis/site/v2/sports/soccer/fra.1/news?limit=30",
     "LMX" => "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/news?limit=30",
     "MLS" => "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/news?limit=30",
-    "UCL" => "https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/news?limit=30"
+    "UCL" => "https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/news?limit=30",
+    "CRC" => "https://site.api.espn.com/apis/site/v2/sports/soccer/crc.1/news?limit=30"
   }.freeze
 
   private

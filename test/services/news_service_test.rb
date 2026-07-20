@@ -17,4 +17,9 @@ class NewsServiceTest < ActiveSupport::TestCase
     codes = service.send(:normalize_league_codes, [ "CRC", "LMX", "WC", "nope" ])
     assert_equal %w[CRC LMX], codes
   end
+
+  test "league espn urls include costa rica" do
+    assert NewsService::LEAGUE_ESPN_URLS.key?("CRC")
+    assert_match(/crc\.1/, NewsService::LEAGUE_ESPN_URLS["CRC"])
+  end
 end

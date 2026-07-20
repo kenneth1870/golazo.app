@@ -22,6 +22,15 @@
   </url>
   <% end %>
 
+  <%# Club team profile pages (clubs mode) %>
+  <% @club_team_urls.each do |path| %>
+  <url>
+    <loc><%= @base %><%= path %></loc>
+    <changefreq>daily</changefreq>
+    <priority>0.55</priority>
+  </url>
+  <% end %>
+
   <%# Dynamic team pages %>
   <% @teams.each do |team| %>
   <url>
