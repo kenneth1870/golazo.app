@@ -60,7 +60,7 @@ export function useFormatter(timezone) {
   return {
     time: (utcDate) => {
       if (!utcDate) return tbd()
-      return new Date(utcDate).toLocaleTimeString("en-US", {
+      return new Date(utcDate).toLocaleTimeString(locale, {
         hour: "numeric", minute: "2-digit", hour12: true,
         timeZone: timezone,
       })

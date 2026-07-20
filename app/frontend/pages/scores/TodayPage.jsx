@@ -14,6 +14,7 @@ import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 import { useAppFocus } from "../../hooks/useAppFocus"
 import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
 import { matchTeamName } from "../../utils/matchTeamName"
+import { formatKickoff } from "../../hooks/useLocalTime"
 
 // ─── Helpers ──────────────────────────────────────────
 function toISO(date) {
@@ -35,7 +36,7 @@ function startOfDay() {
   return d
 }
 
-function useDateLabel(date, t) {
+function useDateLabel(date, t, locale) {
   const todayISO     = toISO(new Date())
   const yesterdayISO = toISO(addDays(new Date(), -1))
   const tomorrowISO  = toISO(addDays(new Date(), 1))
@@ -43,7 +44,7 @@ function useDateLabel(date, t) {
   if (iso === todayISO)     return t("time.today")
   if (iso === yesterdayISO) return t("time.yesterday")
   if (iso === tomorrowISO)  return t("time.tomorrow")
-  return date.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })
+  return date.toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric" })
 }
 
 const WC_START = new Date("2026-06-11T00:00:00")
@@ -140,9 +141,7 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
 
   const kickoffTime = match.kickoff_tbc
     ? t("time.tbc")
-    : match.kickoff_at
-    ? new Date(match.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
-    : t("time.tbd")
+    : formatKickoff(match.kickoff_at, i18n.language)
 
   return (
     <div
@@ -588,7 +587,7 @@ export default function TodayPage() {
     : allGroups
 
   const liveCount = todayMatches.filter(m => m.status === "live").length
-  const label     = useDateLabel(selected, t)
+  const label     = useDateLabel(selected, t, i18n.language)
   const isToday   = toISO(selected) === toISO(new Date())
   const previewDayLabel = upcomingPreview[0]?.kickoff_at
     ? new Date(upcomingPreview[0].kickoff_at).toLocaleDateString(i18n.language || undefined, {

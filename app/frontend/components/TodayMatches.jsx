@@ -3,9 +3,7 @@ import { useTranslation } from "react-i18next"
 import { translateLeague } from "../i18n/leagueNames"
 import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
 
-function formatKickoff(utcDate) {
-  return new Date(utcDate).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
-}
+import { formatKickoff } from "../hooks/useLocalTime"
 
 function MatchRow({ match, onClick }) {
   const { t, i18n } = useTranslation()
@@ -36,7 +34,7 @@ function MatchRow({ match, onClick }) {
           <span style={{ color: "gray", fontSize: "0.72rem" }}>{t("status.ft")}</span>
         ) : (
           <span style={{ color: "var(--muted)", fontSize: "0.8rem" }}>
-            {formatKickoff(match.kickoff_at)}
+            {formatKickoff(match.kickoff_at, i18n.language)}
           </span>
         )}
       </div>

@@ -22,33 +22,9 @@ import EmptyState from "../components/EmptyState"
 import { useStandingsChannel } from "../hooks/useStandingsChannel"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
 
-function useFavoriteFixtures(enabled) {
-  const [fixtures, setFixtures] = useState([])
-
-  useEffect(() => {
-    if (!enabled) { setFixtures([]); return }
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-    fetch(`/api/v1/today?tz=${encodeURIComponent(tz)}`)
-      .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then(all => {
-        if (!Array.isArray(all)) return
-        const sorted = all
-          .filter(m => m.status === "live" || m.status === "scheduled" || m.upcoming_preview)
-          .sort((a, b) => {
-            if (a.status === "live" && b.status !== "live") return -1
-            if (b.status === "live" && a.status !== "live") return 1
-            return new Date(a.kickoff_at || 0) - new Date(b.kickoff_at || 0)
-          })
-        setFixtures(sorted)
-      })
-      .catch(() => {})
-  }, [enabled])
-
-  return fixtures
-}
-
-function useTodayMatches(wcOnly = false) {
-  const [matches, setMatches] = useState([])
+function useTodayFeed(wcOnly = false) {
+  const [todayMatches, setTodayMatches] = useState([])
+  const [upcomingPreview, setUpcomingPreview] = useState([])
   const loadRef = useRef(null)
 
   const load = useCallback(() => {
@@ -57,10 +33,12 @@ function useTodayMatches(wcOnly = false) {
     fetch(`/api/v1/today?tz=${encodeURIComponent(tz)}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(all => {
+        if (!Array.isArray(all)) return
         const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: tz })
-        setMatches(
-          all.filter(m => {
-            if (wcOnly && m.competition?.code !== "WC") return false
+        const filtered = wcOnly ? all.filter(m => m.competition?.code === "WC") : all
+        setUpcomingPreview(filtered.filter(m => m.upcoming_preview))
+        setTodayMatches(
+          filtered.filter(m => {
             if (m.upcoming_preview) return false
             const ko = m.kickoff_at || m.kickoff
             if (!ko) return false
@@ -77,7 +55,6 @@ function useTodayMatches(wcOnly = false) {
     load()
     const onVisible = () => { if (!document.hidden) loadRef.current?.() }
     document.addEventListener("visibilitychange", onVisible)
-    // Safety-net poll only — live changes arrive via the live_scores WebSocket.
     const iv = setInterval(() => loadRef.current?.(), 300_000)
     return () => {
       clearInterval(iv)
@@ -85,9 +62,8 @@ function useTodayMatches(wcOnly = false) {
     }
   }, [load])
 
-  // Patch a row in-place from a live_scores push — no re-fetch.
   const applyLiveScore = useCallback((d) => {
-    setMatches(prev => {
+    const patch = prev => {
       let touched = false
       const next = prev.map(m => {
         const hit = (d.external_id != null && m.external_id === d.external_id) ||
@@ -98,14 +74,14 @@ function useTodayMatches(wcOnly = false) {
         return { ...m, home_score: d.home_score, away_score: d.away_score, status: d.status, minute: d.minute }
       })
       return touched ? next : prev
-    })
+    }
+    setTodayMatches(patch)
+    setUpcomingPreview(patch)
   }, [])
   useLiveScoresChannel(applyLiveScore)
-
-  // Instant refresh when a WC match finishes (final scores + status settle)
   useStandingsChannel(load)
 
-  return matches
+  return { todayMatches, upcomingPreview }
 }
 
 const FEATURED_NEWS_LEAGUES = [ "CRC", "LMX", "PL", "LAL" ]
@@ -130,7 +106,7 @@ function useLatestNews(leagueCodes = []) {
   return { news, newsError: error, retryNews: load }
 }
 
-function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
+function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = false }) {
   const { i18n } = useTranslation()
   const matchesTeam = (name) => matchTeamName(name, fav.name, i18n.language)
   const favMatches = upcomingMatches.filter(m =>
@@ -158,7 +134,9 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
           ) : (
             <div style={{ fontWeight: 800, color: "var(--text)", fontSize: "1rem" }}>{translateTeam(fav.name, i18n.language) || fav.name}</div>
           )}
-          {fav.group && <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{t("nav.group", { letter: fav.group })}</div>}
+          {fav.group && !fav.league_code && !clubsPrimary && (
+            <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{t("nav.group", { letter: fav.group })}</div>
+          )}
         </div>
       </div>
       {next ? (
@@ -188,14 +166,20 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
 }
 
 // ─── Today's matches strip ────────────────────────────────────────────────────
-function TodayMatchesSection({ todayMatches, navigate, t, clubsPrimary = false }) {
+function TodayMatchesSection({ todayMatches, upcomingPreview = [], navigate, t, clubsPrimary = false }) {
+  const { i18n } = useTranslation()
   const all = [...(todayMatches || [])]
     .sort((a, b) => new Date(a.kickoff_at || a.kickoff) - new Date(b.kickoff_at || b.kickoff))
   const live      = all.filter(m => m.status === "live")
   const rest      = all.filter(m => m.status !== "live")
   const liveCount = live.length
+  const previewDayLabel = upcomingPreview[0]?.kickoff_at
+    ? new Date(upcomingPreview[0].kickoff_at).toLocaleDateString(i18n.language || undefined, {
+        weekday: "long", month: "short", day: "numeric",
+      })
+    : null
 
-  if (all.length === 0) {
+  if (all.length === 0 && upcomingPreview.length === 0) {
     return (
       <EmptyState
         icon="📅"
@@ -207,6 +191,40 @@ function TodayMatchesSection({ todayMatches, navigate, t, clubsPrimary = false }
           </Link>
         }
       />
+    )
+  }
+
+  if (all.length === 0 && upcomingPreview.length > 0) {
+    return (
+      <div style={{ marginBottom: 8 }}>
+        <EmptyState
+          icon="📅"
+          title={t("scores.noMatchesToday", "No matches today")}
+          description={t("scores.tryDifferent", "Try another date")}
+        />
+        <div style={{ marginTop: 16 }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "0 4px 10px",
+            fontSize: "0.72rem", fontWeight: 800, color: "#ee1e46",
+            textTransform: "uppercase", letterSpacing: 1,
+          }}>
+            {`${t("home.upcomingMatches")}${previewDayLabel ? ` — ${previewDayLabel}` : ""}`}
+          </div>
+          <div style={{ background: "var(--surface)", borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)" }}>
+            {upcomingPreview.slice(0, 6).map((m, i) => (
+              <div key={m.id} style={{ borderBottom: i < Math.min(upcomingPreview.length, 6) - 1 ? "1px solid var(--border)" : "none" }}>
+                <MatchRow match={m} showDate onClick={() => navigateToMatch(navigate, m)} />
+              </div>
+            ))}
+          </div>
+          <div style={{ textAlign: "center", marginTop: 12 }}>
+            <Link to="/scores/today" className="btn btn-outline-light btn-sm">
+              {t("home.fullSchedule")}
+            </Link>
+          </div>
+        </div>
+      </div>
     )
   }
 
@@ -349,6 +367,13 @@ function NewsThumbnail({ post, index }) {
 }
 
 function NewsCard({ post, index }) {
+  const { i18n } = useTranslation()
+  const dateLabel = post?.published_at
+    ? new Date(post.published_at).toLocaleDateString(i18n.language || undefined, {
+        day: "numeric", month: "short", year: "numeric",
+      })
+    : post?.date_label
+
   return (
     <div className="col-md-4">
       <Link to={post?.id ? `/news/${post.id}` : "#"} style={{ display: "block", textDecoration: "none", color: "inherit", pointerEvents: post ? "auto" : "none" }}>
@@ -366,7 +391,7 @@ function NewsCard({ post, index }) {
                   <div className="author d-flex align-items-center">
                     <div className="text">
                       <h4>{post.source}</h4>
-                      <span>{post.date_label}</span>
+                      <span>{dateLabel}</span>
                     </div>
                   </div>
                 </>
@@ -380,8 +405,6 @@ function NewsCard({ post, index }) {
     </div>
   )
 }
-
-// ─── Main page ────────────────────────────────────────────────────────────────
 export default function HomePage() {
   const { t, i18n } = useTranslation()
   const navigate    = useNavigate()
@@ -407,12 +430,17 @@ export default function HomePage() {
     "url": "https://golazo.app/world-cup-2026"
   })
 
-  const { matches: liveWC }         = useMatches("live",     { competition: clubsPrimary ? undefined : "WC" })
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: clubsPrimary ? undefined : "WC" })
   useLiveScoresChannel(patchLiveScore)
-  const todayMatches                 = useTodayMatches(!clubsPrimary)
-  const favFixtures                  = useFavoriteFixtures(clubsPrimary && !!fav)
-  const favUpcoming                  = clubsPrimary ? favFixtures : upcomingMatches
+  const { todayMatches, upcomingPreview } = useTodayFeed(!clubsPrimary)
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: tz })
+  const clubFixtures = clubsPrimary
+    ? [...todayMatches, ...upcomingPreview]
+        .filter(m => m.status === "live" || m.status === "scheduled")
+        .sort((a, b) => new Date(a.kickoff_at || 0) - new Date(b.kickoff_at || 0))
+    : []
+  const favUpcoming = clubsPrimary ? clubFixtures : upcomingMatches
   const newsLeagues = clubsPrimary
     ? [...new Set(favoriteCompetitions.map(f => f.code).filter(Boolean))]
     : []
@@ -422,17 +450,16 @@ export default function HomePage() {
   // Prefer the next match with a known future kickoff; only fall back to TBD
   // if nothing has a time yet (avoids showing a placeholder knockout slot in hero).
   const nextMatch = clubsPrimary
-    ? todayMatches.find(m => m.kickoff_at && new Date(m.kickoff_at) > new Date())
+    ? clubFixtures.find(m => m.kickoff_at && new Date(m.kickoff_at) > new Date())
+      ?? upcomingPreview.find(m => m.kickoff_at && new Date(m.kickoff_at) > new Date())
     : upcomingMatches.find(m => m.kickoff_at && new Date(m.kickoff_at) > new Date())
       ?? upcomingMatches.find(m => !m.kickoff_at)
 
-  // "Próximos Partidos" table — everything after nextMatch, excluding today's
-  // matches (those are already shown in the TodayMatchesSection above).
-  const todayStr = new Date().toLocaleDateString("en-CA")
-  const upcomingFuture = upcomingMatches.filter(m =>
+  const upcomingSource = clubsPrimary ? clubFixtures : upcomingMatches
+  const upcomingFuture = upcomingSource.filter(m =>
     m.id !== nextMatch?.id &&
     m.kickoff_at &&
-    new Date(m.kickoff_at).toLocaleDateString("en-CA") !== todayStr
+    new Date(m.kickoff_at).toLocaleDateString("en-CA", { timeZone: tz }) !== todayStr
   )
 
   return (
@@ -448,6 +475,7 @@ export default function HomePage() {
       <div className="container" style={{ paddingTop: clubsPrimary ? 16 : 24, paddingBottom: 0 }}>
         <TodayMatchesSection
           todayMatches={todayMatches}
+          upcomingPreview={upcomingPreview}
           navigate={navigate}
           t={t}
           clubsPrimary={clubsPrimary}
@@ -471,7 +499,7 @@ export default function HomePage() {
           <FavoriteTeamPicker />
         </div>
         {fav ? (
-          <FavoriteTeamCard fav={fav} upcomingMatches={favUpcoming} navigate={navigate} t={t} />
+          <FavoriteTeamCard fav={fav} upcomingMatches={favUpcoming} navigate={navigate} t={t} clubsPrimary={clubsPrimary} />
         ) : (
           <EmptyState
             icon="★"
@@ -675,7 +703,7 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div className="text-center widget-vs-contents mb-2">
-                    <h4>{nextMatch.round || nextMatch.group_stage}</h4>
+                    <h4>{clubsPrimary ? (nextMatch.round || nextMatch.competition?.name) : (nextMatch.round || nextMatch.group_stage)}</h4>
                     <p className="mb-2">
                       <span className="d-block">
                         {nextMatch.kickoff_at
@@ -710,7 +738,7 @@ export default function HomePage() {
                         <th>{t("table.home")}</th>
                         <th></th>
                         <th>{t("table.away")}</th>
-                        <th>{t("table.group")}</th>
+                        <th>{clubsPrimary ? t("match.round", "Round") : t("table.group")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -732,7 +760,9 @@ export default function HomePage() {
                               <strong style={{ color: "var(--text)" }}>{m.away_team?.code}</strong>
                             </div>
                           </td>
-                          <td style={{ color: "gray", fontSize: "0.75rem" }}>{m.group_stage}</td>
+                          <td style={{ color: "gray", fontSize: "0.75rem" }}>
+                            {clubsPrimary ? (m.round || m.competition?.code) : m.group_stage}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -762,7 +792,11 @@ export default function HomePage() {
                         </div>
                       </div>
                       <div className="match-row__meta">
-                        {m.group_stage && <span style={{ fontSize: "0.62rem", color: "var(--muted)" }}>{m.group_stage}</span>}
+                        {(clubsPrimary ? (m.round || m.competition?.code) : m.group_stage) && (
+                          <span style={{ fontSize: "0.62rem", color: "var(--muted)" }}>
+                            {clubsPrimary ? (m.round || m.competition?.code) : m.group_stage}
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}

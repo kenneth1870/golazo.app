@@ -4,10 +4,10 @@ function tbd() {
   return i18n.t("time.tbd")
 }
 
-// Always "2:30 PM" / "7:00 AM" — avoids Spanish "p. m." with dots that wrap
-export function formatKickoff(utcDate) {
+export function formatKickoff(utcDate, locale) {
   if (!utcDate) return tbd()
-  return new Date(utcDate).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+  const loc = locale || i18n.language
+  return new Date(utcDate).toLocaleTimeString(loc, { hour: "numeric", minute: "2-digit", hour12: true })
 }
 
 export function formatMatchDate(utcDate, locale) {
