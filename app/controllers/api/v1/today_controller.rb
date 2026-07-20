@@ -53,9 +53,9 @@ module Api
         all = (all + to_add).sort_by { |m| m[:kickoff_at].to_s } unless to_add.empty?
         end
 
-        if all.empty? && date == Date.today
+        if all.empty? && date == TZInfo::Timezone.get(tz).now.to_date
           all = if AppFocus.wc_paused?
-            fetch_upcoming_clubs(8)
+            fetch_upcoming_clubs(8, tz)
           else
             fetch_upcoming_wc(6).map { |m| normalize_db(m).merge(upcoming_preview: true) }
           end
@@ -219,10 +219,11 @@ module Api
         []
       end
 
-      def fetch_upcoming_clubs(limit = 8)
+      def fetch_upcoming_clubs(limit = 8, tz = "UTC")
+        zone = TZInfo::Timezone.get(tz)
+        local_today = zone.now.to_date
         client = LiveScoresClient.new
-        raw = client.matches_for_date(Date.today)
-              .concat((1..7).flat_map { |i| client.matches_for_date(Date.today + i) })
+        raw = (0..7).flat_map { |i| client.matches_for_date(local_today + i) }
               .select { |m| m[:status] == "scheduled" }
               .uniq { |m| m[:external_id] }
 
@@ -230,12 +231,25 @@ module Api
         picks = raw.select { |m| domestic_ids.include?(m[:league_id].to_i) && !AppFocus.excluded_match?(m) }
         picks = raw.select { |m| AppFocus.important_match?(m) } if picks.size < limit
 
+        # Only preview matches on a future local calendar day — not "today".
+        picks = picks.select do |m|
+          local_kickoff_date(m[:kickoff_at], zone)&.> local_today
+        end
+
         picks.sort_by { |m| m[:kickoff_at].to_s }
              .first(limit)
              .map { |m| normalize_api_match(m).merge(upcoming_preview: true) }
       rescue => e
         Rails.logger.error("[TodayController] Upcoming clubs failed: #{e.message}")
         []
+      end
+
+      def local_kickoff_date(kickoff_at, zone)
+        return nil if kickoff_at.blank?
+
+        zone.utc_to_local(Time.parse(kickoff_at.to_s).utc).to_date
+      rescue ArgumentError, TZInfo::InvalidTimezoneIdentifier
+        nil
       end
 
       def fetch_upcoming_wc(limit = 6)

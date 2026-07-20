@@ -426,7 +426,12 @@ export default function TodayPage() {
         // into the previous/next day for users in non-UTC timezones.
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
         const filtered = raw.filter(m => {
-          if (m.upcoming_preview) return true   // preview matches bypass the date filter
+          if (m.upcoming_preview) {
+            const ko = m.kickoff_at || m.kickoff
+            if (!ko) return false
+            const localDate = new Date(ko).toLocaleDateString("en-CA", { timeZone: tz })
+            return localDate > iso
+          }
           const ko = m.kickoff_at || m.kickoff
           if (!ko) return false
           const localDate = new Date(ko).toLocaleDateString("en-CA", { timeZone: tz })
@@ -584,6 +589,12 @@ export default function TodayPage() {
 
   const liveCount = todayMatches.filter(m => m.status === "live").length
   const label     = useDateLabel(selected, t)
+  const isToday   = toISO(selected) === toISO(new Date())
+  const previewDayLabel = upcomingPreview[0]?.kickoff_at
+    ? new Date(upcomingPreview[0].kickoff_at).toLocaleDateString(i18n.language || undefined, {
+        weekday: "long", month: "short", day: "numeric",
+      })
+    : null
 
   const favLiveMatch = !alertDismissed && favTeam ? todayMatches.find(m =>
     m.status === "live" && (
@@ -672,7 +683,7 @@ export default function TodayPage() {
               </span>
             )}
             {!loading && (
-              <span style={{ color: "#555" }}>{t("time.matchCount", { count: matches.length })}</span>
+              <span style={{ color: "#555" }}>{t("time.matchCount", { count: todayMatches.length })}</span>
             )}
           </div>
         </div>
@@ -743,11 +754,9 @@ export default function TodayPage() {
           </div>
         ) : groups.length === 0 ? (
           <>
-            {/* When WC preview is available, skip the empty state and lead with it */}
-            {upcomingPreview.length === 0 && <EmptyState label={label} t={t} />}
-            {/* Upcoming WC preview — returned inline by the API when today is empty */}
-            {upcomingPreview.length > 0 && (
-              <div style={{ marginTop: 4 }}>
+            {todayMatches.length === 0 && <EmptyState label={label} t={t} />}
+            {upcomingPreview.length > 0 && isToday && (
+              <div style={{ marginTop: todayMatches.length === 0 ? 4 : 0 }}>
                 <div style={{
                   display: "flex", alignItems: "center", gap: 8,
                   padding: "0 4px 10px",
@@ -756,19 +765,19 @@ export default function TodayPage() {
                 }}>
                   <img src="/images/SOCCER.png" alt="" style={{ width: 18, height: 18, objectFit: "contain" }} onError={e => (e.target.style.display = "none")} />
                   {clubsPrimary
-                    ? `${t("home.liveScoresWorldwide")} — ${t("home.upcomingMatches")}`
+                    ? `${t("home.upcomingMatches")}${previewDayLabel ? ` — ${previewDayLabel}` : ""}`
                     : `FIFA World Cup 2026 — ${t("home.upcomingMatches")}`}
                 </div>
                 <div className="widget-next-match">
                   <div className="widget-body p-0">
                     {upcomingPreview.map(m => (
-                      <MatchRow key={m.id} match={m} onClick={() => onMatchClick(m)} />
+                      <MatchRow key={m.id} match={m} showDate onClick={() => onMatchClick(m)} />
                     ))}
                   </div>
                 </div>
                 <div style={{ textAlign: "center", marginTop: 12, paddingBottom: 8 }}>
                   <button
-                    onClick={() => navigate("/scores/today")}
+                    onClick={() => setSelected(addDays(new Date(), 1))}
                     style={{
                       background: "none", border: "1px solid var(--border)", borderRadius: 20,
                       color: "var(--muted)", fontSize: "0.75rem", padding: "6px 18px", cursor: "pointer",
