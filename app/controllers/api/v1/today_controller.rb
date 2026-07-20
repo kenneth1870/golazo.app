@@ -10,8 +10,6 @@ module Api
         # which would cause June 13 matches (Qatar, Brazil) to be excluded.
         date = parse_date(params[:date]) || TZInfo::Timezone.get(tz).now.to_date
         all  = merge_matches(date, tz).sort_by { |m| m[:kickoff_at].to_s }
-
-        # Safety net: inject finished/live WC matches from DB when WC is active.
         unless AppFocus.wc_paused?
           wc_db     = fetch_wc_from_db_for_date(date, tz)
 
@@ -129,7 +127,7 @@ module Api
       # Merge live-API matches with DB matches for the date.
       # API match wins on duplicate (same home+away team pair) since it has live scores.
       def merge_matches(date, tz = "UTC")
-        api_matches = fetch_api_matches(date)
+        api_matches = fetch_api_matches(date, tz)
         return api_matches if AppFocus.wc_paused?
 
         db_matches  = fetch_db_matches(date, tz)
@@ -163,27 +161,69 @@ module Api
         api_matches + db_only
       end
 
-      def fetch_api_matches(date)
-        Rails.cache.fetch("today_api_#{date.iso8601}", expires_in: 90.seconds, race_condition_ttl: 15.seconds) do
-          client  = LiveScoresClient.new
-          matches = client.matches_for_date(date)
+      def fetch_api_matches(date, tz = "UTC")
+        Rails.cache.fetch("today_api_v2_#{date.iso8601}_#{tz}", expires_in: 90.seconds, race_condition_ttl: 15.seconds) do
+          client = LiveScoresClient.new
 
-          # Also pull the next UTC day so that evening matches in western timezones
-          # (Americas, UTC-8 to UTC-3) are included. A match at 01:00 UTC on June 10
-          # is 17:00–22:00 local on June 9 — the user's "today". Only include
-          # tomorrow-UTC matches that start before 07:00 UTC (≤ midnight UTC-7).
-          next_day = client.matches_for_date(date + 1).select do |m|
-            t = Time.parse(m[:kickoff_at].to_s) rescue nil
-            t && t.utc.hour < 7
+          raw = if AppFocus.wc_paused?
+            fetch_club_league_raw_matches(client, date, tz)
+          else
+            matches = client.matches_for_date(date, timezone: tz)
+            next_day = client.matches_for_date(date + 1, timezone: tz).select do |m|
+              t = Time.parse(m[:kickoff_at].to_s) rescue nil
+              t && t.utc.hour < 7
+            end
+            seen = Set.new(matches.map { |m| m[:external_id] })
+            matches + next_day.reject { |m| seen.include?(m[:external_id]) }
           end
 
-          seen = Set.new(matches.map { |m| m[:external_id] })
-          combined = matches + next_day.reject { |m| seen.include?(m[:external_id]) }
-          filter_matches_for_focus(combined).map { |m| normalize_api_match(m) }
+          normalized = filter_matches_for_focus(raw).map { |m| normalize_api_match(m) }
+
+          if AppFocus.wc_paused?
+            zone = TZInfo::Timezone.get(tz)
+            normalized.select { |m| match_local_date?(m[:kickoff_at], date, zone) }
+          else
+            normalized
+          end
         end
       rescue => e
         Rails.logger.error("[TodayController] API matches failed: #{e.message}")
         []
+      end
+
+      # Liga MX / Liga Tica jornadas are often stacked on Sunday in the API; adjusted_kickoff
+      # shifts them to Thursday. Pull a week-wide window per league, then filter locally.
+      def fetch_club_league_raw_matches(client, date, tz)
+        seen = {}
+        combined = []
+
+        AppFocus::FEATURED_CLUB_CODES.each do |code|
+          league_id = AppFocus.league_id_for(code)
+          next unless league_id
+
+          season = client.current_season_for_league(league_id, code)
+          client.matches_for_league(
+            league_id, from: date - 7, to: date + 7, code: code, timezone: tz, season: season
+          ).each do |m|
+            key = m[:external_id].to_s
+            next if key.blank? || seen[key]
+
+            seen[key] = true
+            combined << m
+          end
+        end
+
+        [ date - 1, date, date + 1 ].each do |d|
+          client.matches_for_date(d, timezone: tz).each do |m|
+            key = m[:external_id].to_s
+            next if key.blank? || seen[key]
+
+            seen[key] = true
+            combined << m
+          end
+        end
+
+        combined
       end
 
       # Returns WC matches from the DB for the given local date as a safety net
@@ -223,22 +263,15 @@ module Api
         zone = TZInfo::Timezone.get(tz)
         local_today = zone.now.to_date
         client = LiveScoresClient.new
-        raw = (0..7).flat_map { |i| client.matches_for_date(local_today + i) }
-              .select { |m| m[:status] == "scheduled" }
-              .uniq { |m| m[:external_id] }
+        raw = fetch_club_league_raw_matches(client, local_today, tz)
 
-        domestic_ids = AppFocus.domestic_league_ids
-        picks = raw.select { |m| domestic_ids.include?(m[:league_id].to_i) && !AppFocus.excluded_match?(m) }
-        picks = raw.select { |m| AppFocus.important_match?(m) } if picks.size < limit
-
-        # Only preview matches on a future local calendar day — not "today".
-        picks = picks.select do |m|
-          local_kickoff_date(m[:kickoff_at], zone)&.> local_today
-        end
-
-        picks.sort_by { |m| m[:kickoff_at].to_s }
-             .first(limit)
-             .map { |m| normalize_api_match(m).merge(upcoming_preview: true) }
+        picks = filter_matches_for_focus(raw)
+          .select { |m| m[:status] == "scheduled" }
+          .map { |m| normalize_api_match(m) }
+          .select { |m| local_kickoff_date(m[:kickoff_at], zone)&.> local_today }
+          .sort_by { |m| m[:kickoff_at].to_s }
+          .first(limit)
+          .map { |m| m.merge(upcoming_preview: true) }
       rescue => e
         Rails.logger.error("[TodayController] Upcoming clubs failed: #{e.message}")
         []

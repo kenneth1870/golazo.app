@@ -6,7 +6,7 @@ module Api
       TAB_WINDOWS = {
         "results"  => { past: 90, future: 0 },
         "fixtures" => { past: 0, future: 60 },
-        "today"    => { past: 1, future: 1 }
+        "today"    => { past: 7, future: 7 }
       }.freeze
 
       def index
@@ -30,7 +30,7 @@ module Api
           matches = normalize_league_matches(client, league_id, from, to, code, tz, season.to_i - 1)
         end
 
-        render json: filter_for_tab(matches, tab)
+        render json: filter_for_tab(matches, tab, today: today, tz: tz)
       rescue ArgumentError
         render json: []
       end
@@ -51,7 +51,7 @@ module Api
         end
       end
 
-      def filter_for_tab(matches, tab)
+      def filter_for_tab(matches, tab, today: nil, tz: "UTC")
         case tab
         when "results"
           matches.select { |m| m[:status] == "finished" }
@@ -60,6 +60,12 @@ module Api
         when "fixtures"
           matches.select { |m| m[:status] == "scheduled" }
                  .sort_by { |m| m[:kickoff_at].to_s }
+        when "today"
+          zone = TZInfo::Timezone.get(tz)
+          target = today || zone.now.to_date
+          matches.select do |m|
+            m[:status] == "live" || match_local_date?(m[:kickoff_at], target, zone)
+          end.sort_by { |m| m[:kickoff_at].to_s }
         else
           matches.sort_by { |m| m[:kickoff_at].to_s }
         end

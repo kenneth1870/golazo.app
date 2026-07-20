@@ -111,6 +111,15 @@ module ApiMatchNormalizer
     matches.select { |m| m[:league_id].to_i == league_id && !AppFocus.excluded_match?(m) }
   end
 
+  def match_local_date?(kickoff_at, date, timezone)
+    return false if kickoff_at.blank?
+
+    zone = timezone.is_a?(TZInfo::Timezone) ? timezone : TZInfo::Timezone.get(timezone.to_s)
+    zone.utc_to_local(Time.parse(kickoff_at.to_s).utc).to_date == date
+  rescue ArgumentError, TZInfo::InvalidTimezoneIdentifier
+    false
+  end
+
   def competition_code_param
     (params[:competition_code] || params[:code]).to_s.upcase
   end
