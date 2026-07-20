@@ -2,9 +2,11 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
+import { useAppFocus } from "../hooks/useAppFocus"
 import { translateLeague, translateCountry } from "../i18n/leagueNames"
 
-const TYPE_ORDER = { world_cup: 0, cup: 1, league: 2 }
+const TYPE_ORDER = { world_cup: 0, latam: 1, cup: 2, league: 3 }
+const LATAM_CODES = ["CRC", "LMX"]
 
 function LeagueCard({ competition, liveCount, onClick, lang, t }) {
   return (
@@ -49,6 +51,7 @@ function LeagueCard({ competition, liveCount, onClick, lang, t }) {
 
 export default function AllLeaguesPage() {
   const { t, i18n } = useTranslation()
+  const { clubs_primary: clubsPrimary } = useAppFocus()
   usePageMeta(t("leagues.title"), t("leagues.metaDesc"))
   const [competitions, setCompetitions] = useState([])
   const [liveMatches, setLiveMatches]   = useState([])
@@ -103,13 +106,25 @@ export default function AllLeaguesPage() {
     return acc
   }, {})
 
-  // Group competitions by type
-  const byType = competitions.reduce((acc, c) => {
+  // Pin Liga Tica + Liga MX at the top in clubs mode
+  const latamLeagues = clubsPrimary
+    ? competitions.filter(c => LATAM_CODES.includes(c.code))
+    : []
+  const otherComps = clubsPrimary
+    ? competitions.filter(c => !LATAM_CODES.includes(c.code))
+    : competitions
+
+  // Group remaining competitions by type
+  const byType = otherComps.reduce((acc, c) => {
     const type = c.competition_type || "league"
     if (!acc[type]) acc[type] = []
     acc[type].push(c)
     return acc
   }, {})
+
+  if (latamLeagues.length > 0) {
+    byType.latam = latamLeagues
+  }
 
   const sortedTypes = Object.keys(byType).sort(
     (a, b) => (TYPE_ORDER[a] ?? 9) - (TYPE_ORDER[b] ?? 9)
@@ -174,7 +189,11 @@ export default function AllLeaguesPage() {
           {sortedTypes.map(type => (
             <div key={type} className="mb-5">
               <div className="title-section">
-                <h2 className="heading">{t(`leagues.type_${type}`, type)}</h2>
+                <h2 className="heading">
+                  {type === "latam"
+                    ? t("leagues.type_latam", "Centroamérica")
+                    : t(`leagues.type_${type}`, type)}
+                </h2>
               </div>
               <div className="leagues-grid">
                 {byType[type].map(c => (

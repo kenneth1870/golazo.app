@@ -4,16 +4,11 @@ module Api
       include ApiMatchNormalizer
 
       def index
-        competitions = Competition.order(:name)
-
-        render json: competitions.map { |c|
-          c.as_json(only: %i[id name code logo country competition_type external_id]).merge(
-            archived: AppFocus.wc_paused? && c.code == "WC"
-          )
-        }
+        render json: FeaturedCompetitions.for_api
       end
 
       def show
+        FeaturedCompetitions.sync_missing!
         competition = Competition.includes(matches: [ :home_team, :away_team ])
                                  .find_by!(code: competition_code_param)
         render json: competition.as_json(

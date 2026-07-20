@@ -370,6 +370,7 @@
     "type_world_cup": "World Cup",
     "type_cup": "Cups & Tournaments",
     "type_league": "Leagues",
+    "type_latam": "Centroamérica",
     "metaDesc": "Football leagues and competitions worldwide — scores, standings and fixtures.",
     "metaTitleComp": "{{name}} — Scores & Standings",
     "metaDescComp": "Live scores, results, fixtures and standings for {{name}}{{country}}.",

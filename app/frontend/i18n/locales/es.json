@@ -371,6 +371,7 @@
     "type_world_cup": "Copa del Mundo",
     "type_cup": "Copas y Torneos",
     "type_league": "Ligas",
+    "type_latam": "Centroamérica",
     "metaDesc": "Ligas y competiciones de fútbol en todo el mundo — marcadores, clasificaciones y calendario.",
     "metaTitleComp": "{{name}} — Marcadores y Clasificación",
     "metaDescComp": "Marcadores en vivo, resultados, calendario y clasificación de {{name}}{{country}}.",
