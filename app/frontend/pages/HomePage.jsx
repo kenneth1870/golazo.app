@@ -131,10 +131,10 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
           </div>
           <div style={{ fontSize: "0.72rem", color: "#ee1e46" }}>
             {next.status === "live"
-              ? `LIVE ${next.minute ? `${next.minute}'` : ""}`
+              ? `${t("status.live")}${next.minute ? ` ${next.minute}'` : ""}`
               : next.kickoff_at
               ? new Date(next.kickoff_at).toLocaleString(i18n.language || undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-              : "TBD"}
+              : t("time.tbd")}
           </div>
         </div>
       ) : (
@@ -163,10 +163,10 @@ function TodayMatchesSection({ todayMatches, navigate, t, clubsPrimary = false }
             <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
               <span className="live-dot" />
               <span style={{ fontWeight: 900, fontSize: ".82rem", color: "#ee1e46", letterSpacing: ".04em" }}>
-                LIVE NOW
+                {t("scores.liveNow")}
               </span>
               <span style={{ fontSize: ".68rem", color: "var(--muted)" }}>
-                · {liveCount} {liveCount === 1 ? t("scores.match", "match") : t("scores.matches", "matches")}
+                · {liveCount} {liveCount === 1 ? t("scores.match") : t("scores.matches")}
               </span>
             </div>
             <button
@@ -532,7 +532,7 @@ export default function HomePage() {
                       <span className="d-block">
                         {nextMatch.kickoff_at
                           ? new Date(nextMatch.kickoff_at).toLocaleString(i18n.language || undefined, { month: "long", day: "numeric", year: "numeric" })
-                          : "TBD"}
+                          : t("time.tbd")}
                       </span>
                       <span className="d-block">
                         {nextMatch.kickoff_at
@@ -569,7 +569,7 @@ export default function HomePage() {
                       {upcomingFuture.slice(0, 8).map(m => (
                         <tr key={m.id} style={{ cursor: "pointer" }} onClick={() => navigate("/scores/today")}>
                           <td style={{ fontSize: "0.75rem", color: "gray" }}>
-                            {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString(i18n.language || undefined, { month: "short", day: "numeric" }) : "TBD"}
+                            {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString(i18n.language || undefined, { month: "short", day: "numeric" }) : t("time.tbd")}
                           </td>
                           <td>
                             <div className="d-flex align-items-center" style={{ gap: 6 }}>
@@ -597,7 +597,7 @@ export default function HomePage() {
                     <div key={m.id} className="match-row match-row--clickable" onClick={() => navigate("/scores/today")}>
                       <div className="match-row__status">
                         <span className="match-status-time" style={{ fontSize: "0.65rem" }}>
-                          {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString(i18n.language || undefined, { month: "short", day: "numeric" }) : "TBD"}
+                          {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString(i18n.language || undefined, { month: "short", day: "numeric" }) : t("time.tbd")}
                         </span>
                       </div>
                       <div className="match-row__teams">

@@ -1,4 +1,8 @@
 {
+  "meta": {
+    "siteClubs": "Golazo · Live Football",
+    "siteWorldCup": "Golazo · World Cup 2026"
+  },
   "nav": {
     "home": "Home",
     "scores": "Scores",
@@ -65,9 +69,21 @@
     "wcHosts": "USA · Canada · Mexico",
     "clubCompetitions": "Club Competitions",
     "liveScoresWorldwide": "Live scores worldwide",
-    "metaTitleClubs": "Golazo — Live Football Scores & Standings",
+    "metaTitleClubs": "Live Football Scores & Standings",
     "metaDescClubs": "Real-time live scores, fixtures, and standings for Premier League, La Liga, Champions League and 100+ competitions worldwide. Free · No sign-up required.",
-    "metaDescTodayClubs": "Today's live scores and fixtures for Premier League, La Liga, Champions League and all football competitions."
+    "metaDescTodayClubs": "Today's live scores and fixtures for Premier League, La Liga, Champions League and all football competitions.",
+    "metaDescTodayWC": "Today's live scores and fixtures for FIFA World Cup 2026 and all football competitions — real-time goals and updates."
+  },
+  "clubs": {
+    "pl": "Premier League",
+    "lal": "La Liga",
+    "bl1": "Bundesliga",
+    "sa": "Serie A",
+    "l1": "Ligue 1",
+    "ucl": "Champions League",
+    "crc": "Liga Tica",
+    "lmx": "Liga MX",
+    "mls": "MLS"
   },
   "time": {
     "today": "Today",
@@ -77,7 +93,8 @@
     "tryDifferent": "Try a different date",
     "matchCount": "{{count}} matches",
     "liveCount": "{{count}} live",
-    "tbc": "TBC"
+    "tbc": "TBC",
+    "tbd": "TBD"
   },
   "scores": {
     "liveNow": "Live Now",
@@ -104,6 +121,13 @@
     "tabResults": "Results",
     "tabGroups": "Groups",
     "tabBracket": "Knockout",
+    "match": "match",
+    "matches": "matches",
+    "metaTitle": "Scores",
+    "metaTitleLive": "Live Scores — {{count}} matches",
+    "metaDesc": "Live scores, results and fixtures for Premier League, La Liga, Champions League and 100+ competitions worldwide.",
+    "metaDescResults": "Football match results — completed fixtures with goals and final scores.",
+    "noLiveClubs": "No matches live right now",
     "viewFullMatch": "Full match →",
     "noGoals": "No goals recorded",
     "goalsLoading": "Loading..."
@@ -225,6 +249,7 @@
     "generating": "Generating match report…",
     "reportSoon": "Match report will be available shortly after full time.",
     "penaltyShootout": "Penalty Shootout",
+    "penShort": "pen",
     "htDivider": "HT — Half Time",
     "etDivider": "90' — Extra Time",
     "et2Divider": "105' — Extra Time 2nd Half",
@@ -331,7 +356,13 @@
     "subtitle": "{{count}} matches live right now across {{comps}} competitions",
     "noLive": "No live matches worldwide right now",
     "checkBack": "Check back during match times",
-    "available": "Available Leagues ({{count}})"
+    "available": "Available Leagues ({{count}})",
+    "type_world_cup": "World Cup",
+    "type_cup": "Cups & Tournaments",
+    "type_league": "Leagues",
+    "metaDesc": "Football leagues and competitions worldwide — scores, standings and fixtures.",
+    "metaTitleComp": "{{name}} — Scores & Standings",
+    "metaDescComp": "Live scores, results, fixtures and standings for {{name}}{{country}}."
   },
   "news": {
     "title": "News",
@@ -354,6 +385,8 @@
     "follow": "Follow",
     "copyright": "Copyright © {{year}} Golazo — Mundial 2026 Live Scores.",
     "tagline": "Live scores, real-time stats, and every goal from FIFA World Cup 2026.",
+    "taglineClubs": "Live scores, standings and fixtures from the world's top football leagues.",
+    "copyrightClubs": "Copyright © {{year}} Golazo — Live Football Scores.",
     "allGroups": "All Groups →"
   },
   "player": {
@@ -399,6 +432,8 @@
     "tournamentScorers": "Tournament Scorers",
     "following": "★ Following",
     "follow": "☆ Follow",
+    "followLeague": "Follow league",
+    "unfollowLeague": "Unfollow league",
     "searchPlaceholder": "Search team…",
     "noTeamsFound": "No teams found",
     "removeFavorite": "Remove favorite",
@@ -423,7 +458,10 @@
     "linkCopied": "✓ Link copied!",
     "predictOnFixtures": "Predict match scores on any fixture page before kickoff",
     "you": "(you)",
-    "loadMore": "Show more ({{remaining}} remaining)"
+    "loadMore": "Show more ({{remaining}} remaining)",
+    "changeName": "Set Name",
+    "myPredictions": "My Predictions",
+    "yourGuess": "Your guess"
   },
   "compare": {
     "title": "Predictions vs Friend",

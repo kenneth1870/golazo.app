@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam } from "../i18n/teamNames"
+import { translateLeague, translateCountry } from "../i18n/leagueNames"
 import MatchRow from "../components/MatchRow"
 import { useFavorites } from "../hooks/useFavorites"
 import { usePageMeta } from "../hooks/usePageMeta"
@@ -183,9 +184,14 @@ export default function LeagueDetailPage() {
   useLiveScoresChannel(applyLiveScore)
 
   usePageMeta(
-    competition ? `${competition.name} Scores & Standings` : null,
     competition
-      ? `Live scores, results, fixtures and standings for ${competition.name}${competition.country ? ` — ${competition.country}` : ""}.`
+      ? t("leagues.metaTitleComp", { name: translateLeague(competition.name, i18n.language) ?? competition.name })
+      : null,
+    competition
+      ? t("leagues.metaDescComp", {
+          name: translateLeague(competition.name, i18n.language) ?? competition.name,
+          country: competition.country ? ` — ${translateCountry(competition.country, i18n.language) ?? competition.country}` : "",
+        })
       : null
   )
 
@@ -237,13 +243,17 @@ export default function LeagueDetailPage() {
               />
             )}
             <div style={{ flex: 1 }}>
-              <h1 className="page-hero__title" style={{ marginBottom: 4 }}>{competition?.name}</h1>
-              <p className="page-hero__sub" style={{ margin: 0 }}>{competition?.country}</p>
+              <h1 className="page-hero__title" style={{ marginBottom: 4 }}>
+                {translateLeague(competition?.name, i18n.language) ?? competition?.name}
+              </h1>
+              <p className="page-hero__sub" style={{ margin: 0 }}>
+                {translateCountry(competition?.country, i18n.language) ?? competition?.country}
+              </p>
             </div>
             {competition && (
               <button
                 onClick={() => toggleFavorite({ type: "competition", id: competition.id ?? code, name: competition.name, code: competition.code ?? code, flag_url: competition.logo })}
-                title={isFavorite("competition", competition.id ?? code) ? "Unfollow league" : "Follow league"}
+                title={isFavorite("competition", competition.id ?? code) ? t("team.unfollowLeague") : t("team.followLeague")}
                 style={{
                   background: isFavorite("competition", competition.id ?? code) ? "rgba(238,30,70,.15)" : "var(--surface2)",
                   border: isFavorite("competition", competition.id ?? code) ? "1px solid rgba(238,30,70,.4)" : "1px solid var(--border)",

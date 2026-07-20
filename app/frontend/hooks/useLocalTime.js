@@ -1,16 +1,22 @@
+import i18n from "../i18n"
+
+function tbd() {
+  return i18n.t("time.tbd")
+}
+
 // Always "2:30 PM" / "7:00 AM" — avoids Spanish "p. m." with dots that wrap
 export function formatKickoff(utcDate) {
-  if (!utcDate) return "TBD"
+  if (!utcDate) return tbd()
   return new Date(utcDate).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
 }
 
 export function formatMatchDate(utcDate, locale) {
-  if (!utcDate) return "TBD"
+  if (!utcDate) return tbd()
   return new Date(utcDate).toLocaleDateString(locale || undefined, { weekday: "short", month: "short", day: "numeric" })
 }
 
 export function formatMatchDateTime(utcDate, locale) {
-  if (!utcDate) return "TBD"
+  if (!utcDate) return tbd()
   return new Date(utcDate).toLocaleString(locale || undefined, {
     month: "short", day: "numeric",
     hour: "numeric", minute: "2-digit", hour12: true,
@@ -18,7 +24,7 @@ export function formatMatchDateTime(utcDate, locale) {
 }
 
 export function formatFull(utcDate, locale) {
-  if (!utcDate) return "TBD"
+  if (!utcDate) return tbd()
   return new Date(utcDate).toLocaleString(locale || undefined, {
     weekday: "long", month: "long", day: "numeric", year: "numeric",
     hour: "numeric", minute: "2-digit", hour12: true, timeZoneName: "short",

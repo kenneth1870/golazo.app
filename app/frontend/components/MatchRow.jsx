@@ -54,23 +54,23 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
         <div className="match-row__team match-row__team--home">
           <FlagOrPlaceholder src={match.home_team?.flag_url} name={match.home_team?.name} />
           <span className="team-name">
-            {translateTeam(match.home_team?.name, i18n.language) || match.home_slot || "TBD"}
+            {translateTeam(match.home_team?.name, i18n.language) || match.home_slot || t("time.tbd")}
           </span>
         </div>
 
         <div className="match-row__score">
           {hasScore
             ? <span className={`score-pill${isLive ? " score-pill--live" : ""}`}>{match.home_score} – {match.away_score}</span>
-            : <span className="score-pill score-pill--vs">vs</span>
+            : <span className="score-pill score-pill--vs">{t("status.vs")}</span>
           }
           {match.home_pen_score != null && match.away_pen_score != null && (
-            <span className="score-pill__pen">({match.home_pen_score} – {match.away_pen_score} pen)</span>
+            <span className="score-pill__pen">({match.home_pen_score} – {match.away_pen_score} {t("match.penShort")})</span>
           )}
         </div>
 
         <div className="match-row__team match-row__team--away">
           <span className="team-name">
-            {translateTeam(match.away_team?.name, i18n.language) || match.away_slot || "TBD"}
+            {translateTeam(match.away_team?.name, i18n.language) || match.away_slot || t("time.tbd")}
           </span>
           <FlagOrPlaceholder src={match.away_team?.flag_url} name={match.away_team?.name} />
         </div>

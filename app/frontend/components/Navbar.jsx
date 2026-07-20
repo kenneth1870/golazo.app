@@ -6,6 +6,7 @@ import SearchBar from "./SearchBar"
 import { useLiveCount } from "../contexts/LiveContext"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 import { useAppFocus } from "../hooks/useAppFocus"
+import { CLUB_CHIPS } from "./ClubCompetitionChips"
 
 const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
@@ -240,7 +241,7 @@ export default function Navbar() {
   const { t }     = useTranslation()
   const liveCount = useLiveCount()
   const { clubs_primary: clubsPrimary } = useAppFocus()
-  const brandSubtitle = clubsPrimary ? t("hero.clubBadge") : "Mundial 2026"
+  const brandSubtitle = clubsPrimary ? t("hero.clubBadge") : t("nav.mundialShort")
   const [searchOpen, setSearchOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [expanded, setExpanded]     = useState({})
@@ -275,15 +276,8 @@ export default function Navbar() {
   ]
   const MOBILE_LEAGUES = [
     { label: t("nav.allLeagues"), path: "/leagues" },
-    { label: "Premier League",    path: "/leagues/PL" },
-    { label: "La Liga",           path: "/leagues/LAL" },
-    { label: "Bundesliga",        path: "/leagues/BL1" },
-    { label: "Serie A",           path: "/leagues/SA" },
-    { label: "Ligue 1",           path: "/leagues/L1" },
-    { label: "Champions League",  path: "/leagues/UCL" },
-    { label: "MLS",               path: "/leagues/MLS" },
-    { label: "Liga Tica",         path: "/leagues/CRC" },
-    { label: "Liga MX",           path: "/leagues/LMX" },
+    ...CLUB_CHIPS.map(({ key, path }) => ({ label: t(key), path })),
+    { label: t("clubs.mls"), path: "/leagues/MLS" },
   ]
 
   return (

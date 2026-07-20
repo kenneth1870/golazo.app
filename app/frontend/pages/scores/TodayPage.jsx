@@ -137,9 +137,11 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
   const hasScore   = match.home_score !== null && match.away_score !== null
   const clickable  = !!navIdFor(match)
 
-  const kickoffTime = match.kickoff_at
+  const kickoffTime = match.kickoff_tbc
+    ? t("time.tbc")
+    : match.kickoff_at
     ? new Date(match.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
-    : "TBD"
+    : t("time.tbd")
 
   return (
     <div
@@ -160,7 +162,7 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
         <div className="match-row__team match-row__team--home">
           <FlagImg src={match.home_team?.flag_url} name={match.home_team?.name} size={16} className="flag-xs" />
           <span className="team-name">
-            {translateTeam(match.home_team?.name, i18n.language) || match.home_slot || "TBD"}
+            {translateTeam(match.home_team?.name, i18n.language) || match.home_slot || t("time.tbd")}
           </span>
           {match.home_red_cards > 0 && (
             <span className="red-card-badge">🟥{match.home_red_cards > 1 ? `×${match.home_red_cards}` : ""}</span>
@@ -171,10 +173,10 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
             ? <>
                 <span className={`score-pill${isLive ? " score-pill--live" : ""}`}>{match.home_score} – {match.away_score}</span>
                 {match.home_pen_score != null && match.away_pen_score != null && (
-                  <span className="score-pill__pen">({match.home_pen_score} – {match.away_pen_score} pen)</span>
+                  <span className="score-pill__pen">({match.home_pen_score} – {match.away_pen_score} {t("match.penShort")})</span>
                 )}
               </>
-            : <span className="score-pill score-pill--vs">vs</span>
+            : <span className="score-pill score-pill--vs">{t("status.vs")}</span>
           }
         </div>
         <div className="match-row__team match-row__team--away">
@@ -182,7 +184,7 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
             <span className="red-card-badge">🟥{match.away_red_cards > 1 ? `×${match.away_red_cards}` : ""}</span>
           )}
           <span className="team-name">
-            {translateTeam(match.away_team?.name, i18n.language) || match.away_slot || "TBD"}
+            {translateTeam(match.away_team?.name, i18n.language) || match.away_slot || t("time.tbd")}
           </span>
           <FlagImg src={match.away_team?.flag_url} name={match.away_team?.name} size={16} className="flag-xs" />
         </div>
@@ -363,7 +365,7 @@ export default function TodayPage() {
     t("time.today"),
     clubsPrimary
       ? t("home.metaDescTodayClubs")
-      : "Today's live scores and fixtures for FIFA World Cup 2026 and all football competitions — real-time goals and updates."
+      : t("home.metaDescTodayWC")
   )
   const [selected, setSelected] = useState(startOfDay)
   const [matches, setMatches]   = useState([])

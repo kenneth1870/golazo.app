@@ -1,13 +1,18 @@
 import { useEffect } from "react"
+import { useTranslation } from "react-i18next"
+import { useAppFocus } from "./useAppFocus"
 
-const SITE    = "Golazo · Mundial 2026"
 const DEFAULT_IMAGE = "https://golazo.app/images/icon-512.png"
 
 // Update <title>, <meta name="description">, and all OG/Twitter tags.
-// extras: { type, image } — optional overrides for og:type / og:image
+// extras: { type, image, site } — optional overrides for og:type / og:image / site suffix
 export function usePageMeta(title, description, extras = {}) {
+  const { t } = useTranslation()
+  const { clubs_primary: clubsPrimary } = useAppFocus()
+  const site = extras.site ?? (clubsPrimary ? t("meta.siteClubs") : t("meta.siteWorldCup"))
+
   useEffect(() => {
-    const fullTitle = title ? `${title} — ${SITE}` : SITE
+    const fullTitle = title ? `${title} — ${site}` : site
     document.title = fullTitle
 
     // Helper: find or create a meta tag and set its content
@@ -33,6 +38,6 @@ export function usePageMeta(title, description, extras = {}) {
     setMeta("meta[name='twitter:image']", "name", "twitter:image", ogImage)
     setMeta("meta[name='twitter:card']",  "name", "twitter:card",  "summary_large_image")
 
-    return () => { document.title = SITE }
-  }, [title, description, extras.type, extras.image]) // eslint-disable-line react-hooks/exhaustive-deps
+    return () => { document.title = site }
+  }, [title, description, extras.type, extras.image, site])
 }

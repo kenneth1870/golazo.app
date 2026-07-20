@@ -48,7 +48,7 @@ const SOCIAL = [
 export default function Footer() {
   const { t } = useTranslation()
   const { clubs_primary: clubsPrimary } = useAppFocus()
-  const brandSubtitle = clubsPrimary ? t("hero.clubBadge") : "Mundial 2026"
+  const brandSubtitle = clubsPrimary ? t("hero.clubBadge") : t("nav.mundialShort")
 
   return (
     <footer className="footer-section">
@@ -67,7 +67,7 @@ export default function Footer() {
               </div>
             </Link>
             <p style={{ color: "var(--muted)", fontSize: "0.82rem", lineHeight: 1.65, margin: "0 0 18px", maxWidth: 220 }}>
-              {t("footer.tagline")}
+              {t(clubsPrimary ? "footer.taglineClubs" : "footer.tagline")}
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               {SOCIAL.map(s => (
@@ -128,7 +128,7 @@ export default function Footer() {
         {/* ── Bottom bar — always visible ── */}
         <div className="footer-bottom">
           <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.78rem" }}>
-            {t("footer.copyright", { year: new Date().getFullYear() })}
+            {t(clubsPrimary ? "footer.copyrightClubs" : "footer.copyright", { year: new Date().getFullYear() })}
           </p>
           <LanguageSwitcher />
         </div>

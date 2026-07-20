@@ -128,10 +128,10 @@ export default function Hero({ nextMatch, liveCount = 0, compact = false, clubsP
           <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0, overflow: "hidden" }}>
             {liveCount > 0
               ? <><span className="live-dot" /><span style={{ fontWeight: 800, fontSize: ".78rem", color: "#ee1e46", whiteSpace: "nowrap" }}>{t("hero.liveNow", { count: liveCount })}</span></>
-              : <span style={{ fontWeight: 800, fontSize: ".78rem", color: "var(--text)", whiteSpace: "nowrap" }}>{clubsPrimary ? t("hero.clubBadge") : "⚽ FIFA World Cup 2026"}</span>
+              : <span style={{ fontWeight: 800, fontSize: ".78rem", color: "var(--text)", whiteSpace: "nowrap" }}>{clubsPrimary ? t("hero.clubBadge") : t("nav.mundial")}</span>
             }
             <span style={{ fontSize: ".68rem", color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              · {t("hero.badge", "Live Coverage")}
+              · {clubsPrimary ? t("hero.clubBadgeLong") : t("hero.badge")}
             </span>
           </div>
           <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>

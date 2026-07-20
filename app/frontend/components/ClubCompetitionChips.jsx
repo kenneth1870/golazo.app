@@ -2,14 +2,14 @@ import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
 export const CLUB_CHIPS = [
-  { label: "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League", path: "/leagues/PL" },
-  { label: "🇪🇸 La Liga",         path: "/leagues/LAL" },
-  { label: "🇩🇪 Bundesliga",      path: "/leagues/BL1" },
-  { label: "🇮🇹 Serie A",          path: "/leagues/SA" },
-  { label: "🇫🇷 Ligue 1",          path: "/leagues/L1" },
-  { label: "⭐ Champions League", path: "/leagues/UCL" },
-  { label: "🇨🇷 Liga Tica",       path: "/leagues/CRC" },
-  { label: "🇲🇽 Liga MX",         path: "/leagues/LMX" },
+  { emoji: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", key: "clubs.pl", path: "/leagues/PL" },
+  { emoji: "🇪🇸", key: "clubs.lal", path: "/leagues/LAL" },
+  { emoji: "🇩🇪", key: "clubs.bl1", path: "/leagues/BL1" },
+  { emoji: "🇮🇹", key: "clubs.sa", path: "/leagues/SA" },
+  { emoji: "🇫🇷", key: "clubs.l1", path: "/leagues/L1" },
+  { emoji: "⭐", key: "clubs.ucl", path: "/leagues/UCL" },
+  { emoji: "🇨🇷", key: "clubs.crc", path: "/leagues/CRC" },
+  { emoji: "🇲🇽", key: "clubs.lmx", path: "/leagues/LMX" },
 ]
 
 export default function ClubCompetitionChips({ compact = false }) {
@@ -33,14 +33,14 @@ export default function ClubCompetitionChips({ compact = false }) {
         </>
       )}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-        {CLUB_CHIPS.map(({ label, path }) => (
+        {CLUB_CHIPS.map(({ emoji, key, path }) => (
           <Link key={path} to={path} style={{
             display: "inline-block",
             background: "var(--surface2)", border: "1px solid var(--border)",
             borderRadius: 8, padding: "6px 12px",
             fontSize: ".7rem", fontWeight: 700, color: "var(--text)", textDecoration: "none",
           }}>
-            {label}
+            {emoji} {t(key)}
           </Link>
         ))}
         <Link to="/leagues" style={{

@@ -5,6 +5,8 @@ import { translateLeague, translateCountry } from "../../i18n/leagueNames"
 import { translateTeam } from "../../i18n/teamNames"
 import { navigateToMatch } from "../../utils/matchDetailCache"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
+import { usePageMeta } from "../../hooks/usePageMeta"
+import { useAppFocus } from "../../hooks/useAppFocus"
 
 function normalizeMatch(m) {
   return {
@@ -113,7 +115,11 @@ function useResultLabel(date, t) {
 
 export default function ResultsPage() {
   const { t }    = useTranslation()
-  usePageMeta(t("nav.results"), "FIFA World Cup 2026 results and all football match scores — completed fixtures with goals and final scores.")
+  const { clubs_primary: clubsPrimary } = useAppFocus()
+  usePageMeta(
+    t("nav.results"),
+    clubsPrimary ? t("scores.metaDescResults") : "FIFA World Cup 2026 results and all football match scores — completed fixtures with goals and final scores."
+  )
   const [date, setDate]       = useState(() => new Date())
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)

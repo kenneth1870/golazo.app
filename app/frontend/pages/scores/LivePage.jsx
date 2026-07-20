@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague } from "../../i18n/leagueNames"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { useAppFocus } from "../../hooks/useAppFocus"
 import { useVisiblePolling } from "../../hooks/useVisiblePolling"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 import { prefetchMatchDetail, navIdFor, navigateToMatch } from "../../utils/matchDetailCache"
@@ -80,8 +81,9 @@ function CompetitionBlock({ leagueName, leagueLogo, leagueCountry, matches, onMa
 }
 
 export default function LivePage() {
-  usePageMeta("Live Scores", "All live football matches right now — scores, goals and minute-by-minute updates.")
   const { t } = useTranslation()
+  const { clubs_primary: clubsPrimary } = useAppFocus()
+  usePageMeta(t("nav.live"), t("scores.metaDesc"))
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(false)
@@ -159,7 +161,7 @@ export default function LivePage() {
         {groups.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state__pitch" /><div className="empty-state__icon">⚽</div>
-            <h3>{t("scores.noLive")}</h3>
+            <h3>{clubsPrimary ? t("scores.noLiveClubs") : t("scores.noLive")}</h3>
             <p>{t("live.checkBack")}</p>
           </div>
         ) : (

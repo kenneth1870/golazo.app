@@ -2,10 +2,11 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
+import { translateLeague, translateCountry } from "../i18n/leagueNames"
 
 const TYPE_ORDER = { world_cup: 0, cup: 1, league: 2 }
 
-function LeagueCard({ competition, liveCount, onClick }) {
+function LeagueCard({ competition, liveCount, onClick, lang }) {
   return (
     <div className="league-card" onClick={onClick} style={{ cursor: "pointer" }}>
       <div className="league-card__logo">
@@ -20,8 +21,8 @@ function LeagueCard({ competition, liveCount, onClick }) {
         )}
       </div>
       <div className="league-card__body">
-        <div className="league-card__name">{competition.name}</div>
-        <div className="league-card__country">{competition.country}</div>
+        <div className="league-card__name">{translateLeague(competition.name, lang) ?? competition.name}</div>
+        <div className="league-card__country">{translateCountry(competition.country, lang) ?? competition.country}</div>
       </div>
       {liveCount > 0 && (
         <div className="league-card__live">
@@ -34,8 +35,8 @@ function LeagueCard({ competition, liveCount, onClick }) {
 }
 
 export default function AllLeaguesPage() {
-  const { t } = useTranslation()
-  usePageMeta(t("leagues.title"), "Live football leagues and competitions worldwide — scores, standings and fixtures.")
+  const { t, i18n } = useTranslation()
+  usePageMeta(t("leagues.title"), t("leagues.metaDesc"))
   const [competitions, setCompetitions] = useState([])
   const [liveMatches, setLiveMatches]   = useState([])
   const [loading, setLoading]           = useState(true)
@@ -168,6 +169,7 @@ export default function AllLeaguesPage() {
                     key={c.id}
                     competition={c}
                     liveCount={liveByCode[c.code] ?? 0}
+                    lang={i18n.language}
                     onClick={() => navigate(c.code === "WC" ? "/mundial" : `/leagues/${c.code}`)}
                   />
                 ))}
