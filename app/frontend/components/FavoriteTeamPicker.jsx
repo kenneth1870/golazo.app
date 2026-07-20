@@ -25,19 +25,27 @@ function FlagOrInitial({ src, name }) {
 
 const CLUB_LEAGUE_CODES = NAV_LEAGUES.map(l => l.path.split("/").pop())
 
-function teamsFromStandings(results) {
-  const seen = new Set()
-  const teams = []
-  results.forEach(groups => {
-    if (!groups || typeof groups !== "object") return
-    Object.values(groups).flat().forEach(row => {
-      const t = row?.team
-      if (!t?.name || seen.has(t.name)) return
-      seen.add(t.name)
-      teams.push({ id: t.name, name: t.name, flag_url: t.flag_url, group: null, code: t.code })
+function loadClubTeams(setTeams) {
+  Promise.all(
+    CLUB_LEAGUE_CODES.map(code =>
+      fetch(`/api/v1/standings?competition=${code}`)
+        .then(r => r.ok ? r.json().then(data => ({ code, data })) : { code, data: {} })
+    )
+  )
+    .then(pairs => {
+      const seen = new Set()
+      const teams = []
+      pairs.forEach(({ code, data }) => {
+        Object.values(data || {}).flat().forEach(row => {
+          const t = row?.team
+          if (!t?.name || seen.has(t.name)) return
+          seen.add(t.name)
+          teams.push({ id: t.name, name: t.name, flag_url: t.flag_url, group: null, code: t.code, league_code: code })
+        })
+      })
+      setTeams(teams.sort((a, b) => a.name.localeCompare(b.name)))
     })
-  })
-  return teams.sort((a, b) => a.name.localeCompare(b.name))
+    .catch(() => {})
 }
 
 export default function FavoriteTeamPicker() {
@@ -51,14 +59,7 @@ export default function FavoriteTeamPicker() {
 
   useEffect(() => {
     if (clubsPrimary) {
-      Promise.all(
-        CLUB_LEAGUE_CODES.map(code =>
-          fetch(`/api/v1/standings?competition=${code}`).then(r => r.ok ? r.json() : {})
-        )
-      )
-        .then(teamsFromStandings)
-        .then(setTeams)
-        .catch(() => {})
+      loadClubTeams(setTeams)
       return
     }
 
@@ -84,7 +85,7 @@ export default function FavoriteTeamPicker() {
   )
 
   function pick(team) {
-    setFav({ id: team.id, name: team.name, flag_url: team.flag_url, group: team.group })
+    setFav({ id: team.id, name: team.name, flag_url: team.flag_url, group: team.group, league_code: team.league_code })
     setOpen(false)
     setQuery("")
   }

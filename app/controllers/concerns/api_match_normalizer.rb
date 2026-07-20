@@ -33,10 +33,16 @@ module ApiMatchNormalizer
     LEAGUE_ID_TO_CODE[league_id.to_i] || league_id.to_s
   end
 
-  # API-Football uses 20:00 UTC for every Liga Tica jornada until real times are published.
+  LATAM_LEAGUES = %w[CRC LMX].freeze
+
+  def latam_league?(code)
+    LATAM_LEAGUES.include?(code.to_s.upcase)
+  end
+
+  # API-Football uses 20:00 UTC placeholders until real kickoff times are published.
   def crc_placeholder_kickoff?(kickoff_at, code, round)
-    return false unless code.to_s.upcase == "CRC"
-    return false unless round.to_s.match?(/Apertura|Clausura/i)
+    return false unless latam_league?(code)
+    return false unless round.to_s.match?(/Apertura|Clausura|Regular Season|Jornada/i)
 
     kickoff = Time.iso8601(kickoff_at.to_s)
     kickoff.utc.hour == 20 && kickoff.utc.min.zero? && kickoff.sec.zero?
@@ -44,10 +50,10 @@ module ApiMatchNormalizer
     false
   end
 
-  # API-Football stacks every Liga Tica jornada on Sunday; real fechas start on Thursday.
+  # API-Football stacks jornadas on one day; real fechas often start mid-week.
   def adjusted_kickoff(kickoff_at, code, round)
-    return kickoff_at unless code.to_s.upcase == "CRC"
-    return kickoff_at unless round.to_s.match?(/Apertura|Clausura/i)
+    return kickoff_at unless latam_league?(code)
+    return kickoff_at unless round.to_s.match?(/Apertura|Clausura|Regular Season|Jornada/i)
 
     kickoff = Time.iso8601(kickoff_at.to_s)
     return kickoff_at unless kickoff.wday == 0

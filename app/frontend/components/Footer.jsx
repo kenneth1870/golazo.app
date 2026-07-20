@@ -131,7 +131,7 @@ export default function Footer() {
             <h4 className="footer-col__title">{t("nav.news")}</h4>
             <ul className="footer-links">
               <li><Link to="/news">{t("news.allNews")}</Link></li>
-              <li><Link to="/news">{t("news.forYou")}</Link></li>
+              <li><Link to="/news?tab=foryou">{t("news.forYou")}</Link></li>
             </ul>
           </div>
           )}

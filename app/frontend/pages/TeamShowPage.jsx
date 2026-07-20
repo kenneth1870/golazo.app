@@ -8,6 +8,17 @@ import { navigateToMatch } from "../utils/matchDetailCache"
 import { useFavorites } from "../hooks/useFavorites"
 import { getTeamColor } from "../utils/teamColors"
 
+const LEAGUE_API_IDS = { WC: 1, PL: 39, LAL: 140, BL1: 78, SA: 135, L1: 61, MLS: 253, CRC: 162, LMX: 262, UCL: 2 }
+
+function playerQueryForTeam(team, clubsPrimary) {
+  if (clubsPrimary) {
+    const comp = team?.matches?.find(m => m.competition?.external_id || m.competition?.code)?.competition
+    const leagueId = comp?.external_id || LEAGUE_API_IDS[comp?.code]
+    if (leagueId) return `?league=${leagueId}`
+    return ""
+  }
+  return "?league=1&season=2026"
+}
 const POSITION_ORDER = { "Goalkeeper": 0, "Defender": 1, "Midfielder": 2, "Attacker": 3 }
 const POSITION_LABEL = { "Goalkeeper": "GK", "Defender": "DEF", "Midfielder": "MID", "Attacker": "ATT" }
 const POSITION_COLOR = { "Goalkeeper": "#f59e0b", "Defender": "#3b82f6", "Midfielder": "#10b981", "Attacker": "#ee1e46" }
@@ -40,7 +51,7 @@ export default function TeamShowPage() {
       .then(r => r.json())
       .then(data => {
         setTeam(data)
-        if (data.group) {
+        if (data.group && !clubsPrimary) {
           fetch("/api/v1/standings?competition=WC")
             .then(r => r.json())
             .then(grouped => {
@@ -52,7 +63,7 @@ export default function TeamShowPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, clubsPrimary])
 
   // Lazy-load squad when user taps the Squad tab
   useEffect(() => {
@@ -224,7 +235,7 @@ export default function TeamShowPage() {
             <div>
               <h1 style={{ margin: "0 0 4px", fontSize: "1.8rem", fontWeight: 900, color: "#fff" }}>{translateTeam(team.name, i18n.language)}</h1>
               {team.code && <div style={{ fontSize: "0.8rem", color: "var(--muted)", letterSpacing: 2, textTransform: "uppercase" }}>{team.code}</div>}
-              {team.group && <div style={{ marginTop: 6, fontSize: "0.82rem", color: "#ee1e46", fontWeight: 700 }}>{t("nav.group", { letter: team.group })}</div>}
+              {team.group && !clubsPrimary && <div style={{ marginTop: 6, fontSize: "0.82rem", color: "#ee1e46", fontWeight: 700 }}>{t("nav.group", { letter: team.group })}</div>}
             </div>
           </div>
 
@@ -422,7 +433,7 @@ export default function TeamShowPage() {
                       {/* Name */}
                       <div style={{ flex: 1 }}>
                         {p.id ? (
-                          <Link to={`/players/${p.id}?league=4&season=2026`} style={{ color: "var(--text)", fontWeight: 700, fontSize: "0.88rem" }}>
+                          <Link to={`/players/${p.id}${playerQueryForTeam(team, clubsPrimary)}`} style={{ color: "var(--text)", fontWeight: 700, fontSize: "0.88rem" }}>
                             {p.name}
                           </Link>
                         ) : (

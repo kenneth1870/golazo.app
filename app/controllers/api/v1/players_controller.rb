@@ -14,26 +14,20 @@ module Api
         render json: []
       end
 
-      # GET /api/v1/players/:id?season=2026&league=4
+      # GET /api/v1/players/:id?season=2026&league=1
       def show
         api_key = ENV["APISPORTS_KEY"].presence
         return render json: player_not_found unless api_key
 
         player_id = params[:id]
-        season    = params[:season] || 2026
-        league    = params[:league] || 4   # WC 2026
-
-        resp = Faraday.new("https://v3.football.api-sports.io") do |f|
-          f.headers["x-apisports-key"] = api_key
-          f.adapter Faraday.default_adapter
-        end.get("/players", { id: player_id, season: season, league: league })
-
-        unless resp.success?
-          return render json: player_not_found, status: :not_found
+        player    = if params[:league].present?
+          fetch_player(player_id, params[:season], params[:league])
+        elsif AppFocus.wc_paused?
+          find_player_in_featured_leagues(player_id, params[:season])
+        else
+          fetch_player(player_id, params[:season] || 2026, params[:league] || 1)
         end
 
-        data = JSON.parse(resp.body)
-        player = data.dig("response", 0)
         return render json: player_not_found, status: :not_found unless player
 
         render json: serialize_player(player)
@@ -108,6 +102,37 @@ module Api
 
       def player_not_found
         { error: "player_not_found" }
+      end
+
+      def fetch_player(player_id, season, league)
+        resp = api_conn.get("/players", {
+          id:     player_id,
+          season: season || AppFocus.season_for("PL"),
+          league: league
+        })
+        return nil unless resp.success?
+
+        data = JSON.parse(resp.body)
+        data.dig("response", 0)
+      end
+
+      def find_player_in_featured_leagues(player_id, season)
+        AppFocus::FEATURED_CLUB_CODES.each do |code|
+          league_id = AppFocus.league_id_for(code)
+          next unless league_id
+
+          s = season || AppFocus.season_for(code)
+          player = fetch_player(player_id, s, league_id)
+          return player if player
+        end
+        nil
+      end
+
+      def api_conn
+        @api_conn ||= Faraday.new("https://v3.football.api-sports.io") do |f|
+          f.headers["x-apisports-key"] = ENV["APISPORTS_KEY"]
+          f.adapter Faraday.default_adapter
+        end
       end
     end
   end

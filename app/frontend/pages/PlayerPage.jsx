@@ -194,8 +194,10 @@ export default function PlayerPage() {
   const { id }        = useParams()
   const [searchParams] = useSearchParams()
   const navigate      = useNavigate()
-  const league        = searchParams.get("league") || "4"
-  const season        = searchParams.get("season") || "2026"
+  const leagueParam = searchParams.get("league")
+  const seasonParam = searchParams.get("season")
+  const league      = leagueParam ?? (clubsPrimary ? null : "1")
+  const season      = seasonParam ?? (clubsPrimary ? null : "2026")
   const [playerTab, setPlayerTab] = useState("stats")
 
   const [player, setPlayer] = useState(null)
@@ -214,7 +216,11 @@ export default function PlayerPage() {
   useEffect(() => {
     setLoading(true)
     setError(false)
-    fetch(`/api/v1/players/${id}?league=${league}&season=${season}`)
+    const qs = new URLSearchParams()
+    if (league) qs.set("league", league)
+    if (season) qs.set("season", season)
+    const query = qs.toString()
+    fetch(`/api/v1/players/${id}${query ? `?${query}` : ""}`)
       .then(r => r.json())
       .then(d => {
         if (d.error) setError(true)
@@ -318,7 +324,7 @@ export default function PlayerPage() {
             <>
               {stats && (
                 <div className="widget-next-match" style={{ marginBottom: 20 }}>
-                  <div className="widget-title"><h3>{t("player.wcStats")}</h3></div>
+                  <div className="widget-title"><h3>{clubsPrimary ? t("player.seasonStats") : t("player.wcStats")}</h3></div>
                   <div className="widget-body">
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
                       <StatBox label={t("player.goals")}     value={stats.goals}       highlight />

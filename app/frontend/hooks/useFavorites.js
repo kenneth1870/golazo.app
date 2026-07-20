@@ -84,7 +84,7 @@ export function useFavoriteTeam() {
   const fav = favoriteTeams[0] ?? null
 
   function saveFav(team) {
-    if (team) addFavorite({ type: "team", id: team.id, name: team.name, flag_url: team.flag_url, group: team.group })
+    if (team) addFavorite({ type: "team", id: team.id, name: team.name, flag_url: team.flag_url, group: team.group, league_code: team.league_code })
     else if (fav) removeFavorite("team", fav.id)
   }
 

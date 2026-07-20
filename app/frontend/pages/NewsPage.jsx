@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { fetchWithTimeout } from "../utils/fetchWithTimeout"
 import { useFavorites } from "../hooks/useFavorites"
+import { translateTeam } from "../i18n/teamNames"
 
 const PAGE_SIZE = 12
 
@@ -70,27 +71,38 @@ function CompactCard({ article }) {
  * Returns true if an article is relevant to any of the given team names.
  * Checks title and summary (case-insensitive).
  */
-function isRelevantTo(article, teamNames) {
-  if (!teamNames.length) return false
+function isRelevantTo(article, teamNames, competitionNames, lang) {
+  if (!teamNames.length && !competitionNames.length) return false
   const haystack = `${article.title} ${article.summary || ""}`.toLowerCase()
-  return teamNames.some(name => {
-    // Match on the last word of multi-word names too (e.g. "Argentina" from "CF Argentina")
-    const words = name.toLowerCase().split(/\s+/).filter(w => w.length >= 4)
-    return words.some(w => haystack.includes(w))
+  const needles = new Set()
+
+  teamNames.forEach(name => {
+    if (!name) return
+    needles.add(name.toLowerCase())
+    const translated = translateTeam(name, lang)
+    if (translated) needles.add(translated.toLowerCase())
+    name.toLowerCase().split(/\s+/).filter(w => w.length >= 4).forEach(w => needles.add(w))
   })
+  competitionNames.forEach(name => {
+    if (!name) return
+    name.toLowerCase().split(/\s+/).filter(w => w.length >= 4).forEach(w => needles.add(w))
+  })
+
+  return [...needles].some(word => haystack.includes(word))
 }
 
 export default function NewsPage() {
   const { t, i18n }    = useTranslation()
   const { favoriteTeams, favoriteCompetitions } = useFavorites()
   const { clubs_primary: clubsPrimary } = useAppFocus()
+  const [searchParams] = useSearchParams()
   usePageMeta(t("news.title"), clubsPrimary ? t("news.metaDescClubs") : t("news.metaDesc"))
 
   const [articles, setArticles]       = useState([])
   const [loading, setLoading]         = useState(true)
   const [error, setError]             = useState(false)
   const [source, setSource]           = useState(null)   // null = "All"
-  const [tab, setTab]                 = useState("all")  // "all" | "foryou"
+  const [tab, setTab]                 = useState(() => searchParams.get("tab") === "foryou" ? "foryou" : "all")
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   const sentinelRef = useRef(null)
@@ -114,12 +126,10 @@ export default function NewsPage() {
   const active   = source ?? allLabel
 
   // For You: articles matching followed teams or competitions
-  const followedNames = [
-    ...favoriteTeams.map(f => f.name),
-    ...favoriteCompetitions.map(f => f.name),
-  ]
-  const forYouArticles = articles.filter(a => isRelevantTo(a, followedNames))
-  const hasForYou      = followedNames.length > 0
+  const followedTeamNames = favoriteTeams.map(f => f.name)
+  const followedCompNames = favoriteCompetitions.map(f => f.name)
+  const forYouArticles = articles.filter(a => isRelevantTo(a, followedTeamNames, followedCompNames, i18n.language))
+  const hasForYou      = followedTeamNames.length > 0 || followedCompNames.length > 0
 
   // Which pool to show depending on active tab
   const pool = tab === "foryou" ? forYouArticles : (
@@ -243,7 +253,7 @@ export default function NewsPage() {
                   <span>⭐</span>
                   <span>
                     {t("news.forYouShowing", "Showing news for {{teams}}", {
-                      teams: followedNames.slice(0, 3).join(", ") + (followedNames.length > 3 ? ` +${followedNames.length - 3}` : ""),
+                      teams: [...followedTeamNames, ...followedCompNames].slice(0, 3).join(", ") + (followedTeamNames.length + followedCompNames.length > 3 ? ` +${followedTeamNames.length + followedCompNames.length - 3}` : ""),
                     })}
                   </span>
                 </div>
