@@ -99,6 +99,20 @@ function startOfTomorrow() {
   return d
 }
 
+function groupMatchesByRound(matches) {
+  const order = []
+  const map = new Map()
+  for (const m of matches) {
+    const key = m.round || "—"
+    if (!map.has(key)) {
+      map.set(key, [])
+      order.push(key)
+    }
+    map.get(key).push(m)
+  }
+  return order.map(key => ({ key, items: map.get(key) }))
+}
+
 export default function LeagueDetailPage() {
   const { t, i18n } = useTranslation()
   const { code } = useParams()
@@ -282,14 +296,30 @@ export default function LeagueDetailPage() {
             </div>
           ) : (
             <div className="match-list">
-              {displayedMatches.map(m => (
-                <MatchRow
-                  key={m.id}
-                  match={m}
-                  showDate={tab !== "today"}
-                  onClick={navIdFor(m) ? () => navigateToMatch(navigate, m) : undefined}
-                />
-              ))}
+              {(tab === "fixtures" || tab === "results") && displayedMatches.some(m => m.round)
+                ? groupMatchesByRound(displayedMatches).map(({ key, items }) => (
+                    <div key={key} className="mb-4">
+                      <div className="fixture-day__header">{key}</div>
+                      {items.map(m => (
+                        <MatchRow
+                          key={m.id}
+                          match={m}
+                          showDate
+                          showMeta={false}
+                          onClick={navIdFor(m) ? () => navigateToMatch(navigate, m) : undefined}
+                        />
+                      ))}
+                    </div>
+                  ))
+                : displayedMatches.map(m => (
+                    <MatchRow
+                      key={m.id}
+                      match={m}
+                      showDate={tab !== "today"}
+                      onClick={navIdFor(m) ? () => navigateToMatch(navigate, m) : undefined}
+                    />
+                  ))
+              }
             </div>
           )}
         </div>
