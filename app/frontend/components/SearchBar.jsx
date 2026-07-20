@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
+import { resolveTeamLogo } from "../i18n/teamNames"
 
 function FlagOrInitials({ name, flagUrl, size = 24 }) {
   const [err, setErr] = useState(false)
   const initials = name?.slice(0, 2).toUpperCase() || "?"
-
-  if (flagUrl && !err) {
+  const logo = resolveTeamLogo(name, flagUrl)
+  if (logo && !err) {
     return (
       <img
-        src={flagUrl}
+        src={logo}
         alt=""
         onError={() => setErr(true)}
         style={{ width: size, height: size, objectFit: "contain", borderRadius: 2, flexShrink: 0 }}

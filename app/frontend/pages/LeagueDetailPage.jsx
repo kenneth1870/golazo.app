@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { translateTeam } from "../i18n/teamNames"
+import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
 import { translateLeague, translateCountry } from "../i18n/leagueNames"
 import MatchRow from "../components/MatchRow"
 import { useFavorites } from "../hooks/useFavorites"
@@ -57,7 +57,7 @@ function StandingsTable({ standings, t, i18n }) {
                       <div className="d-flex align-items-center" style={{ gap: 8 }}>
                         {s.team?.flag_url && (
                           <img
-                            src={s.team.flag_url}
+                            src={resolveTeamLogo(s.team?.name, s.team.flag_url)}
                             alt={s.team.name}
                             className="flag-xs"
                             loading="eager"

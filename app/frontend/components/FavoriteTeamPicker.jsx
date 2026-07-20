@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { useFavoriteTeam } from "../hooks/useFavoriteTeam"
+import { useAppFocus } from "../hooks/useAppFocus"
+import { NAV_LEAGUES } from "./ClubCompetitionChips"
+import { resolveTeamLogo } from "../i18n/teamNames"
 
 function FlagOrInitial({ src, name }) {
   const [err, setErr] = useState(false)
-  if (src && !err) {
-    return <img src={src} alt="" className="flag-xs" onError={() => setErr(true)} />
+  const logo = resolveTeamLogo(name, src)
+  if (logo && !err) {
+    return <img src={logo} alt="" className="flag-xs" onError={() => setErr(true)} />
   }
   return (
     <span style={{
@@ -19,8 +23,26 @@ function FlagOrInitial({ src, name }) {
   )
 }
 
+const CLUB_LEAGUE_CODES = NAV_LEAGUES.map(l => l.path.split("/").pop())
+
+function teamsFromStandings(results) {
+  const seen = new Set()
+  const teams = []
+  results.forEach(groups => {
+    if (!groups || typeof groups !== "object") return
+    Object.values(groups).flat().forEach(row => {
+      const t = row?.team
+      if (!t?.name || seen.has(t.name)) return
+      seen.add(t.name)
+      teams.push({ id: t.name, name: t.name, flag_url: t.flag_url, group: null, code: t.code })
+    })
+  })
+  return teams.sort((a, b) => a.name.localeCompare(b.name))
+}
+
 export default function FavoriteTeamPicker() {
   const { t } = useTranslation()
+  const { clubs_primary: clubsPrimary } = useAppFocus()
   const [fav, setFav]     = useFavoriteTeam()
   const [teams, setTeams] = useState([])
   const [open, setOpen]   = useState(false)
@@ -28,11 +50,23 @@ export default function FavoriteTeamPicker() {
   const ref = useRef(null)
 
   useEffect(() => {
+    if (clubsPrimary) {
+      Promise.all(
+        CLUB_LEAGUE_CODES.map(code =>
+          fetch(`/api/v1/standings?competition=${code}`).then(r => r.ok ? r.json() : {})
+        )
+      )
+        .then(teamsFromStandings)
+        .then(setTeams)
+        .catch(() => {})
+      return
+    }
+
     fetch("/api/v1/teams?wc=1")
       .then(r => r.json())
       .then(data => setTeams(Array.isArray(data) ? data : []))
       .catch(() => {})
-  }, [])
+  }, [clubsPrimary])
 
   useEffect(() => {
     function onOutside(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }

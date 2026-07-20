@@ -8,7 +8,7 @@ module Api
         teams = Team
           .where("name ILIKE :q OR code ILIKE :q", q: "%#{q}%")
           .limit(6)
-          .map { |t| { type: "team", id: t.id, name: t.name, code: t.code, flag_url: t.flag_url, group: t.group } }
+          .map { |t| serialize_team(t) }
 
         now = Time.current
         matches = Match
@@ -28,18 +28,20 @@ module Api
           )
           .limit(5)
           .map do |m|
+            home = m.home_team
+            away = m.away_team
             {
-              type:       "match",
-              id:         m.id,
+              type:        "match",
+              id:          m.id,
               external_id: m.external_id,
-              home:       m.home_team&.name,
-              away:       m.away_team&.name,
-              home_flag:  m.home_team&.flag_url,
-              away_flag:  m.away_team&.flag_url,
-              home_score: m.home_score,
-              away_score: m.away_score,
-              status:     m.status,
-              kickoff_at: m.kickoff_at
+              home:        TeamDisplayNames.display_name(home&.name),
+              away:        TeamDisplayNames.display_name(away&.name),
+              home_flag:   TeamDisplayNames.flag_url(home&.name, home&.flag_url),
+              away_flag:   TeamDisplayNames.flag_url(away&.name, away&.flag_url),
+              home_score:  m.home_score,
+              away_score:  m.away_score,
+              status:      m.status,
+              kickoff_at:  m.kickoff_at
             }
           end
 
@@ -47,6 +49,19 @@ module Api
       rescue => e
         Rails.logger.error("[SearchController] #{e.message}")
         render json: []
+      end
+
+      private
+
+      def serialize_team(team)
+        {
+          type:     "team",
+          id:       team.id,
+          name:     TeamDisplayNames.display_name(team.name),
+          code:     team.code,
+          flag_url: TeamDisplayNames.flag_url(team.name, team.flag_url),
+          group:    team.group
+        }
       end
     end
   end

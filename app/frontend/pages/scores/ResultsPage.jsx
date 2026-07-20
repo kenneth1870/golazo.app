@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague, translateCountry } from "../../i18n/leagueNames"
-import { translateTeam } from "../../i18n/teamNames"
+import { translateTeam, resolveTeamLogo } from "../../i18n/teamNames"
 import { navigateToMatch } from "../../utils/matchDetailCache"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 import { usePageMeta } from "../../hooks/usePageMeta"
@@ -42,8 +42,8 @@ function ResultRow({ match, onMatchClick }) {
       </div>
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">
-          {match.home_team?.flag_url && (
-            <img src={match.home_team.flag_url} alt={match.home_team.name} className="flag-xs" loading="eager"
+          {(match.home_team?.flag_url || match.home_team?.name) && (
+            <img src={resolveTeamLogo(match.home_team?.name, match.home_team?.flag_url)} alt={match.home_team.name} className="flag-xs" loading="eager"
               onError={e => (e.target.style.display = "none")} />
           )}
           <span className="team-name">{translateTeam(match.home_team?.name, i18n.language) || match.home_team?.name}</span>
@@ -56,8 +56,8 @@ function ResultRow({ match, onMatchClick }) {
         </div>
         <div className="match-row__team match-row__team--away">
           <span className="team-name">{translateTeam(match.away_team?.name, i18n.language) || match.away_team?.name}</span>
-          {match.away_team?.flag_url && (
-            <img src={match.away_team.flag_url} alt={match.away_team.name} className="flag-xs" loading="eager"
+          {(match.away_team?.flag_url || match.away_team?.name) && (
+            <img src={resolveTeamLogo(match.away_team?.name, match.away_team?.flag_url)} alt={match.away_team.name} className="flag-xs" loading="eager"
               onError={e => (e.target.style.display = "none")} />
           )}
         </div>

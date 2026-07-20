@@ -1952,7 +1952,7 @@ export default function MatchShowPage() {
 
   const prevMatchNav = matchIdx > 0                    ? matchList[matchIdx - 1] : null
   const nextMatchNav = matchIdx < matchList.length - 1 ? matchList[matchIdx + 1] : null
-  const { clubs_primary: clubsPrimary } = useAppFocus()
+  const { clubs_primary: clubsPrimary, push_enabled: pushEnabled } = useAppFocus()
   const leagueLabel = translateLeague(data?.fixture?.league?.name, i18n.language) ?? data?.fixture?.league?.name ?? t("nav.leagues")
   const metaDesc = homeName && awayName
     ? (clubsPrimary
@@ -2096,10 +2096,11 @@ export default function MatchShowPage() {
 
   // Show push banner on live matches when not yet granted
   useEffect(() => {
+    if (!pushEnabled) return
     if (!isLive) return
     if (typeof Notification === "undefined") return
     if (Notification.permission === "default") setShowNotifBanner(true)
-  }, [isLive])
+  }, [isLive, pushEnabled])
 
   // Fetch AI summary for finished matches — fires once per mount via ref guard.
   // aiLoading intentionally excluded from deps: setting it would re-trigger the

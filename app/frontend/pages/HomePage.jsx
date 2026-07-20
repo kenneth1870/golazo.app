@@ -401,50 +401,10 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ── Quick-links section: World Cup + Competitions ── */}
-      <div className="site-section" style={{ paddingTop: 32, paddingBottom: 40 }}>
+      {/* ── Quick-links section: World Cup + Competitions (WC mode only) ── */}
+      {!clubsPrimary && <div className="site-section" style={{ paddingTop: 32, paddingBottom: 40 }}>
         <div className="container">
           <div className="row" style={{ gap: "0 0" }}>
-
-            {clubsPrimary ? (
-                <div className="col-md-12" style={{ marginBottom: 20 }}>
-                  <div style={{
-                    background: "linear-gradient(135deg, rgba(238,30,70,.1) 0%, rgba(238,30,70,.03) 100%)",
-                    border: "1px solid rgba(238,30,70,.2)", borderRadius: 14, padding: "20px 24px",
-                  }}>
-                    <div style={{ fontSize: ".62rem", fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 8 }}>
-                      {t("nav.mundial", "Mundial 2026")}
-                    </div>
-                    <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", marginBottom: 12 }}>
-                      {t("home.wcHosts")}
-                    </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                      {[
-                        { label: `📅 ${t("nav.schedule")}`,  path: "/mundial/schedule" },
-                        { label: `📊 ${t("nav.groups")}`,    path: "/scores/groups" },
-                        { label: `🏆 ${t("nav.knockout")}`,  path: "/scores/knockout" },
-                      ].map(({ label, path }) => (
-                        <Link key={path} to={path} style={{
-                          display: "inline-block",
-                          background: "var(--surface2)", border: "1px solid var(--border)",
-                          borderRadius: 8, padding: "6px 12px",
-                          fontSize: ".7rem", fontWeight: 700, color: "var(--text)", textDecoration: "none",
-                        }}>
-                          {label}
-                        </Link>
-                      ))}
-                      <Link to="/mundial" style={{
-                        display: "inline-block",
-                        background: "rgba(238,30,70,.08)", border: "1px solid rgba(238,30,70,.25)",
-                        borderRadius: 8, padding: "6px 12px",
-                        fontSize: ".7rem", fontWeight: 700, color: "var(--accent)", textDecoration: "none",
-                      }}>
-                        {t("home.viewAll")} →
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-            ) : (
             <>
             {/* World Cup 2026 hub */}
             <div className="col-md-6" style={{ marginBottom: 20 }}>
@@ -485,11 +445,9 @@ export default function HomePage() {
               <ClubCompetitionChips />
             </div>
             </>
-            )}
-
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* ── Next match widget + upcoming ── */}
       {(nextMatch || upcomingFuture.length > 0) && !clubsPrimary && <div className="site-section bg-dark">

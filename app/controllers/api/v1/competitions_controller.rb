@@ -5,6 +5,7 @@ module Api
 
       def index
         competitions = Competition.order(:name)
+        competitions = competitions.where.not(code: "WC") if AppFocus.wc_paused?
         render json: competitions.as_json(
           only: %i[id name code logo country competition_type external_id]
         )

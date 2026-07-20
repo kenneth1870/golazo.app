@@ -4,7 +4,7 @@ module Api
       def index
         teams = Team.order(:group, :name)
         teams = teams.where.not(group: [ nil, "" ]) if params[:competition] == "WC" || params[:wc] == "1"
-        render json: teams
+        render json: teams.map { |t| serialize_team(t) }
       end
 
       def show
@@ -55,7 +55,7 @@ module Api
         # those associations (they aren't preloaded) and trims the payload.
         # Mirrors MatchesController#index.
         matches_json = matches.map { |m|
-          m.as_json(
+          json = m.as_json(
             only:    %i[id external_id status kickoff_at home_score away_score home_slot away_slot bracket_pos group_stage round],
             include: {
               home_team:   { only: %i[id name code flag_url] },
@@ -63,9 +63,12 @@ module Api
               competition: { only: %i[id name code logo country] }
             }
           )
+          json["home_team"] = normalize_team_json(json["home_team"]) if json["home_team"]
+          json["away_team"] = normalize_team_json(json["away_team"]) if json["away_team"]
+          json
         }
 
-        render json: team.as_json(only: %i[id name code flag_url group confederation external_id]).merge(
+        render json: serialize_team(team).merge(
           matches: matches_json,
           scorers: scorers,
           tournament_stats: tournament_stats
@@ -111,6 +114,23 @@ module Api
         end
 
         render json: data
+      end
+
+      private
+
+      def serialize_team(team)
+        normalize_team_json(
+          team.as_json(only: %i[id name code flag_url group confederation external_id])
+        )
+      end
+
+      def normalize_team_json(team_hash)
+        return team_hash unless team_hash.is_a?(Hash) && team_hash["name"].present?
+
+        team_hash.merge(
+          "name"     => TeamDisplayNames.display_name(team_hash["name"]),
+          "flag_url" => TeamDisplayNames.flag_url(team_hash["name"], team_hash["flag_url"])
+        )
       end
     end
   end

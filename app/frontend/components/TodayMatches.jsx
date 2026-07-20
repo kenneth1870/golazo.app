@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { translateLeague } from "../i18n/leagueNames"
-import { translateTeam } from "../i18n/teamNames"
+import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
 
 function formatKickoff(utcDate) {
   return new Date(utcDate).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
@@ -44,8 +44,8 @@ function MatchRow({ match, onClick }) {
       {/* Home team */}
       <div className="d-flex align-items-center" style={{ flex: 1, justifyContent: "flex-end", gap: 8 }}>
         <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.9rem" }}>{translateTeam(match.home_team?.name, i18n.language) || match.home_team?.name}</span>
-        {match.home_team?.flag_url && (
-          <img src={match.home_team.flag_url} alt={match.home_team.name} className="flag-xs" loading="eager" />
+        {(match.home_team?.flag_url || match.home_team?.name) && (
+          <img src={resolveTeamLogo(match.home_team?.name, match.home_team?.flag_url)} alt={match.home_team.name} className="flag-xs" loading="eager" />
         )}
       </div>
 
@@ -72,8 +72,8 @@ function MatchRow({ match, onClick }) {
 
       {/* Away team */}
       <div className="d-flex align-items-center" style={{ flex: 1, gap: 8 }}>
-        {match.away_team?.flag_url && (
-          <img src={match.away_team.flag_url} alt={match.away_team.name} className="flag-xs" loading="eager" />
+        {(match.away_team?.flag_url || match.away_team?.name) && (
+          <img src={resolveTeamLogo(match.away_team?.name, match.away_team?.flag_url)} alt={match.away_team.name} className="flag-xs" loading="eager" />
         )}
         <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.9rem" }}>{translateTeam(match.away_team?.name, i18n.language) || match.away_team?.name}</span>
       </div>

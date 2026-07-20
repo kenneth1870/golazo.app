@@ -208,7 +208,7 @@ export default function App() {
               <Route path="/predictor"     element={<ClubsModeRedirect to="/"><BracketPredictorPage /></ClubsModeRedirect>} />
               <Route path="/leaderboard"   element={<ClubsModeRedirect to="/"><LeaderboardPage /></ClubsModeRedirect>} />
               <Route path="/compare"       element={<ClubsModeRedirect to="/"><ComparePage /></ClubsModeRedirect>} />
-              <Route path="/compare/teams" element={<TeamComparisonPage />} />
+              <Route path="/compare/teams" element={<ClubsModeRedirect to="/leagues"><TeamComparisonPage /></ClubsModeRedirect>} />
               <Route path="/players/:id"   element={<PlayerPage />} />
               <Route path="/news"          element={<NewsPage />} />
               <Route path="/news/:id"      element={<NewsShowPage />} />
@@ -221,8 +221,8 @@ export default function App() {
               <Route path="/world-cup-2026/scorers"   element={<ClubsModeRedirect to="/leagues"><Navigate to="/mundial/scorers"  replace /></ClubsModeRedirect>} />
               <Route path="/world-cup-2026/groups"    element={<ClubsModeRedirect to="/leagues"><Navigate to="/mundial/groups"   replace /></ClubsModeRedirect>} />
               <Route path="/world-cup-2026/bracket"   element={<ClubsModeRedirect to="/leagues"><Navigate to="/mundial/knockout" replace /></ClubsModeRedirect>} />
-              <Route path="/world-cup-2026/results"   element={<Navigate to="/scores/results"   replace />} />
-              <Route path="/world-cup-2026/fixtures"  element={<Navigate to="/scores/today"     replace />} />
+              <Route path="/world-cup-2026/results"   element={<ClubsModeRedirect to="/scores/results"><Navigate to="/scores/results" replace /></ClubsModeRedirect>} />
+              <Route path="/world-cup-2026/fixtures"  element={<ClubsModeRedirect to="/scores/today"><Navigate to="/scores/today" replace /></ClubsModeRedirect>} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

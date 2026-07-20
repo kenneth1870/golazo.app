@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { translateTeam } from "../i18n/teamNames"
+import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { navigateToMatch } from "../utils/matchDetailCache"
@@ -32,7 +32,7 @@ export default function TeamShowPage() {
     displayName
       ? (clubsPrimary ? t("meta.teamDescClubs", { name: displayName }) : t("meta.teamDescWC", { name: displayName }))
       : null,
-    { image: team?.flag_url || undefined }
+    { image: resolveTeamLogo(team?.name, team?.flag_url) || undefined }
   )
 
   useEffect(() => {
@@ -134,7 +134,7 @@ export default function TeamShowPage() {
           <div className="empty-state">
             <div className="empty-state__icon">⚽</div>
             <h3>{t("error.notFound")}</h3>
-            <p><Link to="/mundial/teams" style={{ color: "var(--accent)" }}>← {t("nav.teams")}</Link></p>
+            <p><Link to={clubsPrimary ? "/leagues" : "/mundial/teams"} style={{ color: "var(--accent)" }}>← {clubsPrimary ? t("nav.leagues") : t("nav.teams")}</Link></p>
           </div>
         </div>
       </div>
@@ -184,6 +184,7 @@ export default function TeamShowPage() {
           <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back")}</button>
           {team && (
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              {!clubsPrimary && (
               <Link
                 to={`/compare/teams?home=${team.id}`}
                 style={{
@@ -191,8 +192,9 @@ export default function TeamShowPage() {
                   borderRadius: 20, padding: "5px 12px", color: "#818cf8",
                   fontSize: "0.72rem", fontWeight: 700, textDecoration: "none",
                 }}
-                title="Compare with another team"
-              >⚔️ Compare</Link>
+                title={t("team.compareTitle", "Compare with another team")}
+              >⚔️ {t("team.compare", "Compare")}</Link>
+              )}
               <button
                 onClick={() => toggleFavorite({ type: "team", id: team.id, name: team.name, flag_url: team.flag_url, group: team.group })}
                 title={isFavorite("team", team.id) ? "Unfollow team" : "Follow team"}
@@ -216,7 +218,7 @@ export default function TeamShowPage() {
         <div className="container" style={{ maxWidth: 700 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
             {team.flag_url && (
-              <img src={team.flag_url} alt={team.name} className="logo-lg"
+              <img src={resolveTeamLogo(team.name, team.flag_url)} alt={team.name} className="logo-lg"
                 onError={e => (e.target.style.display = "none")} />
             )}
             <div>

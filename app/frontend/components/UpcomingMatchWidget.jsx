@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { formatFull } from "../hooks/useLocalTime"
-import { translateTeam } from "../i18n/teamNames"
+import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
 
 export default function UpcomingMatchWidget({ match, onClick }) {
   const { i18n } = useTranslation()
@@ -18,8 +18,8 @@ export default function UpcomingMatchWidget({ match, onClick }) {
         <div className="widget-vs">
           <div className="d-flex align-items-center justify-content-around w-100">
             <div className="team-1 text-center">
-              {match.home_team?.flag_url
-                ? <img src={match.home_team.flag_url} alt={match.home_team.code} className="logo-md" style={{ margin: "0 auto" }} />
+              {(match.home_team?.flag_url || match.home_team?.name)
+                ? <img src={resolveTeamLogo(match.home_team?.name, match.home_team?.flag_url)} alt={match.home_team.code} className="logo-md" style={{ margin: "0 auto" }} />
                 : <span style={{ fontSize: "2rem" }}>🏳️</span>
               }
               <h3 style={{ fontSize: "0.9rem", marginTop: 8 }}>{translateTeam(match.home_team?.name, i18n.language) || match.home_team?.name}</h3>
@@ -28,8 +28,8 @@ export default function UpcomingMatchWidget({ match, onClick }) {
               <span className="vs"><span>VS</span></span>
             </div>
             <div className="team-2 text-center">
-              {match.away_team?.flag_url
-                ? <img src={match.away_team.flag_url} alt={match.away_team.code} className="logo-md" style={{ margin: "0 auto" }} />
+              {(match.away_team?.flag_url || match.away_team?.name)
+                ? <img src={resolveTeamLogo(match.away_team?.name, match.away_team?.flag_url)} alt={match.away_team.code} className="logo-md" style={{ margin: "0 auto" }} />
                 : <span style={{ fontSize: "2rem" }}>🏳️</span>
               }
               <h3 style={{ fontSize: "0.9rem", marginTop: 8 }}>{translateTeam(match.away_team?.name, i18n.language) || match.away_team?.name}</h3>

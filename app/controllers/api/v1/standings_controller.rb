@@ -24,7 +24,7 @@ module Api
       end
 
       def index
-        competition_code = params[:competition].presence || "WC"
+        competition_code = params[:competition].presence || (AppFocus.wc_paused? ? "PL" : "WC")
         ttl = competition_code == "WC" ? 3.minutes : 30.minutes
 
         result = Rails.cache.fetch("standings_#{competition_code}", expires_in: ttl, race_condition_ttl: 10.seconds) do

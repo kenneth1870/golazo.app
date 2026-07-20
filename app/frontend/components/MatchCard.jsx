@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { formatMatchDateTime } from "../hooks/useLocalTime"
+import { resolveTeamLogo } from "../i18n/teamNames"
 
 function ResultBadge({ result }) {
   const map = { win: { label: "W", bg: "#10b981" }, loss: { label: "L", bg: "#ef4444" }, draw: { label: "D", bg: "#f59e0b" } }
@@ -17,10 +18,11 @@ function ResultBadge({ result }) {
 
 function TeamFlag({ src, code, name, size = 72 }) {
   const [err, setErr] = useState(false)
+  const logo = resolveTeamLogo(name, src)
   const initials = code?.slice(0, 3) || name?.slice(0, 3) || "?"
-  if (src && !err) {
+  if (logo && !err) {
     return (
-      <img src={src} alt={code} className="logo-lg"
+      <img src={logo} alt={code} className="logo-lg"
         style={{ width: size, height: size, margin: "0 auto 8px", display: "block" }}
         onError={() => setErr(true)}
       />
