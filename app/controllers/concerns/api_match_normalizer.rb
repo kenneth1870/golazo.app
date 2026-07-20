@@ -43,7 +43,7 @@ module ApiMatchNormalizer
       away_score:     m.dig(:away, :score),
       home_pen_score: m.dig(:home, :pen_score),
       away_pen_score: m.dig(:away, :pen_score),
-      round:       nil,
+      round:       m[:round],
       group_stage: nil,
       competition: {
         id:      code,
@@ -60,7 +60,7 @@ module ApiMatchNormalizer
   end
 
   def filter_matches_for_focus(matches)
-    matches.select { |m| AppFocus.allowed_league?(m[:league_id]) }
+    matches.select { |m| AppFocus.important_match?(m) }
   end
 
   def filter_matches_for_competition(matches, code)

@@ -747,7 +747,9 @@ export default function TodayPage() {
                   textTransform: "uppercase", letterSpacing: 1,
                 }}>
                   <img src="/images/SOCCER.png" alt="" style={{ width: 18, height: 18, objectFit: "contain" }} onError={e => (e.target.style.display = "none")} />
-                  FIFA World Cup 2026 — {t("home.upcomingMatches")}
+                  {clubsPrimary
+                    ? `${t("home.liveScoresWorldwide")} — ${t("home.upcomingMatches")}`
+                    : `FIFA World Cup 2026 — ${t("home.upcomingMatches")}`}
                 </div>
                 <div className="widget-next-match">
                   <div className="widget-body p-0">

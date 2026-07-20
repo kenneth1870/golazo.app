@@ -39,6 +39,11 @@ module AppFocus
 
   FEATURED_CLUB_CODES = %w[PL LAL BL1 SA L1 UCL MLS].freeze
 
+  # Top domestic leagues — used for empty-day previews (no UCL qualifiers).
+  DOMESTIC_CLUB_CODES = %w[PL LAL BL1 SA L1 MLS].freeze
+
+  EXCLUDED_ROUND_PATTERN = /qualif|preliminary|play.?off|\b1st round\b|\b2nd round\b|\b3rd round\b/i.freeze
+
   # League IDs we surface in the product — everything else is ignored.
   def featured_league_ids
     FEATURED_CLUB_CODES.filter_map { |code| league_id_for(code) }
@@ -57,6 +62,24 @@ module AppFocus
 
   def allowed_league?(league_id)
     allowed_league_ids.include?(league_id.to_i)
+  end
+
+  def domestic_league_ids
+    DOMESTIC_CLUB_CODES.filter_map { |code| league_id_for(code) }
+  end
+
+  # Drop early-round European qualifiers and other low-value fixtures.
+  def excluded_match?(match)
+    round  = match[:round].to_s
+    league = match[:league_name].to_s
+    return true if round.match?(EXCLUDED_ROUND_PATTERN)
+    return true if league.match?(EXCLUDED_ROUND_PATTERN)
+    return true if league.match?(/friendlies?\b/i)
+    false
+  end
+
+  def important_match?(match)
+    allowed_league?(match[:league_id]) && !excluded_match?(match)
   end
 
   def league_id_for(code)

@@ -221,14 +221,18 @@ module Api
 
       def fetch_upcoming_clubs(limit = 8)
         client = LiveScoresClient.new
-        client.matches_for_date(Date.today)
+        raw = client.matches_for_date(Date.today)
               .concat((1..7).flat_map { |i| client.matches_for_date(Date.today + i) })
-              .select { |m| AppFocus.allowed_league?(m[:league_id]) }
               .select { |m| m[:status] == "scheduled" }
               .uniq { |m| m[:external_id] }
-              .sort_by { |m| m[:kickoff_at].to_s }
-              .first(limit)
-              .map { |m| normalize_api_match(m).merge(upcoming_preview: true) }
+
+        domestic_ids = AppFocus.domestic_league_ids
+        picks = raw.select { |m| domestic_ids.include?(m[:league_id].to_i) && !AppFocus.excluded_match?(m) }
+        picks = raw.select { |m| AppFocus.important_match?(m) } if picks.size < limit
+
+        picks.sort_by { |m| m[:kickoff_at].to_s }
+             .first(limit)
+             .map { |m| normalize_api_match(m).merge(upcoming_preview: true) }
       rescue => e
         Rails.logger.error("[TodayController] Upcoming clubs failed: #{e.message}")
         []

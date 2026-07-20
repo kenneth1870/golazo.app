@@ -562,6 +562,8 @@ class LiveScoresClient
 
     return AppFocus.allowed_league?(lid) if AppFocus.wc_paused?
 
+    return false if AppFocus.excluded_match?(match)
+
     return true if lid == AppFocus.league_id_for("WC")
 
     return true if AppFocus.allowed_league?(lid)
@@ -588,6 +590,7 @@ class LiveScoresClient
       league_name:    f.dig("league", "name"),
       league_logo:    f.dig("league", "logo"),
       league_country: f.dig("league", "country"),
+      round:          f.dig("league", "round"),
       kickoff_at:     f.dig("fixture", "date"),
       status:         status,
       status_short:   short,
