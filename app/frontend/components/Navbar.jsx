@@ -177,6 +177,7 @@ const LeaguesDropdown = memo(function LeaguesDropdown({ t }) {
         { label: "Ligue 1",            path: "/leagues/L1",  flag: "🇫🇷" },
         { label: "Champions League",   path: "/leagues/UCL", flag: "⭐" },
         { label: "MLS",                path: "/leagues/MLS", flag: "🇺🇸" },
+        { label: "Liga Tica",          path: "/leagues/CRC", flag: "🇨🇷" },
       ].map(({ label, path, flag }) => (
         <NavLink key={path} to={path} className={({ isActive }) => `dropdown-item-custom${isActive ? " active" : ""}`}>
           <span className="dd-icon">{flag}</span> {label}
@@ -280,6 +281,7 @@ export default function Navbar() {
     { label: "Ligue 1",           path: "/leagues/L1" },
     { label: "Champions League",  path: "/leagues/UCL" },
     { label: "MLS",               path: "/leagues/MLS" },
+    { label: "Liga Tica",         path: "/leagues/CRC" },
   ]
 
   return (

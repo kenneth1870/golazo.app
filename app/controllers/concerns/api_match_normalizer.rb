@@ -9,7 +9,8 @@ module ApiMatchNormalizer
     135 => "SA",
     140 => "LAL",
     61  => "L1",
-    253 => "MLS"
+    253 => "MLS",
+    162 => "CRC"
   }.freeze
 
   LEAGUE_CANONICAL_NAMES = {
@@ -20,7 +21,8 @@ module ApiMatchNormalizer
     78  => "Bundesliga",
     135 => "Serie A",
     61  => "Ligue 1",
-    253 => "Major League Soccer"
+    253 => "Major League Soccer",
+    162 => "Liga Tica"
   }.freeze
 
   private

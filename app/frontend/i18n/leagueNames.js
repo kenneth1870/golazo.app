@@ -38,6 +38,8 @@ const ES = {
   "Brasileirao Serie A":          "Brasileirao Serie A",
   "Argentine Primera Division":   "Primera División Argentina",
   "MLS":                          "MLS",
+  "Liga Tica":                    "Liga Tica",
+  "Primera División":             "Primera División",
 
   // Domestic cups
   "FA Cup":                       "FA Cup",

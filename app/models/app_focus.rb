@@ -34,13 +34,14 @@ module AppFocus
     "L1"  => 61,
     "UCL" => 2,
     "MLS" => 253,
+    "CRC" => 162,
     "WC"  => 1
   }.freeze
 
-  FEATURED_CLUB_CODES = %w[PL LAL BL1 SA L1 UCL MLS].freeze
+  FEATURED_CLUB_CODES = %w[PL LAL BL1 SA L1 UCL MLS CRC].freeze
 
   # Top domestic leagues — used for empty-day previews (no UCL qualifiers).
-  DOMESTIC_CLUB_CODES = %w[PL LAL BL1 SA L1 MLS].freeze
+  DOMESTIC_CLUB_CODES = %w[PL LAL BL1 SA L1 MLS CRC].freeze
 
   EXCLUDED_ROUND_PATTERN = /qualif|preliminary|play.?off|\b1st round\b|\b2nd round\b|\b3rd round\b/i.freeze
 

@@ -49,7 +49,8 @@ class LiveScoresClient
     78,   # Bundesliga
     135,  # Serie A
     61,   # Ligue 1
-    253   # MLS
+    253,  # MLS
+    162   # Liga Tica (Costa Rica Primera División)
   ]).freeze
 
   # Always excluded — low-value fixtures that waste API quota in caches/UI.

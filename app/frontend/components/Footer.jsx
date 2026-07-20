@@ -106,6 +106,7 @@ export default function Footer() {
               <li><Link to="/leagues/LAL">La Liga</Link></li>
               <li><Link to="/leagues/BL1">Bundesliga</Link></li>
               <li><Link to="/leagues/UCL">Champions League</Link></li>
+              <li><Link to="/leagues/CRC">Liga Tica</Link></li>
             </ul>
           </div>
 
