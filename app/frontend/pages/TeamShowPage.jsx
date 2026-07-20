@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam } from "../i18n/teamNames"
 import { usePageMeta } from "../hooks/usePageMeta"
+import { navigateToMatch } from "../utils/matchDetailCache"
 import { useFavorites } from "../hooks/useFavorites"
 import { getTeamColor } from "../utils/teamColors"
 
@@ -287,7 +288,7 @@ export default function TeamShowPage() {
           {/* Next match countdown */}
           {countdown && nextMatch && (
             <div
-              onClick={() => nextMatch.external_id && navigate(`/matches/${nextMatch.external_id}`)}
+              onClick={() => navigateToMatch(navigate, nextMatch)}
               style={{
                 background: "linear-gradient(135deg, rgba(238,30,70,.12) 0%, rgba(99,102,241,.08) 100%)",
                 border: "1px solid rgba(238,30,70,.25)", borderRadius: 12, padding: "14px 18px",
@@ -506,7 +507,7 @@ function MatchLine({ match, teamName, navigate }) {
   return (
     <div
       className="match-row match-row--clickable"
-      onClick={() => match.external_id && navigate(`/matches/${match.external_id}`)}
+      onClick={() => navigateToMatch(navigate, match)}
       style={{ cursor: match.external_id ? "pointer" : "default" }}
     >
       <div className="match-row__status">

@@ -18,6 +18,16 @@ export function navIdFor(match) {
   return null
 }
 
+export function matchPath(match) {
+  const id = navIdFor(match)
+  return id ? `/matches/${id}` : null
+}
+
+export function navigateToMatch(navigate, match, options) {
+  const path = matchPath(match)
+  if (path) navigate(path, options)
+}
+
 export function getCachedMatchDetail(navId) {
   if (!navId) return null
   const e = cache.get(navId)

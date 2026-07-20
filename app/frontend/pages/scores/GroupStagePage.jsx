@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { useMatches } from "../../hooks/useMatches"
 import MatchRow from "../../components/MatchRow"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { navigateToMatch, navIdFor } from "../../utils/matchDetailCache"
 import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 import { useVisiblePolling } from "../../hooks/useVisiblePolling"
 
@@ -180,7 +181,7 @@ export default function GroupStagePage() {
                       match={m}
                       showDate
                       showMeta={false}
-                      onClick={() => m.external_id ? navigate(`/matches/${m.external_id}`) : navigate(`/groups/${g}`)}
+                      onClick={() => navIdFor(m) ? navigateToMatch(navigate, m) : navigate(`/groups/${g}`)}
                     />
                   ))}
                 </div>

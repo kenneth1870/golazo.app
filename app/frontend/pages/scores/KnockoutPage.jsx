@@ -3,8 +3,7 @@ import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useState, useEffect, useRef } from "react"
-import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
-import { useStandingsChannel } from "../../hooks/useStandingsChannel"
+import { navigateToMatch, navIdFor } from "../../utils/matchDetailCache"
 
 // Layout constants — kept compact so the full bracket fits on most desktops
 const SLOT_H     = 90     // px — height of one R32 slot (×8 = TOTAL_H)
@@ -110,7 +109,7 @@ function MatchCard({ match, onClick, pLabel }) {
   return (
     <div
       className={`bk2-card${isLive ? " bk2-card--live" : ""}${isFinished ? " bk2-card--done" : ""}${flash ? " bk2-card--flash" : ""}${match.external_id ? " bk2-card--click" : ""}`}
-      onClick={match.external_id ? onClick : undefined}
+      onClick={navIdFor(match) ? () => onClick(match) : undefined}
     >
       {(header || pLabel) && (
         <div className={`bk2-hdr${header?.live ? " bk2-hdr--live" : ""}${header?.done ? " bk2-hdr--done" : ""}`}>
@@ -214,7 +213,7 @@ function RoundCol({ matches, count, onMatchClick, showPNum }) {
             style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "3px 0" }}>
             <MatchCard
               match={m}
-              onClick={() => m?.external_id && onMatchClick(m.external_id)}
+              onClick={() => onMatchClick(m)}
               pLabel={showPNum && m?.bracket_pos ? pNum(m.bracket_pos) : null}
             />
           </div>
@@ -266,9 +265,9 @@ export default function KnockoutPage() {
     "FIFA World Cup 2026 knockout bracket — Round of 32, Round of 16, Quarter Finals, Semi Finals and Final."
   )
 
-  const { matches, loading, refetch } = useMatches("all", { competition: "WC" })
+  const { matches, loading, refetch } = useMatches("knockout", { competition: "WC" })
   const navigate = useNavigate()
-  const onMatchClick = (extId) => navigate(`/matches/${extId}`)
+  const onMatchClick = (match) => navigateToMatch(navigate, match)
 
   useLiveScoresChannel(patchLiveScore)
   useStandingsChannel(refetch)
@@ -296,7 +295,7 @@ export default function KnockoutPage() {
     return () => ro.disconnect()
   }, [])
 
-  const knockout = matches.filter(m => !m.group_stage)
+  const knockout = matches
   const hasData  = knockout.length > 0
 
   // FIFA 2026 WC bracket draw — exact visual slot order per round column.
@@ -408,7 +407,7 @@ export default function KnockoutPage() {
               <div style={{ fontSize: "1.9rem", filter: "drop-shadow(0 0 8px rgba(238,30,70,.4))" }}>🏆</div>
               <MatchCard
                 match={finalM}
-                onClick={() => finalM?.external_id && onMatchClick(finalM.external_id)}
+                onClick={() => finalM && onMatchClick(finalM)}
                 pLabel={finalM?.bracket_pos ? pNum(finalM.bracket_pos) : null}
               />
             </div>
@@ -432,7 +431,7 @@ export default function KnockoutPage() {
               <div className="bk2-bronze__card">
                 <MatchCard
                   match={thirdM}
-                  onClick={() => thirdM?.external_id && onMatchClick(thirdM.external_id)}
+                  onClick={() => thirdM && onMatchClick(thirdM)}
                   pLabel={thirdM?.bracket_pos ? pNum(thirdM.bracket_pos) : null}
                 />
               </div>

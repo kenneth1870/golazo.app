@@ -9,7 +9,7 @@ import { useLocale } from "../../hooks/useLocale"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useFavorites } from "../../hooks/useFavorites"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
-import { prefetchMatchDetail, navIdFor } from "../../utils/matchDetailCache"
+import { prefetchMatchDetail, navIdFor, navigateToMatch } from "../../utils/matchDetailCache"
 import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
 
@@ -134,7 +134,7 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
   const hasScore   = match.home_score !== null && match.away_score !== null
-  const clickable  = !!match.external_id
+  const clickable  = !!navIdFor(match)
 
   const kickoffTime = match.kickoff_at
     ? new Date(match.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
@@ -143,7 +143,7 @@ function RealMatchRow({ match, onMatchClick, flashing }) {
   return (
     <div
       className={`match-row${isLive ? " match-row--live" : ""}${clickable ? " match-row--clickable" : ""}${flashing ? " match-row--score-flash" : ""}`}
-      onClick={clickable ? () => onMatchClick(match.external_id, match) : undefined}
+      onClick={clickable ? () => onMatchClick(match) : undefined}
       onMouseEnter={clickable ? () => prefetchMatchDetail(navIdFor(match)) : undefined}
       onTouchStart={clickable ? () => prefetchMatchDetail(navIdFor(match)) : undefined}
     >
@@ -227,7 +227,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
         {sorted.map(m =>
           isReal
             ? <RealMatchRow key={m.id} match={m} onMatchClick={onMatchClick} flashing={flashIds?.has(m.external_id ?? m.id)} />
-            : <MatchRow key={m.id} match={m} onClick={m.external_id ? () => onMatchClick(m.external_id, m) : undefined} />
+            : <MatchRow key={m.id} match={m} onClick={navIdFor(m) ? () => onMatchClick(m) : undefined} />
         )}
       </div>
     </div>
@@ -254,7 +254,7 @@ function FavTeamAlert({ match, onMatchClick, onDismiss }) {
       display: "flex", alignItems: "center", gap: 12,
       cursor: "pointer", animation: "pageIn .3s ease",
     }}
-      onClick={() => match.external_id && onMatchClick(match.external_id, match)}
+      onClick={() => navIdFor(match) && onMatchClick(match)}
     >
       <span className="live-dot" style={{ flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -373,14 +373,17 @@ export default function TodayPage() {
   const pullStartY  = useRef(null)
   const isPulling   = useRef(false)
   const navigate     = useNavigate()
-  const onMatchClick = (extId, match) => {
-    const allClickable = matches.filter(m => m.external_id)
-    const idx = allClickable.findIndex(m => m.external_id === extId)
-    navigate(`/matches/${extId}`, {
+  const onMatchClick = (match) => {
+    const navId = navIdFor(match)
+    if (!navId) return
+    const allClickable = matches.filter(m => navIdFor(m))
+    const idx = allClickable.findIndex(m => navIdFor(m) === navId)
+    navigate(`/matches/${navId}`, {
       state: {
         preview: match,
         matchList: allClickable.map(m => ({
           external_id: m.external_id,
+          id: m.id,
           home_team: m.home_team,
           away_team: m.away_team,
           kickoff_at: m.kickoff_at,
@@ -686,7 +689,7 @@ export default function TodayPage() {
             <div className="widget-next-match">
               <div className="widget-body p-0">
                 {yourMatches.map(m => (
-                  <MatchRow key={m.id} match={m} onClick={() => onMatchClick(m.external_id, m)} />
+                  <MatchRow key={m.id} match={m} onClick={() => onMatchClick(m)} />
                 ))}
               </div>
             </div>
@@ -740,7 +743,7 @@ export default function TodayPage() {
                 <div className="widget-next-match">
                   <div className="widget-body p-0">
                     {upcomingPreview.map(m => (
-                      <MatchRow key={m.id} match={m} onClick={() => onMatchClick(m.external_id, m)} />
+                      <MatchRow key={m.id} match={m} onClick={() => onMatchClick(m)} />
                     ))}
                   </div>
                 </div>

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague, translateCountry } from "../../i18n/leagueNames"
 import { translateTeam } from "../../i18n/teamNames"
-import { usePageMeta } from "../../hooks/usePageMeta"
+import { navigateToMatch } from "../../utils/matchDetailCache"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 
 function normalizeMatch(m) {
@@ -33,7 +33,7 @@ function ResultRow({ match, onMatchClick }) {
   const hasScore = match.home_score !== null && match.away_score !== null
 
   return (
-    <div className="match-row match-row--clickable" onClick={() => onMatchClick(match.external_id)}>
+    <div className="match-row match-row--clickable" onClick={() => onMatchClick(match)}>
       <div className="match-row__status">
         <span className="match-status-ft">{t("status.ft")}</span>
         <span style={{ fontSize: "0.65rem", color: "#777", display: "block" }}>{kickoffTime}</span>
@@ -119,7 +119,7 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(false)
   const navigate = useNavigate()
-  const onMatchClick = (extId) => navigate(`/matches/${extId}`)
+  const onMatchClick = (match) => navigateToMatch(navigate, match)
 
   const load = useCallback((d) => {
     setLoading(true)

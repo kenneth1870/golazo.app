@@ -17,6 +17,7 @@ module Api
 
         scope = case params[:filter]
         when "live"     then scope.live
+        when "knockout" then scope.knockout.order(bracket_pos: :asc)
         when "today"
           tz   = sanitize_tz(params[:tz])
           range = tz ? local_day_range(Date.today, tz) : Time.current.beginning_of_day..Time.current.end_of_day

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { useMatches } from "../hooks/useMatches"
 import MatchRow from "../components/MatchRow"
+import { navigateToMatch, navIdFor } from "../utils/matchDetailCache"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { translateTeam } from "../i18n/teamNames"
 import { useStandingsChannel } from "../hooks/useStandingsChannel"
@@ -231,9 +232,7 @@ export default function GroupDetailPage() {
   const { group }   = useParams()
   usePageMeta(`Group ${group} — World Cup 2026`, `FIFA World Cup 2026 Group ${group} standings and match results.`)
   const navigate    = useNavigate()
-  const onMatchClick = (m) => {
-    if (m.external_id) navigate(`/matches/${m.external_id}`)
-  }
+  const onMatchClick = (m) => navigateToMatch(navigate, m)
   const [standings, setStandings] = useState([])
   const [activeTab, setActiveTab] = useState("standings")
 

@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useMatches } from "../../hooks/useMatches"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { navigateToMatch, navIdFor } from "../../utils/matchDetailCache"
 import FlagImg from "../../components/FlagImg"
 import { translateTeam } from "../../i18n/teamNames"
 
@@ -153,7 +154,7 @@ function PhaseSection({ phase, matches, onMatchClick }) {
           <FixtureCard
             key={m.id}
             match={m}
-            onClick={m.external_id ? () => onMatchClick(m) : undefined}
+            onClick={navIdFor(m) ? () => onMatchClick(m) : undefined}
           />
         ))}
       </div>
@@ -204,9 +205,7 @@ export default function SchedulePage() {
   const { matches, loading } = useMatches("all", { competition: "WC" })
   const navigate = useNavigate()
 
-  const onMatchClick = (m) => {
-    if (m.external_id) navigate(`/matches/${m.external_id}`)
-  }
+  const onMatchClick = (m) => navigateToMatch(navigate, m)
 
   // Group: date → phase → matches[]
   const byDate = {}

@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam } from "../../i18n/teamNames"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { navigateToMatch, navIdFor } from "../../utils/matchDetailCache"
 
 const COUNTRY_FLAG = { "USA": "🇺🇸", "Canada": "🇨🇦", "Mexico": "🇲🇽" }
 
@@ -24,9 +25,9 @@ function MatchRow({ match }) {
 
   return (
     <div
-      className={`match-row${match.external_id ? " match-row--clickable" : ""}`}
-      onClick={() => match.external_id && navigate(`/matches/${match.external_id}`)}
-      style={{ cursor: match.external_id ? "pointer" : "default" }}
+      className={`match-row${navIdFor(match) ? " match-row--clickable" : ""}`}
+      onClick={() => navigateToMatch(navigate, match)}
+      style={{ cursor: navIdFor(match) ? "pointer" : "default" }}
     >
       <div className="match-row__status">
         {isLive

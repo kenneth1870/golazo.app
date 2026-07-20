@@ -13,11 +13,8 @@
 #
 # R32 positions 1–16 correspond to official FIFA match numbers 73–88 respectively.
 #
-# Third-place team slots (T1–T8) are assigned in best-to-worst ranking order as a
-# practical approximation. The exact slot assignment depends on which groups the 8
-# advancing third-placed teams come from (FIFA uses a 495-combination lookup table).
-# The ranked fallback may display a slightly different opponent for 3rd-place slots
-# until the combination is resolved at end of group stage.
+# Third-place team slots use FIFA Annex C (495-combination lookup) once all groups
+# are complete. Until then T-slots stay TBD.
 class WorldCupKnockout
   ROUND_DATES = {
     "Round of 32"   => Date.new(2026, 7,  1),
@@ -26,6 +23,12 @@ class WorldCupKnockout
     "Semi Final"    => Date.new(2026, 7, 14),
     "3rd Place"     => Date.new(2026, 7, 18),
     "Final"         => Date.new(2026, 7, 19)
+  }.freeze
+
+  # Third-place T-slots in R32_SLOTS map to the group winner they oppose (Annex C columns).
+  T_SLOT_WINNERS = {
+    "T1" => "E", "T2" => "I", "T3" => "A", "T4" => "L",
+    "T5" => "D", "T6" => "G", "T7" => "B", "T8" => "K"
   }.freeze
 
   # Official FIFA 2026 Round of 32 pairings (FIFA matches 73–88 in tournament order).
@@ -94,6 +97,38 @@ class WorldCupKnockout
     propagate_later_rounds
   end
 
+  # Pick the empty bracket slot whose expected teams match this fixture pair.
+  def match_empty_slot(empties, home_team, away_team)
+    return nil if empties.blank?
+
+    standings  = WorldCupStandings.new(@competition)
+    all_done   = all_groups_complete?
+    qualifiers = standings.qualifiers
+
+    empties.find do |slot|
+      eh = team_for_group_slot(slot.home_slot, qualifiers, standings, all_done)
+      ea = team_for_group_slot(slot.away_slot, qualifiers, standings, all_done)
+      next false unless eh && ea
+
+      (eh.id == home_team.id && ea.id == away_team.id) ||
+        (eh.id == away_team.id && ea.id == home_team.id)
+    end
+  end
+
+  # Among empty slots, return the one whose placeholder kickoff is closest.
+  def closest_empty_slot_by_kickoff(empties, kickoff)
+    return nil if empties.blank? || kickoff.blank?
+
+    ko = Time.parse(kickoff.to_s).utc
+    closest = empties.min_by { |s| s.kickoff_at ? (s.kickoff_at.utc - ko).abs : Float::INFINITY }
+    return nil unless closest&.kickoff_at
+    return closest if (closest.kickoff_at.utc - ko).abs <= 18.hours
+
+    nil
+  rescue ArgumentError, TypeError
+    nil
+  end
+
   # Creates or corrects the 32 knockout fixtures.
   # Slot labels on unfinished matches are always updated so bracket corrections propagate.
   def ensure_fixtures!
@@ -154,7 +189,6 @@ class WorldCupKnockout
 
   def resolve_round_of_32(standings)
     qualifiers = standings.qualifiers
-    thirds     = standings.best_thirds(8)
     all_done   = all_groups_complete?
 
     # Teams already locked into API-confirmed R32 slots must not appear in a
@@ -171,8 +205,8 @@ class WorldCupKnockout
       next if m.status == "finished"
       next if m.external_id.present?
 
-      home = team_for_group_slot(m.home_slot, qualifiers, thirds, all_done)
-      away = team_for_group_slot(m.away_slot, qualifiers, thirds, all_done)
+      home = team_for_group_slot(m.home_slot, qualifiers, standings, all_done)
+      away = team_for_group_slot(m.away_slot, qualifiers, standings, all_done)
 
       # Suppress any team the API has already confirmed in another R32 slot
       home = nil if home && confirmed_team_ids.include?(home.id)
@@ -218,17 +252,37 @@ class WorldCupKnockout
     end
   end
 
-  def team_for_group_slot(slot, qualifiers, thirds, all_done)
+  def team_for_group_slot(slot, qualifiers, standings, all_done)
     return nil if slot.blank?
 
     if slot.start_with?("T")
       return nil unless all_done
-      thirds[slot[1..].to_i - 1]&.team
+
+      group = third_place_group_for_t_slot(slot, standings)
+      return nil unless group
+
+      standings.groups[group]&.then { |ranked| ranked[2]&.team }
     else
       letter = slot[1]
       return nil unless group_complete?(letter)
+
       qualifiers[slot]
     end
+  end
+
+  def third_place_group_for_t_slot(slot, standings)
+    winner = T_SLOT_WINNERS[slot]
+    return nil unless winner
+
+    key = third_place_combination_key(standings)
+    return nil unless key
+
+    FifaThirdPlaceAnnexC::LOOKUP[key]&.[](winner)
+  end
+
+  def third_place_combination_key(standings)
+    letters = standings.third_place_table.first(8).filter_map { |s| s.team.group }.sort
+    letters.join if letters.size == 8
   end
 
   def team_for_feeder_slot(slot)

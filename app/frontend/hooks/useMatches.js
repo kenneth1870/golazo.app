@@ -114,9 +114,9 @@ function applyScorePatch(m, d) {
 // matches; "all|" keys update them in place (needed by the knockout bracket).
 export function patchLiveScore(d) {
   for (const [key, entry] of cache) {
-    const isLiveKey = key.startsWith("live|")
-    const isAllKey  = key.startsWith("all|")
-    if (!isLiveKey && !isAllKey) continue
+    const isLiveKey     = key.startsWith("live|")
+    const isBracketKey  = key.startsWith("all|") || key.startsWith("knockout|")
+    if (!isLiveKey && !isBracketKey) continue
     if (!entry.data?.length) continue
 
     const isHit = (m) =>

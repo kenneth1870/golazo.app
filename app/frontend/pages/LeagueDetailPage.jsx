@@ -5,6 +5,7 @@ import { translateTeam } from "../i18n/teamNames"
 import MatchRow from "../components/MatchRow"
 import { useFavorites } from "../hooks/useFavorites"
 import { usePageMeta } from "../hooks/usePageMeta"
+import { navigateToMatch, navIdFor } from "../utils/matchDetailCache"
 
 function StandingsTable({ standings, t, i18n }) {
   if (!standings || standings.length === 0) return null
@@ -235,7 +236,7 @@ export default function LeagueDetailPage() {
                   key={m.id}
                   match={m}
                   showDate={tab !== "today"}
-                  onClick={m.external_id ? () => navigate(`/matches/${m.external_id}`) : undefined}
+                  onClick={navIdFor(m) ? () => navigateToMatch(navigate, m) : undefined}
                 />
               ))}
             </div>

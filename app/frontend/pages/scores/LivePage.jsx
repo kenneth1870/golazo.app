@@ -5,7 +5,7 @@ import { translateLeague } from "../../i18n/leagueNames"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useVisiblePolling } from "../../hooks/useVisiblePolling"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
-import { prefetchMatchDetail, navIdFor } from "../../utils/matchDetailCache"
+import { prefetchMatchDetail, navIdFor, navigateToMatch } from "../../utils/matchDetailCache"
 
 function LiveMatchRow({ match, onMatchClick }) {
   const { t } = useTranslation()
@@ -14,7 +14,7 @@ function LiveMatchRow({ match, onMatchClick }) {
   const warm = () => prefetchMatchDetail(navIdFor(match))
 
   return (
-    <div className="match-row match-row--live match-row--clickable" onClick={() => onMatchClick(match.external_id)}
+    <div className="match-row match-row--live match-row--clickable" onClick={() => onMatchClick(match)}
       onMouseEnter={warm} onTouchStart={warm}>
       <div className="match-row__status">
         <span className="match-status-live">
@@ -87,7 +87,7 @@ export default function LivePage() {
   const [error, setError]     = useState(false)
   const [lastUpdated, setLastUpdated] = useState(null)
   const navigate = useNavigate()
-  const onMatchClick = (extId) => navigate(`/matches/${extId}`)
+  const onMatchClick = (match) => navigateToMatch(navigate, match)
 
   const load = () =>
     fetchWithTimeout("/api/v1/live_scores")

@@ -20,7 +20,7 @@ import MatchReactions from "../components/MatchReactions"
 import { useReminders } from "../hooks/useReminders"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 import { useVisiblePolling } from "../hooks/useVisiblePolling"
-import { getCachedMatchDetail, setCachedMatchDetail } from "../utils/matchDetailCache"
+import { getCachedMatchDetail, setCachedMatchDetail, navIdFor } from "../utils/matchDetailCache"
 import { getMatchColor } from "../utils/teamColors"
 import { sourceColor } from "../utils/sourceColors"
 import { storageGet, storageSet } from "../utils/safeStorage"
@@ -2205,7 +2205,10 @@ export default function MatchShowPage() {
             <div style={{ display: "flex", gap: 4, flex: 1, justifyContent: "center" }}>
               {prevMatchNav && (
                 <button
-                  onClick={() => navigate(`/matches/${String(prevMatchNav.external_id)}`, { state: { matchList, matchIdx: matchIdx - 1 } })}
+                  onClick={() => {
+                    const navId = navIdFor(prevMatchNav)
+                    if (navId) navigate(`/matches/${navId}`, { state: { matchList, matchIdx: matchIdx - 1 } })
+                  }}
                   style={{
                     background: "var(--surface2)", border: "1px solid var(--border)",
                     borderRadius: 6, padding: "8px 14px", fontSize: "0.68rem",
@@ -2219,7 +2222,10 @@ export default function MatchShowPage() {
               )}
               {nextMatchNav && (
                 <button
-                  onClick={() => navigate(`/matches/${String(nextMatchNav.external_id)}`, { state: { matchList, matchIdx: matchIdx + 1 } })}
+                  onClick={() => {
+                    const navId = navIdFor(nextMatchNav)
+                    if (navId) navigate(`/matches/${navId}`, { state: { matchList, matchIdx: matchIdx + 1 } })
+                  }}
                   style={{
                     background: "var(--surface2)", border: "1px solid var(--border)",
                     borderRadius: 6, padding: "8px 14px", fontSize: "0.68rem",

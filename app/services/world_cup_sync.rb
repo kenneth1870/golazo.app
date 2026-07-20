@@ -407,7 +407,14 @@ class WorldCupSync
         if exact
           slot = exact
         else
-          slot = scope.where(home_team_id: nil, away_team_id: nil).order(:bracket_pos).first
+          empties = scope.where(home_team_id: nil, away_team_id: nil).order(:bracket_pos).to_a
+          builder = WorldCupKnockout.new(competition: competition)
+          slot = builder.match_empty_slot(empties, home_team, away_team)
+          slot ||= builder.closest_empty_slot_by_kickoff(empties, kickoff)
+          if slot.nil? && empties.any?
+            slot = empties.first
+            log("  Warning: fallback to first empty #{db_round} slot pos=#{slot.bracket_pos} for #{home_api} vs #{away_api}")
+          end
           needs_teams = slot.present?
         end
       end
@@ -1324,10 +1331,12 @@ class WorldCupSync
     # Shared stream for list views (Today, Home) — carries enough identity to
     # update the right row without a full re-fetch.
     ActionCable.server.broadcast("live_scores", payload.merge(
-      type:         "live_score_update",
-      match_id:     match.id,
-      external_id:  match.external_id,
-      minute_extra: minute_extra
+      type:            "live_score_update",
+      match_id:        match.id,
+      external_id:     match.external_id,
+      minute_extra:    minute_extra,
+      home_pen_score:  match.home_pen_score,
+      away_pen_score:  match.away_pen_score
     ))
 
     return unless notify

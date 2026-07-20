@@ -8,7 +8,7 @@ import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
 import { formatKickoff } from "../hooks/useLocalTime"
 import { translateTeam } from "../i18n/teamNames"
-import { navIdFor } from "../utils/matchDetailCache"
+import { navIdFor, navigateToMatch } from "../utils/matchDetailCache"
 import Hero from "../components/Hero"
 import MatchCard from "../components/MatchCard"
 import MatchRow from "../components/MatchRow"
@@ -179,7 +179,7 @@ function TodayMatchesSection({ todayMatches, navigate, t }) {
                 <MatchRow
                   match={m}
                   showDate={false}
-                  onClick={() => navigate(`/matches/${navIdFor(m)}`)}
+                  onClick={() => navigateToMatch(navigate, m)}
                 />
               </div>
             ))}
@@ -214,7 +214,7 @@ function TodayMatchesSection({ todayMatches, navigate, t }) {
                 <MatchRow
                   match={m}
                   showDate={false}
-                  onClick={() => navigate(`/matches/${navIdFor(m)}`)}
+                  onClick={() => navigateToMatch(navigate, m)}
                 />
               </div>
             ))}
