@@ -14,12 +14,25 @@ function load() {
         const migrated = [{ type: "team", id: team.id, name: team.name, flag_url: team.flag_url, group: team.group }]
         storageSet(KEY, JSON.stringify(migrated))
         storageRemove("golazo_favorite_team")
-        return migrated
+        return normalizeTeamFavorites(migrated)
       }
       return []
     }
-    return JSON.parse(raw)
+    return normalizeTeamFavorites(JSON.parse(raw))
   } catch { return [] }
+}
+
+function normalizeTeamFavorites(favorites) {
+  const next = favorites.map(f => {
+    if (f.type !== "team") return f
+    // Use stable name-based ids for club teams (legacy numeric DB ids)
+    if (f.name && !f.group && /^\d+$/.test(String(f.id))) {
+      return { ...f, id: f.name }
+    }
+    return f
+  })
+  if (JSON.stringify(next) !== JSON.stringify(favorites)) persist(next)
+  return next
 }
 
 function persist(arr) {

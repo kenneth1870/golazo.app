@@ -14,8 +14,7 @@ class SitemapController < ApplicationController
         /scores/results
         /news
         /leagues
-        /mundial/teams
-        /mundial/schedule
+        /compare/teams
       ]
     else
       %w[

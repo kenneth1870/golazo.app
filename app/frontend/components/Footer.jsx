@@ -51,6 +51,7 @@ export default function Footer() {
             <h4 className="footer-col__title">{t("nav.leagues")}</h4>
             <ul className="footer-links">
               <li><Link to="/leagues">{t("nav.allLeagues")}</Link></li>
+              <li><Link to="/compare/teams">{t("teamComparison.title")}</Link></li>
               {clubsPrimary && (
                 <li><Link to="/mundial/teams">{t("nav.mundial")}</Link></li>
               )}

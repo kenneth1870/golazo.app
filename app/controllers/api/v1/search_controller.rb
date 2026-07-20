@@ -17,6 +17,7 @@ module Api
           live = search_live_matches(needle)
           results.concat(live)
           results.concat(search_club_teams(needle, results))
+          results.concat(search_players(needle))
         end
 
         render json: dedupe_results(results).first(12)
@@ -113,6 +114,26 @@ module Api
         end
 
         teams.first(6)
+      end
+
+      def search_players(needle)
+        client = LiveScoresClient.new
+        client.search_players(needle).first(4).filter_map do |p|
+          id = p["id"] || p.dig("player", "id")
+          name = p["name"] || p.dig("player", "name")
+          next if id.blank? || name.blank?
+
+          {
+            type:  "player",
+            id:    id,
+            name:  name,
+            team:  p.dig("team", "name"),
+            photo: p["photo"] || p.dig("player", "photo")
+          }
+        end
+      rescue => e
+        Rails.logger.error("[SearchController#search_players] #{e.message}")
+        []
       end
 
       def match_names(match)

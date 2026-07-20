@@ -76,6 +76,8 @@ export default function SearchBar({ onClose }) {
       } else {
         navigate(`/matches/db-${result.id}`)
       }
+    } else if (result.type === "player") {
+      navigate(`/players/${result.id}`)
     }
     onClose()
   }, [navigate, onClose])
@@ -183,6 +185,19 @@ export default function SearchBar({ onClose }) {
                           : null}
                     </div>
                     <span style={{ fontSize: "0.68rem", color: "var(--muted)", background: "var(--surface2)", padding: "2px 7px", borderRadius: 4 }}>{t("table.team")}</span>
+                  </>
+                ) : r.type === "player" ? (
+                  <>
+                    {r.photo ? (
+                      <img src={r.photo} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                    ) : (
+                      <FlagOrInitials name={r.name} flagUrl={null} size={32} />
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, color: "var(--text)", fontSize: "0.9rem" }}>{r.name}</div>
+                      {r.team && <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{r.team}</div>}
+                    </div>
+                    <span style={{ fontSize: "0.68rem", color: "var(--muted)", background: "var(--surface2)", padding: "2px 7px", borderRadius: 4 }}>{t("table.player")}</span>
                   </>
                 ) : (
                   <>

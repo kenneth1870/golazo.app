@@ -36,7 +36,7 @@ function LeagueCard({ competition, liveCount, onClick, lang, t }) {
           background: "var(--surface2)", border: "1px solid var(--border)",
           borderRadius: 6, padding: "2px 8px", flexShrink: 0,
         }}>
-          WC 2026
+          {t("nav.mundialShort", "WC 2026")}
         </span>
       )}
       {liveCount > 0 && (

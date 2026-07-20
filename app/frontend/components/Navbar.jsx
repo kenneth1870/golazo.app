@@ -331,6 +331,17 @@ export default function Navbar() {
             ))}
           </div>
 
+          {clubsPrimary && (
+            <>
+              <div className="mobile-drawer-divider">{t("teamComparison.title")}</div>
+              <div className="mobile-link-group">
+                <NavLink to="/compare/teams" className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
+                  ⚔️ {t("teamComparison.compare")}
+                </NavLink>
+              </div>
+            </>
+          )}
+
           {!clubsPrimary && (
             <>
           <div className="mobile-drawer-divider">{t("nav.mundial")}</div>
@@ -418,6 +429,12 @@ export default function Navbar() {
               <NavLink to="/news" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
                 {t("nav.news")}
               </NavLink>
+
+              {clubsPrimary && (
+                <NavLink to="/compare/teams" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
+                  {t("teamComparison.compare")}
+                </NavLink>
+              )}
 
               {/* Search */}
               <button

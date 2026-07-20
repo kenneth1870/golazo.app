@@ -25,7 +25,7 @@ export default function ClubTeamPage() {
   const displayName = team ? (translateTeam(team.name, i18n.language) ?? team.name) : null
 
   usePageMeta(
-    displayName && code ? t("meta.teamDescClubs", { name: displayName }) : null,
+    displayName,
     displayName ? t("meta.teamDescClubs", { name: displayName }) : null,
     { image: resolveTeamLogo(team?.name, team?.flag_url) || undefined }
   )
