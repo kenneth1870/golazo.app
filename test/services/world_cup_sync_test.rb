@@ -5,7 +5,6 @@ class WorldCupSyncTest < ActiveSupport::TestCase
   setup do
     @old_adapter = ActiveJob::Base.queue_adapter
     ActiveJob::Base.queue_adapter = :test
-    ENV["APISPORTS_KEY"] = "test-key"
     @wc  = wc_competition
     @sync = WorldCupSync.new(competition_code: "WC")
     @home = team("KOH", group: "A", name: "Knockout Home")
@@ -20,7 +19,6 @@ class WorldCupSyncTest < ActiveSupport::TestCase
 
   teardown do
     ActiveJob::Base.queue_adapter = @old_adapter
-    ENV.delete("APISPORTS_KEY")
   end
 
   test "live-sync finish does not stamp group_stage on knockout matches" do

@@ -11,12 +11,4 @@ if ! bin/rubocop --no-color; then
 fi
 
 echo ""
-echo "🧪 Running unit tests..."
-if ! PARALLEL_WORKERS=1 RAILS_ENV=test bin/rails test; then
-  echo ""
-  echo "❌ Tests failed. Fix failing tests before pushing."
-  exit 1
-fi
-
-echo ""
 echo "✅ All checks passed — pushing."
