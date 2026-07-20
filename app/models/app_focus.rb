@@ -18,7 +18,11 @@ module AppFocus
   end
 
   def push_enabled?
-    !wc_paused?
+    ENV.fetch("PUSH_NOTIFICATIONS", "paused") == "enabled"
+  end
+
+  def notifications_paused?
+    !push_enabled?
   end
 
   # API-Football league IDs for seeded club competitions.

@@ -80,6 +80,8 @@ module Api
 
         # POST /api/v1/admin/devices/:id/push — send a push to this one device.
         def push
+          return render json: { error: "Push notifications are paused" }, status: :service_unavailable unless AppFocus.push_enabled?
+
           title     = params[:title].to_s.strip
           body_text = params[:body].to_s.strip
           url       = safe_url(params[:url])

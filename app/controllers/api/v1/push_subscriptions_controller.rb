@@ -39,6 +39,8 @@ module Api
       # the FCM token. Migrates team preferences from old → new endpoint so the
       # user keeps their notification settings without having to re-subscribe.
       def refresh
+        return render json: { error: "Push notifications are paused" }, status: :service_unavailable unless AppFocus.push_enabled?
+
         old_endpoint = params[:old_endpoint].to_s.strip
         new_endpoint = params[:endpoint].to_s.strip
 
@@ -98,6 +100,8 @@ module Api
       # POST /api/v1/push_test — sends a test push to all stored subscriptions
       # Use from the Rails console or curl to verify push delivery in production.
       def test_push
+        return render json: { error: "Push notifications are paused" }, status: :service_unavailable unless AppFocus.push_enabled?
+
         vapid_configured = ENV["VAPID_PUBLIC_KEY"].present? &&
                            ENV["VAPID_PRIVATE_KEY"].present? &&
                            ENV["VAPID_SUBJECT"].present?

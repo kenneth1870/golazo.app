@@ -21,6 +21,8 @@ module Api
 
         # POST /api/v1/admin/push/broadcast — send to all or filter by team name
         def broadcast
+          return render json: { error: "Push notifications are paused" }, status: :service_unavailable unless AppFocus.push_enabled?
+
           title     = params[:title].to_s.strip
           body_text = params[:body].to_s.strip
           raw_url   = params[:url].to_s.strip

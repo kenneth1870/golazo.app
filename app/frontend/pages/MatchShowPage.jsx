@@ -29,9 +29,9 @@ import { fetchWithTimeout } from "../utils/fetchWithTimeout"
 // ─── Reminder button ──────────────────────────────────
 function ReminderButton({ match }) {
   const { t } = useTranslation()
-  const { isReminded, addReminder, removeReminder } = useReminders()
+  const { isReminded, addReminder, removeReminder, enabled } = useReminders()
   const matchId = String(match?.external_id || match?.id || "")
-  if (!matchId || !match?.kickoff_at) return null
+  if (!enabled || !matchId || !match?.kickoff_at) return null
   const kickoff = new Date(match.kickoff_at).getTime()
   if (kickoff <= Date.now()) return null
 
