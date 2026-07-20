@@ -106,6 +106,9 @@ export default function Footer() {
             <h4 className="footer-col__title">{t("nav.leagues")}</h4>
             <ul className="footer-links">
               <li><Link to="/leagues">{t("nav.allLeagues")}</Link></li>
+              {clubsPrimary && (
+                <li><Link to="/mundial/teams">{t("nav.mundial")}</Link></li>
+              )}
               {NAV_LEAGUES.map(({ key, path }) => (
                 <li key={path}><Link to={path}>{t(key)}</Link></li>
               ))}

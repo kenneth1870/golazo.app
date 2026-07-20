@@ -189,7 +189,7 @@ export default function App() {
                 <Route path=":group" element={<GroupDetailPage />} />
               </Route>
 
-              <Route path="/mundial" element={<ClubsModeRedirect><MundialPage /></ClubsModeRedirect>}>
+              <Route path="/mundial" element={<MundialPage />}>
                 <Route index element={<Navigate to="/mundial/teams" replace />} />
                 <Route path="teams"    element={<TeamsPage />} />
                 <Route path="schedule" element={<SchedulePage />} />
@@ -216,15 +216,15 @@ export default function App() {
               <Route path="/news/:id"      element={<NewsShowPage />} />
 
               {/* /world-cup-2026/* — SEO-friendly aliases → canonical /mundial/* routes */}
-              <Route path="/world-cup-2026"           element={<ClubsModeRedirect to="/leagues"><Navigate to="/mundial/teams"    replace /></ClubsModeRedirect>} />
-              <Route path="/world-cup-2026/teams"     element={<ClubsModeRedirect to="/leagues"><Navigate to="/mundial/teams"    replace /></ClubsModeRedirect>} />
-              <Route path="/world-cup-2026/schedule"  element={<ClubsModeRedirect to="/leagues"><Navigate to="/mundial/schedule" replace /></ClubsModeRedirect>} />
-              <Route path="/world-cup-2026/venues"    element={<ClubsModeRedirect to="/leagues"><Navigate to="/mundial/venues"   replace /></ClubsModeRedirect>} />
-              <Route path="/world-cup-2026/scorers"   element={<ClubsModeRedirect to="/leagues"><Navigate to="/mundial/scorers"  replace /></ClubsModeRedirect>} />
-              <Route path="/world-cup-2026/groups"    element={<ClubsModeRedirect to="/leagues"><Navigate to="/mundial/groups"   replace /></ClubsModeRedirect>} />
-              <Route path="/world-cup-2026/bracket"   element={<ClubsModeRedirect to="/leagues"><Navigate to="/mundial/knockout" replace /></ClubsModeRedirect>} />
-              <Route path="/world-cup-2026/results"   element={<ClubsModeRedirect to="/scores/results"><Navigate to="/scores/results" replace /></ClubsModeRedirect>} />
-              <Route path="/world-cup-2026/fixtures"  element={<ClubsModeRedirect to="/scores/today"><Navigate to="/scores/today" replace /></ClubsModeRedirect>} />
+              <Route path="/world-cup-2026"           element={<Navigate to="/mundial/teams"    replace />} />
+              <Route path="/world-cup-2026/teams"     element={<Navigate to="/mundial/teams"    replace />} />
+              <Route path="/world-cup-2026/schedule"  element={<Navigate to="/mundial/schedule" replace />} />
+              <Route path="/world-cup-2026/venues"    element={<Navigate to="/mundial/venues"   replace />} />
+              <Route path="/world-cup-2026/scorers"   element={<Navigate to="/mundial/scorers"  replace />} />
+              <Route path="/world-cup-2026/groups"    element={<Navigate to="/mundial/groups"   replace />} />
+              <Route path="/world-cup-2026/bracket"   element={<Navigate to="/mundial/knockout" replace />} />
+              <Route path="/world-cup-2026/results"   element={<Navigate to="/scores/results" replace />} />
+              <Route path="/world-cup-2026/fixtures"  element={<Navigate to="/scores/today" replace />} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

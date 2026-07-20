@@ -373,7 +373,8 @@
     "type_league": "Ligas",
     "metaDesc": "Ligas y competiciones de fútbol en todo el mundo — marcadores, clasificaciones y calendario.",
     "metaTitleComp": "{{name}} — Marcadores y Clasificación",
-    "metaDescComp": "Marcadores en vivo, resultados, calendario y clasificación de {{name}}{{country}}."
+    "metaDescComp": "Marcadores en vivo, resultados, calendario y clasificación de {{name}}{{country}}.",
+    "archived": "Archivado"
   },
   "news": {
     "title": "Noticias",

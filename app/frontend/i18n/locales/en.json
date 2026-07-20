@@ -372,7 +372,8 @@
     "type_league": "Leagues",
     "metaDesc": "Football leagues and competitions worldwide — scores, standings and fixtures.",
     "metaTitleComp": "{{name}} — Scores & Standings",
-    "metaDescComp": "Live scores, results, fixtures and standings for {{name}}{{country}}."
+    "metaDescComp": "Live scores, results, fixtures and standings for {{name}}{{country}}.",
+    "archived": "Archived"
   },
   "news": {
     "title": "News",

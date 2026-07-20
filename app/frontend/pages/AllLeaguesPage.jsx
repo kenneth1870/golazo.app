@@ -6,7 +6,7 @@ import { translateLeague, translateCountry } from "../i18n/leagueNames"
 
 const TYPE_ORDER = { world_cup: 0, cup: 1, league: 2 }
 
-function LeagueCard({ competition, liveCount, onClick, lang }) {
+function LeagueCard({ competition, liveCount, onClick, lang, t }) {
   return (
     <div className="league-card" onClick={onClick} style={{ cursor: "pointer" }}>
       <div className="league-card__logo">
@@ -22,8 +22,21 @@ function LeagueCard({ competition, liveCount, onClick, lang }) {
       </div>
       <div className="league-card__body">
         <div className="league-card__name">{translateLeague(competition.name, lang) ?? competition.name}</div>
-        <div className="league-card__country">{translateCountry(competition.country, lang) ?? competition.country}</div>
+        <div className="league-card__country">
+          {competition.archived
+            ? t("leagues.archived", "Archived")
+            : (translateCountry(competition.country, lang) ?? competition.country)}
+        </div>
       </div>
+      {competition.archived && (
+        <span style={{
+          fontSize: "0.62rem", fontWeight: 800, color: "var(--muted)",
+          background: "var(--surface2)", border: "1px solid var(--border)",
+          borderRadius: 6, padding: "2px 8px", flexShrink: 0,
+        }}>
+          WC 2026
+        </span>
+      )}
       {liveCount > 0 && (
         <div className="league-card__live">
           <span className="live-dot" />
@@ -170,7 +183,8 @@ export default function AllLeaguesPage() {
                     competition={c}
                     liveCount={liveByCode[c.code] ?? 0}
                     lang={i18n.language}
-                    onClick={() => navigate(c.code === "WC" ? "/mundial" : `/leagues/${c.code}`)}
+                    t={t}
+                    onClick={() => navigate(c.code === "WC" ? "/mundial/teams" : `/leagues/${c.code}`)}
                   />
                 ))}
               </div>

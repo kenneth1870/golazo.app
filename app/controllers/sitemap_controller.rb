@@ -14,6 +14,8 @@ class SitemapController < ApplicationController
         /scores/results
         /news
         /leagues
+        /mundial/teams
+        /mundial/schedule
       ]
     else
       %w[
@@ -38,7 +40,6 @@ class SitemapController < ApplicationController
 
     # League detail pages — Competition model
     @league_codes = Competition.where.not(code: [ nil, "" ]).pluck(:code)
-    @league_codes = @league_codes.reject { |c| c == "WC" } if AppFocus.wc_paused?
 
     # Dynamic match pages — only finished or upcoming within 30 days
     @matches = if AppFocus.wc_paused?
