@@ -76,7 +76,8 @@
     "noMatches": "No matches for {{date}}",
     "tryDifferent": "Try a different date",
     "matchCount": "{{count}} matches",
-    "liveCount": "{{count}} live"
+    "liveCount": "{{count}} live",
+    "tbc": "TBC"
   },
   "scores": {
     "liveNow": "Live Now",

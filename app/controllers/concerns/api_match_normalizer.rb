@@ -33,6 +33,17 @@ module ApiMatchNormalizer
     LEAGUE_ID_TO_CODE[league_id.to_i] || league_id.to_s
   end
 
+  # API-Football uses 20:00 UTC for every Liga Tica jornada until real times are published.
+  def crc_placeholder_kickoff?(kickoff_at, code, round)
+    return false unless code.to_s.upcase == "CRC"
+    return false unless round.to_s.match?(/Apertura|Clausura/i)
+
+    kickoff = Time.iso8601(kickoff_at.to_s)
+    kickoff.utc.hour == 20 && kickoff.utc.min.zero? && kickoff.sec.zero?
+  rescue ArgumentError, TypeError
+    false
+  end
+
   # API-Football stacks every Liga Tica jornada on Sunday; real fechas start on Thursday.
   def adjusted_kickoff(kickoff_at, code, round)
     return kickoff_at unless code.to_s.upcase == "CRC"
@@ -56,6 +67,7 @@ module ApiMatchNormalizer
       minute:      m[:minute],
       minute_extra: m[:minute_extra],
       kickoff_at:  adjusted_kickoff(m[:kickoff_at], code, m[:round]),
+      kickoff_tbc: crc_placeholder_kickoff?(m[:kickoff_at], code, m[:round]),
       home_score:     m.dig(:home, :score),
       away_score:     m.dig(:away, :score),
       home_pen_score: m.dig(:home, :pen_score),

@@ -76,7 +76,8 @@
     "noMatches": "No hay partidos para {{date}}",
     "tryDifferent": "Prueba otra fecha",
     "matchCount": "{{count}} partidos",
-    "liveCount": "{{count}} en vivo"
+    "liveCount": "{{count}} en vivo",
+    "tbc": "Por confirmar"
   },
   "scores": {
     "liveNow": "En Vivo",
