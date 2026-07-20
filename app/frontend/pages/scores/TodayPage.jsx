@@ -362,7 +362,7 @@ export default function TodayPage() {
   usePageMeta(
     t("time.today"),
     clubsPrimary
-      ? "Today's live scores and fixtures for Premier League, La Liga, Champions League and all football competitions."
+      ? t("home.metaDescTodayClubs")
       : "Today's live scores and fixtures for FIFA World Cup 2026 and all football competitions — real-time goals and updates."
   )
   const [selected, setSelected] = useState(startOfDay)

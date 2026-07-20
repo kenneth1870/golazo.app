@@ -128,7 +128,7 @@ export default function Hero({ nextMatch, liveCount = 0, compact = false, clubsP
           <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0, overflow: "hidden" }}>
             {liveCount > 0
               ? <><span className="live-dot" /><span style={{ fontWeight: 800, fontSize: ".78rem", color: "#ee1e46", whiteSpace: "nowrap" }}>{t("hero.liveNow", { count: liveCount })}</span></>
-              : <span style={{ fontWeight: 800, fontSize: ".78rem", color: "var(--text)", whiteSpace: "nowrap" }}>{clubsPrimary ? t("hero.clubBadge", "Live Football") : "⚽ FIFA World Cup 2026"}</span>
+              : <span style={{ fontWeight: 800, fontSize: ".78rem", color: "var(--text)", whiteSpace: "nowrap" }}>{clubsPrimary ? t("hero.clubBadge") : "⚽ FIFA World Cup 2026"}</span>
             }
             <span style={{ fontSize: ".68rem", color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               · {t("hero.badge", "Live Coverage")}
@@ -216,7 +216,7 @@ export default function Hero({ nextMatch, liveCount = 0, compact = false, clubsP
                   borderRadius: 20, padding: "4px 12px",
                   fontSize: ".68rem", fontWeight: 700, color: "rgba(255,255,255,.55)", letterSpacing: ".06em",
                 }}>
-                  ⚽ {clubsPrimary ? t("hero.clubBadge", "Live Football · Scores & Standings") : t("hero.badge", "FIFA World Cup 2026 · Live Coverage")}
+                  ⚽ {clubsPrimary ? t("hero.clubBadgeLong") : t("hero.badge")}
                 </span>
               </div>
             )}
@@ -227,7 +227,7 @@ export default function Hero({ nextMatch, liveCount = 0, compact = false, clubsP
               fontWeight: 900, color: "#fff", lineHeight: 1.15,
               margin: "0 0 12px", letterSpacing: "-.01em",
             }}>
-              {clubsPrimary ? t("hero.clubTitle", "Live Football Scores") : t("hero.title")}
+              {clubsPrimary ? t("hero.clubTitle") : t("hero.title")}
             </h1>
 
             <p style={{
@@ -237,7 +237,7 @@ export default function Hero({ nextMatch, liveCount = 0, compact = false, clubsP
               maxWidth: 520,
               lineHeight: 1.55,
             }}>
-              {clubsPrimary ? t("hero.clubSubtitle", "Premier League, La Liga, Champions League and more — real-time scores and standings.") : t("hero.subtitle")}
+              {clubsPrimary ? t("hero.clubSubtitle") : t("hero.subtitle")}
             </p>
 
             {!clubsPrimary && <Countdown targetDate={target} label={countdownLabel} />}

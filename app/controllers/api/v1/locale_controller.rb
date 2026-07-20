@@ -43,7 +43,7 @@ module Api
         geo = fetch_geo(ip)
 
         country_code = geo[:country_code] || "US"
-        lang         = COUNTRY_LANG[country_code] || "en"
+        lang         = COUNTRY_LANG[country_code] || "es"
         timezone     = geo[:timezone] || "UTC"
 
         render json: {

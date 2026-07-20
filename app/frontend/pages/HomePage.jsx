@@ -302,11 +302,9 @@ export default function HomePage() {
   const { clubs_primary: clubsPrimary } = useAppFocus()
 
   usePageMeta(
+    clubsPrimary ? t("home.metaTitleClubs") : "Golazo — Live Football Scores, Stats & World Cup 2026",
     clubsPrimary
-      ? "Golazo — Live Football Scores & Standings"
-      : "Golazo — Live Football Scores, Stats & World Cup 2026",
-    clubsPrimary
-      ? "Real-time live scores, fixtures, and standings for Premier League, La Liga, Champions League and 100+ competitions worldwide. Free · No sign-up required."
+      ? t("home.metaDescClubs")
       : "Real-time live scores, lineups, standings, and match insights for the FIFA World Cup 2026 and 100+ competitions worldwide. Free · No sign-up required."
   )
   useStructuredData(clubsPrimary ? null : {

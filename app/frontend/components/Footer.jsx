@@ -48,7 +48,7 @@ const SOCIAL = [
 export default function Footer() {
   const { t } = useTranslation()
   const { clubs_primary: clubsPrimary } = useAppFocus()
-  const brandSubtitle = clubsPrimary ? t("hero.clubBadge", "Live Football") : "Mundial 2026"
+  const brandSubtitle = clubsPrimary ? t("hero.clubBadge") : "Mundial 2026"
 
   return (
     <footer className="footer-section">

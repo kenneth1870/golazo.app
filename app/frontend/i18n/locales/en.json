@@ -32,6 +32,10 @@
     "nextMatch": "Next match",
     "opensIn": "⚽ World Cup opens in",
     "badge": "FIFA World Cup 2026 · Live Coverage",
+    "clubBadge": "Live Football",
+    "clubBadgeLong": "Live Football · Scores & Standings",
+    "clubTitle": "Live Football Scores",
+    "clubSubtitle": "Premier League, La Liga, Champions League and more — real-time scores and standings.",
     "featLiveScores": "Live Scores",
     "featStats": "Match Stats",
     "featStandings": "Standings",
@@ -59,7 +63,10 @@
     "wcSectionTitle": "FIFA World Cup 2026",
     "wcHosts": "USA · Canada · Mexico",
     "clubCompetitions": "Club Competitions",
-    "liveScoresWorldwide": "Live scores worldwide"
+    "liveScoresWorldwide": "Live scores worldwide",
+    "metaTitleClubs": "Golazo — Live Football Scores & Standings",
+    "metaDescClubs": "Real-time live scores, fixtures, and standings for Premier League, La Liga, Champions League and 100+ competitions worldwide. Free · No sign-up required.",
+    "metaDescTodayClubs": "Today's live scores and fixtures for Premier League, La Liga, Champions League and all football competitions."
   },
   "time": {
     "today": "Today",

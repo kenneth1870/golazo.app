@@ -18,7 +18,7 @@ export function useLocale() {
       .then(data => {
         setLocale(data)
         if (data.timezone) setTimezone(data.timezone)
-        if (data.language) {
+        if (data.language && ["en", "es"].includes(data.language)) {
           i18n.changeLanguage(data.language)
           storageSet("golazo_lang", data.language)
           applyLangToDocument(data.language)

@@ -238,7 +238,7 @@ export default function Navbar() {
   const { t }     = useTranslation()
   const liveCount = useLiveCount()
   const { clubs_primary: clubsPrimary } = useAppFocus()
-  const brandSubtitle = clubsPrimary ? t("hero.clubBadge", "Live Football") : "Mundial 2026"
+  const brandSubtitle = clubsPrimary ? t("hero.clubBadge") : "Mundial 2026"
   const [searchOpen, setSearchOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [expanded, setExpanded]     = useState({})

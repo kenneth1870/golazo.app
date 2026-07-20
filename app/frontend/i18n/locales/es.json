@@ -32,6 +32,10 @@
     "nextMatch": "Próximo partido",
     "opensIn": "⚽ El Mundial comienza en",
     "badge": "Mundial FIFA 2026 · Cobertura en Vivo",
+    "clubBadge": "Fútbol en Vivo",
+    "clubBadgeLong": "Fútbol en Vivo · Marcadores y Clasificaciones",
+    "clubTitle": "Marcadores de Fútbol en Vivo",
+    "clubSubtitle": "Premier League, La Liga, Champions League y más — marcadores y clasificaciones en tiempo real.",
     "featLiveScores": "Marcadores en Vivo",
     "featStats": "Estadísticas",
     "featStandings": "Clasificación",
@@ -59,7 +63,10 @@
     "wcSectionTitle": "FIFA Mundial 2026",
     "wcHosts": "EE.UU. · Canadá · México",
     "clubCompetitions": "Competiciones de Clubes",
-    "liveScoresWorldwide": "Marcadores en vivo de todo el mundo"
+    "liveScoresWorldwide": "Marcadores en vivo de todo el mundo",
+    "metaTitleClubs": "Golazo — Marcadores y Clasificaciones en Vivo",
+    "metaDescClubs": "Marcadores en tiempo real, calendario y clasificaciones de Premier League, La Liga, Champions League y más de 100 competiciones. Gratis · Sin registro.",
+    "metaDescTodayClubs": "Marcadores y partidos de hoy de Premier League, La Liga, Champions League y todas las competiciones de fútbol."
   },
   "time": {
     "today": "Hoy",
