@@ -139,6 +139,7 @@ export default function LeagueDetailPage() {
   const navigate = useNavigate()
   const { isFavorite, toggleFavorite, favoriteTeamNames } = useFavorites()
   const [competition, setCompetition] = useState(null)
+  const [notFound, setNotFound]         = useState(false)
   const [matches, setMatches]         = useState([])
   const [standings, setStandings]     = useState([])
   const [tab, setTab]                 = useState("today")
@@ -182,13 +183,23 @@ export default function LeagueDetailPage() {
 
   useEffect(() => {
     setLoading(true)
+    setNotFound(false)
+    setCompetition(null)
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     Promise.all([
-      fetch(`/api/v1/competitions/${code}`).then(r => r.json()),
+      fetch(`/api/v1/competitions/${code}`).then(async r => {
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok || data?.error === "not_found") return { notFound: true }
+        return { comp: data }
+      }),
       fetch(`/api/v1/competitions/${code}/fixtures?tab=today&tz=${encodeURIComponent(tz)}`).then(r => r.ok ? r.json() : []),
       fetch(`/api/v1/standings?competition=${code}`).then(r => r.ok ? r.json() : {}).catch(() => ({})),
-    ]).then(([comp, matchData, standData]) => {
-      setCompetition(comp)
+    ]).then(([compResult, matchData, standData]) => {
+      if (compResult.notFound) {
+        setNotFound(true)
+        return
+      }
+      setCompetition(compResult.comp)
       const ms = Array.isArray(matchData) ? matchData : []
       setMatches(ms)
       const flat = flattenStandings(standData)
@@ -228,10 +239,14 @@ export default function LeagueDetailPage() {
   useLiveScoresChannel(applyLiveScore)
 
   usePageMeta(
-    competition
+    notFound
+      ? t("leagues.notFound")
+      : competition
       ? t("leagues.metaTitleComp", { name: translateLeague(competition.name, i18n.language) ?? competition.name })
       : null,
-    competition
+    notFound
+      ? t("leagues.notFoundDesc")
+      : competition
       ? t("leagues.metaDescComp", {
           name: translateLeague(competition.name, i18n.language) ?? competition.name,
           country: competition.country ? ` — ${translateCountry(competition.country, i18n.language) ?? competition.country}` : "",
@@ -268,6 +283,28 @@ export default function LeagueDetailPage() {
         </div>
         <div className="site-section container">
           <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
+        </div>
+      </div>
+    )
+  }
+
+  if (notFound) {
+    return (
+      <div>
+        <div className="page-hero" style={heroStyle}>
+          <div className="container"><h1 className="page-hero__title">{t("leagues.notFound")}</h1></div>
+        </div>
+        <div className="site-section">
+          <div className="container">
+            <div className="empty-state">
+              <div className="empty-state__icon">🏆</div>
+              <h3>{t("leagues.notFound")}</h3>
+              <p>{t("leagues.notFoundDesc")}</p>
+              <Link to="/leagues" className="btn btn-primary btn-sm mt-3">
+                {t("nav.allLeagues")}
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -357,10 +394,14 @@ export default function LeagueDetailPage() {
           ) : displayedMatches.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state__icon">📅</div>
-              <h3>{t("noMatches")}</h3>
+              <h3>
+                {tab === "today"    ? t("scores.noMatchesToday") :
+                 tab === "fixtures" ? t("leagues.noFixtures") :
+                 t("scores.noResults")}
+              </h3>
               <p>
                 {tab === "today"    ? t("time.noMatches", { date: t("time.today").toLowerCase() }) :
-                 tab === "fixtures" ? t("home.noUpcoming") :
+                 tab === "fixtures" ? t("leagues.noFixturesDesc") :
                  t("scores.noResults")}
               </p>
             </div>

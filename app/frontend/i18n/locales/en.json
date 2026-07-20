@@ -375,7 +375,11 @@
     "metaDesc": "Football leagues and competitions worldwide — scores, standings and fixtures.",
     "metaTitleComp": "{{name}} — Scores & Standings",
     "metaDescComp": "Live scores, results, fixtures and standings for {{name}}{{country}}.",
-    "archived": "Archived"
+    "archived": "Archived",
+    "notFound": "League not found",
+    "notFoundDesc": "This competition doesn't exist or isn't available yet.",
+    "noFixtures": "No upcoming fixtures",
+    "noFixturesDesc": "Check back later for the next matchday."
   },
   "news": {
     "title": "News",

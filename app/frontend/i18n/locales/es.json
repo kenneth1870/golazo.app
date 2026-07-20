@@ -376,7 +376,11 @@
     "metaDesc": "Ligas y competiciones de fútbol en todo el mundo — marcadores, clasificaciones y calendario.",
     "metaTitleComp": "{{name}} — Marcadores y Clasificación",
     "metaDescComp": "Marcadores en vivo, resultados, calendario y clasificación de {{name}}{{country}}.",
-    "archived": "Archivado"
+    "archived": "Archivado",
+    "notFound": "Liga no encontrada",
+    "notFoundDesc": "Esta competición no existe o aún no está disponible.",
+    "noFixtures": "Sin partidos programados",
+    "noFixturesDesc": "Vuelve más tarde para la próxima jornada."
   },
   "news": {
     "title": "Noticias",

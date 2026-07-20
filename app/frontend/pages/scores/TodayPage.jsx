@@ -706,7 +706,12 @@ export default function TodayPage() {
             <div className="widget-next-match">
               <div className="widget-body p-0">
                 {yourMatches.map(m => (
-                  <MatchRow key={m.id} match={m} onClick={() => onMatchClick(m)} />
+                  <RealMatchRow
+                    key={m.id}
+                    match={m}
+                    onMatchClick={onMatchClick}
+                    flashing={flashIds?.has(m.external_id ?? m.id)}
+                  />
                 ))}
               </div>
             </div>
