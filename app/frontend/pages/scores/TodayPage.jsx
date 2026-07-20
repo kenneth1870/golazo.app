@@ -51,7 +51,7 @@ const WC_START = new Date("2026-06-11T00:00:00")
 
 // ─── Date strip ───────────────────────────────────────
 function DateStrip({ selected, onChange, minDate }) {
-  const { i18n }    = useTranslation()
+  const { t, i18n } = useTranslation()
   const locale      = i18n.language || "en"
   const todayISO    = toISO(new Date())
   const selectedISO = toISO(selected)
@@ -71,48 +71,42 @@ function DateStrip({ selected, onChange, minDate }) {
 
   return (
     <div
-      style={{ display: "flex", alignItems: "center", gap: 4 }}
+      className="date-strip"
+      role="group"
+      aria-label={t("a11y.selectDate")}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
       <button
         className="btn-nav"
-        style={{ flexShrink: 0, minWidth: 44, minHeight: 44, opacity: atMinDate ? 0.3 : 1 }}
         onClick={() => !atMinDate && onChange(addDays(selected, -1))}
-        aria-label="Previous day"
+        aria-label={t("a11y.previousDay")}
         disabled={atMinDate}
       >←</button>
 
-      <div style={{ display: "flex", gap: 4, flex: 1, justifyContent: "center" }}>
+      <div className="date-strip__days">
         {days.map(d => {
           const iso     = toISO(d)
           const isToday = iso === todayISO
           const isSel   = iso === selectedISO
+          const dayClass = [
+            "date-strip__day",
+            isSel ? "date-strip__day--selected" : "",
+            !isSel && isToday ? "date-strip__day--today" : "",
+          ].filter(Boolean).join(" ")
           return (
             <button
               key={iso}
+              type="button"
+              className={dayClass}
               onClick={() => onChange(d)}
-              style={{
-                background:   isSel ? "var(--accent, #ee1e46)" : isToday ? "rgba(238,30,70,0.15)" : "var(--surface2, #1a1a1a)",
-                color:        isSel ? "#fff" : isToday ? "var(--accent, #ee1e46)" : "var(--muted, #888)",
-                border:       isSel ? "1px solid var(--accent, #ee1e46)" : "1px solid var(--border, #2a2a2a)",
-                borderRadius: 8,
-                padding:      "8px 6px",
-                cursor:       "pointer",
-                fontSize:     "0.7rem",
-                fontWeight:   isSel ? 700 : 400,
-                whiteSpace:   "nowrap",
-                transition:   "all 0.15s",
-                flex:         1,
-                minWidth:     44,
-                minHeight:    44,
-                textAlign:    "center",
-              }}
+              aria-pressed={isSel}
+              aria-current={isToday ? "date" : undefined}
             >
-              <div style={{ fontWeight: isSel || isToday ? 700 : 400 }}>
+              <div className={isSel || isToday ? "date-strip__day-label--emph" : "date-strip__day-label"}>
                 {d.toLocaleDateString(locale, { weekday: "short" })}
               </div>
-              <div style={{ fontSize: "0.65rem", opacity: 0.8 }}>
+              <div className="date-strip__day-sub">
                 {d.toLocaleDateString(locale, { month: "short", day: "numeric" })}
               </div>
             </button>
@@ -122,9 +116,8 @@ function DateStrip({ selected, onChange, minDate }) {
 
       <button
         className="btn-nav"
-        style={{ flexShrink: 0, minWidth: 44, minHeight: 44 }}
         onClick={() => onChange(addDays(selected, 1))}
-        aria-label="Next day"
+        aria-label={t("a11y.nextDay")}
       >→</button>
     </div>
   )
@@ -222,7 +215,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
       >
         <FlagImg src={comp?.logo} name={comp?.name} size={20} className="logo-sm" />
         <h3 style={{ margin: 0 }}>{translateLeague(comp?.name, i18n.language) ?? "Other"}</h3>
-        <span className="widget-meta-country" style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{translateCountry(comp?.country, i18n.language)}</span>
+        <span className="widget-meta-country" style={{ marginLeft: "auto", fontSize: "0.72rem", color: "var(--muted)" }}>{translateCountry(comp?.country, i18n.language)}</span>
         {hasLive && <span className="live-badge">{t("status.live")}</span>}
         {canNav && <span style={{ fontSize: "0.75rem", color: "#ee1e46" }}>→</span>}
       </div>
@@ -271,6 +264,7 @@ function FavTeamAlert({ match, onMatchClick, onDismiss }) {
       </div>
       <button
         onClick={e => { e.stopPropagation(); onDismiss() }}
+        aria-label={t("a11y.dismiss")}
         style={{
           background: "none", border: "none", color: "#888",
           fontSize: "1rem", cursor: "pointer", padding: "0 4px", flexShrink: 0,
@@ -635,39 +629,36 @@ export default function TodayPage() {
             <span style={{ fontWeight: 600, fontSize: "0.95rem", color: "var(--text)" }}>{label}</span>
             {toISO(selected) !== toISO(new Date()) && (
               <button
+                type="button"
+                className="filter-tab focus-brand"
                 onClick={() => { setSelected(startOfDay()); setMatches([]) }}
                 style={{
                   background: "rgba(238,30,70,.12)", border: "1px solid rgba(238,30,70,.3)",
-                  borderRadius: 20, padding: "3px 10px", color: "#ee1e46",
-                  fontSize: "0.68rem", fontWeight: 700, cursor: "pointer",
+                  color: "#ee1e46", fontSize: "0.68rem",
                 }}
               >
                 {t("time.today")}
               </button>
             )}
-            {/* My Teams filter chips — only shown when user follows teams */}
             {favoriteTeamNames.length > 0 && (
               <div style={{ display: "flex", gap: 4 }}>
                 <button
+                  type="button"
+                  className={`filter-tab focus-brand${!filterMyTeams ? " active" : ""}`}
                   onClick={() => setFilterMyTeams(false)}
-                  style={{
-                    background: !filterMyTeams ? "var(--accent,#ee1e46)" : "var(--surface2,#1a1a1a)",
-                    border: "1px solid " + (!filterMyTeams ? "var(--accent,#ee1e46)" : "var(--border,#2a2a2a)"),
-                    color: !filterMyTeams ? "#fff" : "var(--muted,#888)",
-                    borderRadius: 20, padding: "3px 10px", fontSize: "0.68rem",
-                    fontWeight: 600, cursor: "pointer", transition: "all .15s",
-                  }}
+                  style={{ fontSize: "0.68rem", fontWeight: 600 }}
                 >
                   {t("scores.filterAll")}
                 </button>
                 <button
+                  type="button"
+                  className="filter-tab focus-brand"
                   onClick={() => setFilterMyTeams(true)}
                   style={{
-                    background: filterMyTeams ? "rgba(238,30,70,.15)" : "var(--surface2,#1a1a1a)",
-                    border: "1px solid " + (filterMyTeams ? "rgba(238,30,70,.5)" : "var(--border,#2a2a2a)"),
-                    color: filterMyTeams ? "#ee1e46" : "var(--muted,#888)",
-                    borderRadius: 20, padding: "3px 10px", fontSize: "0.68rem",
-                    fontWeight: 600, cursor: "pointer", transition: "all .15s",
+                    fontSize: "0.68rem", fontWeight: 600,
+                    background: filterMyTeams ? "rgba(238,30,70,.15)" : undefined,
+                    borderColor: filterMyTeams ? "rgba(238,30,70,.5)" : undefined,
+                    color: filterMyTeams ? "#ee1e46" : undefined,
                   }}
                 >
                   ⭐ {t("scores.myTeams")}
@@ -682,7 +673,7 @@ export default function TodayPage() {
               </span>
             )}
             {!loading && (
-              <span style={{ color: "#555" }}>{t("time.matchCount", { count: todayMatches.length })}</span>
+              <span style={{ color: "var(--muted)" }}>{t("time.matchCount", { count: todayMatches.length })}</span>
             )}
           </div>
         </div>
@@ -770,7 +761,7 @@ export default function TodayPage() {
                   <img src="/images/SOCCER.png" alt="" style={{ width: 18, height: 18, objectFit: "contain" }} onError={e => (e.target.style.display = "none")} />
                   {clubsPrimary
                     ? `${t("home.upcomingMatches")}${previewDayLabel ? ` — ${previewDayLabel}` : ""}`
-                    : `FIFA World Cup 2026 — ${t("home.upcomingMatches")}`}
+                    : `${t("scores.wcSubtitle")} — ${t("home.upcomingMatches")}`}
                 </div>
                 <div className="widget-next-match">
                   <div className="widget-body p-0">
@@ -781,6 +772,8 @@ export default function TodayPage() {
                 </div>
                 <div style={{ textAlign: "center", marginTop: 12, paddingBottom: 8 }}>
                   <button
+                    type="button"
+                    className="focus-brand"
                     onClick={() => setSelected(addDays(new Date(), 1))}
                     style={{
                       background: "none", border: "1px solid var(--border)", borderRadius: 20,

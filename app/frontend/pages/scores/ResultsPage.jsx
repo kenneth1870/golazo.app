@@ -7,6 +7,7 @@ import { navigateToMatch } from "../../utils/matchDetailCache"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useAppFocus } from "../../hooks/useAppFocus"
+import { formatKickoff } from "../../hooks/useLocalTime"
 
 function normalizeMatch(m) {
   return {
@@ -29,16 +30,14 @@ function normalizeMatch(m) {
 
 function ResultRow({ match, onMatchClick }) {
   const { t, i18n } = useTranslation()
-  const kickoffTime = match.kickoff_at
-    ? new Date(match.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
-    : ""
+  const kickoffTime = formatKickoff(match.kickoff_at, i18n.language)
   const hasScore = match.home_score !== null && match.away_score !== null
 
   return (
     <div className="match-row match-row--clickable" onClick={() => onMatchClick(match)}>
       <div className="match-row__status">
         <span className="match-status-ft">{t("status.ft")}</span>
-        <span style={{ fontSize: "0.65rem", color: "#777", display: "block" }}>{kickoffTime}</span>
+        <span style={{ fontSize: "0.65rem", color: "var(--muted)", display: "block" }}>{kickoffTime}</span>
       </div>
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">

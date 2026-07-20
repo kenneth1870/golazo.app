@@ -30,7 +30,7 @@ function FlagOrInitials({ name, flagUrl, size = 24 }) {
 }
 
 export default function SearchBar({ onClose }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [query, setQuery]     = useState("")
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -99,7 +99,9 @@ export default function SearchBar({ onClose }) {
     if (r.status === "finished") return <span style={{ color: "var(--muted)", fontSize: "0.68rem" }}>{t("status.ft")}</span>
     if (r.kickoff_at) {
       const d = new Date(r.kickoff_at)
-      const label = d.toLocaleDateString([], { month: "short", day: "numeric" }) + " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      const locale = i18n.language || undefined
+      const label = d.toLocaleDateString(locale, { month: "short", day: "numeric" }) + " " +
+        d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })
       return <span style={{ color: "#10b981", fontSize: "0.68rem", fontWeight: 600 }}>{label}</span>
     }
     return <span style={{ color: "var(--muted)", fontSize: "0.68rem" }}>{t("time.tbd")}</span>
@@ -150,7 +152,12 @@ export default function SearchBar({ onClose }) {
             }}
           />
           {loading && <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>…</span>}
-          <button onClick={onClose} style={{
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("a11y.close")}
+            className="focus-brand"
+            style={{
             background: "var(--surface2)", border: "1px solid var(--border)",
             borderRadius: 6, padding: "4px 10px", fontSize: "0.72rem", color: "var(--muted)",
             cursor: "pointer", fontFamily: "inherit", fontWeight: 600, flexShrink: 0,

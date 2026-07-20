@@ -12,6 +12,7 @@ const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
 // ─── Theme toggle ─────────────────────────────────────
 function ThemeToggle() {
+  const { t } = useTranslation()
   const [light, setLight] = useState(() => {
     try { return localStorage.getItem("golazo_theme") === "light" } catch { return false }
   })
@@ -21,8 +22,11 @@ function ThemeToggle() {
   }, [light])
   return (
     <button
+      type="button"
       onClick={() => setLight(v => !v)}
-      title={light ? "Switch to dark mode" : "Switch to light mode"}
+      title={light ? t("a11y.themeDark") : t("a11y.themeLight")}
+      aria-label={light ? t("a11y.themeDark") : t("a11y.themeLight")}
+      className="focus-brand"
       style={{
         background: "none", border: "1px solid var(--border)",
         borderRadius: 8, width: 32, height: 32,
@@ -290,12 +294,12 @@ export default function Navbar() {
           {/* Search in drawer */}
           <button
             onClick={() => { setDrawerOpen(false); setSearchOpen(true) }}
-            aria-label="Search"
+            aria-label={t("a11y.search")}
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: 8, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", marginRight: 8, flexShrink: 0 }}
           >
             <SearchIcon />
           </button>
-          <button className="site-mobile-menu-close" onClick={() => setDrawerOpen(false)} aria-label="Close">✕</button>
+          <button className="site-mobile-menu-close" onClick={() => setDrawerOpen(false)} aria-label={t("a11y.close")}>✕</button>
         </div>
 
         {/* Drawer nav */}
@@ -439,8 +443,8 @@ export default function Navbar() {
               {/* Search */}
               <button
                 onClick={() => setSearchOpen(true)}
-                title="Search (⌘K)"
-                aria-label="Search (⌘K)"
+                title={t("a11y.searchShortcut")}
+                aria-label={t("a11y.searchShortcut")}
                 className="nav-search-btn"
               >
                 <SearchIcon />
@@ -458,13 +462,13 @@ export default function Navbar() {
             <div className="mobile-header-actions ml-auto">
               <button
                 onClick={() => setSearchOpen(true)}
-                aria-label="Search"
+                aria-label={t("a11y.search")}
                 style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 0, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
               >
                 <SearchIcon />
               </button>
               <ThemeToggle />
-              <button className="mobile-toggle" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
+              <button className="mobile-toggle" onClick={() => setDrawerOpen(true)} aria-label={t("a11y.openMenu")}>
                 ☰
               </button>
             </div>

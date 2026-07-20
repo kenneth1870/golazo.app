@@ -122,7 +122,7 @@ export default function PushPrompt({ favoriteTeamName = null, paused = false }) 
           background: "none", border: "none", color: "rgba(255,255,255,.3)",
           fontSize: "1rem", cursor: "pointer", padding: 0, flexShrink: 0,
         }}
-        aria-label="Dismiss"
+        aria-label={t("a11y.dismiss")}
       >✕</button>
     </div>
   )

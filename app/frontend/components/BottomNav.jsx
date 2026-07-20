@@ -55,7 +55,7 @@ export default function BottomNav() {
   return (
     <>
       {searchOpen && <SearchBar onClose={() => setSearchOpen(false)} />}
-      <nav className="bottom-nav" aria-label="Main navigation">
+      <nav className="bottom-nav" aria-label={t("a11y.mainNav")}>
 
         <NavLink to="/" end className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}>
           <HomeIcon />
@@ -65,7 +65,7 @@ export default function BottomNav() {
         <NavLink to="/scores/today" className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}>
           <span className="bottom-nav__icon-wrap">
             <ScoresIcon />
-            {liveCount > 0 && <span className="bottom-nav__badge" aria-label={`${liveCount} live`} />}
+            {liveCount > 0 && <span className="bottom-nav__badge" aria-label={t("a11y.liveCount", { count: liveCount })} />}
           </span>
           <span className="bottom-nav__label">{t("time.today", "Today")}</span>
         </NavLink>
@@ -80,7 +80,7 @@ export default function BottomNav() {
           <span className="bottom-nav__label">{clubsPrimary ? t("nav.leagues", "Leagues") : t("nav.mundialShort", "Mundial")}</span>
         </NavLink>
 
-        <button className="bottom-nav__item bottom-nav__item--btn" onClick={() => setSearchOpen(true)} aria-label="Search">
+        <button className="bottom-nav__item bottom-nav__item--btn" onClick={() => setSearchOpen(true)} aria-label={t("a11y.search")}>
           <SearchIcon />
           <span className="bottom-nav__label">{t("nav.search", "Search")}</span>
         </button>

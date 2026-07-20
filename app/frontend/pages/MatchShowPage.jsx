@@ -28,10 +28,11 @@ import { leagueCodeFromApiId } from "../utils/leagueCodes"
 import { sourceColor } from "../utils/sourceColors"
 import { storageGet, storageSet } from "../utils/safeStorage"
 import { fetchWithTimeout } from "../utils/fetchWithTimeout"
+import { formatKickoff } from "../hooks/useLocalTime"
 
 // ─── Reminder button ──────────────────────────────────
 function ReminderButton({ match }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { isReminded, addReminder, removeReminder, enabled } = useReminders()
   const matchId = String(match?.external_id || match?.id || "")
   if (!enabled || !matchId || !match?.kickoff_at) return null
@@ -43,7 +44,7 @@ function ReminderButton({ match }) {
     if (reminded) removeReminder(matchId)
     else await addReminder(match)
   }
-  const kickoffLabel = new Date(match.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+  const kickoffLabel = formatKickoff(match.kickoff_at, i18n.language)
 
   return (
     <button

@@ -671,5 +671,19 @@
     "message": "We use anonymous analytics to understand how the app is used and improve it. No personal data is collected.",
     "accept": "Accept",
     "decline": "Decline"
+  },
+  "a11y": {
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "selectDate": "Select date",
+    "search": "Search",
+    "searchShortcut": "Search (⌘K)",
+    "close": "Close",
+    "openMenu": "Open menu",
+    "mainNav": "Main navigation",
+    "liveCount": "{{count}} live matches",
+    "themeDark": "Switch to dark mode",
+    "themeLight": "Switch to light mode",
+    "dismiss": "Dismiss"
   }
 }

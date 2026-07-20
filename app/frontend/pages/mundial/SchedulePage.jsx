@@ -5,6 +5,7 @@ import { usePageMeta } from "../../hooks/usePageMeta"
 import { navigateToMatch, navIdFor } from "../../utils/matchDetailCache"
 import FlagImg from "../../components/FlagImg"
 import { translateTeam } from "../../i18n/teamNames"
+import { formatKickoff } from "../../hooks/useLocalTime"
 
 // ── Round name i18n ────────────────────────────────────
 const ROUND_KEYS = {
@@ -49,7 +50,7 @@ function phaseLabel(match, t) {
 
 // ── Single fixture card (screenshot style) ────────────
 function FixtureCard({ match, onClick }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const homeName = translateTeam(match.home_team?.name, i18n.language) || slotLabel(match.home_slot, i18n.language)
   const awayName = translateTeam(match.away_team?.name, i18n.language) || slotLabel(match.away_slot, i18n.language)
@@ -62,8 +63,8 @@ function FixtureCard({ match, onClick }) {
     ? new Date(match.kickoff_at).toLocaleDateString(i18n.language, { day: "2-digit", month: "2-digit", year: "2-digit", timeZone: "UTC" })
     : "—"
   const timeStr = match.kickoff_at
-    ? new Date(match.kickoff_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
-    : "TBD"
+    ? formatKickoff(match.kickoff_at, i18n.language)
+    : t("time.tbd")
 
   return (
     <div

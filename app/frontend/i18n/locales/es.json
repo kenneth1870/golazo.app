@@ -672,5 +672,19 @@
     "message": "Usamos analíticas anónimas para entender cómo se usa la app y mejorarla. No recopilamos datos personales.",
     "accept": "Aceptar",
     "decline": "Rechazar"
+  },
+  "a11y": {
+    "previousDay": "Día anterior",
+    "nextDay": "Día siguiente",
+    "selectDate": "Seleccionar fecha",
+    "search": "Buscar",
+    "searchShortcut": "Buscar (⌘K)",
+    "close": "Cerrar",
+    "openMenu": "Abrir menú",
+    "mainNav": "Navegación principal",
+    "liveCount": "{{count}} partidos en vivo",
+    "themeDark": "Cambiar a modo oscuro",
+    "themeLight": "Cambiar a modo claro",
+    "dismiss": "Descartar"
   }
 }
