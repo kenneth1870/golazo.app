@@ -20,6 +20,8 @@ class MatchEventNotificationJob < ApplicationJob
   BATCH_SIZE = 100
 
   def perform(event_type:, match_id:, home_name:, away_name:, home_score: nil, away_score: nil, match_url: nil, minute: nil, scorer: nil, reason: nil)
+    return unless AppFocus.push_enabled?
+
     event_type = event_type.to_s
 
     if ENV["VAPID_PUBLIC_KEY"].blank? || ENV["VAPID_PRIVATE_KEY"].blank?

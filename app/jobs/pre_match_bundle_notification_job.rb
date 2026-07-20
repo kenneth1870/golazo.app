@@ -12,6 +12,7 @@ class PreMatchBundleNotificationJob < ApplicationJob
   BATCH_SIZE = 100
 
   def perform(matches:)
+    return unless AppFocus.push_enabled?
     return if matches.blank?
     if ENV["VAPID_PUBLIC_KEY"].blank? || ENV["VAPID_PRIVATE_KEY"].blank?
       Rails.logger.error("[PreMatchBundle] VAPID keys not configured — skipping")

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 let cached = null
 
 export function useAppFocus() {
-  const [focus, setFocus] = useState(cached || { wc_paused: true, clubs_primary: true, featured_clubs: [] })
+  const [focus, setFocus] = useState(cached || { wc_paused: true, clubs_primary: true, push_enabled: false, featured_clubs: [] })
 
   useEffect(() => {
     if (cached) return

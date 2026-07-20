@@ -19,6 +19,7 @@ function persistLanguage(code) {
 }
 import { useFavorites } from "../hooks/useFavorites"
 import { usePushNotifications } from "../hooks/usePushNotifications"
+import { useAppFocus } from "../hooks/useAppFocus"
 import { isIosSafari, isStandalone } from "../utils/platform"
 
 const ONBOARDED_KEY = "golazo_onboarded"
@@ -84,6 +85,7 @@ export default function OnboardingModal({ onDismiss }) {
   const { t, i18n } = useTranslation()
   const { addFavorite, favorites } = useFavorites()
   const { subscribe } = usePushNotifications()
+  const { push_enabled: pushEnabled = false } = useAppFocus()
 
   const [step, setStep]               = useState(0)
   const [selectedTeams, setTeams]     = useState([])
@@ -345,7 +347,7 @@ export default function OnboardingModal({ onDismiss }) {
       ctaAction: finish,
       skip: false,
     },
-  ]
+  ].filter(s => pushEnabled || s.key !== "notifications")
 
   const current = steps[step]
   const total   = steps.length

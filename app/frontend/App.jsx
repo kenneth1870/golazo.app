@@ -17,6 +17,7 @@ import RequireAdmin from "./components/RequireAdmin"
 import LoginPage from "./pages/LoginPage"
 import { useFavorites } from "./hooks/useFavorites"
 import { usePushNotifications } from "./hooks/usePushNotifications"
+import { useAppFocus } from "./hooks/useAppFocus"
 import { isIosSafari, isStandalone } from "./utils/platform"
 
 // Critical path — loaded eagerly (always needed on first paint)
@@ -75,8 +76,10 @@ const PUSH_AUTO_KEY = "golazo_push_auto"
 const PUSH_AUTO_TTL = 30 * 24 * 60 * 60 * 1000
 
 function useAutoSubscribePush() {
+  const { push_enabled: pushEnabled = false } = useAppFocus()
   const { subscribe, subscribed } = usePushNotifications()
   useEffect(() => {
+    if (!pushEnabled) return
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return
     if (subscribed) return
     if (isIosSafari() && !isStandalone()) return // needs PWA install first
@@ -99,7 +102,7 @@ function useAutoSubscribePush() {
     localStorage.setItem(PUSH_AUTO_KEY, Date.now().toString())
     const t = setTimeout(() => { subscribe([]) }, 2000)
     return () => clearTimeout(t)
-  }, [subscribe, subscribed])
+  }, [subscribe, subscribed, pushEnabled])
 }
 
 export default function App() {

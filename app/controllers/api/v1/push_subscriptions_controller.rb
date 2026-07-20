@@ -6,6 +6,8 @@ module Api
       # POST /api/v1/push_subscriptions
       # Body: { endpoint, p256dh, auth, device_id, team_ids: [] }
       def create
+        return render json: { error: "Push notifications are paused" }, status: :service_unavailable unless AppFocus.push_enabled?
+
         endpoint = params[:endpoint].to_s.strip
         return render json: { error: "Missing endpoint" }, status: :unprocessable_entity if endpoint.blank?
         return render json: { error: "Invalid endpoint" }, status: :unprocessable_entity unless valid_push_endpoint?(endpoint)
@@ -88,7 +90,9 @@ module Api
 
       # GET /api/v1/vapid_public_key — returns the public key so the frontend can subscribe
       def vapid_key
-        render json: { key: ENV["VAPID_PUBLIC_KEY"].to_s }
+        return render json: { key: nil, enabled: false } unless AppFocus.push_enabled?
+
+        render json: { key: ENV["VAPID_PUBLIC_KEY"].to_s, enabled: true }
       end
 
       # POST /api/v1/push_test — sends a test push to all stored subscriptions

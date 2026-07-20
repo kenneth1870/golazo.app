@@ -4,6 +4,8 @@ class PreMatchNotificationJob < ApplicationJob
   # Runs every 2 minutes. Finds WC matches kicking off in 8–12 min and sends
   # a "starting soon" push to subscribers following either team.
   def perform
+    return unless AppFocus.push_enabled?
+
     wc = Competition.find_by(code: "WC")
     return unless wc
 

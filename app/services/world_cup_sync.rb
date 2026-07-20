@@ -1346,6 +1346,8 @@ class WorldCupSync
   end
 
   def fire_notification(match, event_type, home_score: nil, away_score: nil, minute: nil, scorer: nil, reason: nil)
+    return false unless AppFocus.push_enabled?
+
     # Defense-in-depth: suppress a "fulltime" push if the match kicked off less
     # than 30 minutes ago — a genuine FT is impossible that early. This is a
     # narrow guard so stale kickoff_at data (common on newly-resolved knockout

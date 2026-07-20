@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { isIosSafari, isStandalone } from "../utils/platform"
 import { getDeviceId } from "../utils/deviceId"
+import { useAppFocus } from "./useAppFocus"
 import i18n from "../i18n"
 
 function urlBase64ToUint8Array(base64String) {
@@ -11,6 +12,7 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 export function usePushNotifications() {
+  const { push_enabled: pushEnabled = false } = useAppFocus()
   const [permission, setPermission] = useState(
     typeof Notification !== "undefined" ? Notification.permission : "default"
   )
@@ -28,6 +30,7 @@ export function usePushNotifications() {
   }, [])
 
   const subscribe = useCallback(async (teamNames = [], eventPrefs = []) => {
+    if (!pushEnabled) return { error: "Push notifications are paused" }
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       return { error: "Push not supported in this browser" }
     }
@@ -84,7 +87,7 @@ export function usePushNotifications() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [pushEnabled])
 
   const unsubscribe = useCallback(async () => {
     setLoading(true)
@@ -164,7 +167,8 @@ export function usePushNotifications() {
     }
   }, [updateTeams])
 
-  const supported = typeof window !== "undefined" &&
+  const supported = pushEnabled &&
+    typeof window !== "undefined" &&
     "serviceWorker" in navigator &&
     "PushManager" in window &&
     "Notification" in window
@@ -185,5 +189,5 @@ export function usePushNotifications() {
     try { return JSON.parse(localStorage.getItem("push_event_prefs") || "[]") } catch { return [] }
   })()
 
-  return { supported, permission, subscribed, loading, subscribe, unsubscribe, updateTeams, addTeams, teamsSubscribed, needsIosInstall, updateEventPrefs, eventPrefs }
+  return { supported, pushEnabled, permission, subscribed, loading, subscribe, unsubscribe, updateTeams, addTeams, teamsSubscribed, needsIosInstall, updateEventPrefs, eventPrefs }
 }

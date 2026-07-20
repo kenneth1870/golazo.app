@@ -18,6 +18,7 @@ class DeliverPushJob < ApplicationJob
   # @param subscription_ids [Array<Integer>] PushSubscription ids to deliver to
   # @param payload [String] fully-rendered, localized JSON payload
   def perform(subscription_ids:, payload:)
+    return unless AppFocus.push_enabled?
     return if ENV["VAPID_PUBLIC_KEY"].blank? || ENV["VAPID_PRIVATE_KEY"].blank?
 
     vapid = {

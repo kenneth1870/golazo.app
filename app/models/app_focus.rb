@@ -17,6 +17,10 @@ module AppFocus
     FOCUS == "clubs"
   end
 
+  def push_enabled?
+    !wc_paused?
+  end
+
   # API-Football league IDs for seeded club competitions.
   LEAGUE_IDS = {
     "PL"  => 39,
