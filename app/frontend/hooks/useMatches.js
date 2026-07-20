@@ -96,12 +96,27 @@ function unsubscribe(key, setState) {
   }
 }
 
-// Patch a live score update directly into every cached "live" filter so the
-// home-page LIVE panel reflects goals without waiting for the 60s poll.
-// When status is "finished", the match is removed from the live list immediately.
+function applyScorePatch(m, d) {
+  return {
+    ...m,
+    home_score:      d.home_score,
+    away_score:      d.away_score,
+    status:          d.status,
+    minute:          d.minute,
+    minute_extra:    d.minute_extra,
+    ...(d.home_pen_score != null ? { home_pen_score: d.home_pen_score } : {}),
+    ...(d.away_pen_score != null ? { away_pen_score: d.away_pen_score } : {}),
+  }
+}
+
+// Patch a live score update directly into cached list filters so list views
+// reflect goals without waiting for the 60s poll. "live|" keys drop finished
+// matches; "all|" keys update them in place (needed by the knockout bracket).
 export function patchLiveScore(d) {
   for (const [key, entry] of cache) {
-    if (!key.startsWith("live|")) continue
+    const isLiveKey = key.startsWith("live|")
+    const isAllKey  = key.startsWith("all|")
+    if (!isLiveKey && !isAllKey) continue
     if (!entry.data?.length) continue
 
     const isHit = (m) =>
@@ -110,7 +125,9 @@ export function patchLiveScore(d) {
 
     if (d.status === "finished") {
       if (!entry.data.some(isHit)) continue
-      const next = entry.data.filter(m => !isHit(m))
+      const next = isLiveKey
+        ? entry.data.filter(m => !isHit(m))
+        : entry.data.map(m => isHit(m) ? applyScorePatch(m, d) : m)
       cache.set(key, { ...entry, data: next })
       notify(key, { data: next, loading: false, error: null })
       continue
@@ -122,8 +139,7 @@ export function patchLiveScore(d) {
       if (m.home_score === d.home_score && m.away_score === d.away_score &&
           m.status === d.status && m.minute === d.minute) return m
       patched = true
-      return { ...m, home_score: d.home_score, away_score: d.away_score,
-               status: d.status, minute: d.minute, minute_extra: d.minute_extra }
+      return applyScorePatch(m, d)
     })
     if (patched) {
       cache.set(key, { ...entry, data: next })

@@ -1,8 +1,10 @@
-import { useMatches } from "../../hooks/useMatches"
+import { useMatches, patchLiveScore } from "../../hooks/useMatches"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useState, useEffect, useRef } from "react"
+import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
+import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 
 // Layout constants — kept compact so the full bracket fits on most desktops
 const SLOT_H     = 90     // px — height of one R32 slot (×8 = TOTAL_H)
@@ -62,7 +64,9 @@ function MatchCard({ match, onClick, pLabel }) {
     const { h, a } = prev.current
     if (match.home_score !== h || match.away_score !== a) {
       setFlash(true)
-      setTimeout(() => setFlash(false), 900)
+      const t = setTimeout(() => setFlash(false), 900)
+      prev.current = { h: match.home_score, a: match.away_score }
+      return () => clearTimeout(t)
     }
     prev.current = { h: match.home_score, a: match.away_score }
   }, [match?.home_score, match?.away_score]) // eslint-disable-line
@@ -79,13 +83,16 @@ function MatchCard({ match, onClick, pLabel }) {
 
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
-  const hasPen     = match.home_pen_score != null && match.away_pen_score != null
-  const homeWon    = isFinished && (hasPen
-    ? match.home_pen_score > match.away_pen_score
+  const homePen    = match.home_pen_score
+  const awayPen    = match.away_pen_score
+  const pensDecide = homePen != null || awayPen != null
+  const homeWon    = isFinished && (pensDecide
+    ? (homePen ?? 0) > (awayPen ?? 0)
     : (match.home_score ?? -1) > (match.away_score ?? -1))
-  const awayWon    = isFinished && (hasPen
-    ? match.away_pen_score > match.home_pen_score
+  const awayWon    = isFinished && (pensDecide
+    ? (awayPen ?? 0) > (homePen ?? 0)
     : (match.away_score ?? -1) > (match.home_score ?? -1))
+  const hasPen     = homePen != null && awayPen != null
 
   // Header text
   let header = null
@@ -160,9 +167,9 @@ function Connector({ leftCount, rightCount }) {
   const bigCount   = Math.max(leftCount, rightCount)
   const smallCount = Math.min(leftCount, rightCount)
   const bigH       = TOTAL_H / bigCount
-  // Place junction at 1/3 from the big (outer) side so short stubs near R32
-  // make convergence direction obvious; long single line goes toward center.
-  const MX         = converging ? CONN_W / 3 : CONN_W * 2 / 3
+  // Traditional bracket: long arms from R32 reach junction near R16,
+  // then a short single line connects to the R16 match.
+  const MX         = converging ? CONN_W * 2 / 3 : CONN_W / 3
 
   const segs = []
   for (let j = 0; j < smallCount; j++) {
@@ -259,9 +266,12 @@ export default function KnockoutPage() {
     "FIFA World Cup 2026 knockout bracket — Round of 32, Round of 16, Quarter Finals, Semi Finals and Final."
   )
 
-  const { matches, loading } = useMatches("all", { competition: "WC" })
+  const { matches, loading, refetch } = useMatches("all", { competition: "WC" })
   const navigate = useNavigate()
   const onMatchClick = (extId) => navigate(`/matches/${extId}`)
+
+  useLiveScoresChannel(patchLiveScore)
+  useStandingsChannel(refetch)
 
   // Mobile: horizontal scroll. Desktop: auto-scale to fill width.
   const containerRef = useRef(null)

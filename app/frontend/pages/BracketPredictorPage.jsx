@@ -5,16 +5,22 @@ import { translateTeam } from "../i18n/teamNames"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { fetchWithTimeout } from "../utils/fetchWithTimeout"
 
-// Official WC 2026 R32 seedings
+// Official FIFA 2026 R32 pairings — mirrors WorldCupKnockout::R32_SLOTS.
+// Slot codes use predictor format: A1 = 1st in group A, A2 = 2nd, T1–T8 = 3rd-placed.
 const R32_SEEDS = [
-  ["A1","B2"],["C1","D2"],["E1","F2"],["G1","H2"],
-  ["I1","J2"],["K1","L2"],["B1","A2"],["D1","C2"],
-  ["F1","E2"],["H1","G2"],["J1","I2"],["L1","K2"],
-  ["T1","T2"],["T3","T4"],["T5","T6"],["T7","T8"],
+  ["A2","B2"],["E1","T1"],["F1","C2"],["C1","F2"],
+  ["I1","T2"],["E2","I2"],["A1","T3"],["L1","T4"],
+  ["D1","T5"],["G1","T6"],["K2","L2"],["H1","J2"],
+  ["B1","T7"],["J1","H2"],["K1","T8"],["D2","G2"],
 ]
 
+// Cross-bracket pairings for later rounds (0-based indices into previous round).
+const R16_PAIRINGS = [[1,4],[0,2],[3,5],[6,7],[10,11],[8,9],[13,15],[12,14]]
+const QF_PAIRINGS  = [[0,1],[4,5],[2,3],[6,7]]
+const SF_PAIRINGS  = [[0,1],[2,3]]
+const FINAL_PAIRING = [0, 1]
+
 const ROUND_LABEL_KEYS = ["bracket.r32","bracket.roundOf16","bracket.quarterFinals","bracket.semiFinals","bracket.final"]
-const ROUND_SIZES  = [16, 8, 4, 2, 1]
 
 function seedLabel(slot) {
   const m = slot.match(/^([A-L])([12])$/)
@@ -56,26 +62,25 @@ function buildBracket(standings, picks) {
     return { id: i, team1, team2, pick, winner: pick !== undefined ? (pick === 0 ? team1 : team2) : null }
   })
 
-  const rounds = [r32]
-  let prev = r32, startId = 16
-
-  for (const size of ROUND_SIZES.slice(1)) {
-    const round = Array.from({ length: size }, (_, i) => {
-      const m1    = prev[i * 2]
-      const m2    = prev[i * 2 + 1]
+  function nextRound(prev, pairings, startId) {
+    return pairings.map(([i, j], idx) => {
+      const m1    = prev[i]
+      const m2    = prev[j]
       const team1 = m1?.winner || null
       const team2 = m2?.winner || null
-      const pick  = picks[startId + i]
+      const pick  = picks[startId + idx]
       return {
-        id: startId + i, team1, team2, pick,
+        id: startId + idx, team1, team2, pick,
         winner: pick !== undefined && team1 && team2 ? (pick === 0 ? team1 : team2) : null,
       }
     })
-    rounds.push(round)
-    prev = round
-    startId += size
   }
-  return rounds
+
+  const r16   = nextRound(r32, R16_PAIRINGS, 16)
+  const qf    = nextRound(r16, QF_PAIRINGS, 24)
+  const sf    = nextRound(qf, SF_PAIRINGS, 28)
+  const final = nextRound(sf, [FINAL_PAIRING], 30)
+  return [r32, r16, qf, sf, final]
 }
 
 function TeamButton({ team, isWinner, isPicked, onClick, disabled }) {

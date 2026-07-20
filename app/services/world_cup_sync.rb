@@ -754,9 +754,11 @@ class WorldCupSync
     if finished_shorts.include?(status_short)
       was_not_finished = match.status != "finished"
       finish_attrs = { status: "finished", home_score: home_score, away_score: away_score }
-      finish_attrs[:home_pen_score] = home_pen if home_pen
-      finish_attrs[:away_pen_score] = away_pen if away_pen
-      if match.group_stage.blank?
+      finish_attrs[:home_pen_score] = home_pen unless home_pen.nil?
+      finish_attrs[:away_pen_score] = away_pen unless away_pen.nil?
+      # Knockout matches have `round` set — never stamp group_stage or they vanish
+      # from the bracket page (which filters on !group_stage).
+      if match.group_stage.blank? && match.round.blank?
         group = match.home_team&.group.presence || match.away_team&.group.presence
         finish_attrs[:group_stage] = group if group
       end
@@ -776,6 +778,28 @@ class WorldCupSync
         end
         RecalculateStandingsJob.perform_later
         bust_scorers_cache(match)
+        if match.external_id.present?
+          Rails.cache.delete("wc_fixture_events_v2_#{match.external_id}")
+          Rails.cache.delete("live_scores_detail_v5_#{match.external_id}")
+        end
+        kickoff_date = match.kickoff_at&.utc&.to_date
+        if kickoff_date
+          [ kickoff_date, kickoff_date + 1, kickoff_date - 1 ].each do |d|
+            Rails.cache.delete("today_api_#{d.iso8601}")
+          end
+        end
+        ActionCable.server.broadcast("live_scores", {
+          type:            "live_score_update",
+          match_id:        match.id,
+          external_id:     match.external_id,
+          home_score:      home_score.to_i,
+          away_score:      away_score.to_i,
+          home_pen_score:  finish_attrs[:home_pen_score],
+          away_pen_score:  finish_attrs[:away_pen_score],
+          status:          "finished",
+          minute:          nil,
+          minute_extra:    nil
+        })
       end
       if match.external_id.present? && home_score && away_score
         ScorePrediction.grade!(
@@ -784,6 +808,9 @@ class WorldCupSync
         )
       end
       GenerateMatchSummaryJob.set(wait: 5.minutes).perform_later(match_id: match.id) if match.id.present?
+      if !match.group_stage && match.competition&.code == "WC"
+        ResolveKnockoutSlotsJob.set(wait: 2.minutes).perform_later
+      end
       return true
     end
 
