@@ -4,7 +4,7 @@ module Api
       def index
         competitions = Competition.order(:name)
         render json: competitions.as_json(
-          only: %i[id name code logo country competition_type]
+          only: %i[id name code logo country competition_type external_id]
         )
       end
 

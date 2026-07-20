@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useLiveCount } from "../contexts/LiveContext"
 import SearchBar from "./SearchBar"
+import { useAppFocus } from "../hooks/useAppFocus"
 
 const HomeIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -22,6 +23,16 @@ const NewsIcon = () => (
     <path d="M18 14h-8M15 18h-5M10 6h8v4h-8z"/>
   </svg>
 )
+const LeaguesIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+    <path d="M4 22h16"/>
+    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/>
+    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/>
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+  </svg>
+)
 const MundialIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10"/>
@@ -38,6 +49,7 @@ const SearchIcon = () => (
 export default function BottomNav() {
   const { t }     = useTranslation()
   const liveCount = useLiveCount()
+  const { clubs_primary: clubsPrimary } = useAppFocus()
   const [searchOpen, setSearchOpen] = useState(false)
 
   return (
@@ -63,9 +75,9 @@ export default function BottomNav() {
           <span className="bottom-nav__label">{t("nav.news", "News")}</span>
         </NavLink>
 
-        <NavLink to="/mundial" className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}>
-          <MundialIcon />
-          <span className="bottom-nav__label">{t("nav.mundialShort", "Mundial")}</span>
+        <NavLink to={clubsPrimary ? "/leagues" : "/mundial"} className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}>
+          {clubsPrimary ? <LeaguesIcon /> : <MundialIcon />}
+          <span className="bottom-nav__label">{clubsPrimary ? t("nav.leagues", "Leagues") : t("nav.mundialShort", "Mundial")}</span>
         </NavLink>
 
         <button className="bottom-nav__item bottom-nav__item--btn" onClick={() => setSearchOpen(true)} aria-label="Search">

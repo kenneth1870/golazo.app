@@ -1,6 +1,7 @@
 module Api
   module V1
     class TodayController < BaseController
+      include ApiMatchNormalizer
       def index
         tz   = sanitize_tz(params[:tz])
         # When no explicit date is given (homepage), use the caller's local date,
@@ -10,11 +11,9 @@ module Api
         date = parse_date(params[:date]) || TZInfo::Timezone.get(tz).now.to_date
         all  = merge_matches(date, tz).sort_by { |m| m[:kickoff_at].to_s }
 
-        # Safety net: always inject finished/live WC matches from DB for the
-        # requested date. Prevents stale API caches (24h TTL for past dates)
-        # from hiding completed matches. For today, also catches matches that
-        # kicked off after a cache was populated.
-        wc_db     = fetch_wc_from_db_for_date(date, tz)
+        # Safety net: inject finished/live WC matches from DB when WC is active.
+        unless AppFocus.wc_paused?
+          wc_db     = fetch_wc_from_db_for_date(date, tz)
 
         # Overlay DB scores onto API matches for live/finished WC matches.
         # The API date endpoint can lag several minutes behind the live endpoint;
@@ -52,12 +51,14 @@ module Api
             home_away.include?("#{normalize_team_name(m.dig(:home_team, :name))}|#{normalize_team_name(m.dig(:away_team, :name))}")
         end
         all = (all + to_add).sort_by { |m| m[:kickoff_at].to_s } unless to_add.empty?
+        end
 
-        # When today has no matches, append next upcoming WC fixtures so the
-        # frontend can show a teaser without a second round-trip.
         if all.empty? && date == Date.today
-          upcoming = fetch_upcoming_wc(6).map { |m| normalize_db(m).merge(upcoming_preview: true) }
-          all = upcoming
+          all = if AppFocus.wc_paused?
+            fetch_upcoming_clubs(8)
+          else
+            fetch_upcoming_wc(6).map { |m| normalize_db(m).merge(upcoming_preview: true) }
+          end
         end
 
         render json: all
@@ -129,6 +130,8 @@ module Api
       # API match wins on duplicate (same home+away team pair) since it has live scores.
       def merge_matches(date, tz = "UTC")
         api_matches = fetch_api_matches(date)
+        return api_matches if AppFocus.wc_paused?
+
         db_matches  = fetch_db_matches(date, tz)
 
         # Index API matches by normalised home+away pair for dedup.
@@ -176,8 +179,7 @@ module Api
 
           seen = Set.new(matches.map { |m| m[:external_id] })
           combined = matches + next_day.reject { |m| seen.include?(m[:external_id]) }
-          combined.select { |m| LEAGUE_ID_TO_CODE[m[:league_id].to_i] == "WC" }
-                  .map { |m| normalize_api(m) }
+          filter_matches_for_focus(combined).map { |m| normalize_api_match(m) }
         end
       rescue => e
         Rails.logger.error("[TodayController] API matches failed: #{e.message}")
@@ -214,6 +216,21 @@ module Api
         (authoritative.to_a + overdue.to_a).map { |m| normalize_db(m) }.uniq { |m| m[:id] }
       rescue => e
         Rails.logger.error("[TodayController] fetch_wc_from_db_for_date failed: #{e.message}")
+        []
+      end
+
+      def fetch_upcoming_clubs(limit = 8)
+        client = LiveScoresClient.new
+        client.matches_for_date(Date.today)
+              .concat((1..7).flat_map { |i| client.matches_for_date(Date.today + i) })
+              .select { |m| AppFocus::FEATURED_CLUB_CODES.include?(league_code(m[:league_id])) }
+              .select { |m| m[:status] == "scheduled" }
+              .uniq { |m| m[:external_id] }
+              .sort_by { |m| m[:kickoff_at].to_s }
+              .first(limit)
+              .map { |m| normalize_api_match(m).merge(upcoming_preview: true) }
+      rescue => e
+        Rails.logger.error("[TodayController] Upcoming clubs failed: #{e.message}")
         []
       end
 
@@ -258,52 +275,8 @@ module Api
 
       # Canonical names for key competitions so API and DB matches render
       # the same section header regardless of what the API returns.
-      LEAGUE_CANONICAL_NAMES = {
-        1 => "FIFA World Cup 2026"
-      }.freeze
-
       def normalize_api(m)
-        league_id = m[:league_id].to_i
-        code      = league_code(league_id)
-        {
-          id:          "ext_#{m[:external_id]}",
-          external_id: m[:external_id],
-          status:      m[:status],
-          minute:      m[:minute],
-          kickoff_at:  m[:kickoff_at],
-          home_score:     m.dig(:home, :score),
-          away_score:     m.dig(:away, :score),
-          home_pen_score: m.dig(:home, :pen_score),
-          away_pen_score: m.dig(:away, :pen_score),
-          round:       nil,
-          group_stage: nil,
-          competition: {
-            id:      code,
-            name:    LEAGUE_CANONICAL_NAMES[league_id] || m[:league_name],
-            code:    code,
-            logo:    m[:league_logo],
-            country: m[:league_country]
-          },
-          home_red_cards: m.dig(:home, :red_cards).to_i,
-          away_red_cards: m.dig(:away, :red_cards).to_i,
-          home_team: { name: m.dig(:home, :name), flag_url: m.dig(:home, :logo) },
-          away_team: { name: m.dig(:away, :name), flag_url: m.dig(:away, :logo) }
-        }
-      end
-
-      # Map API-Football league IDs to the codes used in our DB.
-      LEAGUE_ID_TO_CODE = {
-        1   => "WC",
-        2   => "CL",
-        39  => "PL",
-        78  => "BL1",
-        135 => "SA",
-        140 => "LAL",
-        61  => "L1"
-      }.freeze
-
-      def league_code(league_id)
-        LEAGUE_ID_TO_CODE[league_id.to_i] || league_id.to_s
+        normalize_api_match(m)
       end
 
       def normalize_db(m)

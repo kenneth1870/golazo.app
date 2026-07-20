@@ -11,6 +11,7 @@ import { useFavorites } from "../../hooks/useFavorites"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 import { prefetchMatchDetail, navIdFor, navigateToMatch } from "../../utils/matchDetailCache"
 import { useStandingsChannel } from "../../hooks/useStandingsChannel"
+import { useAppFocus } from "../../hooks/useAppFocus"
 import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
 
 // ─── Helpers ──────────────────────────────────────────
@@ -47,13 +48,13 @@ function useDateLabel(date, t) {
 const WC_START = new Date("2026-06-11T00:00:00")
 
 // ─── Date strip ───────────────────────────────────────
-function DateStrip({ selected, onChange }) {
+function DateStrip({ selected, onChange, minDate }) {
   const { i18n }    = useTranslation()
   const locale      = i18n.language || "en"
   const todayISO    = toISO(new Date())
   const selectedISO = toISO(selected)
   const touchStartX = useRef(null)
-  const atMinDate   = toISO(selected) <= toISO(WC_START)
+  const atMinDate   = minDate ? toISO(selected) <= toISO(minDate) : false
 
   // 5 days centred on selected — fits comfortably on 375px
   const days = Array.from({ length: 5 }, (_, i) => addDays(selected, i - 2))
@@ -357,7 +358,13 @@ const PULL_THRESHOLD = 64
 
 export default function TodayPage() {
   const { t } = useTranslation()
-  usePageMeta(t("time.today"), "Today's live scores and fixtures for FIFA World Cup 2026 and all football competitions — real-time goals and updates.")
+  const { clubs_primary: clubsPrimary } = useAppFocus()
+  usePageMeta(
+    t("time.today"),
+    clubsPrimary
+      ? "Today's live scores and fixtures for Premier League, La Liga, Champions League and all football competitions."
+      : "Today's live scores and fixtures for FIFA World Cup 2026 and all football competitions — real-time goals and updates."
+  )
   const [selected, setSelected] = useState(startOfDay)
   const [matches, setMatches]   = useState([])
   const [loading, setLoading]   = useState(true)
@@ -592,6 +599,8 @@ export default function TodayPage() {
     ? todayMatches.filter(matchInvolvesAnyFav)
     : []
 
+  const minDate = clubsPrimary ? addDays(new Date(), -30) : WC_START
+
   return (
     <div
       className="site-section"
@@ -609,7 +618,7 @@ export default function TodayPage() {
       <div className="container">
         {/* Date strip */}
         <div className="mb-4">
-          <DateStrip selected={selected} onChange={d => { setSelected(d); setMatches([]) }} />
+          <DateStrip selected={selected} onChange={d => { setSelected(d); setMatches([]) }} minDate={minDate} />
         </div>
 
         {/* Header row */}

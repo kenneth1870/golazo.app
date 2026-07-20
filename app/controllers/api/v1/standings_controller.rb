@@ -67,13 +67,19 @@ module Api
         end
       end
 
-      # Non-WC competitions: read from the Standing model (populated by SyncStandingsJob).
+      # Non-WC competitions: DB standings when synced, otherwise API-Football.
       def external_standings(competition_code)
+        db = standings_from_db(competition_code)
+        return db if db.present?
+
+        standings_from_api(competition_code)
+      end
+
+      def standings_from_db(competition_code)
         scope = Standing.includes(:team, :competition)
                         .for_competition(competition_code)
                         .where.not(group_name: [ nil, "" ])
                         .order(:group_name, :rank)
-
         return {} unless scope.exists?
 
         flat = scope.map { |s|
@@ -93,6 +99,43 @@ module Api
           }
         }
         flat.group_by { |s| s[:group_name] }
+      end
+
+      def standings_from_api(competition_code)
+        league_id = AppFocus.league_id_for(competition_code)
+        return {} unless league_id
+
+        season = current_season_for(competition_code)
+        rows   = LiveScoresClient.new.league_standings(league_id, season)
+        return {} if rows.blank?
+
+        flat = rows.map do |r|
+          team = r["team"] || {}
+          {
+            rank:          r["rank"],
+            group_name:    (r["group"] || "Overall").to_s.sub(/\AGroup\s+/i, ""),
+            team:          { name: team["name"], code: team["name"]&.slice(0, 3)&.upcase, flag_url: team["logo"] },
+            played:        r["all"]["played"],
+            won:           r["all"]["win"],
+            drawn:         r["all"]["draw"],
+            lost:          r["all"]["lose"],
+            goals_for:     r["all"]["goals"]["for"],
+            goals_against: r["all"]["goals"]["against"],
+            goal_diff:     r["goalsDiff"],
+            points:        r["points"]
+          }
+        end
+        flat.group_by { |s| s[:group_name] }
+      rescue => e
+        Rails.logger.error("[StandingsController] API standings failed: #{e.message}")
+        {}
+      end
+
+      def current_season_for(competition_code)
+        # European leagues: season spans two calendar years (e.g. 2025 for 2025/26).
+        month = Date.today.month
+        year  = Date.today.year
+        competition_code == "MLS" ? year : (month >= 7 ? year : year - 1)
       end
     end
   end

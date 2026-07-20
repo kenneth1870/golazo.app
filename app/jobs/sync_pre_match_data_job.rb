@@ -7,6 +7,8 @@ class SyncPreMatchDataJob < ApplicationJob
   # Requires: match.external_id is an API-Football fixture ID (set by
   # WorldCupSync#sync_external_ids_from_api_football).
   def perform
+    return if AppFocus.wc_paused?
+
     window_end = Time.current + 90.minutes
 
     upcoming = Match

@@ -34,8 +34,11 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :competitions, only: [ :index, :show ], param: :code
+      resources :competitions, only: [ :index, :show ], param: :code do
+        get "fixtures", to: "competition_fixtures#index"
+      end
       get "search",       to: "search#index"
+      get "config",       to: "config#show"
       get "locale",       to: "locale#index"
       get "live_scores",  to: "live_scores#index"
       get "live_count",   to: "live_scores#count"

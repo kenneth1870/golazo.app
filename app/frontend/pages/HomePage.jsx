@@ -13,10 +13,12 @@ import Hero from "../components/Hero"
 import MatchCard from "../components/MatchCard"
 import MatchRow from "../components/MatchRow"
 import FavoriteTeamPicker from "../components/FavoriteTeamPicker"
+import ClubCompetitionChips from "../components/ClubCompetitionChips"
+import { useAppFocus } from "../hooks/useAppFocus"
 import { useStandingsChannel } from "../hooks/useStandingsChannel"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
 
-function useTodayWC() {
+function useTodayMatches(wcOnly = false) {
   const [matches, setMatches] = useState([])
   const loadRef = useRef(null)
 
@@ -29,7 +31,8 @@ function useTodayWC() {
         const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: tz })
         setMatches(
           all.filter(m => {
-            if (m.competition?.code !== "WC") return false
+            if (wcOnly && m.competition?.code !== "WC") return false
+            if (m.upcoming_preview) return false
             const ko = m.kickoff_at || m.kickoff
             if (!ko) return false
             return new Date(ko).toLocaleDateString("en-CA", { timeZone: tz }) === todayStr
@@ -37,7 +40,7 @@ function useTodayWC() {
         )
       })
       .catch(() => { /* silently retain previous matches on network hiccup */ })
-  }, [])
+  }, [wcOnly])
 
   loadRef.current = load
 
@@ -142,7 +145,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t }) {
 }
 
 // ─── Today's matches strip ────────────────────────────────────────────────────
-function TodayMatchesSection({ todayMatches, navigate, t }) {
+function TodayMatchesSection({ todayMatches, navigate, t, clubsPrimary = false }) {
   const all = [...(todayMatches || [])]
     .sort((a, b) => new Date(a.kickoff_at || a.kickoff) - new Date(b.kickoff_at || b.kickoff))
   const live      = all.filter(m => m.status === "live")
@@ -196,7 +199,7 @@ function TodayMatchesSection({ todayMatches, navigate, t }) {
                 {t("time.today", "Today")}
               </span>
               <span style={{ fontSize: ".7rem", color: "var(--muted)" }}>
-                · {t("scores.wcSubtitle", "FIFA World Cup 2026")}
+                · {clubsPrimary ? t("home.liveScoresWorldwide") : t("scores.wcSubtitle", "FIFA World Cup 2026")}
               </span>
             </div>
             {liveCount === 0 && (
@@ -296,12 +299,17 @@ export default function HomePage() {
   const navigate    = useNavigate()
   const liveCount  = useLiveCount()
   const [fav]      = useFavoriteTeam()
+  const { clubs_primary: clubsPrimary } = useAppFocus()
 
   usePageMeta(
-    "Golazo — Live Football Scores, Stats & World Cup 2026",
-    "Real-time live scores, lineups, standings, and match insights for the FIFA World Cup 2026 and 100+ competitions worldwide. Free · No sign-up required."
+    clubsPrimary
+      ? "Golazo — Live Football Scores & Standings"
+      : "Golazo — Live Football Scores, Stats & World Cup 2026",
+    clubsPrimary
+      ? "Real-time live scores, fixtures, and standings for Premier League, La Liga, Champions League and 100+ competitions worldwide. Free · No sign-up required."
+      : "Real-time live scores, lineups, standings, and match insights for the FIFA World Cup 2026 and 100+ competitions worldwide. Free · No sign-up required."
   )
-  useStructuredData({
+  useStructuredData(clubsPrimary ? null : {
     "@context": "https://schema.org",
     "@type": "SportsEvent",
     "name": "FIFA World Cup 2026",
@@ -314,21 +322,23 @@ export default function HomePage() {
     "url": "https://golazo.app/world-cup-2026"
   })
 
-  const { matches: liveWC }         = useMatches("live",     { competition: "WC" })
-  const { matches: upcomingMatches } = useMatches("upcoming", { competition: "WC" })
+  const { matches: liveWC }         = useMatches("live",     { competition: clubsPrimary ? undefined : "WC" })
+  const { matches: upcomingMatches } = useMatches("upcoming", { competition: clubsPrimary ? undefined : "WC" })
   useLiveScoresChannel(patchLiveScore)
-  const todayWC                      = useTodayWC()
+  const todayMatches                 = useTodayMatches(!clubsPrimary)
   const { news: latestNews, newsError, retryNews } = useLatestNews()
 
   // Prefer the next match with a known future kickoff; only fall back to TBD
   // if nothing has a time yet (avoids showing a placeholder knockout slot in hero).
-  const nextMatch = upcomingMatches.find(m => m.kickoff_at && new Date(m.kickoff_at) > new Date())
-    ?? upcomingMatches.find(m => !m.kickoff_at)
+  const nextMatch = clubsPrimary
+    ? todayMatches.find(m => m.kickoff_at && new Date(m.kickoff_at) > new Date())
+    : upcomingMatches.find(m => m.kickoff_at && new Date(m.kickoff_at) > new Date())
+      ?? upcomingMatches.find(m => !m.kickoff_at)
 
   // "Próximos Partidos" table — everything after nextMatch, excluding today's
   // matches (those are already shown in the TodayMatchesSection above).
   const todayStr = new Date().toLocaleDateString("en-CA")
-  const upcomingFuture = upcomingMatches.filter(m =>
+  const upcomingFuture = clubsPrimary ? [] : upcomingMatches.filter(m =>
     m.id !== nextMatch?.id &&
     m.kickoff_at &&
     new Date(m.kickoff_at).toLocaleDateString("en-CA") !== todayStr
@@ -336,15 +346,20 @@ export default function HomePage() {
 
   return (
     <>
-      {/* ── Hero — always show full hero with rotating backgrounds ── */}
-      <Hero nextMatch={nextMatch} liveCount={liveCount} />
+      <Hero nextMatch={nextMatch} liveCount={liveCount} clubsPrimary={clubsPrimary} />
 
-      {/* ── Today's matches / Live ── */}
-      <div className="container" style={{ paddingTop: 24, paddingBottom: 0 }}>
+      {clubsPrimary && (
+        <div className="container" style={{ paddingTop: 24, paddingBottom: 0 }}>
+          <ClubCompetitionChips />
+        </div>
+      )}
+
+      <div className="container" style={{ paddingTop: clubsPrimary ? 16 : 24, paddingBottom: 0 }}>
         <TodayMatchesSection
-          todayMatches={todayWC}
+          todayMatches={todayMatches}
           navigate={navigate}
           t={t}
+          clubsPrimary={clubsPrimary}
         />
       </div>
 
@@ -395,6 +410,46 @@ export default function HomePage() {
         <div className="container">
           <div className="row" style={{ gap: "0 0" }}>
 
+            {clubsPrimary ? (
+                <div className="col-md-12" style={{ marginBottom: 20 }}>
+                  <div style={{
+                    background: "linear-gradient(135deg, rgba(238,30,70,.1) 0%, rgba(238,30,70,.03) 100%)",
+                    border: "1px solid rgba(238,30,70,.2)", borderRadius: 14, padding: "20px 24px",
+                  }}>
+                    <div style={{ fontSize: ".62rem", fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 8 }}>
+                      {t("nav.mundial", "Mundial 2026")}
+                    </div>
+                    <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", marginBottom: 12 }}>
+                      {t("home.wcHosts")}
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {[
+                        { label: `📅 ${t("nav.schedule")}`,  path: "/mundial/schedule" },
+                        { label: `📊 ${t("nav.groups")}`,    path: "/scores/groups" },
+                        { label: `🏆 ${t("nav.knockout")}`,  path: "/scores/knockout" },
+                      ].map(({ label, path }) => (
+                        <Link key={path} to={path} style={{
+                          display: "inline-block",
+                          background: "var(--surface2)", border: "1px solid var(--border)",
+                          borderRadius: 8, padding: "6px 12px",
+                          fontSize: ".7rem", fontWeight: 700, color: "var(--text)", textDecoration: "none",
+                        }}>
+                          {label}
+                        </Link>
+                      ))}
+                      <Link to="/mundial" style={{
+                        display: "inline-block",
+                        background: "rgba(238,30,70,.08)", border: "1px solid rgba(238,30,70,.25)",
+                        borderRadius: 8, padding: "6px 12px",
+                        fontSize: ".7rem", fontWeight: 700, color: "var(--accent)", textDecoration: "none",
+                      }}>
+                        {t("home.viewAll")} →
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+            ) : (
+            <>
             {/* World Cup 2026 hub */}
             <div className="col-md-6" style={{ marginBottom: 20 }}>
               <div style={{
@@ -431,43 +486,17 @@ export default function HomePage() {
 
             {/* Club competitions */}
             <div className="col-md-6" style={{ marginBottom: 20 }}>
-              <div style={{
-                background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "20px 24px",
-              }}>
-                <div style={{ fontSize: ".62rem", fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 8 }}>
-                  {t("home.clubCompetitions")}
-                </div>
-                <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", marginBottom: 12 }}>
-                  {t("home.liveScoresWorldwide")}
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {[
-                    { label: "🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League", path: "/leagues/PL" },
-                    { label: "🇪🇸 La Liga",         path: "/leagues/LAL" },
-                    { label: "🇩🇪 Bundesliga",      path: "/leagues/BL1" },
-                    { label: "🇮🇹 Serie A",          path: "/leagues/SA" },
-                    { label: "🇫🇷 Ligue 1",          path: "/leagues/L1" },
-                    { label: "⭐ Champions League", path: "/leagues/UCL" },
-                  ].map(({ label, path }) => (
-                    <Link key={path} to={path} style={{
-                      display: "inline-block",
-                      background: "var(--surface2)", border: "1px solid var(--border)",
-                      borderRadius: 8, padding: "6px 12px",
-                      fontSize: ".7rem", fontWeight: 700, color: "var(--text)", textDecoration: "none",
-                    }}>
-                      {label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
+              <ClubCompetitionChips />
             </div>
+            </>
+            )}
 
           </div>
         </div>
       </div>
 
       {/* ── Next match widget + upcoming ── */}
-      {(nextMatch || upcomingFuture.length > 0) && <div className="site-section bg-dark">
+      {(nextMatch || upcomingFuture.length > 0) && !clubsPrimary && <div className="site-section bg-dark">
         <div className="container">
           <div className="row">
 

@@ -5,6 +5,8 @@ class SyncStandingsJob < ApplicationJob
   # match is live, kicks off within 2h, or finished within the last ~4h —
   # otherwise the DB-side RecalculateStandingsJob already keeps things current.
   def perform
+    return if AppFocus.wc_paused?
+
     wc = Competition.find_by(code: "WC")
     if wc
       active = Match.where(competition: wc, status: "live").exists? ||

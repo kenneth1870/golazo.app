@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam } from "../i18n/teamNames"
@@ -6,6 +6,13 @@ import MatchRow from "../components/MatchRow"
 import { useFavorites } from "../hooks/useFavorites"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { navigateToMatch, navIdFor } from "../utils/matchDetailCache"
+import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
+
+function flattenStandings(data) {
+  if (Array.isArray(data)) return data
+  if (data && typeof data === "object") return Object.values(data).flat()
+  return []
+}
 
 function StandingsTable({ standings, t, i18n }) {
   if (!standings || standings.length === 0) return null
@@ -43,7 +50,7 @@ function StandingsTable({ standings, t, i18n }) {
               </thead>
               <tbody>
                 {rows.map(s => (
-                  <tr key={s.id}>
+                  <tr key={s.id ?? s.rank}>
                     <td style={{ color: "#888" }}>{s.rank}</td>
                     <td>
                       <div className="d-flex align-items-center" style={{ gap: 8 }}>
@@ -91,19 +98,32 @@ export default function LeagueDetailPage() {
   const [tab, setTab]                 = useState("today")
   const [loading, setLoading]         = useState(true)
 
+  const tabParam = tab === "standings" ? null : tab
+
+  const loadMatches = useCallback(() => {
+    if (!code || tab === "standings") return Promise.resolve()
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const url = `/api/v1/competitions/${code}/fixtures?tab=${tabParam || "today"}&tz=${encodeURIComponent(tz)}`
+    return fetch(url)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setMatches(Array.isArray(data) ? data : []))
+      .catch(() => setMatches([]))
+  }, [code, tab, tabParam])
+
   useEffect(() => {
     setLoading(true)
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     Promise.all([
       fetch(`/api/v1/competitions/${code}`).then(r => r.json()),
-      fetch(`/api/v1/matches?competition=${code}`).then(r => r.json()),
+      fetch(`/api/v1/competitions/${code}/fixtures?tab=today&tz=${encodeURIComponent(tz)}`).then(r => r.ok ? r.json() : []),
       fetch(`/api/v1/standings?competition=${code}`).then(r => r.json()).catch(() => []),
     ]).then(([comp, matchData, standData]) => {
       setCompetition(comp)
-        const ms = Array.isArray(matchData) ? matchData : []
+      const ms = Array.isArray(matchData) ? matchData : []
       setMatches(ms)
-      setStandings(Array.isArray(standData) ? standData : [])
-      // Auto-select the most relevant tab after data loads
-      const now = new Date(); now.setHours(0,0,0,0)
+      const flat = flattenStandings(standData)
+      setStandings(flat)
+      const now = new Date(); now.setHours(0, 0, 0, 0)
       const tmrw = new Date(now); tmrw.setDate(tmrw.getDate() + 1)
       const hasLiveOrToday = ms.some(m => m.status === "live" || (new Date(m.kickoff_at) >= now && new Date(m.kickoff_at) < tmrw))
       const hasUpcoming    = ms.some(m => m.status === "scheduled" && new Date(m.kickoff_at) >= tmrw)
@@ -112,6 +132,26 @@ export default function LeagueDetailPage() {
       else if (!hasLiveOrToday && !hasUpcoming && hasResults) setTab("results")
     }).finally(() => setLoading(false))
   }, [code])
+
+  useEffect(() => {
+    if (loading || tab === "standings") return
+    loadMatches()
+  }, [tab, loadMatches, loading])
+
+  const applyLiveScore = useCallback((d) => {
+    setMatches(prev => {
+      let touched = false
+      const next = prev.map(m => {
+        const hit = d.external_id != null && m.external_id === d.external_id
+        if (!hit) return m
+        if (m.home_score === d.home_score && m.away_score === d.away_score && m.status === d.status) return m
+        touched = true
+        return { ...m, home_score: d.home_score, away_score: d.away_score, status: d.status, minute: d.minute }
+      })
+      return touched ? next : prev
+    })
+  }, [])
+  useLiveScoresChannel(applyLiveScore)
 
   usePageMeta(
     competition ? `${competition.name} Scores & Standings` : null,
@@ -135,7 +175,6 @@ export default function LeagueDetailPage() {
     .sort((a, b) => new Date(b.kickoff_at) - new Date(a.kickoff_at))
   const liveMatches     = matches.filter(m => m.status === "live")
 
-  // Tab definitions (keyed strings for comparison)
   const TABS = [
     { key: "today",      label: t("time.today") },
     { key: "fixtures",   label: t("nav.fixtures") },

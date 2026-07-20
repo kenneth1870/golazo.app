@@ -5,6 +5,7 @@ import LanguageSwitcher from "./LanguageSwitcher"
 import SearchBar from "./SearchBar"
 import { useLiveCount } from "../contexts/LiveContext"
 import { usePushNotifications } from "../hooks/usePushNotifications"
+import { useAppFocus } from "../hooks/useAppFocus"
 
 const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
@@ -236,6 +237,8 @@ export default function Navbar() {
   const location  = useLocation()
   const { t }     = useTranslation()
   const liveCount = useLiveCount()
+  const { clubs_primary: clubsPrimary } = useAppFocus()
+  const brandSubtitle = clubsPrimary ? t("hero.clubBadge", "Live Football") : "Mundial 2026"
   const [searchOpen, setSearchOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [expanded, setExpanded]     = useState({})
@@ -294,7 +297,7 @@ export default function Navbar() {
             <img src="/images/icon-192.png" alt="Golazo" style={{ height: 38, width: 38, borderRadius: 9, objectFit: "cover" }} />
             <div>
               <div style={{ fontWeight: 900, fontSize: "1rem", color: "var(--text)", letterSpacing: 2 }}>GOLAZO</div>
-              <div style={{ fontSize: ".5rem", color: "var(--accent)", letterSpacing: 2, textTransform: "uppercase" }}>Mundial 2026</div>
+              <div style={{ fontSize: ".5rem", color: "var(--accent)", letterSpacing: 2, textTransform: "uppercase" }}>{brandSubtitle}</div>
             </div>
           </Link>
           {/* Search in drawer */}
@@ -330,6 +333,17 @@ export default function Navbar() {
             <NotifQuickItem />
           </div>
 
+          <div className="mobile-drawer-divider">{t("nav.leagues", "Ligas")}</div>
+
+          {/* Leagues section */}
+          <div className="mobile-link-group">
+            {MOBILE_LEAGUES.map(item => (
+              <NavLink key={item.path} to={item.path} className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
+
           <div className="mobile-drawer-divider">{t("nav.mundial", "Mundial 2026")}</div>
 
           {/* Mundial section */}
@@ -347,19 +361,12 @@ export default function Navbar() {
             </NavLink>
           </div>
 
-          <div className="mobile-drawer-divider">{t("nav.leagues", "Ligas")}</div>
-
-          {/* Leagues section */}
-          <div className="mobile-link-group">
-            {MOBILE_LEAGUES.slice(1).map(item => (
-              <NavLink key={item.path} to={item.path} className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
-                {item.label}
-              </NavLink>
-            ))}
-          </div>
-
+          {!clubsPrimary && (
+            <>
           <div className="mobile-drawer-divider">{t("nav.groups", "Grupos")}</div>
           <MobileGroupGrid />
+            </>
+          )}
 
           <div style={{ height: 80 }} />
         </nav>
@@ -380,7 +387,7 @@ export default function Navbar() {
               <img src="/images/icon-192.png" alt="Golazo" style={{ height: 46, width: 46, borderRadius: 12, objectFit: "cover" }} />
               <div style={{ marginLeft: 9 }}>
                 <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", letterSpacing: 2, lineHeight: 1.1 }}>GOLAZO</div>
-                <div style={{ fontSize: ".5rem", color: "var(--accent)", letterSpacing: 2, textTransform: "uppercase" }}>Mundial 2026</div>
+                <div style={{ fontSize: ".5rem", color: "var(--accent)", letterSpacing: 2, textTransform: "uppercase" }}>{brandSubtitle}</div>
               </div>
             </Link>
 
@@ -396,6 +403,15 @@ export default function Navbar() {
                 {t("nav.liveMatches")}
                 {liveCount > 0 && <span className="live-dot" style={{ marginLeft: 5, verticalAlign: "middle" }} />}
               </NavLink>
+
+              {/* Leagues dropdown */}
+              <div className="nav-item has-dropdown">
+                <NavLink to="/leagues" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
+                  {t("nav.leagues", "Leagues")}
+                  <span className="nav-chevron">▼</span>
+                </NavLink>
+                <LeaguesDropdown t={t} />
+              </div>
 
               {/* Mundial 2026 (mega-menu) */}
               <div className="nav-item has-mega">

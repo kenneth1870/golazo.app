@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import LanguageSwitcher from "./LanguageSwitcher"
+import { useAppFocus } from "../hooks/useAppFocus"
 
 
 const SOCIAL = [
@@ -46,6 +47,8 @@ const SOCIAL = [
 
 export default function Footer() {
   const { t } = useTranslation()
+  const { clubs_primary: clubsPrimary } = useAppFocus()
+  const brandSubtitle = clubsPrimary ? t("hero.clubBadge", "Live Football") : "Mundial 2026"
 
   return (
     <footer className="footer-section">
@@ -60,7 +63,7 @@ export default function Footer() {
               <span style={{ fontSize: "1.8rem", lineHeight: 1 }}>⚽</span>
               <div>
                 <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", letterSpacing: 2, lineHeight: 1.1 }}>GOLAZO</div>
-                <div style={{ fontSize: ".52rem", color: "var(--accent)", letterSpacing: 2, textTransform: "uppercase" }}>Mundial 2026</div>
+                <div style={{ fontSize: ".52rem", color: "var(--accent)", letterSpacing: 2, textTransform: "uppercase" }}>{brandSubtitle}</div>
               </div>
             </Link>
             <p style={{ color: "var(--muted)", fontSize: "0.82rem", lineHeight: 1.65, margin: "0 0 18px", maxWidth: 220 }}>
@@ -91,6 +94,18 @@ export default function Footer() {
               <li><Link to="/scores/results">{t("nav.results")}</Link></li>
               <li><Link to="/scores/groups">{t("nav.groupStage")}</Link></li>
               <li><Link to="/scores/knockout">{t("nav.knockout")}</Link></li>
+            </ul>
+          </div>
+
+          {/* ── Leagues ── */}
+          <div className="footer-col">
+            <h4 className="footer-col__title">{t("nav.leagues", "Leagues")}</h4>
+            <ul className="footer-links">
+              <li><Link to="/leagues">{t("nav.allLeagues")}</Link></li>
+              <li><Link to="/leagues/PL">Premier League</Link></li>
+              <li><Link to="/leagues/LAL">La Liga</Link></li>
+              <li><Link to="/leagues/BL1">Bundesliga</Link></li>
+              <li><Link to="/leagues/UCL">Champions League</Link></li>
             </ul>
           </div>
 

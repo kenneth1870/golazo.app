@@ -9,6 +9,8 @@ class SyncLiveScoresJob < ApplicationJob
   # was removed to halve API-Football quota usage; goal/fulltime detection latency
   # is now max ~60 s, which is acceptable for push notifications.
   def perform
+    return if AppFocus.wc_paused?
+
     WorldCupSync.new.sync_live
   end
 end
