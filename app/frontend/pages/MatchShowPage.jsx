@@ -54,7 +54,7 @@ function ReminderButton({ match }) {
         background: reminded ? "rgba(16,185,129,.15)" : "none",
         border: reminded ? "1px solid rgba(16,185,129,.4)" : "1px solid var(--border)",
         borderRadius: 6, cursor: "pointer",
-        color: reminded ? "#10b981" : "var(--muted)",
+        color: reminded ? "var(--success)" : "var(--muted)",
         fontSize: "0.78rem", display: "flex", alignItems: "center", gap: 4,
         padding: "5px 8px", transition: "all .2s",
       }}
@@ -101,7 +101,7 @@ function ShareButton({ homeName, awayName }) {
       onClick={share}
       style={{
         background: "none", border: "none", cursor: "pointer",
-        color: copied ? "#10b981" : "var(--muted)",
+        color: copied ? "var(--success)" : "var(--muted)",
         fontSize: "0.75rem", display: "flex", alignItems: "center", gap: 4,
         padding: "6px 0", transition: "color .2s",
       }}
@@ -139,8 +139,8 @@ function posLabel(pos, t) { return t(POS_I18N[pos] || POS_I18N.M) }
 function EventIcon({ type, detail }) {
   const { t } = useTranslation()
   if (type === "Goal") {
-    if (detail === "Own Goal")   return <span title={t("event.ownGoal")}>⚽<span style={{ fontSize: "0.55rem", verticalAlign: "top", color: "#ef4444", fontWeight: 800 }}>OG</span></span>
-    if (detail === "Penalty")    return <span title="Penalty">⚽<span style={{ fontSize: "0.55rem", verticalAlign: "top", color: "#f59e0b", fontWeight: 800 }}>P</span></span>
+    if (detail === "Own Goal")   return <span title={t("event.ownGoal")}>⚽<span style={{ fontSize: "0.55rem", verticalAlign: "top", color: "var(--danger)", fontWeight: 800 }}>OG</span></span>
+    if (detail === "Penalty")    return <span title="Penalty">⚽<span style={{ fontSize: "0.55rem", verticalAlign: "top", color: "var(--amber)", fontWeight: 800 }}>P</span></span>
     if (detail === "Missed Penalty") return <span title="Missed Penalty" style={{ fontSize: "1.1rem" }}>❌</span>
     return <span style={{ fontSize: "1.15rem" }}>⚽</span>
   }
@@ -236,7 +236,7 @@ function ScoreTimeline({ events, homeTeamRaw, homeName, awayName, t }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 56px 1fr", gap: 8, marginBottom: 4 }}>
         <div style={{ textAlign: "right", fontSize: "0.65rem", color: "var(--accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>{homeName}</div>
         <div />
-        <div style={{ textAlign: "left",  fontSize: "0.65rem", color: "#3b82f6", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>{awayName}</div>
+        <div style={{ textAlign: "left",  fontSize: "0.65rem", color: "var(--away-blue)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>{awayName}</div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
         {moments.map((m, i) => (
@@ -247,8 +247,8 @@ function ScoreTimeline({ events, homeTeamRaw, homeName, awayName, t }) {
                 <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-end", lineHeight: 1.3 }}>
                   <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--text)" }}>
                     {m.player}
-                    {m.isOG && <span style={{ color: "#ef4444", fontSize: "0.65rem" }}> OG</span>}
-                    {m.isP  && <span style={{ color: "#f59e0b", fontSize: "0.65rem" }}> P</span>}
+                    {m.isOG && <span style={{ color: "var(--danger)", fontSize: "0.65rem" }}> OG</span>}
+                    {m.isP  && <span style={{ color: "var(--amber)", fontSize: "0.65rem" }}> P</span>}
                   </span>
                   <span style={{ fontSize: "0.68rem", color: "var(--accent)", fontWeight: 700 }}>{m.min}</span>
                 </div>
@@ -268,10 +268,10 @@ function ScoreTimeline({ events, homeTeamRaw, homeName, awayName, t }) {
                 <div style={{ display: "inline-flex", flexDirection: "column", lineHeight: 1.3 }}>
                   <span style={{ fontWeight: 700, fontSize: "0.82rem", color: "var(--text)" }}>
                     {m.player}
-                    {m.isOG && <span style={{ color: "#ef4444", fontSize: "0.65rem" }}> OG</span>}
-                    {m.isP  && <span style={{ color: "#f59e0b", fontSize: "0.65rem" }}> P</span>}
+                    {m.isOG && <span style={{ color: "var(--danger)", fontSize: "0.65rem" }}> OG</span>}
+                    {m.isP  && <span style={{ color: "var(--amber)", fontSize: "0.65rem" }}> P</span>}
                   </span>
-                  <span style={{ fontSize: "0.68rem", color: "#3b82f6", fontWeight: 700 }}>{m.min}</span>
+                  <span style={{ fontSize: "0.68rem", color: "var(--away-blue)", fontWeight: 700 }}>{m.min}</span>
                 </div>
               )}
             </div>
@@ -307,7 +307,7 @@ function MiniStatsBar({ stats, homeName, awayName }) {
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", fontWeight: 700, color: "var(--muted)", marginBottom: 2 }}>
         <span style={{ color: "var(--accent)" }}>{homeName}</span>
         <span style={{ color: "var(--muted)", fontSize: "0.62rem" }}>{t("match.statStatsSnapshot")}</span>
-        <span style={{ color: "#3b82f6" }}>{awayName}</span>
+        <span style={{ color: "var(--away-blue)" }}>{awayName}</span>
       </div>
 
       {/* Possession bar */}
@@ -320,7 +320,7 @@ function MiniStatsBar({ stats, homeName, awayName }) {
           </div>
           <div style={{ display: "flex", height: 5, borderRadius: 3, overflow: "hidden" }}>
             <div style={{ width: `${homePoss}%`, background: "var(--accent)", transition: "width .4s" }} />
-            <div style={{ flex: 1, background: "#3b82f6" }} />
+            <div style={{ flex: 1, background: "var(--away-blue)" }} />
           </div>
         </div>
       )}
@@ -711,7 +711,7 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
                   background: notifEnabled ? "rgba(16,185,129,.15)" : "rgba(255,255,255,.08)",
                   border: notifEnabled ? "1px solid rgba(16,185,129,.4)" : "1px solid rgba(255,255,255,.15)",
                   borderRadius: 20, padding: "5px 12px",
-                  color: notifEnabled ? "#10b981" : "rgba(255,255,255,.5)",
+                  color: notifEnabled ? "var(--success)" : "rgba(255,255,255,.5)",
                   fontSize: ".72rem", fontWeight: 600, cursor: "pointer",
                 }}
               >
@@ -866,13 +866,13 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t, i18n }) {
                   <span className="match-event__assist"> ↑ {e.assist}</span>
                 )}
                 {isVar && e.detail && (
-                  <span className="match-event__assist" style={{ color: varCancelled ? "#ef4444" : "#10b981" }}>
+                  <span className="match-event__assist" style={{ color: varCancelled ? "var(--danger)" : "var(--success)" }}>
                     {" "}{e.detail}
                     {e.comments ? ` — ${e.comments}` : ""}
                   </span>
                 )}
                 {isMissed && (
-                  <span className="match-event__assist" style={{ color: "#ef4444" }}> {t("match.missedPenalty")}</span>
+                  <span className="match-event__assist" style={{ color: "var(--danger)" }}> {t("match.missedPenalty")}</span>
                 )}
               </div>
               {!isSub && !isVar && (
@@ -907,7 +907,7 @@ function EventsTimeline({ events, homeTeam, awayTeam, statusShort, t, i18n }) {
                     <span className="match-event__player" style={{ color: scored ? "var(--text)" : "var(--muted)" }}>
                       {e.player}
                     </span>
-                    <span className="match-event__assist" style={{ color: scored ? "#10b981" : "#ef4444" }}>
+                    <span className="match-event__assist" style={{ color: scored ? "var(--success)" : "var(--danger)" }}>
                       {scored ? " scored" : " missed"}
                     </span>
                   </div>
@@ -941,7 +941,7 @@ function StatBar({ label, homeVal, awayVal, isPct }) {
       </div>
       <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "var(--surface2)" }}>
         <div style={{ width: `${homePct}%`, background: "var(--accent)", transition: "width .4s" }} />
-        <div style={{ flex: 1, background: "#3b82f6" }} />
+        <div style={{ flex: 1, background: "var(--away-blue)" }} />
       </div>
     </div>
   )
@@ -988,7 +988,7 @@ function StatsPanel({ stats, home, away, t, statusShort }) {
         </div>
         <h3 className="match-section__title" style={{ margin: 0 }}>{t("match.statistics")}</h3>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#3b82f6" }}>{translateTeam(away?.name, i18n.language)}</span>
+          <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--away-blue)" }}>{translateTeam(away?.name, i18n.language)}</span>
           <SafeImg src={away?.logo} className="logo-sm" />
         </div>
       </div>
@@ -1095,11 +1095,11 @@ function ComparisonBar({ label, home, away }) {
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", marginBottom: 4 }}>
         <span style={{ color: "var(--accent)", fontWeight: 700 }}>{home}</span>
         <span style={{ color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", fontSize: "0.62rem" }}>{label}</span>
-        <span style={{ color: "#3b82f6", fontWeight: 700 }}>{away}</span>
+        <span style={{ color: "var(--away-blue)", fontWeight: 700 }}>{away}</span>
       </div>
       <div style={{ display: "flex", height: 5, borderRadius: 3, overflow: "hidden", background: "var(--border)" }}>
         <div style={{ width: `${h}%`, background: "var(--accent)", transition: "width .5s" }} />
-        <div style={{ flex: 1, background: "#3b82f6" }} />
+        <div style={{ flex: 1, background: "var(--away-blue)" }} />
       </div>
     </div>
   )
@@ -1150,7 +1150,7 @@ function InjuriesSection({ fixtureId, homeName, awayName }) {
                   fontSize: "0.65rem", fontWeight: 700,
                   padding: "3px 8px", borderRadius: 10,
                   background: inj.type === "Missing Fixture" ? "rgba(239,68,68,.15)" : "rgba(245,158,11,.15)",
-                  color: inj.type === "Missing Fixture" ? "#ef4444" : "#f59e0b",
+                  color: inj.type === "Missing Fixture" ? "var(--danger)" : "var(--amber)",
                   whiteSpace: "nowrap",
                 }}>
                   {inj.type === "Missing Fixture" ? t("match.injuryOut") : t("match.injuryDoubt")}
@@ -1235,7 +1235,7 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", fontWeight: 700, marginBottom: 14 }}>
             <span style={{ color: "var(--accent)" }}>{homeName}</span>
             <span style={{ color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", fontSize: "0.6rem" }}>{t("match.comparison")}</span>
-            <span style={{ color: "#3b82f6" }}>{awayName}</span>
+            <span style={{ color: "var(--away-blue)" }}>{awayName}</span>
           </div>
           {COMP_ROWS.map(({ key, label }) => {
             const val = comparison[key]
@@ -1254,14 +1254,14 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
               <div style={{ fontSize: "0.95rem", fontWeight: 800 }}>
                 <span style={{ color: "var(--accent)" }}>{goals.home}</span>
                 <span style={{ color: "var(--muted)", margin: "0 4px" }}>–</span>
-                <span style={{ color: "#3b82f6" }}>{goals.away}</span>
+                <span style={{ color: "var(--away-blue)" }}>{goals.away}</span>
               </div>
             </div>
           )}
           {under_over && (
             <div style={{ flex: 1, background: "var(--surface2)", borderRadius: 10, padding: "12px 10px", textAlign: "center" }}>
               <div style={{ fontSize: "0.6rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 5 }}>{t("match.underOver")}</div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#f59e0b" }}>{under_over}</div>
+              <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "var(--amber)" }}>{under_over}</div>
             </div>
           )}
         </div>
@@ -1419,14 +1419,14 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t, lang }) {
             <div style={{ fontSize: ".68rem", color: "var(--muted)", marginTop: 2 }}>{t("match.draw")}</div>
           </div>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#3b82f6" }}>{aw}</div>
+            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--away-blue)" }}>{aw}</div>
             <div style={{ fontSize: ".68rem", color: "var(--muted)", marginTop: 2 }}>{awayTeamName}</div>
           </div>
         </div>
         <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "var(--surface2)" }}>
           <div style={{ width: `${(hw/total)*100}%`, background: "var(--accent)" }} />
           <div style={{ width: `${(d/total)*100}%`, background: "var(--border)" }} />
-          <div style={{ width: `${(aw/total)*100}%`, background: "#3b82f6" }} />
+          <div style={{ width: `${(aw/total)*100}%`, background: "var(--away-blue)" }} />
         </div>
       </section>
 
@@ -1618,7 +1618,7 @@ function LiveCommentaryPanel({ events, homeTeamRaw, homeName, awayName }) {
             <div key={i} style={{
               display: "flex", gap: 10, padding: "10px 14px",
               background: "var(--surface2)", borderRadius: 8,
-              borderLeft: `3px solid ${e.type === "Goal" ? "var(--accent)" : e.type === "Card" ? "#f59e0b" : "var(--border)"}`,
+              borderLeft: `3px solid ${e.type === "Goal" ? "var(--accent)" : e.type === "Card" ? "var(--amber)" : "var(--border)"}`,
             }}>
               <div style={{ flexShrink: 0, textAlign: "center", minWidth: 36 }}>
                 <div style={{ fontSize: "0.65rem", fontWeight: 800, color: "var(--muted)" }}>{min}</div>
@@ -1731,7 +1731,7 @@ function NotifPrefsPanel() {
               padding: "5px 12px", borderRadius: 20, fontSize: "0.72rem", fontWeight: 700, cursor: "pointer",
               border: `1px solid ${prefs[key] ? "rgba(16,185,129,.4)" : "var(--border)"}`,
               background: prefs[key] ? "rgba(16,185,129,.12)" : "var(--surface)",
-              color: prefs[key] ? "#10b981" : "var(--muted)",
+              color: prefs[key] ? "var(--success)" : "var(--muted)",
             }}
           >{label}</button>
         ))}
