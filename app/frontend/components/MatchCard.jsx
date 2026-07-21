@@ -57,11 +57,26 @@ export default function MatchCard({ match, onClick }) {
     : match.away_score < match.home_score ? "loss" : "draw"
     : null
 
+  const homeName = match.home_team?.name || "?"
+  const awayName = match.away_team?.name || "?"
+
+  function handleKeyDown(e) {
+    if (!onClick) return
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      onClick(e)
+    }
+  }
+
   return (
     <div
       className="team-vs"
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? t("a11y.matchRow", { home: homeName, away: awayName }) : undefined}
       onClick={onClick}
-      style={{ cursor: "pointer", marginBottom: 30, display: "flex", alignItems: "center", padding: "16px 12px" }}
+      onKeyDown={handleKeyDown}
+      style={{ cursor: onClick ? "pointer" : undefined, marginBottom: 30, display: "flex", alignItems: "center", padding: "16px 12px" }}
     >
       {/* Home team */}
       <div style={{ flex: 1, textAlign: "center", minWidth: 0 }}>

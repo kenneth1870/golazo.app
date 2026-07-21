@@ -186,10 +186,13 @@ export default function ScorersPage() {
       <div className="container">
 
         {/* Sub-tab bar */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 20, overflowX: "auto", paddingBottom: 2 }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 20, overflowX: "auto", paddingBottom: 2 }} role="tablist">
           {TABS.map(tb => (
             <button
               key={tb.key}
+              role="tab"
+              aria-selected={activeTab === tb.key}
+              aria-controls="scorers-tab-panel"
               onClick={() => setActiveTab(tb.key)}
               style={{
                 padding: "7px 14px", borderRadius: 20, border: "1px solid var(--border)",
@@ -204,6 +207,7 @@ export default function ScorersPage() {
           ))}
         </div>
 
+        <div id="scorers-tab-panel" role="tabpanel">
         {loading && (
           <>
             <div className="loading-shimmer" style={{ height: 140, borderRadius: 16, marginBottom: 16 }} />
@@ -238,6 +242,8 @@ export default function ScorersPage() {
             </div>
           </>
         )}
+
+        </div>
 
       </div>
     </div>

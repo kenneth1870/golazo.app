@@ -402,10 +402,13 @@ export default function LeagueDetailPage() {
 
       <div className="tab-bar sticky-tabs">
         <div className="container">
-          <div className="tab-bar__inner">
+          <div className="tab-bar__inner" role="tablist">
             {TABS.map(tabItem => (
               <button
                 key={tabItem.key}
+                role="tab"
+                aria-selected={tab === tabItem.key}
+                aria-controls="league-tab-panel"
                 className={`tab-link${tab === tabItem.key ? " tab-link--active" : ""}`}
                 onClick={() => selectTab(tabItem.key)}
               >
@@ -419,7 +422,7 @@ export default function LeagueDetailPage() {
         </div>
       </div>
 
-      <div className="site-section">
+      <div className="site-section" id="league-tab-panel" role="tabpanel">
         <div className="container">
           {tab === "standings" ? (
             standingsLoading ? (

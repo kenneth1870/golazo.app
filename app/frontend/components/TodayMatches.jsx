@@ -31,7 +31,7 @@ function MatchRow({ match, onClick }) {
             <span className="live-indicator" /> {match.minute || t("status.live")}
           </span>
         ) : isFinished ? (
-          <span style={{ color: "gray", fontSize: "0.72rem" }}>{t("status.ft")}</span>
+          <span style={{ color: "var(--muted)", fontSize: "0.72rem" }}>{t("status.ft")}</span>
         ) : (
           <span style={{ color: "var(--muted)", fontSize: "0.8rem" }}>
             {formatKickoff(match.kickoff_at, i18n.language)}
@@ -78,7 +78,7 @@ function MatchRow({ match, onClick }) {
 
       {/* Round */}
       <div style={{ width: 110, flexShrink: 0, textAlign: "right" }}>
-        <span style={{ color: "gray", fontSize: "0.72rem" }}>{match.round || match.group_stage}</span>
+        <span style={{ color: "var(--muted)", fontSize: "0.72rem" }}>{match.round || match.group_stage}</span>
       </div>
     </div>
   )
@@ -175,7 +175,7 @@ export default function TodayMatches({ onMatchSelect }) {
         {data.length === 0 ? (
           <div className="widget-next-match">
             <div className="widget-body text-center py-5">
-              <p style={{ color: "gray" }}>{t("scores.noMatchesToday")}</p>
+              <p style={{ color: "var(--muted)" }}>{t("scores.noMatchesToday")}</p>
             </div>
           </div>
         ) : (

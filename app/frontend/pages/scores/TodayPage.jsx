@@ -192,15 +192,28 @@ function FavTeamAlert({ match, onMatchClick, onDismiss }) {
   const score = match.home_score !== null && match.away_score !== null
     ? `${match.home_score}–${match.away_score}` : null
   const minute = match.minute ? `${match.minute}'` : t("status.live")
+  const clickable = !!navIdFor(match)
+
+  function handleKeyDown(e) {
+    if (!clickable) return
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      onMatchClick(match)
+    }
+  }
 
   return (
     <div style={{
       background: "rgba(238,30,70,.12)", border: "1px solid rgba(238,30,70,.35)",
       borderRadius: 12, padding: "12px 16px", marginBottom: 20,
       display: "flex", alignItems: "center", gap: 12,
-      cursor: "pointer", animation: "pageIn .3s ease",
+      cursor: clickable ? "pointer" : "default", animation: "pageIn .3s ease",
     }}
-      onClick={() => navIdFor(match) && onMatchClick(match)}
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      aria-label={clickable ? t("a11y.matchRow", { home, away }) : undefined}
+      onClick={() => clickable && onMatchClick(match)}
+      onKeyDown={handleKeyDown}
     >
       <span className="live-dot" style={{ flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>

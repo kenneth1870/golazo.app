@@ -166,10 +166,13 @@ export default function NewsPage() {
 
       <div className="tab-bar sticky-tabs">
         <div className="container">
-          <div className="tab-bar__inner" style={{ overflowX: "auto" }}>
+          <div className="tab-bar__inner" style={{ overflowX: "auto" }} role="tablist">
 
             {/* For You tab — always visible; empty state guides new users */}
             <button
+              role="tab"
+              aria-selected={tab === "foryou"}
+              aria-controls="news-tab-panel"
               className={`tab-link${tab === "foryou" ? " tab-link--active" : ""}`}
               onClick={() => { setTab("foryou"); setSource(null) }}
               style={{ display: "flex", alignItems: "center", gap: 5 }}
@@ -191,6 +194,9 @@ export default function NewsPage() {
             {/* "All news" button when in For You mode */}
             {tab === "foryou" && (
               <button
+                role="tab"
+                aria-selected={tab === "all"}
+                aria-controls="news-tab-panel"
                 className="tab-link"
                 onClick={() => setTab("all")}
                 style={{ color: "var(--muted)" }}
@@ -223,7 +229,7 @@ export default function NewsPage() {
         </div>
       )}
 
-      <div className="site-section">
+      <div className="site-section" id="news-tab-panel" role="tabpanel">
         <div className="container">
           {loading ? (
             <div className="news-editorial-grid">

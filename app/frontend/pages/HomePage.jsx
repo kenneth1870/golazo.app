@@ -149,8 +149,20 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
       </div>
       {next ? (
         <div
+          role="button"
+          tabIndex={0}
+          aria-label={t("a11y.matchRow", {
+            home: translateTeam(next.home_team?.name, i18n.language),
+            away: translateTeam(next.away_team?.name, i18n.language),
+          })}
           style={{ marginLeft: "auto", cursor: "pointer", textAlign: "right" }}
           onClick={() => navigateToMatch(navigate, next)}
+          onKeyDown={e => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault()
+              navigateToMatch(navigate, next)
+            }
+          }}
         >
           <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>
             {next.status === "live" ? t("home.playingNow") : t("hero.nextMatch")}

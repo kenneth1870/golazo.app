@@ -115,7 +115,7 @@ export default function MatchRow({
           {showChevron
             ? <span style={{ fontSize: "0.65rem", color: "var(--muted)" }}>›</span>
             : metaLabel
-            ? <span style={{ fontSize: "0.65rem", color: "#666" }}>{metaLabel}</span>
+            ? <span style={{ fontSize: "0.65rem", color: "var(--muted)" }}>{metaLabel}</span>
             : <>
                 <span>{match.round || match.group_stage}</span>
                 {match.competition?.code && <span className="competition-badge">{match.competition.code}</span>}

@@ -93,6 +93,17 @@ function MatchCard({ match, onClick, pLabel }) {
     ? (awayPen ?? 0) > (homePen ?? 0)
     : (match.away_score ?? -1) > (match.home_score ?? -1))
   const hasPen     = homePen != null && awayPen != null
+  const clickable  = !!navIdFor(match)
+  const homeName   = match.home_team?.name || match.home_slot || "?"
+  const awayName   = match.away_team?.name || match.away_slot || "?"
+
+  function handleKeyDown(e) {
+    if (!clickable) return
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      onClick(match)
+    }
+  }
 
   // Header text
   let header = null
@@ -109,8 +120,12 @@ function MatchCard({ match, onClick, pLabel }) {
 
   return (
     <div
-      className={`bk2-card${isLive ? " bk2-card--live" : ""}${isFinished ? " bk2-card--done" : ""}${flash ? " bk2-card--flash" : ""}${match.external_id ? " bk2-card--click" : ""}`}
-      onClick={navIdFor(match) ? () => onClick(match) : undefined}
+      className={`bk2-card${isLive ? " bk2-card--live" : ""}${isFinished ? " bk2-card--done" : ""}${flash ? " bk2-card--flash" : ""}${clickable ? " bk2-card--click" : ""}`}
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      aria-label={clickable ? t("a11y.matchRow", { home: homeName, away: awayName }) : undefined}
+      onClick={clickable ? () => onClick(match) : undefined}
+      onKeyDown={handleKeyDown}
     >
       {(header || pLabel) && (
         <div className={`bk2-hdr${header?.live ? " bk2-hdr--live" : ""}${header?.done ? " bk2-hdr--done" : ""}`}>

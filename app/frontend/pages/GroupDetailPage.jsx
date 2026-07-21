@@ -280,9 +280,12 @@ export default function GroupDetailPage() {
 
         {/* Mobile tabs */}
         <div className="tab-bar d-lg-none" style={{ marginBottom: 16 }}>
-          <div className="tab-bar__inner">
+          <div className="tab-bar__inner" role="tablist">
             {TABS.map(tab => (
               <button key={tab.key}
+                role="tab"
+                aria-selected={activeTab === tab.key}
+                aria-controls={`group-tab-${tab.key}`}
                 className={`tab-link${activeTab === tab.key ? " tab-link--active" : ""}`}
                 onClick={() => setActiveTab(tab.key)}
               >

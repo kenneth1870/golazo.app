@@ -287,10 +287,13 @@ export default function TeamShowPage() {
       {/* Tab bar */}
       <div className="sticky-tabs" style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}>
         <div className="container" style={{ maxWidth: 700 }}>
-          <div style={{ display: "flex", gap: 0 }}>
+          <div style={{ display: "flex", gap: 0 }} role="tablist">
             {TABS.map(tab => (
               <button
                 key={tab.key}
+                role="tab"
+                aria-selected={activeTab === tab.key}
+                aria-controls={`team-tab-${tab.key}`}
                 onClick={() => setActiveTab(tab.key)}
                 style={{
                   background: "none", border: "none", cursor: "pointer",
@@ -308,15 +311,29 @@ export default function TeamShowPage() {
       <div className="container" style={{ maxWidth: 700, paddingTop: 16 }}>
 
         {/* ── Overview tab ── */}
-        {activeTab === "overview" && <>
+        {activeTab === "overview" && <div id="team-tab-overview" role="tabpanel">
           {/* Next match countdown */}
-          {countdown && nextMatch && (
+          {countdown && nextMatch && (() => {
+            const homeName = translateTeam(nextMatch.home_team?.name, i18n.language)
+            const awayName = translateTeam(nextMatch.away_team?.name, i18n.language)
+            const clickable = !!nextMatch.external_id
+            return (
             <div
-              onClick={() => navigateToMatch(navigate, nextMatch)}
+              role={clickable ? "button" : undefined}
+              tabIndex={clickable ? 0 : undefined}
+              aria-label={clickable ? t("a11y.matchRow", { home: homeName, away: awayName }) : undefined}
+              onClick={() => clickable && navigateToMatch(navigate, nextMatch)}
+              onKeyDown={e => {
+                if (!clickable) return
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault()
+                  navigateToMatch(navigate, nextMatch)
+                }
+              }}
               style={{
                 background: "linear-gradient(135deg, rgba(238,30,70,.12) 0%, rgba(99,102,241,.08) 100%)",
                 border: "1px solid rgba(238,30,70,.25)", borderRadius: 12, padding: "14px 18px",
-                marginBottom: 16, cursor: nextMatch.external_id ? "pointer" : "default",
+                marginBottom: 16, cursor: clickable ? "pointer" : "default",
                 display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
               }}
             >
@@ -338,7 +355,8 @@ export default function TeamShowPage() {
                 <div style={{ fontSize: "0.6rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>away</div>
               </div>
             </div>
-          )}
+            )
+          })()}
 
           {/* Live match */}
           {live.length > 0 && (
@@ -389,11 +407,11 @@ export default function TeamShowPage() {
               <p>{t("home.noUpcoming")}</p>
             </div>
           )}
-        </>}
+        </div>}
 
         {/* ── Squad tab ── */}
         {activeTab === "squad" && (
-          <div>
+          <div id="team-tab-squad" role="tabpanel">
             {squadLoading && (
               <div style={{ paddingTop: 24 }}>
                 {[1,2,3].map(i => <div key={i} className="loading-shimmer" style={{ height: 44, borderRadius: 8, marginBottom: 10 }} />)}
@@ -456,7 +474,7 @@ export default function TeamShowPage() {
 
         {/* ── Stats tab ── */}
         {activeTab === "stats" && (
-          <div>
+          <div id="team-tab-stats" role="tabpanel">
             {clubsPrimary ? (
               <div className="empty-state" style={{ marginTop: 40 }}>
                 <div className="empty-state__icon">📊</div>
