@@ -2,12 +2,11 @@ import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague, translateCountry } from "../../i18n/leagueNames"
-import { translateTeam, resolveTeamLogo } from "../../i18n/teamNames"
+import MatchRow from "../../components/MatchRow"
 import { navigateToMatch } from "../../utils/matchDetailCache"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useAppFocus } from "../../hooks/useAppFocus"
-import { formatKickoff } from "../../hooks/useLocalTime"
 
 function normalizeMatch(m) {
   return {
@@ -28,46 +27,6 @@ function normalizeMatch(m) {
   }
 }
 
-function ResultRow({ match, onMatchClick }) {
-  const { t, i18n } = useTranslation()
-  const kickoffTime = formatKickoff(match.kickoff_at, i18n.language)
-  const hasScore = match.home_score !== null && match.away_score !== null
-
-  return (
-    <div className="match-row match-row--clickable" onClick={() => onMatchClick(match)}>
-      <div className="match-row__status">
-        <span className="match-status-ft">{t("status.ft")}</span>
-        <span style={{ fontSize: "0.65rem", color: "var(--muted)", display: "block" }}>{kickoffTime}</span>
-      </div>
-      <div className="match-row__teams">
-        <div className="match-row__team match-row__team--home">
-          {(match.home_team?.flag_url || match.home_team?.name) && (
-            <img src={resolveTeamLogo(match.home_team?.name, match.home_team?.flag_url)} alt={match.home_team.name} className="flag-xs" loading="eager"
-              onError={e => (e.target.style.display = "none")} />
-          )}
-          <span className="team-name">{translateTeam(match.home_team?.name, i18n.language) || match.home_team?.name}</span>
-        </div>
-        <div className="match-row__score">
-          {hasScore
-            ? <span className="score-pill">{match.home_score} – {match.away_score}</span>
-            : <span className="score-pill score-pill--vs">vs</span>
-          }
-        </div>
-        <div className="match-row__team match-row__team--away">
-          <span className="team-name">{translateTeam(match.away_team?.name, i18n.language) || match.away_team?.name}</span>
-          {(match.away_team?.flag_url || match.away_team?.name) && (
-            <img src={resolveTeamLogo(match.away_team?.name, match.away_team?.flag_url)} alt={match.away_team.name} className="flag-xs" loading="eager"
-              onError={e => (e.target.style.display = "none")} />
-          )}
-        </div>
-      </div>
-      <div className="match-row__meta">
-        <span style={{ fontSize: "0.65rem", color: "var(--muted)" }}>›</span>
-      </div>
-    </div>
-  )
-}
-
 function CompetitionBlock({ matches, onMatchClick }) {
   const { i18n } = useTranslation()
   const comp   = matches[0]?.competition
@@ -84,7 +43,16 @@ function CompetitionBlock({ matches, onMatchClick }) {
         <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{translateCountry(comp?.country, i18n.language)}</span>
       </div>
       <div className="widget-body p-0">
-        {sorted.map(m => <ResultRow key={m.id} match={m} onMatchClick={onMatchClick} />)}
+        {sorted.map(m => (
+          <MatchRow
+            key={m.id}
+            match={m}
+            kickoffBelowStatus
+            showChevron
+            showMeta
+            onClick={() => onMatchClick(m)}
+          />
+        ))}
       </div>
     </div>
   )

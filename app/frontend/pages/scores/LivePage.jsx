@@ -2,60 +2,27 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague } from "../../i18n/leagueNames"
+import MatchRow from "../../components/MatchRow"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useAppFocus } from "../../hooks/useAppFocus"
 import { useVisiblePolling } from "../../hooks/useVisiblePolling"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
-import { prefetchMatchDetail, navIdFor, navigateToMatch } from "../../utils/matchDetailCache"
+import { navigateToMatch } from "../../utils/matchDetailCache"
 
-function LiveMatchRow({ match, onMatchClick }) {
-  const { t } = useTranslation()
-  const hasScore = match.home?.score !== null && match.away?.score !== null
-
-  const warm = () => prefetchMatchDetail(navIdFor(match))
-
-  return (
-    <div className="match-row match-row--live match-row--clickable" onClick={() => onMatchClick(match)}
-      onMouseEnter={warm} onTouchStart={warm}>
-      <div className="match-row__status">
-        <span className="match-status-live">
-          <span className="live-dot" />
-          {match.minute ? `${match.minute}'` : t("status.live")}
-        </span>
-      </div>
-      <div className="match-row__teams">
-        <div className="match-row__team match-row__team--home">
-          {match.home?.logo && (
-            <img src={match.home.logo} alt={match.home.name} className="flag-xs" loading="eager"
-              onError={e => (e.target.style.display = "none")} />
-          )}
-          <span className="team-name">{match.home?.name}</span>
-          {match.home?.red_cards > 0 && (
-            <span className="red-card-badge">🟥{match.home.red_cards > 1 ? `×${match.home.red_cards}` : ""}</span>
-          )}
-        </div>
-        <div className="match-row__score">
-          {hasScore
-            ? <span className="score-pill score-pill--live">{match.home?.score} – {match.away?.score}</span>
-            : <span className="score-pill score-pill--vs">vs</span>
-          }
-        </div>
-        <div className="match-row__team match-row__team--away">
-          {match.away?.red_cards > 0 && (
-            <span className="red-card-badge">🟥{match.away.red_cards > 1 ? `×${match.away.red_cards}` : ""}</span>
-          )}
-          <span className="team-name">{match.away?.name}</span>
-          {match.away?.logo && (
-            <img src={match.away.logo} alt={match.away.name} className="flag-xs" loading="eager"
-              onError={e => (e.target.style.display = "none")} />
-          )}
-        </div>
-      </div>
-      <div className="match-row__meta">
-        {match.venue && <span style={{ fontSize: "0.65rem", color: "#666" }}>{match.venue}</span>}
-      </div>
-    </div>
-  )
+function toMatchRowMatch(m) {
+  return {
+    external_id: m.external_id,
+    id: m.external_id,
+    status: "live",
+    minute: m.minute,
+    minute_extra: m.minute_extra,
+    home_score: m.home?.score ?? null,
+    away_score: m.away?.score ?? null,
+    home_red_cards: m.home?.red_cards ?? 0,
+    away_red_cards: m.away?.red_cards ?? 0,
+    home_team: { name: m.home?.name, flag_url: m.home?.logo },
+    away_team: { name: m.away?.name, flag_url: m.away?.logo },
+  }
 }
 
 function CompetitionBlock({ leagueName, leagueLogo, leagueCountry, matches, onMatchClick }) {
@@ -74,7 +41,16 @@ function CompetitionBlock({ leagueName, leagueLogo, leagueCountry, matches, onMa
         <span className="live-badge">LIVE</span>
       </div>
       <div className="widget-body p-0">
-        {sorted.map((m, i) => <LiveMatchRow key={m.external_id ?? i} match={m} onMatchClick={onMatchClick} />)}
+        {sorted.map((m, i) => (
+          <MatchRow
+            key={m.external_id ?? i}
+            match={toMatchRowMatch(m)}
+            metaLabel={m.venue || undefined}
+            showChevron
+            showMeta
+            onClick={() => onMatchClick(m)}
+          />
+        ))}
       </div>
     </div>
   )

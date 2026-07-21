@@ -66,9 +66,21 @@ function FixtureCard({ match, onClick }) {
     ? formatKickoff(match.kickoff_at, i18n.language)
     : t("time.tbd")
 
+  function handleKeyDown(e) {
+    if (!onClick) return
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      onClick(e)
+    }
+  }
+
   return (
     <div
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? t("a11y.matchRow", { home: homeName, away: awayName }) : undefined}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
       style={{
         background: "var(--surface2, rgba(255,255,255,.06))",
         border: "1px solid var(--border, rgba(255,255,255,.08))",

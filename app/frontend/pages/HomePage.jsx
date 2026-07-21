@@ -817,33 +817,13 @@ export default function HomePage() {
                 {/* Mobile rows */}
                 <div className="d-md-none widget-body p-0">
                   {upcomingFuture.slice(0, 6).map(m => (
-                    <div key={m.id} className="match-row match-row--clickable" onClick={() => navigate("/scores/today")}>
-                      <div className="match-row__status">
-                        <span className="match-status-time" style={{ fontSize: "0.65rem" }}>
-                          {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString(i18n.language || undefined, { month: "short", day: "numeric" }) : t("time.tbd")}
-                        </span>
-                      </div>
-                      <div className="match-row__teams">
-                        <div className="match-row__team match-row__team--home">
-                          {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt={m.home_team.name} className="flag-xs" onError={e => (e.target.style.display="none")} />}
-                          <span className="team-name">{translateTeam(m.home_team?.name, i18n.language)}</span>
-                        </div>
-                        <div className="match-row__score">
-                          <span className="score-pill score-pill--vs">vs</span>
-                        </div>
-                        <div className="match-row__team match-row__team--away">
-                          <span className="team-name">{translateTeam(m.away_team?.name, i18n.language)}</span>
-                          {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt={m.away_team.name} className="flag-xs" onError={e => (e.target.style.display="none")} />}
-                        </div>
-                      </div>
-                      <div className="match-row__meta">
-                        {(clubsPrimary ? (m.round || m.competition?.code) : m.group_stage) && (
-                          <span style={{ fontSize: "0.62rem", color: "var(--muted)" }}>
-                            {clubsPrimary ? (m.round || m.competition?.code) : m.group_stage}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <MatchRow
+                      key={m.id}
+                      match={m}
+                      showDate
+                      showMeta
+                      onClick={() => (navIdFor(m) ? navigateToMatch(navigate, m) : navigate("/scores/today"))}
+                    />
                   ))}
                 </div>
 

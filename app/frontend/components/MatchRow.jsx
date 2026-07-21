@@ -21,7 +21,16 @@ function FlagOrPlaceholder({ src, name }) {
   )
 }
 
-export default function MatchRow({ match, onClick, showDate = false, showMeta = true }) {
+export default function MatchRow({
+  match,
+  onClick,
+  showDate = false,
+  showMeta = true,
+  flashing = false,
+  showChevron = false,
+  kickoffBelowStatus = false,
+  metaLabel,
+}) {
   const { t, i18n } = useTranslation()
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
@@ -29,6 +38,10 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
 
   const homeName = translateTeam(match.home_team?.name, i18n.language) || match.home_slot || t("time.tbd")
   const awayName = translateTeam(match.away_team?.name, i18n.language) || match.away_slot || t("time.tbd")
+
+  const kickoffTime = match.kickoff_tbc
+    ? t("time.tbc")
+    : formatKickoff(match.kickoff_at, i18n.language)
 
   const warm = onClick ? () => prefetchMatchDetail(navIdFor(match)) : undefined
 
@@ -42,7 +55,7 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
 
   return (
     <div
-      className={`match-row${isLive ? " match-row--live" : ""}${onClick ? " match-row--clickable" : ""}`}
+      className={`match-row${isLive ? " match-row--live" : ""}${onClick ? " match-row--clickable" : ""}${flashing ? " match-row--score-flash" : ""}`}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       aria-label={onClick ? t("a11y.matchRow", { home: homeName, away: awayName }) : undefined}
@@ -54,12 +67,17 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
     >
       <div className="match-row__status">
         {isLive
-          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'` : t("status.live")}</span>
+          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'${match.minute_extra ? `+${match.minute_extra}` : ""}` : t("status.live")}</span>
           : isFinished
-          ? <span className="match-status-ft">{t("status.ft")}</span>
+          ? <>
+              <span className="match-status-ft">{t("status.ft")}</span>
+              {kickoffBelowStatus && (
+                <span style={{ fontSize: "0.65rem", color: "var(--muted)", display: "block" }}>{kickoffTime}</span>
+              )}
+            </>
           : <span className="match-status-time">
               {showDate && <span className="match-date">{formatMatchDate(match.kickoff_at, i18n.language)}</span>}
-              {match.kickoff_tbc ? t("time.tbc") : formatKickoff(match.kickoff_at, i18n.language)}
+              {kickoffTime}
             </span>
         }
       </div>
@@ -68,6 +86,9 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
         <div className="match-row__team match-row__team--home">
           <FlagOrPlaceholder src={resolveTeamLogo(match.home_team?.name, match.home_team?.flag_url)} name={match.home_team?.name} />
           <span className="team-name">{homeName}</span>
+          {match.home_red_cards > 0 && (
+            <span className="red-card-badge">🟥{match.home_red_cards > 1 ? `×${match.home_red_cards}` : ""}</span>
+          )}
         </div>
 
         <div className="match-row__score">
@@ -81,6 +102,9 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
         </div>
 
         <div className="match-row__team match-row__team--away">
+          {match.away_red_cards > 0 && (
+            <span className="red-card-badge">🟥{match.away_red_cards > 1 ? `×${match.away_red_cards}` : ""}</span>
+          )}
           <span className="team-name">{awayName}</span>
           <FlagOrPlaceholder src={resolveTeamLogo(match.away_team?.name, match.away_team?.flag_url)} name={match.away_team?.name} />
         </div>
@@ -88,8 +112,15 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
 
       {showMeta && (
         <div className="match-row__meta">
-          <span>{match.round || match.group_stage}</span>
-          {match.competition?.code && <span className="competition-badge">{match.competition.code}</span>}
+          {showChevron
+            ? <span style={{ fontSize: "0.65rem", color: "var(--muted)" }}>›</span>
+            : metaLabel
+            ? <span style={{ fontSize: "0.65rem", color: "#666" }}>{metaLabel}</span>
+            : <>
+                <span>{match.round || match.group_stage}</span>
+                {match.competition?.code && <span className="competition-badge">{match.competition.code}</span>}
+              </>
+          }
         </div>
       )}
     </div>

@@ -9,12 +9,11 @@ import { useLocale } from "../../hooks/useLocale"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useFavorites } from "../../hooks/useFavorites"
 import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
-import { prefetchMatchDetail, navIdFor, navigateToMatch } from "../../utils/matchDetailCache"
+import { navIdFor } from "../../utils/matchDetailCache"
 import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 import { useAppFocus } from "../../hooks/useAppFocus"
 import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
 import { matchTeamName } from "../../utils/matchTeamName"
-import { formatKickoff } from "../../hooks/useLocalTime"
 
 // ─── Helpers ──────────────────────────────────────────
 function toISO(date) {
@@ -123,82 +122,11 @@ function DateStrip({ selected, onChange, minDate }) {
   )
 }
 
-// ─── Real-match row (API shape) ────────────────────────
-function RealMatchRow({ match, onMatchClick, flashing }) {
-  const { t, i18n } = useTranslation()
-
-  const isLive     = match.status === "live"
-  const isFinished = match.status === "finished"
-  const hasScore   = match.home_score !== null && match.away_score !== null
-  const clickable  = !!navIdFor(match)
-
-  const kickoffTime = match.kickoff_tbc
-    ? t("time.tbc")
-    : formatKickoff(match.kickoff_at, i18n.language)
-
-  return (
-    <div
-      className={`match-row${isLive ? " match-row--live" : ""}${clickable ? " match-row--clickable" : ""}${flashing ? " match-row--score-flash" : ""}`}
-      onClick={clickable ? () => onMatchClick(match) : undefined}
-      onMouseEnter={clickable ? () => prefetchMatchDetail(navIdFor(match)) : undefined}
-      onTouchStart={clickable ? () => prefetchMatchDetail(navIdFor(match)) : undefined}
-    >
-      <div className="match-row__status">
-        {isLive
-          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}${match.minute_extra ? `+${match.minute_extra}` : ""}'` : t("status.live")}</span>
-          : isFinished
-          ? <span className="match-status-ft">{t("status.ft")}</span>
-          : <span className="match-status-time">{kickoffTime}</span>
-        }
-      </div>
-      <div className="match-row__teams">
-        <div className="match-row__team match-row__team--home">
-          <FlagImg src={match.home_team?.flag_url} name={match.home_team?.name} size={16} className="flag-xs" />
-          <span className="team-name">
-            {translateTeam(match.home_team?.name, i18n.language) || match.home_slot || t("time.tbd")}
-          </span>
-          {match.home_red_cards > 0 && (
-            <span className="red-card-badge">🟥{match.home_red_cards > 1 ? `×${match.home_red_cards}` : ""}</span>
-          )}
-        </div>
-        <div className="match-row__score">
-          {hasScore
-            ? <>
-                <span className={`score-pill${isLive ? " score-pill--live" : ""}`}>{match.home_score} – {match.away_score}</span>
-                {match.home_pen_score != null && match.away_pen_score != null && (
-                  <span className="score-pill__pen">({match.home_pen_score} – {match.away_pen_score} {t("match.penShort")})</span>
-                )}
-              </>
-            : <span className="score-pill score-pill--vs">{t("status.vs")}</span>
-          }
-        </div>
-        <div className="match-row__team match-row__team--away">
-          {match.away_red_cards > 0 && (
-            <span className="red-card-badge">🟥{match.away_red_cards > 1 ? `×${match.away_red_cards}` : ""}</span>
-          )}
-          <span className="team-name">
-            {translateTeam(match.away_team?.name, i18n.language) || match.away_slot || t("time.tbd")}
-          </span>
-          <FlagImg src={match.away_team?.flag_url} name={match.away_team?.name} size={16} className="flag-xs" />
-        </div>
-      </div>
-      {clickable && (
-        <div className="match-row__meta">
-          <span style={{ fontSize: "0.65rem", color: "var(--muted)" }}>›</span>
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ─── Competition block ────────────────────────────────
 function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
   const { t, i18n } = useTranslation()
   const comp    = matches[0]?.competition
   const hasLive = matches.some(m => m.status === "live")
-  // Use the rich RealMatchRow (with expandable goals) for any match that has an
-  // external_id — covers both live-API matches ("ext_" ids) and WC DB matches ("db_" ids).
-  const isReal  = !!matches[0]?.external_id
   const canNav  = comp?.code && !String(comp.code).match(/^\d+$/)
 
   const sorted = [...matches].sort((a, b) => {
@@ -220,11 +148,19 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
         {canNav && <span style={{ fontSize: "0.75rem", color: "#ee1e46" }}>→</span>}
       </div>
       <div className="widget-body p-0">
-        {sorted.map(m =>
-          isReal
-            ? <RealMatchRow key={m.id} match={m} onMatchClick={onMatchClick} flashing={flashIds?.has(m.external_id ?? m.id)} />
-            : <MatchRow key={m.id} match={m} onClick={navIdFor(m) ? () => onMatchClick(m) : undefined} />
-        )}
+        {sorted.map(m => {
+          const navigable = !!navIdFor(m)
+          return (
+            <MatchRow
+              key={m.id}
+              match={m}
+              flashing={flashIds?.has(m.external_id ?? m.id)}
+              showChevron={navigable}
+              showMeta={navigable}
+              onClick={navigable ? () => onMatchClick(m) : undefined}
+            />
+          )
+        })}
       </div>
     </div>
   )
@@ -696,14 +632,19 @@ export default function TodayPage() {
             </div>
             <div className="widget-next-match">
               <div className="widget-body p-0">
-                {yourMatches.map(m => (
-                  <RealMatchRow
-                    key={m.id}
-                    match={m}
-                    onMatchClick={onMatchClick}
-                    flashing={flashIds?.has(m.external_id ?? m.id)}
-                  />
-                ))}
+                {yourMatches.map(m => {
+                  const navigable = !!navIdFor(m)
+                  return (
+                    <MatchRow
+                      key={m.id}
+                      match={m}
+                      flashing={flashIds?.has(m.external_id ?? m.id)}
+                      showChevron={navigable}
+                      showMeta={navigable}
+                      onClick={navigable ? () => onMatchClick(m) : undefined}
+                    />
+                  )
+                })}
               </div>
             </div>
           </div>
