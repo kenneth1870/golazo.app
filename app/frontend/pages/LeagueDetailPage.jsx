@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react"
-import { useParams, useNavigate, Link } from "react-router-dom"
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
 import { translateLeague, translateCountry } from "../i18n/leagueNames"
@@ -12,10 +12,44 @@ import { clubTeamPath } from "../utils/clubTeamPath"
 import { matchTeamName } from "../utils/matchTeamName"
 import { leagueHeroStyle } from "../utils/leagueHeroImages"
 
+const VALID_TABS = ["today", "fixtures", "results", "standings"]
+
 function flattenStandings(data) {
   if (Array.isArray(data)) return data
   if (data && typeof data === "object") return Object.values(data).flat()
   return []
+}
+
+function isFollowedTeam(teamName, favoriteTeamNames, lang) {
+  return favoriteTeamNames.some(name => matchTeamName(teamName, name, lang))
+}
+
+function StandingsTeamCell({ s, leagueCode, i18n }) {
+  return (
+    <div className="d-flex align-items-center" style={{ gap: 8 }}>
+      {s.team?.flag_url && (
+        <img
+          src={resolveTeamLogo(s.team?.name, s.team.flag_url)}
+          alt={s.team.name}
+          className="flag-xs"
+          loading="eager"
+          onError={e => (e.target.style.display = "none")}
+        />
+      )}
+      <strong style={{ color: "var(--text)" }}>
+        {leagueCode ? (
+          <Link
+            to={clubTeamPath(leagueCode, s.team?.name)}
+            style={{ color: "inherit", textDecoration: "none" }}
+          >
+            {translateTeam(s.team?.name, i18n.language)}
+          </Link>
+        ) : (
+          translateTeam(s.team?.name, i18n.language)
+        )}
+      </strong>
+    </div>
+  )
 }
 
 function StandingsTable({ standings, t, i18n, leagueCode, favoriteTeamNames = [] }) {
@@ -36,7 +70,7 @@ function StandingsTable({ standings, t, i18n, leagueCode, favoriteTeamNames = []
           {group !== "Overall" && (
             <div className="fixture-day__header">{t("table.group")} {group}</div>
           )}
-          <div className="table-responsive">
+          <div className="table-responsive d-none d-md-block">
             <table className="table custom-table">
               <thead>
                 <tr>
@@ -54,36 +88,13 @@ function StandingsTable({ standings, t, i18n, leagueCode, favoriteTeamNames = []
               </thead>
               <tbody>
                 {rows.map(s => {
-                  const followed = favoriteTeamNames.some(name =>
-                    matchTeamName(s.team?.name, name, i18n.language)
-                  )
+                  const followed = isFollowedTeam(s.team?.name, favoriteTeamNames, i18n.language)
+                  const gd = s.goals_for - s.goals_against
                   return (
                   <tr key={s.id ?? s.rank} style={followed ? { background: "rgba(238,30,70,.08)" } : undefined}>
                     <td style={{ color: "var(--muted)" }}>{s.rank}</td>
                     <td>
-                      <div className="d-flex align-items-center" style={{ gap: 8 }}>
-                        {s.team?.flag_url && (
-                          <img
-                            src={resolveTeamLogo(s.team?.name, s.team.flag_url)}
-                            alt={s.team.name}
-                            className="flag-xs"
-                            loading="eager"
-                            onError={e => (e.target.style.display = "none")}
-                          />
-                        )}
-                        <strong style={{ color: "var(--text)" }}>
-                          {leagueCode ? (
-                            <Link
-                              to={clubTeamPath(leagueCode, s.team?.name)}
-                              style={{ color: "inherit", textDecoration: "none" }}
-                            >
-                              {translateTeam(s.team?.name, i18n.language)}
-                            </Link>
-                          ) : (
-                            translateTeam(s.team?.name, i18n.language)
-                          )}
-                        </strong>
-                      </div>
+                      <StandingsTeamCell s={s} leagueCode={leagueCode} i18n={i18n} />
                     </td>
                     <td>{s.played}</td>
                     <td>{s.won}</td>
@@ -91,8 +102,8 @@ function StandingsTable({ standings, t, i18n, leagueCode, favoriteTeamNames = []
                     <td>{s.lost}</td>
                     <td>{s.goals_for}</td>
                     <td>{s.goals_against}</td>
-                    <td style={{ color: s.goals_for - s.goals_against >= 0 ? "#10b981" : "#ee1e46" }}>
-                      {s.goals_for - s.goals_against >= 0 ? "+" : ""}{s.goals_for - s.goals_against}
+                    <td style={{ color: gd >= 0 ? "#10b981" : "#ee1e46" }}>
+                      {gd >= 0 ? "+" : ""}{gd}
                     </td>
                     <td><strong style={{ color: "var(--text)" }}>{s.points}</strong></td>
                   </tr>
@@ -100,6 +111,35 @@ function StandingsTable({ standings, t, i18n, leagueCode, favoriteTeamNames = []
                 })}
               </tbody>
             </table>
+          </div>
+
+          <div className="standings-cards d-md-none">
+            {rows.map(s => {
+              const followed = isFollowedTeam(s.team?.name, favoriteTeamNames, i18n.language)
+              const gd = s.goals_for - s.goals_against
+              return (
+                <div
+                  key={s.id ?? s.rank}
+                  className={`standings-card${followed ? " standings-card--followed" : ""}`}
+                >
+                  <div className="standings-card__rank">{s.rank}</div>
+                  <div className="standings-card__team">
+                    <StandingsTeamCell s={s} leagueCode={leagueCode} i18n={i18n} />
+                  </div>
+                  <div className="standings-card__stats">
+                    <span className="standings-card__pts">
+                      <strong>{s.points}</strong> {t("table.points")}
+                    </span>
+                    <span
+                      className="standings-card__gd"
+                      style={{ color: gd >= 0 ? "#10b981" : "#ee1e46" }}
+                    >
+                      {gd >= 0 ? "+" : ""}{gd} {t("table.gd")}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       ))}
@@ -137,12 +177,14 @@ export default function LeagueDetailPage() {
   const { t, i18n } = useTranslation()
   const { code } = useParams()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { isFavorite, toggleFavorite, favoriteTeamNames } = useFavorites()
   const [competition, setCompetition] = useState(null)
   const [notFound, setNotFound]         = useState(false)
   const [matches, setMatches]         = useState([])
   const [standings, setStandings]     = useState([])
-  const [tab, setTab]                 = useState("today")
+  const urlTab = searchParams.get("tab")
+  const tab = VALID_TABS.includes(urlTab) ? urlTab : "today"
   const [loading, setLoading]         = useState(true)
   const [tabLoading, setTabLoading]   = useState(false)
   const [standingsLoading, setStandingsLoading] = useState(false)
@@ -154,6 +196,15 @@ export default function LeagueDetailPage() {
     heroRef.current = { code, style: leagueHeroStyle(code) }
   }
   const heroStyle = heroRef.current.style
+
+  const selectTab = useCallback((key) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (key === "today") next.delete("tab")
+      else next.set("tab", key)
+      return next
+    }, { replace: false })
+  }, [setSearchParams])
 
   const loadStandings = useCallback(() => {
     if (!code) return Promise.resolve()
@@ -182,6 +233,7 @@ export default function LeagueDetailPage() {
   }, [code, tab, tabParam])
 
   useEffect(() => {
+    const tabAtMount = searchParams.get("tab")
     setLoading(true)
     setNotFound(false)
     setCompetition(null)
@@ -204,11 +256,16 @@ export default function LeagueDetailPage() {
       setMatches(ms)
       const flat = flattenStandings(standData)
       setStandings(flat)
-      const hasLiveOrToday = ms.some(m => m.status === "live") || ms.length > 0
-      if (!hasLiveOrToday && hasResults(ms)) setTab("results")
-      else if (!hasLiveOrToday && hasUpcoming(ms)) setTab("fixtures")
+      if (!VALID_TABS.includes(tabAtMount)) {
+        const hasLiveOrToday = ms.some(m => m.status === "live") || ms.length > 0
+        if (!hasLiveOrToday && hasResults(ms)) {
+          setSearchParams({ tab: "results" }, { replace: true })
+        } else if (!hasLiveOrToday && hasUpcoming(ms)) {
+          setSearchParams({ tab: "fixtures" }, { replace: true })
+        }
+      }
     }).finally(() => setLoading(false))
-  }, [code])
+  }, [code, setSearchParams])
 
   useEffect(() => {
     if (loading || tab !== "standings") return
@@ -350,7 +407,7 @@ export default function LeagueDetailPage() {
               <button
                 key={tabItem.key}
                 className={`tab-link${tab === tabItem.key ? " tab-link--active" : ""}`}
-                onClick={() => setTab(tabItem.key)}
+                onClick={() => selectTab(tabItem.key)}
               >
                 {tabItem.label}
                 {tabItem.key === "today" && liveMatches.length > 0 && (

@@ -1572,6 +1572,42 @@ body.light-mode .date-strip__day--today{background:rgba(238,30,70,.1)}
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ─── League standings mobile cards ──────────────────── */
+.standings-cards{
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  background:var(--surface);
+}
+.standings-card{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  border-bottom:1px solid var(--border);
+}
+.standings-card:last-child{border-bottom:none}
+.standings-card--followed{background:rgba(238,30,70,.08)}
+.standings-card__rank{
+  width:24px;
+  flex-shrink:0;
+  font-size:.78rem;
+  font-weight:700;
+  color:var(--muted);
+  text-align:center;
+}
+.standings-card__team{flex:1;min-width:0}
+.standings-card__stats{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:2px;
+  flex-shrink:0;
+}
+.standings-card__pts{font-size:.72rem;color:var(--muted);white-space:nowrap}
+.standings-card__pts strong{color:var(--text);font-size:.82rem}
+.standings-card__gd{font-size:.68rem;font-weight:700;white-space:nowrap}
+
 /* ─── Bracket Predictor ──────────────────────────────── */
 .pred-match{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;width:160px}
 .pred-match--pending{opacity:.5}
