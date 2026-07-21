@@ -1819,14 +1819,14 @@ function MatchSkeleton() {
 
 // ─── Related News ──────────────────────────────────────
 
-function relativeTime(published_at) {
-  if (!published_at) return ""
+function relativeTime(published_at, t) {
+  if (!published_at || !t) return ""
   const diff = Math.floor((Date.now() - new Date(published_at).getTime()) / 1000)
-  if (diff <= 0)    return "< 1m"
-  if (diff < 60)    return `${diff}s`
-  if (diff < 3600)  return `${Math.floor(diff / 60)} min`
-  if (diff < 86400) return `${Math.floor(diff / 3600)} h`
-  return `${Math.floor(diff / 86400)} d`
+  if (diff <= 0)    return t("time.agoJustNow")
+  if (diff < 60)    return t("time.agoSeconds", { count: diff })
+  if (diff < 3600)  return t("time.agoMinutes", { count: Math.floor(diff / 60) })
+  if (diff < 86400) return t("time.agoHours", { count: Math.floor(diff / 3600) })
+  return t("time.agoDays", { count: Math.floor(diff / 86400) })
 }
 
 // Leagues whose names are specific enough to improve article matching.
@@ -1890,7 +1890,7 @@ function RelatedNewsPanel({ homeName, awayName, leagueName, lang, t }) {
                 <p className="rn-card__title">{a.title}</p>
                 <div className="rn-card__footer">
                   <div className="rn-card__source-dot" style={{ background: color }} />
-                  <span className="rn-card__time">{relativeTime(a.published_at)}</span>
+                  <span className="rn-card__time">{relativeTime(a.published_at, t)}</span>
                   <span className="rn-card__bookmark">🔖</span>
                 </div>
               </div>
@@ -2068,7 +2068,10 @@ export default function MatchShowPage() {
     }
     const fetchStarted = Date.now()
     return fetchWithTimeout(`/api/v1/match_detail/${id}`, 10000)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
       .then(d => {
         if (d?.fixture) setCachedMatchDetail(id, d)
         setData(prev => {
@@ -2078,7 +2081,9 @@ export default function MatchShowPage() {
           return d
         })
       })
-      .catch(() => {})
+      .catch(() => {
+        setData(prev => (prev?.fixture ? prev : { error: "api_error" }))
+      })
   }, [id])
 
   useEffect(() => {

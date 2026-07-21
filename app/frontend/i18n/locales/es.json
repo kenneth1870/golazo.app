@@ -102,7 +102,12 @@
     "matchCount": "{{count}} partidos",
     "liveCount": "{{count}} en vivo",
     "tbc": "Por confirmar",
-    "tbd": "Por definir"
+    "tbd": "Por definir",
+    "agoSeconds": "{{count}} s",
+    "agoMinutes": "{{count}} min",
+    "agoHours": "{{count}} h",
+    "agoDays": "{{count}} d",
+    "agoJustNow": "< 1 min"
   },
   "scores": {
     "liveNow": "En Vivo",
@@ -685,6 +690,7 @@
     "liveCount": "{{count}} partidos en vivo",
     "themeDark": "Cambiar a modo oscuro",
     "themeLight": "Cambiar a modo claro",
-    "dismiss": "Descartar"
+    "dismiss": "Descartar",
+    "matchRow": "{{home}} vs {{away}}"
   }
 }

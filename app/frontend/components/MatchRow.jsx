@@ -27,13 +27,27 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
   const isFinished = match.status === "finished"
   const hasScore   = match.home_score !== null && match.away_score !== null
 
-  // Warm the match-detail cache on intent-to-click so the page paints instantly.
+  const homeName = translateTeam(match.home_team?.name, i18n.language) || match.home_slot || t("time.tbd")
+  const awayName = translateTeam(match.away_team?.name, i18n.language) || match.away_slot || t("time.tbd")
+
   const warm = onClick ? () => prefetchMatchDetail(navIdFor(match)) : undefined
+
+  function handleKeyDown(e) {
+    if (!onClick) return
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      onClick(e)
+    }
+  }
 
   return (
     <div
       className={`match-row${isLive ? " match-row--live" : ""}${onClick ? " match-row--clickable" : ""}`}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={onClick ? t("a11y.matchRow", { home: homeName, away: awayName }) : undefined}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
       onMouseEnter={warm}
       onTouchStart={warm}
       onFocus={warm}
@@ -45,7 +59,7 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
           ? <span className="match-status-ft">{t("status.ft")}</span>
           : <span className="match-status-time">
               {showDate && <span className="match-date">{formatMatchDate(match.kickoff_at, i18n.language)}</span>}
-              {match.kickoff_tbc ? t("time.tbc") : formatKickoff(match.kickoff_at)}
+              {match.kickoff_tbc ? t("time.tbc") : formatKickoff(match.kickoff_at, i18n.language)}
             </span>
         }
       </div>
@@ -53,9 +67,7 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
       <div className="match-row__teams">
         <div className="match-row__team match-row__team--home">
           <FlagOrPlaceholder src={resolveTeamLogo(match.home_team?.name, match.home_team?.flag_url)} name={match.home_team?.name} />
-          <span className="team-name">
-            {translateTeam(match.home_team?.name, i18n.language) || match.home_slot || t("time.tbd")}
-          </span>
+          <span className="team-name">{homeName}</span>
         </div>
 
         <div className="match-row__score">
@@ -69,9 +81,7 @@ export default function MatchRow({ match, onClick, showDate = false, showMeta = 
         </div>
 
         <div className="match-row__team match-row__team--away">
-          <span className="team-name">
-            {translateTeam(match.away_team?.name, i18n.language) || match.away_slot || t("time.tbd")}
-          </span>
+          <span className="team-name">{awayName}</span>
           <FlagOrPlaceholder src={resolveTeamLogo(match.away_team?.name, match.away_team?.flag_url)} name={match.away_team?.name} />
         </div>
       </div>

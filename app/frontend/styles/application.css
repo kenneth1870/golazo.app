@@ -162,6 +162,14 @@ a:hover{color:var(--accent);opacity:.85}
 .btn-secondary:hover,.btn.btn-secondary:hover{
   background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.5);color:#fff;
 }
+body.light-mode .btn-secondary,
+body.light-mode .btn.btn-secondary{
+  color:var(--text);border-color:var(--border);
+}
+body.light-mode .btn-secondary:hover,
+body.light-mode .btn.btn-secondary:hover{
+  background:var(--surface2);color:var(--text);border-color:var(--muted);
+}
 
 /* Outline accent */
 .btn-outline-accent{
@@ -554,6 +562,8 @@ button:focus:not(:focus-visible){outline:none}
 .match-row--score-flash{animation:scoreFlash 2s ease-out}
 @keyframes scoreFlash{0%{background:rgba(16,185,129,.25)}100%{background:transparent}}
 .match-row--clickable{cursor:pointer}
+.match-row--clickable:focus{outline:none}
+.match-row--clickable:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media(hover:hover){
   .match-row:hover{background:var(--surface2)}
   .match-row--live:hover{background:rgba(238,30,70,.07)}

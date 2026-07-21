@@ -102,7 +102,12 @@
     "matchCount": "{{count}} matches",
     "liveCount": "{{count}} live",
     "tbc": "TBC",
-    "tbd": "TBD"
+    "tbd": "TBD",
+    "agoSeconds": "{{count}}s",
+    "agoMinutes": "{{count}} min",
+    "agoHours": "{{count}} h",
+    "agoDays": "{{count}} d",
+    "agoJustNow": "< 1m"
   },
   "scores": {
     "liveNow": "Live Now",
@@ -684,6 +689,7 @@
     "liveCount": "{{count}} live matches",
     "themeDark": "Switch to dark mode",
     "themeLight": "Switch to light mode",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "matchRow": "{{home}} vs {{away}}"
   }
 }
