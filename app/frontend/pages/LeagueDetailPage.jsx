@@ -204,9 +204,7 @@ export default function LeagueDetailPage() {
       setMatches(ms)
       const flat = flattenStandings(standData)
       setStandings(flat)
-      const now = startOfToday()
-      const tmrw = startOfTomorrow()
-      const hasLiveOrToday = ms.some(m => m.status === "live" || (new Date(m.kickoff_at) >= now && new Date(m.kickoff_at) < tmrw))
+      const hasLiveOrToday = ms.some(m => m.status === "live") || ms.length > 0
       if (!hasLiveOrToday && hasResults(ms)) setTab("results")
       else if (!hasLiveOrToday && hasUpcoming(ms)) setTab("fixtures")
     }).finally(() => setLoading(false))
@@ -254,14 +252,7 @@ export default function LeagueDetailPage() {
       : null
   )
 
-  const today = startOfToday()
-  const tomorrow = startOfTomorrow()
-
-  const todayMatches = matches.filter(m => {
-    const d = new Date(m.kickoff_at)
-    return d >= today && d < tomorrow
-  })
-  const liveMatches  = matches.filter(m => m.status === "live")
+  const liveMatches = matches.filter(m => m.status === "live")
 
   const TABS = [
     { key: "today",      label: t("time.today") },
@@ -271,9 +262,11 @@ export default function LeagueDetailPage() {
   ]
 
   const displayedMatches =
-    tab === "today"    ? [...liveMatches, ...todayMatches.filter(m => m.status !== "live")] :
-    tab === "standings" ? [] :
-    matches
+    tab === "today"
+      ? [...liveMatches, ...matches.filter(m => m.status !== "live")]
+      : tab === "standings"
+      ? []
+      : matches
 
   if (loading) {
     return (

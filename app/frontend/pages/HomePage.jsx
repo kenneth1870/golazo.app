@@ -25,6 +25,7 @@ import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
 function useTodayFeed(wcOnly = false) {
   const [todayMatches, setTodayMatches] = useState([])
   const [upcomingPreview, setUpcomingPreview] = useState([])
+  const [loading, setLoading] = useState(true)
   const loadRef = useRef(null)
 
   const load = useCallback(() => {
@@ -47,6 +48,7 @@ function useTodayFeed(wcOnly = false) {
         )
       })
       .catch(() => { /* silently retain previous matches on network hiccup */ })
+      .finally(() => setLoading(false))
   }, [wcOnly])
 
   loadRef.current = load
@@ -81,18 +83,20 @@ function useTodayFeed(wcOnly = false) {
   useLiveScoresChannel(applyLiveScore)
   useStandingsChannel(load)
 
-  return { todayMatches, upcomingPreview }
+  return { todayMatches, upcomingPreview, loading }
 }
 
 const FEATURED_NEWS_LEAGUES = [ "CRC", "LMX", "PL", "LAL" ]
 
 function useLatestNews(leagueCodes = []) {
   const { i18n } = useTranslation()
-  const [news, setNews]   = useState([])
-  const [error, setError] = useState(false)
+  const [news, setNews]     = useState([])
+  const [error, setError]   = useState(false)
+  const [loading, setLoading] = useState(true)
 
   const load = () => {
     setError(false)
+    setLoading(true)
     const leaguesParam = leagueCodes.length
       ? `&leagues=${encodeURIComponent(leagueCodes.join(","))}`
       : ""
@@ -100,10 +104,11 @@ function useLatestNews(leagueCodes = []) {
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(data => setNews(data.slice(0, 3)))
       .catch(() => setError(true))
+      .finally(() => setLoading(false))
   }
 
   useEffect(() => { load() }, [i18n.language, leagueCodes.join(",")]) // eslint-disable-line react-hooks/exhaustive-deps
-  return { news, newsError: error, retryNews: load }
+  return { news, newsError: error, newsLoading: loading, retryNews: load }
 }
 
 function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = false }) {
@@ -166,8 +171,26 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
 }
 
 // ─── Today's matches strip ────────────────────────────────────────────────────
-function TodayMatchesSection({ todayMatches, upcomingPreview = [], navigate, t, clubsPrimary = false }) {
+function TodayFeedSkeleton() {
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <div className="loading-shimmer" style={{ height: 14, width: 120, borderRadius: 6, marginBottom: 10 }} />
+      <div style={{ background: "var(--surface)", borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)" }}>
+        {[0, 1, 2, 3].map(i => (
+          <div key={i} style={{ padding: "14px 16px", borderBottom: i < 3 ? "1px solid var(--border)" : "none" }}>
+            <div className="loading-shimmer" style={{ height: 36, borderRadius: 8 }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = false, navigate, t, clubsPrimary = false }) {
   const { i18n } = useTranslation()
+
+  if (loading) return <TodayFeedSkeleton />
+
   const all = [...(todayMatches || [])]
     .sort((a, b) => new Date(a.kickoff_at || a.kickoff) - new Date(b.kickoff_at || b.kickoff))
   const live      = all.filter(m => m.status === "live")
@@ -432,7 +455,7 @@ export default function HomePage() {
 
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: clubsPrimary ? undefined : "WC" })
   useLiveScoresChannel(patchLiveScore)
-  const { todayMatches, upcomingPreview } = useTodayFeed(!clubsPrimary)
+  const { todayMatches, upcomingPreview, loading: todayLoading } = useTodayFeed(!clubsPrimary)
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
   const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: tz })
   const clubFixtures = clubsPrimary
@@ -445,7 +468,7 @@ export default function HomePage() {
     ? [...new Set(favoriteCompetitions.map(f => f.code).filter(Boolean))]
     : []
   const newsLeagueFilter = newsLeagues.length > 0 ? newsLeagues : (clubsPrimary ? FEATURED_NEWS_LEAGUES : [])
-  const { news: latestNews, newsError, retryNews } = useLatestNews(newsLeagueFilter)
+  const { news: latestNews, newsError, newsLoading, retryNews } = useLatestNews(newsLeagueFilter)
 
   // Prefer the next match with a known future kickoff; only fall back to TBD
   // if nothing has a time yet (avoids showing a placeholder knockout slot in hero).
@@ -476,6 +499,7 @@ export default function HomePage() {
         <TodayMatchesSection
           todayMatches={todayMatches}
           upcomingPreview={upcomingPreview}
+          loading={todayLoading}
           navigate={navigate}
           t={t}
           clubsPrimary={clubsPrimary}
@@ -538,9 +562,30 @@ export default function HomePage() {
             </div>
           )}
           <div className="row no-gutters" style={{ rowGap: 16 }}>
-            {(latestNews.length > 0 ? latestNews : newsError ? [] : [null, null, null]).map((post, i) => (
-              <NewsCard key={post?.id ?? i} post={post} index={i} />
-            ))}
+            {newsLoading ? (
+              [0, 1, 2].map(i => (
+                <div key={i} className="col-md-4">
+                  <div className="loading-shimmer" style={{ aspectRatio: "16/9", borderRadius: "8px 8px 0 0" }} />
+                  <div className="loading-shimmer" style={{ height: 60, borderRadius: 8, marginTop: 8 }} />
+                </div>
+              ))
+            ) : newsError ? null : latestNews.length === 0 ? (
+              <div className="col-12">
+                <EmptyState
+                  icon="🗞️"
+                  title={t("news.noArticles")}
+                  action={
+                    <Link to="/news" className="btn btn-primary btn-sm" style={{ marginTop: 8 }}>
+                      {t("news.allNews")}
+                    </Link>
+                  }
+                />
+              </div>
+            ) : (
+              latestNews.map((post, i) => (
+                <NewsCard key={post.id} post={post} index={i} />
+              ))
+            )}
           </div>
         </div>
       </div>
