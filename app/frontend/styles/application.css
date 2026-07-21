@@ -26,6 +26,10 @@
   --green:     #10b981;
   --radius:    10px;
   --shadow:    0 8px 32px rgba(0,0,0,0.4);
+  --nav-height: calc(57px + env(safe-area-inset-top, 0px));
+}
+@media(max-width:992px){
+  :root{--nav-height:calc(53px + env(safe-area-inset-top,0px))}
 }
 
 /* ─── Light Mode ─────────────────────────────────────── */
@@ -483,9 +487,8 @@ button:focus:not(:focus-visible){outline:none}
 }
 
 /* ─── Tab Bar ────────────────────────────────────────── */
-.tab-bar{background:var(--surface);border-bottom:1px solid var(--border);z-index:99}
-.sticky-tabs{position:sticky;top:57px}
-@media(max-width:992px){.sticky-tabs{top:53px}}
+.tab-bar{background:var(--surface);border-bottom:1px solid var(--border)}
+.sticky-tabs{position:sticky;top:var(--nav-height);z-index:99}
 .tab-bar__inner{
   display:flex;gap:6px;padding:10px 16px;
   overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;

@@ -285,7 +285,7 @@ export default function TeamShowPage() {
       )})()}
 
       {/* Tab bar */}
-      <div style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)", position: "sticky", top: 56, zIndex: 10 }}>
+      <div className="sticky-tabs" style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}>
         <div className="container" style={{ maxWidth: 700 }}>
           <div style={{ display: "flex", gap: 0 }}>
             {TABS.map(tab => (
