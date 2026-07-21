@@ -21,6 +21,7 @@ const SF_PAIRINGS  = [[0,1],[2,3]]
 const FINAL_PAIRING = [0, 1]
 
 const ROUND_LABEL_KEYS = ["bracket.r32","bracket.roundOf16","bracket.quarterFinals","bracket.semiFinals","bracket.final"]
+const ROUND_SIZES = [16, 8, 4, 2, 1]
 
 function seedLabel(slot) {
   const m = slot.match(/^([A-L])([12])$/)
@@ -97,6 +98,7 @@ function TeamButton({ team, isWinner, isPicked, onClick, disabled }) {
       className={`pred-team${isPicked ? " pred-team--picked" : ""}${isWinner ? " pred-team--winner" : ""}`}
       onClick={onClick}
       disabled={disabled || !team.name}
+      aria-pressed={isPicked}
       title={team.resolved ? team.name : `Slot: ${team.name}`}
     >
       {team.flag_url
@@ -137,17 +139,22 @@ export default function BracketPredictorPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [standings, setStandings] = useState({})
   const [standingsLoading, setStandingsLoading] = useState(true)
+  const [standingsError, setStandingsError] = useState(false)
   const [picks, setPicks] = useState(() => decodePicks(searchParams.get("p")))
   const [copied, setCopied] = useState(false)
   const [champion, setChampion] = useState(null)
 
-  useEffect(() => {
+  const loadStandings = useCallback(() => {
+    setStandingsLoading(true)
+    setStandingsError(false)
     fetchWithTimeout("/api/v1/standings?competition=WC")
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(setStandings)
-      .catch(() => {})
+      .catch(() => setStandingsError(true))
       .finally(() => setStandingsLoading(false))
   }, [])
+
+  useEffect(() => { loadStandings() }, [loadStandings])
 
   const rounds = buildBracket(standings, picks)
 
@@ -242,7 +249,9 @@ export default function BracketPredictorPage() {
 
         {/* Champion banner */}
         {champion && (
-          <div style={{
+          <div
+            aria-live="polite"
+            style={{
             background: "linear-gradient(135deg,rgba(238,30,70,.15),rgba(245,158,11,.12))",
             border: "1px solid rgba(245,158,11,.3)", borderRadius: 12,
             padding: "14px 20px", marginBottom: 24,
@@ -257,7 +266,12 @@ export default function BracketPredictorPage() {
         )}
 
         {/* Bracket */}
-        {standingsLoading ? (
+        {standingsError ? (
+          <div style={{ textAlign: "center", padding: "40px 0" }}>
+            <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.tryAgain")}</p>
+            <button className="btn btn-primary btn-sm" onClick={loadStandings}>{t("error.retry")}</button>
+          </div>
+        ) : standingsLoading ? (
           <div style={{ display: "flex", gap: 12, overflow: "hidden" }}>
             {[16, 8, 4, 2, 1].map((count, ri) => (
               <div key={ri} style={{ display: "flex", flexDirection: "column", gap: 6, flex: `0 0 ${ri === 4 ? 100 : 160}px` }}>
@@ -269,10 +283,11 @@ export default function BracketPredictorPage() {
             ))}
           </div>
         ) : null}
+        {!standingsError && (
         <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16, display: standingsLoading ? "none" : undefined }}>
-          <div style={{ display: "flex", gap: 12, minWidth: "max-content", paddingBottom: 16 }}>
+          <div style={{ display: "flex", gap: 12, minWidth: "max-content", paddingBottom: 16 }} role="list" aria-label={t("bracket.title")}>
             {rounds.map((round, ri) => (
-              <div key={ri} style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              <div key={ri} role="listitem" aria-label={t(ROUND_LABEL_KEYS[ri])} style={{ display: "flex", flexDirection: "column", gap: 0 }}>
                 <div style={{
                   fontSize: "0.68rem", fontWeight: 700, color: "var(--muted)",
                   textTransform: "uppercase", letterSpacing: ".08em",
@@ -299,10 +314,13 @@ export default function BracketPredictorPage() {
             ))}
           </div>
         </div>
+        )}
 
+        {!standingsError && (
         <p style={{ color: "var(--muted)", fontSize: "0.72rem", marginTop: 16, textAlign: "center" }}>
           {t("bracket.matchesPicked", { count: totalPicks })}
         </p>
+        )}
       </div>
     </div>
   )

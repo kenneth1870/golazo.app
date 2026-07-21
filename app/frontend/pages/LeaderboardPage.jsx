@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
@@ -22,6 +22,7 @@ export default function LeaderboardPage() {
   const navigate  = useNavigate()
   const [rows, setRows]             = useState([])
   const [loading, setLoading]       = useState(true)
+  const [error, setError]           = useState(false)
   const [copied, setCopied]         = useState(false)
   const [visibleCount, setVisible]  = useState(25)
   const [myPreds, setMyPreds]         = useState(null)
@@ -57,17 +58,21 @@ export default function LeaderboardPage() {
       .catch(() => {})
   }
 
-  useEffect(() => {
+  const loadLeaderboard = useCallback(() => {
+    setLoading(true)
+    setError(false)
     fetch("/api/v1/score_predictions/leaderboard")
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(data => {
         setRows(data)
         const myIdx = data.findIndex(r => r.device_id === deviceId)
         if (myIdx > 24) setVisible(myIdx + 5)
       })
-      .catch(() => {})
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
-  }, []) // eslint-disable-line
+  }, [deviceId])
+
+  useEffect(() => { loadLeaderboard() }, [loadLeaderboard])
 
   useEffect(() => {
     fetch(`/api/v1/score_predictions/by_device?device_id=${encodeURIComponent(deviceId)}`)
@@ -208,6 +213,11 @@ export default function LeaderboardPage() {
 
         {loading ? (
           <div className="loading-shimmer" style={{ height: 300, borderRadius: 12 }} />
+        ) : error ? (
+          <div style={{ textAlign: "center", padding: "40px 0" }}>
+            <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("leaderboard.loadError", "Couldn't load the leaderboard.")}</p>
+            <button className="btn btn-primary btn-sm" onClick={loadLeaderboard}>{t("error.retry")}</button>
+          </div>
         ) : rows.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state__icon">🎯</div>

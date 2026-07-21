@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { storageGet, storageSet } from "../utils/safeStorage"
 import { isIosSafari, isStandalone } from "../utils/platform"
+import { dismissOverlayProps } from "../utils/dismissOverlay"
 
 const SHOWN_KEY = "golazo_ios_guide_shown"
 
@@ -66,18 +67,30 @@ export default function IosInstallGuide({ paused = false }) {
     setVisible(false)
   }
 
+  useEffect(() => {
+    if (!visible) return
+    function onKey(e) {
+      if (e.key === "Escape") dismiss()
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [visible])
+
   if (!visible) return null
 
   return (
     <div
+      {...dismissOverlayProps(dismiss, t("a11y.dismiss"))}
       style={{
         position: "fixed", inset: 0, zIndex: 9000,
         background: "rgba(0,0,0,.72)", backdropFilter: "blur(4px)",
         display: "flex", alignItems: "flex-end",
       }}
-      onClick={dismiss}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("ios.title", "Get the full experience")}
         onClick={e => e.stopPropagation()}
         style={{
           width: "100%",

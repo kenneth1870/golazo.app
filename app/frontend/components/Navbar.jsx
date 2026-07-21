@@ -7,6 +7,7 @@ import { useLiveCount } from "../contexts/LiveContext"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { NAV_LEAGUES } from "./ClubCompetitionChips"
+import { dismissOverlayProps } from "../utils/dismissOverlay"
 
 const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
@@ -103,7 +104,7 @@ function IosInstallHint({ onClose }) {
   const { t } = useTranslation()
   return (
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", zIndex: 4000, backdropFilter: "blur(4px)" }} />
+      <div {...dismissOverlayProps(onClose, t("a11y.dismiss"))} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", zIndex: 4000, backdropFilter: "blur(4px)" }} />
       <div style={{
         position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
         width: "min(360px, 90vw)", zIndex: 4001,
@@ -284,7 +285,7 @@ export default function Navbar() {
       {searchOpen && <SearchBar onClose={() => setSearchOpen(false)} returnFocusRef={searchTriggerRef} />}
 
       {/* Drawer overlay */}
-      {drawerOpen && <div className="mobile-overlay" onClick={() => setDrawerOpen(false)} />}
+      {drawerOpen && <div className="mobile-overlay" {...dismissOverlayProps(() => setDrawerOpen(false), t("a11y.close"))} />}
 
       {/* Mobile drawer */}
       <div className={`site-mobile-menu${drawerOpen ? " mobile-menu-open" : ""}`}>

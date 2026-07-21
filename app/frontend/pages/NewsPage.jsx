@@ -95,14 +95,23 @@ export default function NewsPage() {
   const { t, i18n }    = useTranslation()
   const { favoriteTeams, favoriteCompetitions } = useFavorites()
   const { clubs_primary: clubsPrimary } = useAppFocus()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   usePageMeta(t("news.title"), clubsPrimary ? t("news.metaDescClubs") : t("news.metaDesc"))
 
   const [articles, setArticles]       = useState([])
   const [loading, setLoading]         = useState(true)
   const [error, setError]             = useState(false)
   const [source, setSource]           = useState(null)   // null = "All"
-  const [tab, setTab]                 = useState(() => searchParams.get("tab") === "foryou" ? "foryou" : "all")
+  const tab = searchParams.get("tab") === "foryou" ? "foryou" : "all"
+
+  const selectTab = useCallback((key) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (key === "all") next.delete("tab")
+      else next.set("tab", key)
+      return next
+    }, { replace: true })
+  }, [setSearchParams])
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   const sentinelRef = useRef(null)
@@ -174,7 +183,7 @@ export default function NewsPage() {
               aria-selected={tab === "foryou"}
               aria-controls="news-tab-panel"
               className={`tab-link${tab === "foryou" ? " tab-link--active" : ""}`}
-              onClick={() => { setTab("foryou"); setSource(null) }}
+              onClick={() => { selectTab("foryou"); setSource(null) }}
               style={{ display: "flex", alignItems: "center", gap: 5 }}
             >
               <span style={{ fontSize: "0.85rem" }}>⭐</span>
@@ -198,7 +207,7 @@ export default function NewsPage() {
                 aria-selected={tab === "all"}
                 aria-controls="news-tab-panel"
                 className="tab-link"
-                onClick={() => setTab("all")}
+                onClick={() => selectTab("all")}
                 style={{ color: "var(--muted)" }}
               >
                 {t("news.allNews", "All news")}
