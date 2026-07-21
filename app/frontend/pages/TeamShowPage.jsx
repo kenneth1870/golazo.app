@@ -273,7 +273,7 @@ export default function TeamShowPage() {
                   width: 26, height: 26, borderRadius: "50%", display: "inline-flex",
                   alignItems: "center", justifyContent: "center",
                   fontSize: "0.65rem", fontWeight: 800, color: "#fff",
-                  background: r === "W" ? "#10b981" : r === "D" ? "#f59e0b" : "#ef4444",
+                  background: r === "W" ? "var(--green)" : r === "D" ? "var(--amber)" : "var(--danger)",
                 }}>
                   {r}
                 </span>
@@ -555,7 +555,7 @@ function MatchLine({ match, teamName, navigate }) {
     result = myScore > oppScore ? "W" : myScore < oppScore ? "L" : "D"
   }
 
-  const resultColors = { W: "#10b981", D: "#f59e0b", L: "#ef4444" }
+  const resultColors = { W: "var(--green)", D: "var(--amber)", L: "var(--danger)" }
 
   return (
     <div

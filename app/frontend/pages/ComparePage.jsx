@@ -16,7 +16,7 @@ function getDeviceId() {
 }
 
 function PtsBadge({ pts }) {
-  const color = pts === 3 ? "#10b981" : pts === 1 ? "#f59e0b" : pts === 0 ? "#ef4444" : "var(--muted)"
+  const color = pts === 3 ? "var(--green)" : pts === 1 ? "var(--amber)" : pts === 0 ? "var(--danger)" : "var(--muted)"
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", justifyContent: "center",

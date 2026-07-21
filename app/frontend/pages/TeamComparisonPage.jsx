@@ -19,13 +19,13 @@ function StatBar({ label, homeVal, awayVal, invert = false }) {
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", marginBottom: 4, fontWeight: 700 }}>
-        <span style={{ color: homeBetter ? "#10b981" : "var(--text)" }}>{homeVal ?? "–"}</span>
+        <span style={{ color: homeBetter ? "var(--green)" : "var(--text)" }}>{homeVal ?? "–"}</span>
         <span style={{ color: "var(--muted)", fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".06em" }}>{label}</span>
-        <span style={{ color: awayBetter ? "#10b981" : "var(--text)" }}>{awayVal ?? "–"}</span>
+        <span style={{ color: awayBetter ? "var(--green)" : "var(--text)" }}>{awayVal ?? "–"}</span>
       </div>
       <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "var(--surface2)" }}>
-        <div style={{ width: `${homePct}%`, background: homeBetter ? "#10b981" : "var(--accent)", transition: "width .5s ease" }} />
-        <div style={{ width: `${awayPct}%`, background: awayBetter ? "#10b981" : "rgba(99,102,241,.6)", transition: "width .5s ease" }} />
+        <div style={{ width: `${homePct}%`, background: homeBetter ? "var(--green)" : "var(--accent)", transition: "width .5s ease" }} />
+        <div style={{ width: `${awayPct}%`, background: awayBetter ? "var(--green)" : "rgba(99,102,241,.6)", transition: "width .5s ease" }} />
       </div>
     </div>
   )

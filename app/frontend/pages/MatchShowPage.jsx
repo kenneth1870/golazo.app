@@ -652,17 +652,17 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
 
           <div className="scoreboard__score-block">
             <div className="scoreboard__score" style={{ gap: 12 }}>
-              <span style={{ color: isFT && home?.winner ? "#10b981" : "#fff" }}>{goals?.home ?? (isNS ? "–" : "0")}</span>
+              <span style={{ color: isFT && home?.winner ? "var(--green)" : "#fff" }}>{goals?.home ?? (isNS ? "–" : "0")}</span>
               <span className="scoreboard__score-sep">:</span>
-              <span style={{ color: isFT && away?.winner ? "#10b981" : "#fff" }}>{goals?.away ?? (isNS ? "–" : "0")}</span>
+              <span style={{ color: isFT && away?.winner ? "var(--green)" : "#fff" }}>{goals?.away ?? (isNS ? "–" : "0")}</span>
             </div>
             {isFT && home?.winner && (
-              <div style={{ textAlign: "center", marginTop: 8, fontSize: ".6rem", fontWeight: 800, letterSpacing: ".1em", color: "#10b981" }}>
+              <div style={{ textAlign: "center", marginTop: 8, fontSize: ".6rem", fontWeight: 800, letterSpacing: ".1em", color: "var(--green)" }}>
                 {homeName} WIN
               </div>
             )}
             {isFT && away?.winner && (
-              <div style={{ textAlign: "center", marginTop: 8, fontSize: ".6rem", fontWeight: 800, letterSpacing: ".1em", color: "#10b981" }}>
+              <div style={{ textAlign: "center", marginTop: 8, fontSize: ".6rem", fontWeight: 800, letterSpacing: ".1em", color: "var(--green)" }}>
                 {awayName} WIN
               </div>
             )}
@@ -745,7 +745,7 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
 // ─── Tab components ────────────────────────────────────
 function FormPill({ result }) {
   if (!result) return null
-  const colors = { W: "#10b981", D: "#f59e0b", L: "#ef4444" }
+  const colors = { W: "var(--green)", D: "var(--amber)", L: "var(--danger)" }
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -1213,8 +1213,8 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
         <div style={{ display: "flex", gap: 8, marginBottom: 12, marginTop: 10 }}>
           {[
             { label: homeName, pct: percent?.home, color: "var(--accent)" },
-            { label: t("match.draw"),  pct: percent?.draw, color: "#f59e0b" },
-            { label: awayName, pct: percent?.away, color: "#3b82f6" },
+            { label: t("match.draw"),  pct: percent?.draw, color: "var(--amber)" },
+            { label: awayName, pct: percent?.away, color: "var(--away-blue)" },
           ].map(({ label, pct, color }) => (
             <div key={label} style={{ flex: 1, textAlign: "center" }}>
               <div style={{ fontSize: "1.4rem", fontWeight: 900, color }}>{pct ?? "—"}</div>
@@ -1224,8 +1224,8 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
         </div>
         <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden" }}>
           <div style={{ width: percent?.home, background: "var(--accent)" }} />
-          <div style={{ width: percent?.draw, background: "#f59e0b" }} />
-          <div style={{ flex: 1, background: "#3b82f6" }} />
+          <div style={{ width: percent?.draw, background: "var(--amber)" }} />
+          <div style={{ flex: 1, background: "var(--away-blue)" }} />
         </div>
       </div>
 
@@ -1468,9 +1468,9 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t, lang }) {
 const RATING_COLOR = r => {
   const n = parseFloat(r)
   if (isNaN(n)) return "var(--muted)"
-  if (n >= 8)   return "#10b981"
-  if (n >= 6.5) return "#f59e0b"
-  return "#ef4444"
+  if (n >= 8)   return "var(--green)"
+  if (n >= 6.5) return "var(--amber)"
+  return "var(--danger)"
 }
 
 function PlayerRatingsPanel({ fixtureId }) {

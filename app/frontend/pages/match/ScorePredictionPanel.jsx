@@ -117,7 +117,7 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
         {myPred?.points_earned != null && (
           <span style={{
             background: myPred.points_earned === 3 ? "rgba(16,185,129,.2)" : myPred.points_earned === 1 ? "rgba(245,158,11,.2)" : "rgba(239,68,68,.15)",
-            color: myPred.points_earned === 3 ? "#10b981" : myPred.points_earned === 1 ? "#f59e0b" : "#ef4444",
+            color: myPred.points_earned === 3 ? "var(--green)" : myPred.points_earned === 1 ? "var(--amber)" : "var(--danger)",
             border: `1px solid currentColor`, borderRadius: 20, padding: "3px 12px",
             fontSize: "0.75rem", fontWeight: 700,
           }}>

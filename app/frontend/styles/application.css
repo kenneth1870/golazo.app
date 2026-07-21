@@ -24,6 +24,10 @@
   --accent:    #ee1e46;
   --accent2:   #6366f1;
   --green:     #10b981;
+  --success:   var(--green);
+  --danger:    #ef4444;
+  --amber:     #f59e0b;
+  --away-blue: #3b82f6;
   --radius:    10px;
   --shadow:    0 8px 32px rgba(0,0,0,0.4);
   --nav-height: calc(57px + env(safe-area-inset-top, 0px));

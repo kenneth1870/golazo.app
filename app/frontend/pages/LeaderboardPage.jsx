@@ -180,7 +180,7 @@ export default function LeaderboardPage() {
               <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderTop: "none", borderRadius: "0 0 10px 10px", overflow: "hidden" }}>
                 {myPreds.predictions.map((p, i) => {
                   const pts = p.points_earned ?? 0
-                  const ptsColor = pts >= 3 ? "#10b981" : pts >= 1 ? "#f59e0b" : "var(--muted)"
+                  const ptsColor = pts >= 3 ? "var(--green)" : pts >= 1 ? "var(--amber)" : "var(--muted)"
                   return (
                     <div key={i} style={{
                       display: "flex", alignItems: "center", gap: 10, padding: "10px 16px",
