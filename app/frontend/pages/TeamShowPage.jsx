@@ -213,7 +213,7 @@ export default function TeamShowPage() {
               )}
               <button
                 onClick={() => toggleFavorite({ type: "team", id: team.id, name: team.name, flag_url: team.flag_url, group: team.group })}
-                title={isFavorite("team", team.id) ? "Unfollow team" : "Follow team"}
+                title={isFavorite("team", team.id) ? t("team.unfollowTeam") : t("team.followTeam")}
                 style={{
                   background: isFavorite("team", team.id) ? "rgba(238,30,70,.15)" : "rgba(255,255,255,.06)",
                   border: isFavorite("team", team.id) ? "1px solid rgba(238,30,70,.4)" : "1px solid rgba(255,255,255,.12)",

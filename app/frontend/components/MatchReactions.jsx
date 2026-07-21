@@ -9,14 +9,15 @@
  * The server also rate-limits per IP.
  */
 import { useState, useEffect, useCallback } from "react"
+import { useTranslation } from "react-i18next"
 
 const EMOJIS = [
-  { emoji: "⚽", label: "Goal!" },
-  { emoji: "🔥", label: "Fire" },
-  { emoji: "🎉", label: "Party" },
-  { emoji: "😭", label: "Sad" },
-  { emoji: "😮", label: "Wow" },
-  { emoji: "👏", label: "Applause" },
+  { emoji: "⚽", labelKey: "reactions.goal" },
+  { emoji: "🔥", labelKey: "reactions.fire" },
+  { emoji: "🎉", labelKey: "reactions.party" },
+  { emoji: "😭", labelKey: "reactions.sad" },
+  { emoji: "😮", labelKey: "reactions.wow" },
+  { emoji: "👏", labelKey: "reactions.applause" },
 ]
 
 function reactionKey(matchId, emoji) {
@@ -40,6 +41,7 @@ function formatCount(n) {
 }
 
 export default function MatchReactions({ matchId, compact = false }) {
+  const { t } = useTranslation()
   const [counts, setCounts]     = useState({})
   const [loading, setLoading]   = useState(true)
   const [bouncing, setBouncing] = useState(null)
@@ -85,7 +87,8 @@ export default function MatchReactions({ matchId, compact = false }) {
       flexWrap: "wrap",
       padding: compact ? "6px 0" : "10px 0",
     }}>
-      {EMOJIS.map(({ emoji, label }) => {
+      {EMOJIS.map(({ emoji, labelKey }) => {
+        const label    = t(labelKey)
         const count    = counts[emoji] || 0
         const reacted  = hasReacted(matchId, emoji)
         const isBounce = bouncing === emoji
@@ -95,7 +98,7 @@ export default function MatchReactions({ matchId, compact = false }) {
             key={emoji}
             onClick={() => react(emoji)}
             title={label}
-            aria-label={`React with ${label}`}
+            aria-label={t("a11y.reactWith", { label })}
             style={{
               display: "flex",
               alignItems: "center",
@@ -136,7 +139,7 @@ export default function MatchReactions({ matchId, compact = false }) {
 
       {!compact && total > 0 && (
         <span style={{ fontSize: "0.7rem", color: "var(--muted)", marginLeft: 4 }}>
-          {total.toLocaleString()} reaction{total !== 1 ? "s" : ""}
+          {t(total !== 1 ? "reactions.total_other" : "reactions.total_one", { count: total })}
         </span>
       )}
     </div>

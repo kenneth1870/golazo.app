@@ -473,6 +473,8 @@
     "follow": "☆ Follow",
     "followLeague": "Follow league",
     "unfollowLeague": "Unfollow league",
+    "followTeam": "Follow team",
+    "unfollowTeam": "Unfollow team",
     "searchPlaceholder": "Search team…",
     "noTeamsFound": "No teams found",
     "removeFavorite": "Remove favorite",
@@ -688,6 +690,16 @@
     "accept": "Accept",
     "decline": "Decline"
   },
+  "reactions": {
+    "goal": "Goal!",
+    "fire": "Fire",
+    "party": "Party",
+    "sad": "Sad",
+    "wow": "Wow",
+    "applause": "Applause",
+    "total_one": "{{count}} reaction",
+    "total_other": "{{count}} reactions"
+  },
   "a11y": {
     "previousDay": "Previous day",
     "nextDay": "Next day",
@@ -704,6 +716,7 @@
     "matchRow": "{{home}} vs {{away}}",
     "searchResultTeam": "{{name}}",
     "searchResultPlayer": "{{name}}",
-    "viewLeague": "View {{name}}"
+    "viewLeague": "View {{name}}",
+    "reactWith": "React with {{label}}"
   }
 }
