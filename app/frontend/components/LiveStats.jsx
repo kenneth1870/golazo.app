@@ -44,7 +44,7 @@ export default function LiveStats({ stats, homeTeam, awayTeam }) {
       </div>
       <div className="widget-body">
         <div className="d-flex justify-content-between mb-3" style={{ padding: "0 8px" }}>
-          <span style={{ color: "#ee1e46", fontWeight: 700 }}>{homeTeam?.code}</span>
+          <span style={{ color: "var(--accent)", fontWeight: 700 }}>{homeTeam?.code}</span>
           <span style={{ color: "gray", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: 1 }}>vs</span>
           <span style={{ color: "var(--muted)", fontWeight: 700 }}>{awayTeam?.code}</span>
         </div>

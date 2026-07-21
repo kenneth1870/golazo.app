@@ -10,7 +10,7 @@ function StatBox({ label, value, highlight }) {
       background: "var(--surface2)", borderRadius: 10, padding: "14px 12px",
       textAlign: "center", flex: "1 1 80px", minWidth: 72,
     }}>
-      <div style={{ fontSize: "1.4rem", fontWeight: 900, color: highlight ? "#ee1e46" : "var(--text)" }}>
+      <div style={{ fontSize: "1.4rem", fontWeight: 900, color: highlight ? "var(--accent)" : "var(--text)" }}>
         {value ?? "—"}
       </div>
       <div style={{ fontSize: "0.65rem", color: "var(--muted)", marginTop: 3, textTransform: "uppercase", letterSpacing: .5 }}>
@@ -282,7 +282,7 @@ export default function PlayerPage() {
                 <h1 style={{ margin: "0 0 6px", fontSize: "1.5rem", fontWeight: 900, color: "#fff" }}>{name}</h1>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {position && (
-                    <span style={{ background: "rgba(238,30,70,.15)", color: "#ee1e46", borderRadius: 20, padding: "2px 10px", fontSize: "0.72rem", fontWeight: 700 }}>
+                    <span style={{ background: "rgba(238,30,70,.15)", color: "var(--accent)", borderRadius: 20, padding: "2px 10px", fontSize: "0.72rem", fontWeight: 700 }}>
                       {position}
                     </span>
                   )}

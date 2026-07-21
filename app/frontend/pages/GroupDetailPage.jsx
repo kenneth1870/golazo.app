@@ -165,9 +165,9 @@ function WhatIfPanel({ matches, standings, lang, t }) {
               onClick={() => setOverrides(o => ({ ...o, [m.id]: val }))}
               style={{
                 flex: 1, padding: "6px 4px", fontSize: "0.72rem", fontWeight: 700,
-                borderRadius: 6, border: `1px solid ${sel === val ? "#ee1e46" : "var(--border)"}`,
+                borderRadius: 6, border: `1px solid ${sel === val ? "var(--accent)" : "var(--border)"}`,
                 background: sel === val ? "rgba(238,30,70,.15)" : "var(--surface2)",
-                color: sel === val ? "#ee1e46" : "var(--muted)", cursor: "pointer",
+                color: sel === val ? "var(--accent)" : "var(--muted)", cursor: "pointer",
               }}
             >{label}</button>
           )
@@ -288,7 +288,7 @@ export default function GroupDetailPage() {
               >
                 {tab.label}
                 {tab.key === "standings" && hasLiveInGroup && (
-                  <span style={{ marginLeft: 5, width: 6, height: 6, borderRadius: "50%", background: "#ee1e46", display: "inline-block", verticalAlign: "middle" }} />
+                  <span style={{ marginLeft: 5, width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", display: "inline-block", verticalAlign: "middle" }} />
                 )}
               </button>
             ))}
@@ -302,7 +302,7 @@ export default function GroupDetailPage() {
               <div className="widget-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <h3 style={{ margin: 0 }}>{t("groups.standings", { letter: group })}</h3>
                 {hasLiveInGroup && (
-                  <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.65rem", color: "#ee1e46", fontWeight: 700, marginLeft: "auto" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.65rem", color: "var(--accent)", fontWeight: 700, marginLeft: "auto" }}>
                     <span className="live-dot" style={{ width: 6, height: 6 }} />
                     {t("groups.liveUpdate")}
                   </span>

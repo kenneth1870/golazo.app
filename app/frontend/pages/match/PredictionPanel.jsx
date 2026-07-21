@@ -43,7 +43,7 @@ export default function PredictionPanel({ matchId, homeTeamName, awayTeamName, t
   const voted   = !!myVote
   const total   = pred.total || 0
   const options = [
-    { key: "home", label: homeTeamName ?? "Home", pct: pred.home_pct, color: "#ee1e46" },
+    { key: "home", label: homeTeamName ?? "Home", pct: pred.home_pct, color: "var(--accent)" },
     { key: "draw", label: t("match.draw"),           pct: pred.draw_pct, color: "#f59e0b" },
     { key: "away", label: awayTeamName ?? "Away",  pct: pred.away_pct, color: "#3b82f6" },
   ]

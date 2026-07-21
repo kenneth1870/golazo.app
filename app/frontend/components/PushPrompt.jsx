@@ -94,7 +94,7 @@ export default function PushPrompt({ favoriteTeamName = null, paused = false }) 
               onClick={enable}
               disabled={loading}
               style={{
-                background: "#ee1e46", color: "#fff", border: "none",
+                background: "var(--accent)", color: "#fff", border: "none",
                 borderRadius: 8, padding: "7px 14px", fontSize: "0.8rem",
                 fontWeight: 700, cursor: loading ? "default" : "pointer",
                 opacity: loading ? .6 : 1,

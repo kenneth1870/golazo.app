@@ -232,7 +232,7 @@ export default function BracketPredictorPage() {
               </button>
             )}
             <button onClick={share} style={{
-              background: "var(--accent,#ee1e46)", border: "none", borderRadius: 8,
+              background: "var(--accent)", border: "none", borderRadius: 8,
               color: "#fff", padding: "8px 16px", cursor: "pointer", fontSize: "0.82rem", fontWeight: 700,
             }}>
               {copied ? t("bracket.copied") : t("bracket.share")}

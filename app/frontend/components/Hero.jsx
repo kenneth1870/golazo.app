@@ -127,7 +127,7 @@ export default function Hero({ nextMatch, liveCount = 0, compact = false, clubsP
         <div className="container" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0, overflow: "hidden" }}>
             {liveCount > 0
-              ? <><span className="live-dot" /><span style={{ fontWeight: 800, fontSize: ".78rem", color: "#ee1e46", whiteSpace: "nowrap" }}>{t("hero.liveNow", { count: liveCount })}</span></>
+              ? <><span className="live-dot" /><span style={{ fontWeight: 800, fontSize: ".78rem", color: "var(--accent)", whiteSpace: "nowrap" }}>{t("hero.liveNow", { count: liveCount })}</span></>
               : <span style={{ fontWeight: 800, fontSize: ".78rem", color: "var(--text)", whiteSpace: "nowrap" }}>{clubsPrimary ? t("hero.clubBadge") : t("nav.mundial")}</span>
             }
             <span style={{ fontSize: ".68rem", color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -202,7 +202,7 @@ export default function Hero({ nextMatch, liveCount = 0, compact = false, clubsP
                   display: "inline-flex", alignItems: "center", gap: 6,
                   background: "rgba(238,30,70,.15)", border: "1px solid rgba(238,30,70,.4)",
                   borderRadius: 20, padding: "4px 12px",
-                  fontSize: ".68rem", fontWeight: 800, color: "#ee1e46", letterSpacing: ".08em", textTransform: "uppercase",
+                  fontSize: ".68rem", fontWeight: 800, color: "var(--accent)", letterSpacing: ".08em", textTransform: "uppercase",
                 }}>
                   <span className="live-dot" />
                   {t("hero.liveNow", { count: liveCount })}

@@ -107,9 +107,9 @@ function FixtureCard({ match, onClick }) {
           <>
             <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end", marginBottom: 4 }}>
               <span className="live-dot" />
-              <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "#ee1e46", letterSpacing: 1 }}>{t("status.live")}</span>
+              <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "var(--accent)", letterSpacing: 1 }}>{t("status.live")}</span>
             </div>
-            <div style={{ fontSize: "1rem", fontWeight: 900, color: "#ee1e46", lineHeight: 1 }}>
+            <div style={{ fontSize: "1rem", fontWeight: 900, color: "var(--accent)", lineHeight: 1 }}>
               {match.home_score} – {match.away_score}
             </div>
           </>
@@ -152,7 +152,7 @@ function PhaseSection({ phase, matches, onMatchClick }) {
   return (
     <div style={{ marginBottom: 32 }}>
       <div style={{
-        fontSize: "0.72rem", fontWeight: 800, color: "#ee1e46",
+        fontSize: "0.72rem", fontWeight: 800, color: "var(--accent)",
         textTransform: "uppercase", letterSpacing: ".08em",
         marginBottom: 14, paddingLeft: 2,
       }}>

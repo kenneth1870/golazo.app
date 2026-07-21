@@ -17,7 +17,7 @@ export default function RequireAdmin({ children }) {
         <div style={{ fontSize: "3rem" }}>🚫</div>
         <h2 style={{ color: "#fff", margin: 0 }}>Access denied</h2>
         <p style={{ color: "rgba(255,255,255,.4)", margin: 0 }}>Admin privileges required.</p>
-        <a href="/" style={{ color: "#ee1e46", fontSize: "0.9rem" }}>← Back to site</a>
+        <a href="/" style={{ color: "var(--accent)", fontSize: "0.9rem" }}>← Back to site</a>
       </div>
     )
   }

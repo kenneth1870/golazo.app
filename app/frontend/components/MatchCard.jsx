@@ -78,7 +78,7 @@ export default function MatchCard({ match, onClick }) {
       {/* Score / kickoff */}
       <div style={{ flexShrink: 0, textAlign: "center", padding: "0 12px", minWidth: 70 }}>
         {isLive && (
-          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: "0.65rem", fontWeight: 700, color: "#ee1e46", letterSpacing: 1, marginBottom: 4 }}>
+          <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: "0.65rem", fontWeight: 700, color: "var(--accent)", letterSpacing: 1, marginBottom: 4 }}>
             <span className="live-dot" /> LIVE
           </span>
         )}

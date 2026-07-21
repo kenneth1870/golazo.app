@@ -139,7 +139,7 @@ export default function ClubTeamPage() {
                 background: following ? "rgba(238,30,70,.15)" : "var(--surface2)",
                 border: following ? "1px solid rgba(238,30,70,.4)" : "1px solid var(--border)",
                 borderRadius: 20, padding: "6px 16px",
-                color: following ? "#ee1e46" : "var(--muted)",
+                color: following ? "var(--accent)" : "var(--muted)",
                 fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", flexShrink: 0,
               }}
             >

@@ -132,7 +132,7 @@ export default function ComparePage() {
                 <button
                   onClick={copyLink}
                   style={{
-                    background: copied ? "#10b981" : "#ee1e46", color: "#fff",
+                    background: copied ? "#10b981" : "var(--accent)", color: "#fff",
                     border: "none", borderRadius: 8, padding: "8px 16px",
                     fontWeight: 700, fontSize: "0.8rem", cursor: "pointer",
                     flexShrink: 0, transition: "background .2s",
@@ -156,7 +156,7 @@ export default function ComparePage() {
                   flex: 1, textAlign: "center", background: "rgba(238,30,70,.08)",
                   border: "1px solid rgba(238,30,70,.2)", borderRadius: 12, padding: "16px 8px",
                 }}>
-                  <div style={{ fontSize: "2rem", fontWeight: 900, color: "#ee1e46" }}>{myData?.total_points ?? 0}</div>
+                  <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--accent)" }}>{myData?.total_points ?? 0}</div>
                   <div style={{ fontSize: "0.7rem", color: "var(--muted)", marginTop: 4 }}>{t("compare.you")}</div>
                   <div style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 2, fontWeight: 700 }}>
                     {myData?.display_name || t("compare.you")}

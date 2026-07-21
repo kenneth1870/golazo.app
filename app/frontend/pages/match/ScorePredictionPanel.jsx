@@ -175,7 +175,7 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
             <button
               onClick={submit} disabled={saving}
               style={{
-                background: "#ee1e46", color: "#fff", border: "none",
+                background: "var(--accent)", color: "#fff", border: "none",
                 borderRadius: 8, padding: "9px 28px", fontWeight: 700,
                 fontSize: "0.85rem", cursor: "pointer", opacity: saving ? .6 : 1,
               }}

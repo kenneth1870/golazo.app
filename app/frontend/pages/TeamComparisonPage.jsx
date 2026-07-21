@@ -24,7 +24,7 @@ function StatBar({ label, homeVal, awayVal, invert = false }) {
         <span style={{ color: awayBetter ? "#10b981" : "var(--text)" }}>{awayVal ?? "–"}</span>
       </div>
       <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "var(--surface2)" }}>
-        <div style={{ width: `${homePct}%`, background: homeBetter ? "#10b981" : "#ee1e46", transition: "width .5s ease" }} />
+        <div style={{ width: `${homePct}%`, background: homeBetter ? "#10b981" : "var(--accent)", transition: "width .5s ease" }} />
         <div style={{ width: `${awayPct}%`, background: awayBetter ? "#10b981" : "rgba(99,102,241,.6)", transition: "width .5s ease" }} />
       </div>
     </div>
@@ -134,7 +134,7 @@ function ComparisonShell({ subtitle, homePicker, awayPicker, homeId, awayId, set
           disabled={!homeId || !awayId || loading}
           style={{
             width: "100%", padding: "10px", marginBottom: 24,
-            background: homeId && awayId ? "#ee1e46" : "var(--surface2)",
+            background: homeId && awayId ? "var(--accent)" : "var(--surface2)",
             border: "none", borderRadius: 10, color: homeId && awayId ? "#fff" : "var(--muted)", fontWeight: 800,
             fontSize: "0.85rem", cursor: homeId && awayId ? "pointer" : "default",
             opacity: homeId && awayId ? 1 : 0.5,
@@ -243,7 +243,7 @@ function WcTeamComparison() {
                 {(team.scorers || []).slice(0, 3).map((s, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                     <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.player_name}</span>
-                    <span style={{ fontWeight: 900, color: "#ee1e46", fontSize: "0.85rem" }}>⚽ {s.goals}</span>
+                    <span style={{ fontWeight: 900, color: "var(--accent)", fontSize: "0.85rem" }}>⚽ {s.goals}</span>
                   </div>
                 ))}
                 {!team.scorers?.length && <div style={{ color: "var(--muted)", fontSize: "0.75rem" }}>{t("mundial.noScorers")}</div>}

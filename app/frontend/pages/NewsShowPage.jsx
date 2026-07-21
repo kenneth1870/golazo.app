@@ -8,7 +8,7 @@ import { useAppFocus } from "../hooks/useAppFocus"
 const SOURCE_COLORS = {
   "BBC Sport": "#b80000",
   "ESPN FC":   "#cc0000",
-  "Goal.com":  "#ee1e46",
+  "Goal.com":  "var(--accent)",
 }
 
 function ArticleSkeleton() {
@@ -115,7 +115,7 @@ export default function NewsShowPage() {
     )
   }
 
-  const color      = SOURCE_COLORS[article.source] || "#ee1e46"
+  const color      = SOURCE_COLORS[article.source] || "var(--accent)"
   const heroImage  = content?.hero_image || article.image
   const paragraphs = content?.paragraphs || []
 

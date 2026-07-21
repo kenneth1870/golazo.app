@@ -189,13 +189,13 @@ export default function AllLeaguesPage() {
           {totalLive > 0 && (
             <div
               className="widget-next-match mb-5"
-              style={{ borderLeft: "3px solid #ee1e46", cursor: "pointer" }}
+              style={{ borderLeft: "3px solid var(--accent)", cursor: "pointer" }}
               onClick={() => navigate("/scores/today")}
             >
               <div className="widget-title d-flex align-items-center" style={{ gap: 8 }}>
                 <span className="live-dot" />
                 <h3 style={{ margin: 0 }}>{t("leagues.subtitle", { count: totalLive, comps: competitions.length })}</h3>
-                <span style={{ marginLeft: "auto", fontSize: "0.8rem", color: "#ee1e46" }}>
+                <span style={{ marginLeft: "auto", fontSize: "0.8rem", color: "var(--accent)" }}>
                   {t("home.viewAll")}
                 </span>
               </div>

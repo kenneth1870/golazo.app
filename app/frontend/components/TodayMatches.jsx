@@ -19,7 +19,7 @@ function MatchRow({ match, onClick }) {
         cursor: "pointer",
         borderBottom: "1px solid var(--border)",
         transition: "background 0.15s",
-        borderLeft: isLive ? "3px solid #ee1e46" : "3px solid transparent",
+        borderLeft: isLive ? "3px solid var(--accent)" : "3px solid transparent",
       }}
       onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.04)"}
       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
@@ -27,7 +27,7 @@ function MatchRow({ match, onClick }) {
       {/* Status / time */}
       <div style={{ width: 70, flexShrink: 0, textAlign: "center" }}>
         {isLive ? (
-          <span style={{ color: "#ee1e46", fontSize: "0.7rem", fontWeight: 700, letterSpacing: 1 }}>
+          <span style={{ color: "var(--accent)", fontSize: "0.7rem", fontWeight: 700, letterSpacing: 1 }}>
             <span className="live-indicator" /> {match.minute || t("status.live")}
           </span>
         ) : isFinished ? (
@@ -53,7 +53,7 @@ function MatchRow({ match, onClick }) {
           <>
             <span style={{
               fontWeight: 900, fontSize: "1.05rem",
-              color: isLive ? "#ee1e46" : "var(--text)",
+              color: isLive ? "var(--accent)" : "var(--text)",
               background: "var(--surface2)",
               padding: "3px 10px", borderRadius: 4
             }}>
@@ -102,7 +102,7 @@ function CompetitionGroup({ competition, matches, onMatchSelect }) {
         )}
         {liveCount > 0 && (
           <span style={{
-            background: "#ee1e46", color: "#fff", fontSize: "0.65rem",
+            background: "var(--accent)", color: "#fff", fontSize: "0.65rem",
             fontWeight: 700, padding: "2px 7px", borderRadius: 4, letterSpacing: 1
           }}>
             {t("status.liveCount", { count: liveCount })}

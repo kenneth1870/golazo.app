@@ -102,7 +102,7 @@ export default function MatchReactions({ matchId, compact = false }) {
               gap: 4,
               padding: compact ? "4px 8px" : "6px 10px",
               borderRadius: 20,
-              border: `1px solid ${reacted ? "var(--accent,#ee1e46)" : "var(--border,#2a2a2a)"}`,
+              border: `1px solid ${reacted ? "var(--accent)" : "var(--border,#2a2a2a)"}`,
               background: reacted ? "rgba(238,30,70,.12)" : "var(--surface2,#1a1a1a)",
               cursor: reacted ? "default" : "pointer",
               fontSize: compact ? "0.85rem" : "1rem",
@@ -123,7 +123,7 @@ export default function MatchReactions({ matchId, compact = false }) {
             {count > 0 && (
               <span style={{
                 fontSize: compact ? "0.65rem" : "0.72rem",
-                color: reacted ? "var(--accent,#ee1e46)" : "var(--muted)",
+                color: reacted ? "var(--accent)" : "var(--muted)",
                 fontWeight: reacted ? 700 : 400,
                 minWidth: 12,
               }}>

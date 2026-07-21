@@ -155,7 +155,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
           <div style={{ fontWeight: 700, color: "var(--text)", fontSize: "0.9rem" }}>
             {translateTeam(next.home_team?.name, i18n.language)} vs {translateTeam(next.away_team?.name, i18n.language)}
           </div>
-          <div style={{ fontSize: "0.72rem", color: "#ee1e46" }}>
+          <div style={{ fontSize: "0.72rem", color: "var(--accent)" }}>
             {next.status === "live"
               ? `${t("status.live")}${next.minute ? ` ${next.minute}'` : ""}`
               : next.kickoff_at
@@ -229,7 +229,7 @@ function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = fal
           <div style={{
             display: "flex", alignItems: "center", gap: 8,
             padding: "0 4px 10px",
-            fontSize: "0.72rem", fontWeight: 800, color: "#ee1e46",
+            fontSize: "0.72rem", fontWeight: 800, color: "var(--accent)",
             textTransform: "uppercase", letterSpacing: 1,
           }}>
             {`${t("home.upcomingMatches")}${previewDayLabel ? ` — ${previewDayLabel}` : ""}`}
@@ -259,7 +259,7 @@ function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = fal
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
               <span className="live-dot" />
-              <span style={{ fontWeight: 900, fontSize: ".82rem", color: "#ee1e46", letterSpacing: ".04em" }}>
+              <span style={{ fontWeight: 900, fontSize: ".82rem", color: "var(--accent)", letterSpacing: ".04em" }}>
                 {t("scores.liveNow")}
               </span>
               <span style={{ fontSize: ".68rem", color: "var(--muted)" }}>
@@ -350,7 +350,7 @@ function YourMatchesSection({ todayMatches, favoriteTeamNames, navigate, t }) {
     <div style={{ marginBottom: 16 }}>
       <div style={{
         display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
-        fontSize: "0.75rem", fontWeight: 700, color: "#ee1e46", textTransform: "uppercase", letterSpacing: 1,
+        fontSize: "0.75rem", fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: 1,
       }}>
         <span>★</span> {t("scores.yourMatches")}
       </div>

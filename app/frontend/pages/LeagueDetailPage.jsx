@@ -102,7 +102,7 @@ function StandingsTable({ standings, t, i18n, leagueCode, favoriteTeamNames = []
                     <td>{s.lost}</td>
                     <td>{s.goals_for}</td>
                     <td>{s.goals_against}</td>
-                    <td style={{ color: gd >= 0 ? "#10b981" : "#ee1e46" }}>
+                    <td style={{ color: gd >= 0 ? "#10b981" : "var(--accent)" }}>
                       {gd >= 0 ? "+" : ""}{gd}
                     </td>
                     <td><strong style={{ color: "var(--text)" }}>{s.points}</strong></td>
@@ -132,7 +132,7 @@ function StandingsTable({ standings, t, i18n, leagueCode, favoriteTeamNames = []
                     </span>
                     <span
                       className="standings-card__gd"
-                      style={{ color: gd >= 0 ? "#10b981" : "#ee1e46" }}
+                      style={{ color: gd >= 0 ? "#10b981" : "var(--accent)" }}
                     >
                       {gd >= 0 ? "+" : ""}{gd} {t("table.gd")}
                     </span>
@@ -389,7 +389,7 @@ export default function LeagueDetailPage() {
                   background: isFavorite("competition", favKey) ? "rgba(238,30,70,.15)" : "var(--surface2)",
                   border: isFavorite("competition", favKey) ? "1px solid rgba(238,30,70,.4)" : "1px solid var(--border)",
                   borderRadius: 20, padding: "6px 16px",
-                  color: isFavorite("competition", favKey) ? "#ee1e46" : "var(--muted)",
+                  color: isFavorite("competition", favKey) ? "var(--accent)" : "var(--muted)",
                   fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", flexShrink: 0,
                 }}
               >

@@ -184,7 +184,7 @@ export default function LoginPage() {
             type="submit"
             disabled={loading}
             style={{
-              width: "100%", background: "#ee1e46", color: "#fff", border: "none",
+              width: "100%", background: "var(--accent)", color: "#fff", border: "none",
               borderRadius: 10, padding: "12px 0", fontWeight: 800, fontSize: "0.95rem",
               cursor: loading ? "default" : "pointer",
               opacity: loading ? 0.7 : 1,

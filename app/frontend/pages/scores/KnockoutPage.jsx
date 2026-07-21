@@ -364,7 +364,7 @@ export default function KnockoutPage() {
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
           <Link to="/predictor" style={{
             background: "rgba(238,30,70,.12)", border: "1px solid rgba(238,30,70,.3)",
-            borderRadius: 8, color: "#ee1e46", padding: "7px 14px",
+            borderRadius: 8, color: "var(--accent)", padding: "7px 14px",
             fontSize: "0.78rem", fontWeight: 700, textDecoration: "none",
           }}>🏆 {t("bracket.predictorLink")}</Link>
         </div>

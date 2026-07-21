@@ -124,7 +124,7 @@ const POS_STYLE = {
   G:  { bg: "#f59e0b", shadow: "rgba(245,158,11,.4)" },
   D:  { bg: "#3b82f6", shadow: "rgba(59,130,246,.4)" },
   M:  { bg: "#10b981", shadow: "rgba(16,185,129,.4)" },
-  F:  { bg: "#ee1e46", shadow: "rgba(238,30,70,.4)" },
+  F:  { bg: "var(--accent)", shadow: "rgba(238,30,70,.4)" },
 }
 const POS_I18N = {
   G: "match.posGK",
@@ -233,7 +233,7 @@ function ScoreTimeline({ events, homeTeamRaw, homeName, awayName, t }) {
       </div>
       {/* Team labels */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 56px 1fr", gap: 8, marginBottom: 4 }}>
-        <div style={{ textAlign: "right", fontSize: "0.65rem", color: "#ee1e46", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>{homeName}</div>
+        <div style={{ textAlign: "right", fontSize: "0.65rem", color: "var(--accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>{homeName}</div>
         <div />
         <div style={{ textAlign: "left",  fontSize: "0.65rem", color: "#3b82f6", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>{awayName}</div>
       </div>
@@ -249,7 +249,7 @@ function ScoreTimeline({ events, homeTeamRaw, homeName, awayName, t }) {
                     {m.isOG && <span style={{ color: "#ef4444", fontSize: "0.65rem" }}> OG</span>}
                     {m.isP  && <span style={{ color: "#f59e0b", fontSize: "0.65rem" }}> P</span>}
                   </span>
-                  <span style={{ fontSize: "0.68rem", color: "#ee1e46", fontWeight: 700 }}>{m.min}</span>
+                  <span style={{ fontSize: "0.68rem", color: "var(--accent)", fontWeight: 700 }}>{m.min}</span>
                 </div>
               )}
             </div>
@@ -304,7 +304,7 @@ function MiniStatsBar({ stats, homeName, awayName }) {
     }}>
       {/* Team labels */}
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", fontWeight: 700, color: "var(--muted)", marginBottom: 2 }}>
-        <span style={{ color: "#ee1e46" }}>{homeName}</span>
+        <span style={{ color: "var(--accent)" }}>{homeName}</span>
         <span style={{ color: "var(--muted)", fontSize: "0.62rem" }}>{t("match.statStatsSnapshot")}</span>
         <span style={{ color: "#3b82f6" }}>{awayName}</span>
       </div>
@@ -318,7 +318,7 @@ function MiniStatsBar({ stats, homeName, awayName }) {
             <span style={{ fontWeight: 700, color: "var(--text)" }}>{awayPoss}%</span>
           </div>
           <div style={{ display: "flex", height: 5, borderRadius: 3, overflow: "hidden" }}>
-            <div style={{ width: `${homePoss}%`, background: "#ee1e46", transition: "width .4s" }} />
+            <div style={{ width: `${homePoss}%`, background: "var(--accent)", transition: "width .4s" }} />
             <div style={{ flex: 1, background: "#3b82f6" }} />
           </div>
         </div>
@@ -606,7 +606,7 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
               display: "inline-flex", alignItems: "center", gap: 6,
               background: "rgba(238,30,70,.15)", border: "1px solid rgba(238,30,70,.4)",
               borderRadius: 20, padding: "5px 14px",
-              fontSize: ".72rem", fontWeight: 800, color: "#ee1e46", letterSpacing: ".06em",
+              fontSize: ".72rem", fontWeight: 800, color: "var(--accent)", letterSpacing: ".06em",
             }}>
               <span className="live-dot" />
               {liveMinute ? `${liveMinute}${liveExtra ? `+${liveExtra}` : ""}'` : t("status.live")}
@@ -939,7 +939,7 @@ function StatBar({ label, homeVal, awayVal, isPct }) {
         <span style={{ fontWeight: 700, color: "var(--text)" }}>{fmt(awayVal)}</span>
       </div>
       <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "var(--surface2)" }}>
-        <div style={{ width: `${homePct}%`, background: "#ee1e46", transition: "width .4s" }} />
+        <div style={{ width: `${homePct}%`, background: "var(--accent)", transition: "width .4s" }} />
         <div style={{ flex: 1, background: "#3b82f6" }} />
       </div>
     </div>
@@ -983,7 +983,7 @@ function StatsPanel({ stats, home, away, t, statusShort }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <SafeImg src={home?.logo} className="logo-sm" />
-          <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#ee1e46" }}>{translateTeam(home?.name, i18n.language)}</span>
+          <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--accent)" }}>{translateTeam(home?.name, i18n.language)}</span>
         </div>
         <h3 className="match-section__title" style={{ margin: 0 }}>{t("match.statistics")}</h3>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -1092,12 +1092,12 @@ function ComparisonBar({ label, home, away }) {
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", marginBottom: 4 }}>
-        <span style={{ color: "#ee1e46", fontWeight: 700 }}>{home}</span>
+        <span style={{ color: "var(--accent)", fontWeight: 700 }}>{home}</span>
         <span style={{ color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", fontSize: "0.62rem" }}>{label}</span>
         <span style={{ color: "#3b82f6", fontWeight: 700 }}>{away}</span>
       </div>
       <div style={{ display: "flex", height: 5, borderRadius: 3, overflow: "hidden", background: "var(--border)" }}>
-        <div style={{ width: `${h}%`, background: "#ee1e46", transition: "width .5s" }} />
+        <div style={{ width: `${h}%`, background: "var(--accent)", transition: "width .5s" }} />
         <div style={{ flex: 1, background: "#3b82f6" }} />
       </div>
     </div>
@@ -1211,7 +1211,7 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
         <div className="match-section__title">{t("match.winProbability")}</div>
         <div style={{ display: "flex", gap: 8, marginBottom: 12, marginTop: 10 }}>
           {[
-            { label: homeName, pct: percent?.home, color: "#ee1e46" },
+            { label: homeName, pct: percent?.home, color: "var(--accent)" },
             { label: t("match.draw"),  pct: percent?.draw, color: "#f59e0b" },
             { label: awayName, pct: percent?.away, color: "#3b82f6" },
           ].map(({ label, pct, color }) => (
@@ -1222,7 +1222,7 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
           ))}
         </div>
         <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden" }}>
-          <div style={{ width: percent?.home, background: "#ee1e46" }} />
+          <div style={{ width: percent?.home, background: "var(--accent)" }} />
           <div style={{ width: percent?.draw, background: "#f59e0b" }} />
           <div style={{ flex: 1, background: "#3b82f6" }} />
         </div>
@@ -1232,7 +1232,7 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
       {comparison && Object.values(comparison).some(Boolean) && (
         <div className="match-section" style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", fontWeight: 700, marginBottom: 14 }}>
-            <span style={{ color: "#ee1e46" }}>{homeName}</span>
+            <span style={{ color: "var(--accent)" }}>{homeName}</span>
             <span style={{ color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", fontSize: "0.6rem" }}>{t("match.comparison")}</span>
             <span style={{ color: "#3b82f6" }}>{awayName}</span>
           </div>
@@ -1251,7 +1251,7 @@ function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
             <div style={{ flex: 1, background: "var(--surface2)", borderRadius: 10, padding: "12px 10px", textAlign: "center" }}>
               <div style={{ fontSize: "0.6rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 5 }}>{t("match.expectedGoals")}</div>
               <div style={{ fontSize: "0.95rem", fontWeight: 800 }}>
-                <span style={{ color: "#ee1e46" }}>{goals.home}</span>
+                <span style={{ color: "var(--accent)" }}>{goals.home}</span>
                 <span style={{ color: "var(--muted)", margin: "0 4px" }}>–</span>
                 <span style={{ color: "#3b82f6" }}>{goals.away}</span>
               </div>
@@ -1318,7 +1318,7 @@ function FirstScorerOdds({ fixtureId, t }) {
             </div>
             <span style={{
               background: i === 0 ? "rgba(238,30,70,.15)" : "var(--surface)",
-              color: i === 0 ? "#ee1e46" : "var(--muted)",
+              color: i === 0 ? "var(--accent)" : "var(--muted)",
               borderRadius: 6, padding: "3px 10px", fontSize: "0.8rem", fontWeight: 700,
             }}>{s.odd}</span>
           </div>
@@ -1410,7 +1410,7 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t, lang }) {
         <h3 className="match-section__title">{t("match.h2hSummary")}</h3>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#ee1e46" }}>{hw}</div>
+            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--accent)" }}>{hw}</div>
             <div style={{ fontSize: ".68rem", color: "var(--muted)", marginTop: 2 }}>{homeTeamName}</div>
           </div>
           <div style={{ textAlign: "center" }}>
@@ -1423,7 +1423,7 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t, lang }) {
           </div>
         </div>
         <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "var(--surface2)" }}>
-          <div style={{ width: `${(hw/total)*100}%`, background: "#ee1e46" }} />
+          <div style={{ width: `${(hw/total)*100}%`, background: "var(--accent)" }} />
           <div style={{ width: `${(d/total)*100}%`, background: "var(--border)" }} />
           <div style={{ width: `${(aw/total)*100}%`, background: "#3b82f6" }} />
         </div>
@@ -1617,7 +1617,7 @@ function LiveCommentaryPanel({ events, homeTeamRaw, homeName, awayName }) {
             <div key={i} style={{
               display: "flex", gap: 10, padding: "10px 14px",
               background: "var(--surface2)", borderRadius: 8,
-              borderLeft: `3px solid ${e.type === "Goal" ? "#ee1e46" : e.type === "Card" ? "#f59e0b" : "var(--border)"}`,
+              borderLeft: `3px solid ${e.type === "Goal" ? "var(--accent)" : e.type === "Card" ? "#f59e0b" : "var(--border)"}`,
             }}>
               <div style={{ flexShrink: 0, textAlign: "center", minWidth: 36 }}>
                 <div style={{ fontSize: "0.65rem", fontWeight: 800, color: "var(--muted)" }}>{min}</div>
@@ -1651,7 +1651,7 @@ function GoalToast({ text, visible, onDismiss }) {
       style={{
         position: "fixed", bottom: "calc(72px + env(safe-area-inset-bottom))",
         left: "50%", transform: "translateX(-50%)",
-        background: "#ee1e46", color: "#fff", fontWeight: 800, fontSize: "0.92rem",
+        background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: "0.92rem",
         padding: "11px 22px 11px 18px", borderRadius: 40, zIndex: 9999,
         boxShadow: "0 8px 32px rgba(238,30,70,.55)",
         animation: "pageIn .25s ease",
@@ -1778,7 +1778,7 @@ function LivePushBanner({ homeName, awayName, teamNamesRaw, onDismiss }) {
       </div>
       {!needsIosInstall && (
         <button onClick={enable} disabled={loading} style={{
-          background: "#ee1e46", color: "#fff", border: "none", borderRadius: 6,
+          background: "var(--accent)", color: "#fff", border: "none", borderRadius: 6,
           padding: "6px 14px", fontWeight: 700, fontSize: "0.8rem",
           cursor: loading ? "default" : "pointer", opacity: loading ? 0.6 : 1,
         }}>

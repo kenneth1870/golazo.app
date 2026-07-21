@@ -70,6 +70,8 @@ const LANGS = [
   { code: "es", label: "Español", flag: "🇪🇸" },
 ]
 
+const INERT_SELECTORS = [".site-wrap > main", ".site-wrap > footer", ".bottom-nav", ".site-navbar", ".site-mobile-menu"]
+
 export function useOnboarding() {
   const [show, setShow] = useState(false)
   useEffect(() => {
@@ -87,7 +89,7 @@ export function useOnboarding() {
   return { show, dismiss }
 }
 
-export default function OnboardingModal({ onDismiss }) {
+export default function OnboardingModal({ onDismiss, returnFocusRef }) {
   const { t, i18n } = useTranslation()
   const { addFavorite, favorites } = useFavorites()
   const { subscribe } = usePushNotifications()
@@ -103,6 +105,44 @@ export default function OnboardingModal({ onDismiss }) {
   const [dragY, setDragY]             = useState(0)
   const [clubTeams, setClubTeams]       = useState([])
   const dragStart                     = useRef(null)
+  const dialogRef                     = useRef(null)
+
+  useEffect(() => {
+    const inerted = INERT_SELECTORS.flatMap(s => [...document.querySelectorAll(s)])
+    inerted.forEach(el => { el.inert = true })
+    const root = dialogRef.current
+    const first = root?.querySelector(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )
+    first?.focus()
+    return () => {
+      inerted.forEach(el => { el.inert = false })
+      returnFocusRef?.current?.focus()
+    }
+  }, [returnFocusRef])
+
+  useEffect(() => {
+    function onTab(e) {
+      if (e.key !== "Tab") return
+      const root = dialogRef.current
+      if (!root) return
+      const focusable = [...root.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )].filter(el => !el.disabled)
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener("keydown", onTab)
+    return () => document.removeEventListener("keydown", onTab)
+  }, [])
 
   useEffect(() => {
     if (clubsPrimary) loadClubTeams(setClubTeams)
@@ -133,7 +173,7 @@ export default function OnboardingModal({ onDismiss }) {
     setTimeout(() => { setStep(s => s + 1); setAnimating(false) }, 220)
   }
 
-  const finish = () => {
+  const finish = useCallback(() => {
     selectedTeams.forEach(team => {
       addFavorite({
         type: "team",
@@ -148,7 +188,15 @@ export default function OnboardingModal({ onDismiss }) {
     })
     storageSet(ONBOARDED_AT_KEY, Date.now().toString())
     onDismiss()
-  }
+  }, [selectedTeams, selectedLeagues, addFavorite, t, onDismiss])
+
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === "Escape") finish()
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [finish])
 
   const requestNotifications = async () => {
     setNotifLoading(true)
@@ -183,7 +231,7 @@ export default function OnboardingModal({ onDismiss }) {
                 display: "flex", alignItems: "center", gap: 8,
                 padding: "12px 20px", borderRadius: 12,
                 background: i18n.language.startsWith(lang.code)
-                  ? "var(--accent, #ee1e46)" : "var(--surface2, #1a1a1a)",
+                  ? "var(--accent)" : "var(--surface2, #1a1a1a)",
                 border: "1px solid var(--border, #2a2a2a)",
                 color: i18n.language.startsWith(lang.code) ? "#fff" : "var(--text)", cursor: "pointer", fontSize: "1rem", fontWeight: 500,
                 transition: "all .15s",
@@ -217,7 +265,7 @@ export default function OnboardingModal({ onDismiss }) {
                   display: "flex", flexDirection: "column", alignItems: "center",
                   gap: 6, padding: "10px 4px", borderRadius: 12, cursor: "pointer",
                   background: selected ? "rgba(238,30,70,.18)" : "var(--surface2, #1a1a1a)",
-                  border: `1px solid ${selected ? "var(--accent,#ee1e46)" : "var(--border,#2a2a2a)"}`,
+                  border: `1px solid ${selected ? "var(--accent)" : "var(--border,#2a2a2a)"}`,
                   transition: "all .15s",
                 }}
               >
@@ -231,13 +279,13 @@ export default function OnboardingModal({ onDismiss }) {
                   <span style={{ fontSize: "1.4rem" }}>⚽</span>
                 )}
                 <span style={{
-                  fontSize: "0.62rem", color: selected ? "var(--accent,#ee1e46)" : "var(--muted)",
+                  fontSize: "0.62rem", color: selected ? "var(--accent)" : "var(--muted)",
                   textAlign: "center", lineHeight: 1.2, fontWeight: selected ? 600 : 400,
                 }}>
                   {translateTeam(team.name, i18n.language) || team.name}
                 </span>
                 {selected && (
-                  <span style={{ fontSize: "0.6rem", color: "var(--accent,#ee1e46)", fontWeight: 700 }}>✓</span>
+                  <span style={{ fontSize: "0.6rem", color: "var(--accent)", fontWeight: 700 }}>✓</span>
                 )}
               </button>
             )
@@ -271,7 +319,7 @@ export default function OnboardingModal({ onDismiss }) {
                   display: "flex", flexDirection: "column", alignItems: "center",
                   gap: 6, padding: "10px 4px", borderRadius: 12, cursor: "pointer",
                   background: selected ? "rgba(238,30,70,.18)" : "var(--surface2, #1a1a1a)",
-                  border: `1px solid ${selected ? "var(--accent,#ee1e46)" : "var(--border,#2a2a2a)"}`,
+                  border: `1px solid ${selected ? "var(--accent)" : "var(--border,#2a2a2a)"}`,
                   transition: "all .15s",
                 }}
               >
@@ -281,13 +329,13 @@ export default function OnboardingModal({ onDismiss }) {
                   onError={e => { e.target.style.display = "none" }}
                 />
                 <span style={{
-                  fontSize: "0.62rem", color: selected ? "var(--accent,#ee1e46)" : "var(--muted)",
+                  fontSize: "0.62rem", color: selected ? "var(--accent)" : "var(--muted)",
                   textAlign: "center", lineHeight: 1.2, fontWeight: selected ? 600 : 400,
                 }}>
                   {translateTeam(team.name, i18n.language) || team.name}
                 </span>
                 {selected && (
-                  <span style={{ fontSize: "0.6rem", color: "var(--accent,#ee1e46)", fontWeight: 700 }}>✓</span>
+                  <span style={{ fontSize: "0.6rem", color: "var(--accent)", fontWeight: 700 }}>✓</span>
                 )}
               </button>
             )
@@ -314,15 +362,15 @@ export default function OnboardingModal({ onDismiss }) {
                   display: "flex", alignItems: "center", gap: 8,
                   padding: "10px 16px", borderRadius: 20, cursor: "pointer",
                   background: selected ? "rgba(238,30,70,.18)" : "var(--surface2,#1a1a1a)",
-                  border: `1px solid ${selected ? "var(--accent,#ee1e46)" : "var(--border,#2a2a2a)"}`,
-                  color: selected ? "var(--accent,#ee1e46)" : "var(--muted)",
+                  border: `1px solid ${selected ? "var(--accent)" : "var(--border,#2a2a2a)"}`,
+                  color: selected ? "var(--accent)" : "var(--muted)",
                   fontSize: "0.85rem", fontWeight: selected ? 600 : 400,
                   transition: "all .15s",
                 }}
               >
                 <span>{league.flag}</span>
                 {t(league.key)}
-                {selected && <span style={{ color: "var(--accent,#ee1e46)", fontWeight: 700 }}>✓</span>}
+                {selected && <span style={{ color: "var(--accent)", fontWeight: 700 }}>✓</span>}
               </button>
             )
           })}
@@ -385,7 +433,7 @@ export default function OnboardingModal({ onDismiss }) {
           {/* iOS PWA — can enable now */}
           {onIosPwa && !notifDone && (
             <button onClick={requestNotifications} disabled={notifLoading} style={{
-              padding: "13px 28px", borderRadius: 12, background: "var(--accent,#ee1e46)",
+              padding: "13px 28px", borderRadius: 12, background: "var(--accent)",
               border: "none", color: "#fff", fontSize: ".95rem", fontWeight: 700,
               cursor: notifLoading ? "default" : "pointer", opacity: notifLoading ? .6 : 1,
             }}>
@@ -396,7 +444,7 @@ export default function OnboardingModal({ onDismiss }) {
           {/* Chrome / Android — enable directly */}
           {!onIosSafari && !notifDone && (
             <button onClick={requestNotifications} disabled={notifLoading} style={{
-              padding: "13px 28px", borderRadius: 12, background: "var(--accent,#ee1e46)",
+              padding: "13px 28px", borderRadius: 12, background: "var(--accent)",
               border: "none", color: "#fff", fontSize: ".95rem", fontWeight: 700,
               cursor: notifLoading ? "default" : "pointer", opacity: notifLoading ? .6 : 1,
             }}>
@@ -437,6 +485,10 @@ export default function OnboardingModal({ onDismiss }) {
     >
       {/* Sheet */}
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={current.title}
         onTouchStart={e => {
           // Don't start dismiss gesture if touch begins inside a scrollable child
           // (e.g. the team grid on step 2 — scrolling it would wrongly dismiss)
@@ -480,7 +532,7 @@ export default function OnboardingModal({ onDismiss }) {
               key={i}
               style={{
                 width: i === step ? 20 : 6, height: 6, borderRadius: 3,
-                background: i <= step ? "var(--accent,#ee1e46)" : "var(--border,#2a2a2a)",
+                background: i <= step ? "var(--accent)" : "var(--border,#2a2a2a)",
                 transition: "all .25s",
               }}
             />
@@ -533,7 +585,7 @@ export default function OnboardingModal({ onDismiss }) {
               disabled={step === 1 && selectedTeams.length === 0 && false}
               style={{
                 flex: 2, maxWidth: 280, padding: "14px", borderRadius: 12,
-                background: "var(--accent,#ee1e46)", border: "none",
+                background: "var(--accent)", border: "none",
                 color: "#fff", fontSize: "1rem", fontWeight: 700, cursor: "pointer",
               }}
             >

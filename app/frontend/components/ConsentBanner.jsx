@@ -46,7 +46,7 @@ export default function ConsentBanner() {
         <button
           onClick={accept}
           style={{
-            background: "#ee1e46", color: "#fff", border: "none",
+            background: "var(--accent)", color: "#fff", border: "none",
             borderRadius: 8, padding: "8px 18px", fontSize: "0.82rem",
             fontWeight: 700, cursor: "pointer", flex: 1,
           }}

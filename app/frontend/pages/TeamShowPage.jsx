@@ -22,7 +22,7 @@ function playerQueryForTeam(team, clubsPrimary) {
 }
 const POSITION_ORDER = { "Goalkeeper": 0, "Defender": 1, "Midfielder": 2, "Attacker": 3 }
 const POSITION_LABEL = { "Goalkeeper": "GK", "Defender": "DEF", "Midfielder": "MID", "Attacker": "ATT" }
-const POSITION_COLOR = { "Goalkeeper": "#f59e0b", "Defender": "#3b82f6", "Midfielder": "#10b981", "Attacker": "#ee1e46" }
+const POSITION_COLOR = { "Goalkeeper": "#f59e0b", "Defender": "#3b82f6", "Midfielder": "#10b981", "Attacker": "var(--accent)" }
 
 export default function TeamShowPage() {
   const { t, i18n } = useTranslation()
@@ -217,7 +217,7 @@ export default function TeamShowPage() {
                 style={{
                   background: isFavorite("team", team.id) ? "rgba(238,30,70,.15)" : "rgba(255,255,255,.06)",
                   border: isFavorite("team", team.id) ? "1px solid rgba(238,30,70,.4)" : "1px solid rgba(255,255,255,.12)",
-                  borderRadius: 20, padding: "5px 14px", color: isFavorite("team", team.id) ? "#ee1e46" : "rgba(255,255,255,.4)",
+                  borderRadius: 20, padding: "5px 14px", color: isFavorite("team", team.id) ? "var(--accent)" : "rgba(255,255,255,.4)",
                   fontSize: "0.78rem", fontWeight: 700, cursor: "pointer", transition: ".2s",
                 }}
               >
@@ -240,7 +240,7 @@ export default function TeamShowPage() {
             <div>
               <h1 style={{ margin: "0 0 4px", fontSize: "1.8rem", fontWeight: 900, color: "#fff" }}>{translateTeam(team.name, i18n.language)}</h1>
               {team.code && <div style={{ fontSize: "0.8rem", color: "var(--muted)", letterSpacing: 2, textTransform: "uppercase" }}>{team.code}</div>}
-              {team.group && !clubsPrimary && <div style={{ marginTop: 6, fontSize: "0.82rem", color: "#ee1e46", fontWeight: 700 }}>{t("nav.group", { letter: team.group })}</div>}
+              {team.group && !clubsPrimary && <div style={{ marginTop: 6, fontSize: "0.82rem", color: "var(--accent)", fontWeight: 700 }}>{t("nav.group", { letter: team.group })}</div>}
             </div>
           </div>
 
@@ -295,8 +295,8 @@ export default function TeamShowPage() {
                 style={{
                   background: "none", border: "none", cursor: "pointer",
                   padding: "14px 20px", fontSize: "0.82rem", fontWeight: 700,
-                  color: activeTab === tab.key ? "#ee1e46" : "var(--muted)",
-                  borderBottom: activeTab === tab.key ? "2px solid #ee1e46" : "2px solid transparent",
+                  color: activeTab === tab.key ? "var(--accent)" : "var(--muted)",
+                  borderBottom: activeTab === tab.key ? "2px solid var(--accent)" : "2px solid transparent",
                   transition: "color .2s, border-color .2s",
                 }}
               >{tab.label}</button>
@@ -332,7 +332,7 @@ export default function TeamShowPage() {
                 </div>
               </div>
               <div style={{ textAlign: "right", flexShrink: 0 }}>
-                <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "#ee1e46", fontVariantNumeric: "tabular-nums", letterSpacing: "-.02em" }}>
+                <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "var(--accent)", fontVariantNumeric: "tabular-nums", letterSpacing: "-.02em" }}>
                   {countdown}
                 </div>
                 <div style={{ fontSize: "0.6rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>away</div>
@@ -343,7 +343,7 @@ export default function TeamShowPage() {
           {/* Live match */}
           {live.length > 0 && (
             <section className="match-section" style={{ borderColor: "rgba(238,30,70,.4)" }}>
-              <h3 className="match-section__title" style={{ color: "#ee1e46" }}>{t("home.playingNow")}</h3>
+              <h3 className="match-section__title" style={{ color: "var(--accent)" }}>{t("home.playingNow")}</h3>
               {live.map(m => <MatchLine key={m.id} match={m} teamName={team.name} navigate={navigate} />)}
             </section>
           )}
@@ -373,7 +373,7 @@ export default function TeamShowPage() {
                   <div key={i} style={{ display: "flex", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--border)" }}>
                     <span style={{ width: 22, fontSize: "0.72rem", color: "var(--muted)", fontWeight: 700 }}>{i + 1}</span>
                     <span style={{ flex: 1, fontWeight: 600, fontSize: "0.85rem" }}>{s.name}</span>
-                    <span style={{ background: "rgba(238,30,70,.12)", color: "#ee1e46", borderRadius: 12, padding: "2px 10px", fontSize: "0.75rem", fontWeight: 900 }}>
+                    <span style={{ background: "rgba(238,30,70,.12)", color: "var(--accent)", borderRadius: 12, padding: "2px 10px", fontSize: "0.75rem", fontWeight: 900 }}>
                       {s.goals} ⚽
                     </span>
                   </div>
@@ -482,7 +482,7 @@ export default function TeamShowPage() {
                         [t("team.cleanSheets"),   tstats.clean_sheets,   false],
                       ].map(([label, val, hi]) => (
                         <div key={label} style={{ flex: "1 1 80px", minWidth: 72, textAlign: "center", background: "var(--surface2)", borderRadius: 10, padding: "14px 8px" }}>
-                          <div style={{ fontSize: "1.5rem", fontWeight: 900, color: hi ? "#ee1e46" : "var(--text)" }}>{val ?? "—"}</div>
+                          <div style={{ fontSize: "1.5rem", fontWeight: 900, color: hi ? "var(--accent)" : "var(--text)" }}>{val ?? "—"}</div>
                           <div style={{ fontSize: "0.6rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: .5, marginTop: 3 }}>{label}</div>
                         </div>
                       ))}
@@ -498,7 +498,7 @@ export default function TeamShowPage() {
                         <div key={i} style={{ display: "flex", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid var(--border)" }}>
                           <span style={{ width: 22, fontSize: "0.72rem", color: "var(--muted)", fontWeight: 700 }}>{i + 1}</span>
                           <span style={{ flex: 1, fontWeight: 600, fontSize: "0.85rem" }}>{s.name}</span>
-                          <span style={{ background: "rgba(238,30,70,.12)", color: "#ee1e46", borderRadius: 12, padding: "2px 10px", fontSize: "0.75rem", fontWeight: 900 }}>{s.goals} ⚽</span>
+                          <span style={{ background: "rgba(238,30,70,.12)", color: "var(--accent)", borderRadius: 12, padding: "2px 10px", fontSize: "0.75rem", fontWeight: 900 }}>{s.goals} ⚽</span>
                         </div>
                       ))}
                     </div>

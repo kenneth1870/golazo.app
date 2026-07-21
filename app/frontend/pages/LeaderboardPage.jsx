@@ -97,7 +97,7 @@ export default function LeaderboardPage() {
               style={{
                 background: copied ? "#10b981" : "rgba(238,30,70,.15)",
                 border: `1px solid ${copied ? "#10b981" : "rgba(238,30,70,.3)"}`,
-                color: copied ? "#fff" : "#ee1e46",
+                color: copied ? "#fff" : "var(--accent)",
                 borderRadius: 20, padding: "6px 16px", fontSize: "0.78rem",
                 fontWeight: 700, cursor: "pointer", transition: ".2s",
               }}
@@ -146,7 +146,7 @@ export default function LeaderboardPage() {
                 onClick={saveName}
                 disabled={!nameInput.trim()}
                 style={{
-                  background: "#ee1e46", border: "none", borderRadius: 8,
+                  background: "var(--accent)", border: "none", borderRadius: 8,
                   padding: "7px 14px", color: "#fff", fontWeight: 700, fontSize: "0.82rem",
                   cursor: nameInput.trim() ? "pointer" : "default", opacity: nameInput.trim() ? 1 : 0.5,
                 }}
@@ -228,14 +228,14 @@ export default function LeaderboardPage() {
                       padding: "12px 16px",
                       borderBottom: "1px solid var(--border)",
                       background: isMe ? "rgba(238,30,70,.06)" : "transparent",
-                      borderLeft: isMe ? "2px solid #ee1e46" : "2px solid transparent",
+                      borderLeft: isMe ? "2px solid var(--accent)" : "2px solid transparent",
                     }}
                   >
                     <span style={{ width: 28, textAlign: "center", fontSize: i < 3 ? "1.2rem" : "0.85rem", color: "var(--muted)", fontWeight: 700, flexShrink: 0 }}>
                       {i < 3 ? MEDALS[i] : `#${i + 1}`}
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: "0.9rem", color: isMe ? "#ee1e46" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ fontWeight: 700, fontSize: "0.9rem", color: isMe ? "var(--accent)" : "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {r.display_name}{isMe && ` ${t("leaderboard.you")}`}
                       </div>
                       <div style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 2 }}>

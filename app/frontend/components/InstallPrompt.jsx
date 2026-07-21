@@ -42,7 +42,7 @@ function AndroidBanner({ onInstall, onDismiss }) {
         <button
           onClick={onInstall}
           style={{
-            background: "#ee1e46", color: "#fff", border: "none",
+            background: "var(--accent)", color: "#fff", border: "none",
             borderRadius: 7, padding: "7px 14px", fontWeight: 700,
             fontSize: ".78rem", cursor: "pointer", fontFamily: "inherit",
           }}

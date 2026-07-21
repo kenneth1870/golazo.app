@@ -159,7 +159,7 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
         <h3 style={{ margin: 0 }}>{leagueName}</h3>
         <span className="widget-meta-country" style={{ marginLeft: "auto", fontSize: "0.72rem", color: "var(--muted)" }}>{translateCountry(comp?.country, i18n.language)}</span>
         {hasLive && <span className="live-badge">{t("status.live")}</span>}
-        {canNav && <span style={{ fontSize: "0.75rem", color: "#ee1e46" }}>→</span>}
+        {canNav && <span style={{ fontSize: "0.75rem", color: "var(--accent)" }}>→</span>}
       </div>
       <div className="widget-body p-0">
         {sorted.map(m => {
@@ -204,12 +204,12 @@ function FavTeamAlert({ match, onMatchClick, onDismiss }) {
     >
       <span className="live-dot" style={{ flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 800, fontSize: ".85rem", color: "#ee1e46" }}>
+        <div style={{ fontWeight: 800, fontSize: ".85rem", color: "var(--accent)" }}>
           {t("scores.yourTeamLive")}
         </div>
         <div style={{ fontSize: ".78rem", color: "#e6edf3", marginTop: 2 }}>
           {home} {score ? score : "vs"} {away}
-          <span style={{ marginLeft: 8, color: "#ee1e46", fontWeight: 700 }}>{minute}</span>
+          <span style={{ marginLeft: 8, color: "var(--accent)", fontWeight: 700 }}>{minute}</span>
         </div>
       </div>
       <button
@@ -270,13 +270,13 @@ function PullIndicator({ distance, refreshing }) {
       >
         <circle cx={14} cy={14} r={radius} fill="none" stroke="rgba(238,30,70,.25)" strokeWidth={2.5} />
         {refreshing ? (
-          <circle cx={14} cy={14} r={radius} fill="none" stroke="#ee1e46" strokeWidth={2.5}
+          <circle cx={14} cy={14} r={radius} fill="none" stroke="var(--accent)" strokeWidth={2.5}
             strokeDasharray={`${circ * 0.6} ${circ * 0.4}`}
             strokeLinecap="round"
             style={{ transformOrigin: "50% 50%", animation: "spin 0.8s linear infinite" }}
           />
         ) : (
-          <circle cx={14} cy={14} r={radius} fill="none" stroke="#ee1e46" strokeWidth={2.5}
+          <circle cx={14} cy={14} r={radius} fill="none" stroke="var(--accent)" strokeWidth={2.5}
             strokeDasharray={`${dash} ${circ - dash}`}
             strokeDashoffset={circ / 4}
             strokeLinecap="round"
@@ -584,7 +584,7 @@ export default function TodayPage() {
                 onClick={() => { setSelected(startOfDay()); setMatches([]) }}
                 style={{
                   background: "rgba(238,30,70,.12)", border: "1px solid rgba(238,30,70,.3)",
-                  color: "#ee1e46", fontSize: "0.68rem",
+                  color: "var(--accent)", fontSize: "0.68rem",
                 }}
               >
                 {t("time.today")}
@@ -608,7 +608,7 @@ export default function TodayPage() {
                     fontSize: "0.68rem", fontWeight: 600,
                     background: filterMyTeams ? "rgba(238,30,70,.15)" : undefined,
                     borderColor: filterMyTeams ? "rgba(238,30,70,.5)" : undefined,
-                    color: filterMyTeams ? "#ee1e46" : undefined,
+                    color: filterMyTeams ? "var(--accent)" : undefined,
                   }}
                 >
                   ⭐ {t("scores.myTeams")}
@@ -618,7 +618,7 @@ export default function TodayPage() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: "0.78rem" }}>
             {liveCount > 0 && (
-              <span style={{ display: "flex", alignItems: "center", gap: 5, color: "#ee1e46" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 5, color: "var(--accent)" }}>
                 <span className="live-dot" />{t("time.liveCount", { count: liveCount })}
               </span>
             )}
@@ -640,7 +640,7 @@ export default function TodayPage() {
           <div style={{ marginBottom: 24 }}>
             <div style={{
               display: "flex", alignItems: "center", gap: 8, marginBottom: 10,
-              fontSize: "0.75rem", fontWeight: 700, color: "#ee1e46", textTransform: "uppercase", letterSpacing: 1,
+              fontSize: "0.75rem", fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: 1,
             }}>
               <span>★</span> {t("scores.yourMatches")}
             </div>
@@ -710,7 +710,7 @@ export default function TodayPage() {
                 <div style={{
                   display: "flex", alignItems: "center", gap: 8,
                   padding: "0 4px 10px",
-                  fontSize: "0.72rem", fontWeight: 800, color: "#ee1e46",
+                  fontSize: "0.72rem", fontWeight: 800, color: "var(--accent)",
                   textTransform: "uppercase", letterSpacing: 1,
                 }}>
                   <img src="/images/SOCCER.png" alt="" style={{ width: 18, height: 18, objectFit: "contain" }} onError={e => (e.target.style.display = "none")} />

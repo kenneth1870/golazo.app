@@ -118,7 +118,7 @@ export default function IosInstallGuide({ paused = false }) {
                 background: "rgba(255,255,255,.06)",
                 border: "1px solid rgba(255,255,255,.1)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                color: "var(--accent, #ee1e46)",
+                color: "var(--accent)",
               }}>
                 {step.icon}
               </div>
@@ -136,7 +136,7 @@ export default function IosInstallGuide({ paused = false }) {
                 background: "rgba(238,30,70,.15)",
                 border: "1px solid rgba(238,30,70,.35)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: ".65rem", fontWeight: 800, color: "var(--accent,#ee1e46)",
+                fontSize: ".65rem", fontWeight: 800, color: "var(--accent)",
               }}>
                 {i + 1}
               </div>
@@ -164,7 +164,7 @@ export default function IosInstallGuide({ paused = false }) {
             onClick={dismiss}
             style={{
               width: "100%", padding: "14px", borderRadius: 12,
-              background: "var(--accent,#ee1e46)", border: "none",
+              background: "var(--accent)", border: "none",
               color: "#fff", fontSize: "1rem", fontWeight: 700, cursor: "pointer",
             }}
           >

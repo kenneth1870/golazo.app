@@ -178,7 +178,7 @@ export default function NewsPage() {
               {t("news.forYou", "For You")}
               {forYouArticles.length > 0 && (
                 <span style={{
-                  background: "var(--accent,#ee1e46)", color: "#fff",
+                  background: "var(--accent)", color: "#fff",
                   borderRadius: 10, fontSize: "0.62rem", padding: "1px 6px",
                   fontWeight: 700, lineHeight: 1.4,
                 }}>

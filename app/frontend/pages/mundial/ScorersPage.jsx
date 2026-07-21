@@ -76,7 +76,7 @@ function PlayerRow({ player, rank, maxValue, tab, lang }) {
   const teamName  = translateTeam(player.team?.name, lang)
   const medal     = MEDALS[rank]
   const rankColor = RANK_COLORS[rank]
-  const barColor  = tab.key === "yellow" ? "#f59e0b" : tab.key === "red" ? "#ef4444" : rank === 0 ? "linear-gradient(90deg,#f59e0b,#ee1e46)" : "#3b82f6"
+  const barColor  = tab.key === "yellow" ? "#f59e0b" : tab.key === "red" ? "#ef4444" : rank === 0 ? "linear-gradient(90deg,#f59e0b,var(--accent))" : "#3b82f6"
 
   return (
     <div style={{
