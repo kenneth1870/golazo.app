@@ -121,12 +121,19 @@ function ShareButton({ homeName, awayName }) {
 
 // ─── Position color map ────────────────────────────────
 const POS_STYLE = {
-  G:  { bg: "#f59e0b", shadow: "rgba(245,158,11,.4)",  label: "GK"  },
-  D:  { bg: "#3b82f6", shadow: "rgba(59,130,246,.4)",  label: "DEF" },
-  M:  { bg: "#10b981", shadow: "rgba(16,185,129,.4)",  label: "MID" },
-  F:  { bg: "#ee1e46", shadow: "rgba(238,30,70,.4)",   label: "FWD" },
+  G:  { bg: "#f59e0b", shadow: "rgba(245,158,11,.4)" },
+  D:  { bg: "#3b82f6", shadow: "rgba(59,130,246,.4)" },
+  M:  { bg: "#10b981", shadow: "rgba(16,185,129,.4)" },
+  F:  { bg: "#ee1e46", shadow: "rgba(238,30,70,.4)" },
+}
+const POS_I18N = {
+  G: "match.posGK",
+  D: "match.posDEF",
+  M: "match.posMID",
+  F: "match.posFWD",
 }
 function posStyle(pos) { return POS_STYLE[pos] || POS_STYLE.M }
+function posLabel(pos, t) { return t(POS_I18N[pos] || POS_I18N.M) }
 
 // ─── Event icon components ─────────────────────────────
 function EventIcon({ type, detail }) {
@@ -992,6 +999,7 @@ function StatsPanel({ stats, home, away, t, statusShort }) {
 }
 
 function PlayerDot({ number, pos, name }) {
+  const { t }    = useTranslation()
   const ps       = posStyle(pos)
   const lastName = name?.split(" ").slice(-1)[0] || ""
   return (
@@ -999,7 +1007,7 @@ function PlayerDot({ number, pos, name }) {
       <div className="player-dot__circle" style={{ background: ps.bg, boxShadow: `0 3px 10px ${ps.shadow}` }}>
         {number}
       </div>
-      <div className="player-dot__pos" style={{ color: ps.bg }}>{ps.label}</div>
+      <div className="player-dot__pos" style={{ color: ps.bg }}>{posLabel(pos, t)}</div>
       <div className="player-dot__name">{lastName}</div>
     </div>
   )
@@ -1052,7 +1060,7 @@ function LineupTeam({ team, side }) {
               <div key={p.number ?? p.name ?? i} className="lineup-sub-row">
                 <span className="lineup-sub-row__num" style={{ background: ps.bg }}>{p.number}</span>
                 <span className="lineup-sub-row__name">{p.name}</span>
-                <span className="lineup-sub-row__pos" style={{ color: ps.bg }}>{ps.label}</span>
+                <span className="lineup-sub-row__pos" style={{ color: ps.bg }}>{posLabel(p.pos, t)}</span>
               </div>
             )
           })}
@@ -1064,12 +1072,13 @@ function LineupTeam({ team, side }) {
 
 // Position legend
 function PosLegend() {
+  const { t } = useTranslation()
   return (
     <div className="pos-legend">
       {Object.entries(POS_STYLE).map(([k, v]) => (
         <span key={k} className="pos-legend__item">
           <span className="pos-legend__dot" style={{ background: v.bg }} />
-          {v.label}
+          {posLabel(k, t)}
         </span>
       ))}
     </div>
