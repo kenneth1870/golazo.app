@@ -137,8 +137,9 @@ function posLabel(pos, t) { return t(POS_I18N[pos] || POS_I18N.M) }
 
 // ─── Event icon components ─────────────────────────────
 function EventIcon({ type, detail }) {
+  const { t } = useTranslation()
   if (type === "Goal") {
-    if (detail === "Own Goal")   return <span title="Own Goal">⚽<span style={{ fontSize: "0.55rem", verticalAlign: "top", color: "#ef4444", fontWeight: 800 }}>OG</span></span>
+    if (detail === "Own Goal")   return <span title={t("event.ownGoal")}>⚽<span style={{ fontSize: "0.55rem", verticalAlign: "top", color: "#ef4444", fontWeight: 800 }}>OG</span></span>
     if (detail === "Penalty")    return <span title="Penalty">⚽<span style={{ fontSize: "0.55rem", verticalAlign: "top", color: "#f59e0b", fontWeight: 800 }}>P</span></span>
     if (detail === "Missed Penalty") return <span title="Missed Penalty" style={{ fontSize: "1.1rem" }}>❌</span>
     return <span style={{ fontSize: "1.15rem" }}>⚽</span>
@@ -148,7 +149,7 @@ function EventIcon({ type, detail }) {
       <span style={{ display: "inline-block", width: 14, height: 18, background: "#f59e0b", borderRadius: 2, boxShadow: "0 2px 6px rgba(245,158,11,.5)", flexShrink: 0 }} title="Yellow Card" />
     )
     if (detail === "Red Card") return (
-      <span style={{ display: "inline-block", width: 14, height: 18, background: "#ef4444", borderRadius: 2, boxShadow: "0 2px 6px rgba(239,68,68,.5)", flexShrink: 0 }} title="Red Card" />
+      <span style={{ display: "inline-block", width: 14, height: 18, background: "#ef4444", borderRadius: 2, boxShadow: "0 2px 6px rgba(239,68,68,.5)", flexShrink: 0 }} title={t("event.redCard")} />
     )
     if (detail === "Second Yellow Card") return (
       <span style={{ display: "inline-flex", gap: 2, alignItems: "center" }} title="Second Yellow">
@@ -162,7 +163,7 @@ function EventIcon({ type, detail }) {
     if (detail?.includes("cancelled") || detail?.includes("disallowed")) return <span title={detail}>📹❌</span>
     if (detail?.includes("Penalty confirmed"))  return <span title={detail}>📹✅</span>
     if (detail?.includes("Card upgrade"))       return <span title={detail}>📹🟥</span>
-    return <span title={detail || "VAR"}>📹</span>
+    return <span title={detail || t("event.var")}>📹</span>
   }
   if (type === "injury")  return <span style={{ fontSize: "1rem" }} title="Injury">🩹</span>
   return <span>•</span>
@@ -486,10 +487,10 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
 
     // Header line
     if (isLive) {
-      lines.push(`🔴 LIVE · ${homeName} ${hs}–${as} ${awayName}`)
+      lines.push(`🔴 ${t("status.live")} · ${homeName} ${hs}–${as} ${awayName}`)
     } else if (isFT) {
       const winner = hs > as ? homeName : as > hs ? awayName : null
-      lines.push(`⚽ FT · ${homeName} ${hs}–${as} ${awayName}${winner ? ` · ${winner} win` : " · Draw"}`)
+      lines.push(`⚽ ${t("status.ft")} · ${homeName} ${hs}–${as} ${awayName}${winner ? t("match.shareWin", { team: winner }) : ` · ${t("match.draw")}`}`)
     } else {
       lines.push(`${homeName} vs ${awayName}`)
     }

@@ -39,7 +39,7 @@ function TeamFlag({ src, code, name, size = 72 }) {
 }
 
 export default function MatchCard({ match, onClick }) {
-  const { i18n } = useTranslation()
+  const { i18n, t } = useTranslation()
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
   const hasScore   = match.home_score !== null && match.away_score !== null
@@ -79,13 +79,13 @@ export default function MatchCard({ match, onClick }) {
       <div style={{ flexShrink: 0, textAlign: "center", padding: "0 12px", minWidth: 70 }}>
         {isLive && (
           <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: "0.65rem", fontWeight: 700, color: "var(--accent)", letterSpacing: 1, marginBottom: 4 }}>
-            <span className="live-dot" /> LIVE
+            <span className="live-dot" /> {t("status.live")}
           </span>
         )}
         <span className="score" style={{ fontSize: hasScore ? undefined : ".9rem" }}>
           {hasScore ? `${match.home_score}–${match.away_score}` : kickoff}
         </span>
-        {isFinished && <div style={{ fontSize: "0.62rem", color: "var(--muted)", letterSpacing: 1, marginTop: 2 }}>FT</div>}
+        {isFinished && <div style={{ fontSize: "0.62rem", color: "var(--muted)", letterSpacing: 1, marginTop: 2 }}>{t("status.ft")}</div>}
       </div>
 
       {/* Away team */}

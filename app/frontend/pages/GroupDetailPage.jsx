@@ -415,7 +415,7 @@ export default function GroupDetailPage() {
                             {t("groups.matchday", { n: dayIdx + 1 })}
                           </span>
                           <span style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{dateLabel}</span>
-                          {hasLive && <span className="live-badge" style={{ marginLeft: "auto" }}>LIVE</span>}
+                          {hasLive && <span className="live-badge" style={{ marginLeft: "auto" }}>{t("status.live")}</span>}
                         </div>
                         {dayMatches
                           .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))

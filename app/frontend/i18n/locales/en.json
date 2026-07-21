@@ -334,7 +334,8 @@
     "roundQuarterFinal": "Quarter-finals",
     "roundSemiFinal": "Semi-finals",
     "round3rdPlace": "3rd Place",
-    "roundFinal": "Final"
+    "roundFinal": "Final",
+    "shareWin": " · {{team}} win"
   },
   "teamComparison": {
     "title": "Team Comparison",
@@ -348,6 +349,11 @@
     "draws": "Draws",
     "losses": "Losses",
     "avgPossession": "Avg Possession %"
+  },
+  "event": {
+    "ownGoal": "Own Goal",
+    "redCard": "Red Card",
+    "var": "VAR"
   },
   "error": {
     "dataUnavailable": "Data temporarily unavailable",
@@ -369,6 +375,7 @@
     "live": "LIVE",
     "ft": "FT",
     "vs": "vs",
+    "pens": "Pens",
     "liveCount": "{{count}} LIVE"
   },
   "leagues": {

@@ -117,7 +117,7 @@ function MatchCard({ match, onClick, pLabel }) {
           {header?.live && <span className="live-dot" />}
           {header?.text}
           {hasPen && isFinished && !header?.live && (
-            <span className="bk2-hdr-pen">· Pens</span>
+            <span className="bk2-hdr-pen">· {t("status.pens")}</span>
           )}
           {pLabel && <span className="bk2-hdr-pnum">{pLabel}</span>}
         </div>

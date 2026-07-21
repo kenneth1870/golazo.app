@@ -140,6 +140,7 @@ export default function ScorersPage() {
   const [activeTab, setActiveTab] = useState("goals")
   const [data, setData]           = useState({})
   const [loading, setLoading]     = useState(false)
+  const [error, setError]         = useState(false)
 
   const TABS = TAB_DEFS.map(d => ({ ...d, label: t(d.labelKey), unit: t(d.unitKey) }))
   const tab = TABS.find(tab => tab.key === activeTab)
@@ -147,14 +148,16 @@ export default function ScorersPage() {
   const fetchTab = useCallback((tabKey) => {
     const t = TABS.find(t => t.key === tabKey)
     if (!t) return
+    setError(false)
     setLoading(true)
     fetch(t.endpoint)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(json => {
         const rows = Array.isArray(json) ? json : []
         cache[tabKey] = { rows, ts: Date.now() }
         setData(prev => ({ ...prev, [tabKey]: rows }))
       })
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -210,7 +213,14 @@ export default function ScorersPage() {
           </>
         )}
 
-        {!loading && rows.length === 0 && (
+        {!loading && error && (
+          <div style={{ textAlign: "center", padding: "40px 0" }}>
+            <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
+            <button className="btn btn-primary btn-sm" onClick={() => fetchTab(activeTab)}>{t("error.retry")}</button>
+          </div>
+        )}
+
+        {!loading && !error && rows.length === 0 && (
           <div className="empty-state">
             <div className="empty-state__icon">{tab.icon}</div>
             <h3>{t("mundial.noData")}</h3>
@@ -218,7 +228,7 @@ export default function ScorersPage() {
           </div>
         )}
 
-        {!loading && rows.length > 0 && (
+        {!loading && !error && rows.length > 0 && (
           <>
             <LeaderHero player={leader} tab={tab} lang={i18n.language} />
             <div className="widget-next-match" style={{ overflow: "hidden" }}>

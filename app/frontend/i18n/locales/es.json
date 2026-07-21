@@ -335,7 +335,8 @@
     "roundQuarterFinal": "Cuartos de Final",
     "roundSemiFinal": "Semifinales",
     "round3rdPlace": "Tercer Puesto",
-    "roundFinal": "Final"
+    "roundFinal": "Final",
+    "shareWin": " · {{team}} gana"
   },
   "teamComparison": {
     "title": "Comparativa de Equipos",
@@ -349,6 +350,11 @@
     "draws": "Empates",
     "losses": "Derrotas",
     "avgPossession": "Posesión Media %"
+  },
+  "event": {
+    "ownGoal": "Autogol",
+    "redCard": "Tarjeta roja",
+    "var": "VAR"
   },
   "error": {
     "dataUnavailable": "Datos temporalmente no disponibles",
@@ -370,6 +376,7 @@
     "live": "EN VIVO",
     "ft": "FIN",
     "vs": "vs",
+    "pens": "Pen.",
     "liveCount": "{{count}} EN VIVO"
   },
   "leagues": {

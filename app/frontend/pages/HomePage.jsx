@@ -26,10 +26,13 @@ function useTodayFeed(wcOnly = false) {
   const [todayMatches, setTodayMatches] = useState([])
   const [upcomingPreview, setUpcomingPreview] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const loadRef = useRef(null)
 
-  const load = useCallback(() => {
+  const load = useCallback((isRetry = false) => {
     if (document.hidden) return
+    setError(false)
+    if (isRetry) setLoading(true)
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     fetch(`/api/v1/today?tz=${encodeURIComponent(tz)}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
@@ -47,7 +50,7 @@ function useTodayFeed(wcOnly = false) {
           })
         )
       })
-      .catch(() => { /* silently retain previous matches on network hiccup */ })
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [wcOnly])
 
@@ -83,7 +86,7 @@ function useTodayFeed(wcOnly = false) {
   useLiveScoresChannel(applyLiveScore)
   useStandingsChannel(load)
 
-  return { todayMatches, upcomingPreview, loading }
+  return { todayMatches, upcomingPreview, loading, todayError: error, retryToday: () => load(true) }
 }
 
 const FEATURED_NEWS_LEAGUES = [ "CRC", "LMX", "PL", "LAL" ]
@@ -186,10 +189,19 @@ function TodayFeedSkeleton() {
   )
 }
 
-function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = false, navigate, t, clubsPrimary = false }) {
+function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = false, error = false, onRetry, navigate, t, clubsPrimary = false }) {
   const { i18n } = useTranslation()
 
   if (loading) return <TodayFeedSkeleton />
+
+  const errorBanner = error && (
+    <div style={{ textAlign: "center", color: "var(--muted)", fontSize: "0.82rem", marginBottom: 12 }}>
+      {t("error.tryAgain", "Couldn't load matches. Check your connection.")}
+      <button onClick={onRetry} style={{ marginLeft: 8, background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "0.82rem", textDecoration: "underline" }}>
+        {t("error.retry", "Retry")}
+      </button>
+    </div>
+  )
 
   const all = [...(todayMatches || [])]
     .sort((a, b) => new Date(a.kickoff_at || a.kickoff) - new Date(b.kickoff_at || b.kickoff))
@@ -204,16 +216,21 @@ function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = fal
 
   if (all.length === 0 && upcomingPreview.length === 0) {
     return (
-      <EmptyState
-        icon="📅"
-        title={t("scores.noMatchesToday", "No matches today")}
-        description={clubsPrimary ? t("home.liveScoresWorldwide") : t("scores.wcSubtitle")}
-        action={
-          <Link to="/scores/today" className="btn btn-primary btn-sm" style={{ marginTop: 8 }}>
-            {t("scores.tabToday", "Today")}
-          </Link>
-        }
-      />
+      <>
+        {errorBanner}
+        {!error && (
+          <EmptyState
+            icon="📅"
+            title={t("scores.noMatchesToday", "No matches today")}
+            description={clubsPrimary ? t("home.liveScoresWorldwide") : t("scores.wcSubtitle")}
+            action={
+              <Link to="/scores/today" className="btn btn-primary btn-sm" style={{ marginTop: 8 }}>
+                {t("scores.tabToday", "Today")}
+              </Link>
+            }
+          />
+        )}
+      </>
     )
   }
 
@@ -253,6 +270,7 @@ function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = fal
 
   return (
     <div style={{ marginBottom: 8 }}>
+      {errorBanner}
       {/* ── LIVE NOW banner — only shown when matches are in progress ── */}
       {liveCount > 0 && (
         <div style={{ marginBottom: 12 }}>
@@ -455,7 +473,7 @@ export default function HomePage() {
 
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: clubsPrimary ? undefined : "WC" })
   useLiveScoresChannel(patchLiveScore)
-  const { todayMatches, upcomingPreview, loading: todayLoading } = useTodayFeed(!clubsPrimary)
+  const { todayMatches, upcomingPreview, loading: todayLoading, todayError, retryToday } = useTodayFeed(!clubsPrimary)
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
   const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: tz })
   const clubFixtures = clubsPrimary
@@ -500,6 +518,8 @@ export default function HomePage() {
           todayMatches={todayMatches}
           upcomingPreview={upcomingPreview}
           loading={todayLoading}
+          error={todayError}
+          onRetry={retryToday}
           navigate={navigate}
           t={t}
           clubsPrimary={clubsPrimary}
@@ -787,29 +807,47 @@ export default function HomePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {upcomingFuture.slice(0, 8).map(m => (
-                        <tr key={m.id} style={{ cursor: "pointer" }} onClick={() => navigate("/scores/today")}>
-                          <td style={{ fontSize: "0.75rem", color: "gray" }}>
-                            {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString(i18n.language || undefined, { month: "short", day: "numeric" }) : t("time.tbd")}
-                          </td>
-                          <td>
-                            <div className="d-flex align-items-center" style={{ gap: 6 }}>
-                              {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt={m.home_team.name} className="flag-xs" />}
-                              <strong style={{ color: "var(--text)" }}>{m.home_team?.code}</strong>
-                            </div>
-                          </td>
-                          <td style={{ color: "gray", fontSize: "0.75rem" }}>vs</td>
-                          <td>
-                            <div className="d-flex align-items-center" style={{ gap: 6 }}>
-                              {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt={m.away_team.name} className="flag-xs" />}
-                              <strong style={{ color: "var(--text)" }}>{m.away_team?.code}</strong>
-                            </div>
-                          </td>
-                          <td style={{ color: "gray", fontSize: "0.75rem" }}>
-                            {clubsPrimary ? (m.round || m.competition?.code) : m.group_stage}
-                          </td>
-                        </tr>
-                      ))}
+                      {upcomingFuture.slice(0, 8).map(m => {
+                        const homeLabel = translateTeam(m.home_team?.name, i18n.language) || m.home_team?.code
+                        const awayLabel = translateTeam(m.away_team?.name, i18n.language) || m.away_team?.code
+                        const goToMatch = () => (navIdFor(m) ? navigateToMatch(navigate, m) : navigate("/scores/today"))
+                        return (
+                          <tr
+                            key={m.id}
+                            role="button"
+                            tabIndex={0}
+                            style={{ cursor: "pointer" }}
+                            aria-label={t("a11y.matchRow", { home: homeLabel, away: awayLabel })}
+                            onClick={goToMatch}
+                            onKeyDown={e => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault()
+                                goToMatch()
+                              }
+                            }}
+                          >
+                            <td style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
+                              {m.kickoff_at ? new Date(m.kickoff_at).toLocaleDateString(i18n.language || undefined, { month: "short", day: "numeric" }) : t("time.tbd")}
+                            </td>
+                            <td>
+                              <div className="d-flex align-items-center" style={{ gap: 6 }}>
+                                {m.home_team?.flag_url && <img src={m.home_team.flag_url} alt={m.home_team.name} className="flag-xs" />}
+                                <strong style={{ color: "var(--text)" }}>{m.home_team?.code}</strong>
+                              </div>
+                            </td>
+                            <td style={{ color: "var(--muted)", fontSize: "0.75rem" }}>{t("status.vs")}</td>
+                            <td>
+                              <div className="d-flex align-items-center" style={{ gap: 6 }}>
+                                {m.away_team?.flag_url && <img src={m.away_team.flag_url} alt={m.away_team.name} className="flag-xs" />}
+                                <strong style={{ color: "var(--text)" }}>{m.away_team?.code}</strong>
+                              </div>
+                            </td>
+                            <td style={{ color: "var(--muted)", fontSize: "0.75rem" }}>
+                              {clubsPrimary ? (m.round || m.competition?.code) : m.group_stage}
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
