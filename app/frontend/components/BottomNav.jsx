@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { NavLink } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useLiveCount } from "../contexts/LiveContext"
@@ -51,10 +51,11 @@ export default function BottomNav() {
   const liveCount = useLiveCount()
   const { clubs_primary: clubsPrimary } = useAppFocus()
   const [searchOpen, setSearchOpen] = useState(false)
+  const searchTriggerRef = useRef(null)
 
   return (
     <>
-      {searchOpen && <SearchBar onClose={() => setSearchOpen(false)} />}
+      {searchOpen && <SearchBar onClose={() => setSearchOpen(false)} returnFocusRef={searchTriggerRef} />}
       <nav className="bottom-nav" aria-label={t("a11y.mainNav")}>
 
         <NavLink to="/" end className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}>
@@ -80,7 +81,7 @@ export default function BottomNav() {
           <span className="bottom-nav__label">{clubsPrimary ? t("nav.leagues", "Leagues") : t("nav.mundialShort", "Mundial")}</span>
         </NavLink>
 
-        <button className="bottom-nav__item bottom-nav__item--btn" onClick={() => setSearchOpen(true)} aria-label={t("a11y.search")}>
+        <button ref={searchTriggerRef} className="bottom-nav__item bottom-nav__item--btn" onClick={() => setSearchOpen(true)} aria-label={t("a11y.search")}>
           <SearchIcon />
           <span className="bottom-nav__label">{t("nav.search", "Search")}</span>
         </button>

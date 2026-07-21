@@ -29,7 +29,9 @@ function FlagOrInitials({ name, flagUrl, size = 24 }) {
   )
 }
 
-export default function SearchBar({ onClose }) {
+const INERT_SELECTORS = [".site-wrap > main", ".site-wrap > footer", ".bottom-nav", ".site-navbar", ".site-mobile-menu"]
+
+export default function SearchBar({ onClose, returnFocusRef }) {
   const { t, i18n } = useTranslation()
   const [query, setQuery]     = useState("")
   const [results, setResults] = useState([])
@@ -37,10 +39,44 @@ export default function SearchBar({ onClose }) {
   const [focused, setFocused] = useState(0)
   const navigate  = useNavigate()
   const inputRef     = useRef(null)
+  const dialogRef    = useRef(null)
   const timerRef     = useRef(null)
   const abortRef     = useRef(null)
 
-  useEffect(() => { inputRef.current?.focus() }, [])
+  const close = useCallback(() => { onClose() }, [onClose])
+
+  useEffect(() => {
+    inputRef.current?.focus()
+    const inerted = INERT_SELECTORS.flatMap(s => [...document.querySelectorAll(s)])
+    inerted.forEach(el => { el.inert = true })
+    return () => {
+      inerted.forEach(el => { el.inert = false })
+      returnFocusRef?.current?.focus()
+    }
+  }, [returnFocusRef])
+
+  useEffect(() => {
+    function onTab(e) {
+      if (e.key !== "Tab") return
+      const root = dialogRef.current
+      if (!root) return
+      const focusable = [...root.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )].filter(el => !el.disabled)
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener("keydown", onTab)
+    return () => document.removeEventListener("keydown", onTab)
+  }, [])
 
   // Debounced search with request cancellation
   useEffect(() => {
@@ -79,20 +115,34 @@ export default function SearchBar({ onClose }) {
     } else if (result.type === "player") {
       navigate(`/players/${result.id}`)
     }
-    onClose()
-  }, [navigate, onClose])
+    close()
+  }, [navigate, close])
+
+  function resultLabel(r) {
+    if (r.type === "team") return t("a11y.searchResultTeam", { name: r.name })
+    if (r.type === "player") return t("a11y.searchResultPlayer", { name: r.name })
+    return t("a11y.matchRow", { home: r.home, away: r.away })
+  }
+
+  function handleResultKeyDown(e, result) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      e.stopPropagation()
+      go(result)
+    }
+  }
 
   // Keyboard navigation
   useEffect(() => {
     function onKey(e) {
-      if (e.key === "Escape") { onClose(); return }
+      if (e.key === "Escape") { close(); return }
       if (e.key === "ArrowDown") { e.preventDefault(); setFocused(f => Math.min(f + 1, results.length - 1)) }
       if (e.key === "ArrowUp")   { e.preventDefault(); setFocused(f => Math.max(f - 1, 0)) }
       if (e.key === "Enter" && results[focused]) { go(results[focused]) }
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [results, focused, go, onClose])
+  }, [results, focused, go, close])
 
   const statusLabel = (r) => {
     if (r.status === "live")     return <span style={{ color: "#ee1e46", fontSize: "0.68rem", fontWeight: 800 }}>● {t("status.live")}</span>
@@ -111,7 +161,7 @@ export default function SearchBar({ onClose }) {
     <>
       {/* Overlay */}
       <div
-        onClick={onClose}
+        onClick={close}
         style={{
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
           zIndex: 3000, backdropFilter: "blur(4px)", animation: "fadeIn .15s",
@@ -120,6 +170,7 @@ export default function SearchBar({ onClose }) {
 
       {/* Modal */}
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={t("search.title", "Search")}
@@ -154,7 +205,7 @@ export default function SearchBar({ onClose }) {
           {loading && <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>…</span>}
           <button
             type="button"
-            onClick={onClose}
+            onClick={close}
             aria-label={t("a11y.close")}
             className="focus-brand"
             style={{
@@ -170,7 +221,13 @@ export default function SearchBar({ onClose }) {
             {results.map((r, i) => (
               <div
                 key={`${r.type}-${r.id}`}
+                role="button"
+                tabIndex={0}
+                aria-label={resultLabel(r)}
+                className="focus-brand"
                 onClick={() => go(r)}
+                onKeyDown={e => handleResultKeyDown(e, r)}
+                onFocus={() => setFocused(i)}
                 style={{
                   display: "flex", alignItems: "center", gap: 12,
                   padding: "12px 16px", cursor: "pointer",

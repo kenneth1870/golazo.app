@@ -690,6 +690,8 @@
     "themeDark": "Switch to dark mode",
     "themeLight": "Switch to light mode",
     "dismiss": "Dismiss",
-    "matchRow": "{{home}} vs {{away}}"
+    "matchRow": "{{home}} vs {{away}}",
+    "searchResultTeam": "{{name}}",
+    "searchResultPlayer": "{{name}}"
   }
 }

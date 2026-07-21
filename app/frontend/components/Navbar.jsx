@@ -239,6 +239,12 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [expanded, setExpanded]     = useState({})
+  const searchTriggerRef = useRef(null)
+
+  const openSearch = useCallback((e) => {
+    searchTriggerRef.current = e.currentTarget
+    setSearchOpen(true)
+  }, [])
 
   useEffect(() => { setDrawerOpen(false); setSearchOpen(false) }, [location.pathname])
 
@@ -275,7 +281,7 @@ export default function Navbar() {
 
   return (
     <>
-      {searchOpen && <SearchBar onClose={() => setSearchOpen(false)} />}
+      {searchOpen && <SearchBar onClose={() => setSearchOpen(false)} returnFocusRef={searchTriggerRef} />}
 
       {/* Drawer overlay */}
       {drawerOpen && <div className="mobile-overlay" onClick={() => setDrawerOpen(false)} />}
@@ -293,7 +299,7 @@ export default function Navbar() {
           </Link>
           {/* Search in drawer */}
           <button
-            onClick={() => { setDrawerOpen(false); setSearchOpen(true) }}
+            onClick={(e) => { searchTriggerRef.current = e.currentTarget; setDrawerOpen(false); setSearchOpen(true) }}
             aria-label={t("a11y.search")}
             style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: 8, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", marginRight: 8, flexShrink: 0 }}
           >
@@ -442,7 +448,7 @@ export default function Navbar() {
 
               {/* Search */}
               <button
-                onClick={() => setSearchOpen(true)}
+                onClick={openSearch}
                 title={t("a11y.searchShortcut")}
                 aria-label={t("a11y.searchShortcut")}
                 className="nav-search-btn"
@@ -461,7 +467,7 @@ export default function Navbar() {
             {/* Mobile: search + theme toggle + hamburger */}
             <div className="mobile-header-actions ml-auto">
               <button
-                onClick={() => setSearchOpen(true)}
+                onClick={openSearch}
                 aria-label={t("a11y.search")}
                 style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", padding: 0, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center" }}
               >
