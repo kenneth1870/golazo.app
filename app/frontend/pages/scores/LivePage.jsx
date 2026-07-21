@@ -26,7 +26,7 @@ function toMatchRowMatch(m) {
 }
 
 function CompetitionBlock({ leagueName, leagueLogo, leagueCountry, matches, onMatchClick }) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const sorted = [...matches].sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0))
 
   return (
@@ -37,8 +37,8 @@ function CompetitionBlock({ leagueName, leagueLogo, leagueCountry, matches, onMa
             onError={e => (e.target.style.display = "none")} />
         )}
         <h3 style={{ margin: 0 }}>{translateLeague(leagueName, i18n.language) ?? "Live"}</h3>
-        <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{leagueCountry}</span>
-        <span className="live-badge">LIVE</span>
+        <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "var(--muted)" }}>{leagueCountry}</span>
+        <span className="live-badge">{t("status.live")}</span>
       </div>
       <div className="widget-body p-0">
         {sorted.map((m, i) => (
@@ -109,7 +109,7 @@ export default function LivePage() {
     return (
       <div className="site-section">
         <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
-          <p style={{ color: "#888", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
+          <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
           <button className="btn btn-primary btn-sm" onClick={() => { setError(false); setLoading(true); load().finally(() => setLoading(false)) }}>
             {t("error.retry")}
           </button>

@@ -123,7 +123,7 @@ export default function MatchReactions({ matchId, compact = false }) {
             {count > 0 && (
               <span style={{
                 fontSize: compact ? "0.65rem" : "0.72rem",
-                color: reacted ? "var(--accent,#ee1e46)" : "var(--muted,#888)",
+                color: reacted ? "var(--accent,#ee1e46)" : "var(--muted)",
                 fontWeight: reacted ? 700 : 400,
                 minWidth: 12,
               }}>
@@ -135,7 +135,7 @@ export default function MatchReactions({ matchId, compact = false }) {
       })}
 
       {!compact && total > 0 && (
-        <span style={{ fontSize: "0.7rem", color: "var(--muted,#888)", marginLeft: 4 }}>
+        <span style={{ fontSize: "0.7rem", color: "var(--muted)", marginLeft: 4 }}>
           {total.toLocaleString()} reaction{total !== 1 ? "s" : ""}
         </span>
       )}

@@ -9,8 +9,25 @@ const TYPE_ORDER = { world_cup: 0, latam: 1, cup: 2, league: 3 }
 const LATAM_CODES = ["CRC", "LMX"]
 
 function LeagueCard({ competition, liveCount, onClick, lang, t }) {
+  const leagueName = translateLeague(competition.name, lang) ?? competition.name
+
+  function handleKeyDown(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      onClick(e)
+    }
+  }
+
   return (
-    <div className="league-card" onClick={onClick} style={{ cursor: "pointer" }}>
+    <div
+      className="league-card"
+      role="button"
+      tabIndex={0}
+      aria-label={t("a11y.viewLeague", { name: leagueName })}
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      style={{ cursor: "pointer" }}
+    >
       <div className="league-card__logo">
         {competition.logo ? (
           <img
@@ -23,7 +40,7 @@ function LeagueCard({ competition, liveCount, onClick, lang, t }) {
         )}
       </div>
       <div className="league-card__body">
-        <div className="league-card__name">{translateLeague(competition.name, lang) ?? competition.name}</div>
+        <div className="league-card__name">{leagueName}</div>
         <div className="league-card__country">
           {competition.archived
             ? t("leagues.archived", "Archived")
@@ -146,7 +163,7 @@ export default function AllLeaguesPage() {
     return (
       <div className="site-section">
         <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
-          <p style={{ color: "#888", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
+          <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
           <button className="btn btn-primary btn-sm" onClick={load}>{t("error.retry")}</button>
         </div>
       </div>

@@ -193,7 +193,7 @@ export default function NewsPage() {
               <button
                 className="tab-link"
                 onClick={() => setTab("all")}
-                style={{ color: "var(--muted,#888)" }}
+                style={{ color: "var(--muted)" }}
               >
                 {t("news.allNews", "All news")}
               </button>
@@ -209,7 +209,7 @@ export default function NewsPage() {
             <div className="empty-state">
               <div className="empty-state__icon">⭐</div>
               <h3>{t("news.forYouEmpty", "No personalised news yet")}</h3>
-              <p style={{ color: "var(--muted,#888)", maxWidth: 300, textAlign: "center" }}>
+              <p style={{ color: "var(--muted)", maxWidth: 300, textAlign: "center" }}>
                 {t(clubsPrimary ? "news.forYouEmptyHintClubs" : "news.forYouEmptyHint")}
               </p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginTop: 12 }}>
@@ -240,7 +240,7 @@ export default function NewsPage() {
             </div>
           ) : error ? (
             <div style={{ textAlign: "center", paddingTop: 60 }}>
-              <p style={{ color: "#888", marginBottom: 16 }}>{t("error.failedToLoadNews")}</p>
+              <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoadNews")}</p>
               <button className="btn btn-primary btn-sm" onClick={loadNews}>{t("error.retry")}</button>
             </div>
           ) : visible.length === 0 && tab !== "foryou" ? (
@@ -254,7 +254,7 @@ export default function NewsPage() {
                 <div style={{
                   marginBottom: 20, padding: "10px 14px", borderRadius: 10,
                   background: "rgba(238,30,70,.08)", border: "1px solid rgba(238,30,70,.2)",
-                  fontSize: "0.82rem", color: "var(--muted,#888)",
+                  fontSize: "0.82rem", color: "var(--muted)",
                   display: "flex", alignItems: "center", gap: 8,
                 }}>
                   <span>⭐</span>

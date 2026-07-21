@@ -132,7 +132,7 @@ export default function AllGroupsPage() {
     return (
       <div className="site-section">
         <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
-          <p style={{ color: "#888", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
+          <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
           <button className="btn btn-primary btn-sm" onClick={load}>{t("error.retry")}</button>
         </div>
       </div>

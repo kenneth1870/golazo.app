@@ -697,6 +697,7 @@
     "dismiss": "Descartar",
     "matchRow": "{{home}} vs {{away}}",
     "searchResultTeam": "{{name}}",
-    "searchResultPlayer": "{{name}}"
+    "searchResultPlayer": "{{name}}",
+    "viewLeague": "Ver {{name}}"
   }
 }

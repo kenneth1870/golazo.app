@@ -107,7 +107,7 @@ function FixtureCard({ match, onClick }) {
           <>
             <div style={{ display: "flex", alignItems: "center", gap: 4, justifyContent: "flex-end", marginBottom: 4 }}>
               <span className="live-dot" />
-              <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "#ee1e46", letterSpacing: 1 }}>LIVE</span>
+              <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "#ee1e46", letterSpacing: 1 }}>{t("status.live")}</span>
             </div>
             <div style={{ fontSize: "1rem", fontWeight: 900, color: "#ee1e46", lineHeight: 1 }}>
               {match.home_score} – {match.away_score}

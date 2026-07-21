@@ -696,6 +696,7 @@
     "dismiss": "Dismiss",
     "matchRow": "{{home}} vs {{away}}",
     "searchResultTeam": "{{name}}",
-    "searchResultPlayer": "{{name}}"
+    "searchResultPlayer": "{{name}}",
+    "viewLeague": "View {{name}}"
   }
 }

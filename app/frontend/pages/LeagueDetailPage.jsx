@@ -59,7 +59,7 @@ function StandingsTable({ standings, t, i18n, leagueCode, favoriteTeamNames = []
                   )
                   return (
                   <tr key={s.id ?? s.rank} style={followed ? { background: "rgba(238,30,70,.08)" } : undefined}>
-                    <td style={{ color: "#888" }}>{s.rank}</td>
+                    <td style={{ color: "var(--muted)" }}>{s.rank}</td>
                     <td>
                       <div className="d-flex align-items-center" style={{ gap: 8 }}>
                         {s.team?.flag_url && (

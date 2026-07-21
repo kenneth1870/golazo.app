@@ -501,7 +501,7 @@ button:focus:not(:focus-visible){outline:none}
 .tab-link{
   white-space:nowrap;
   padding:7px 16px;
-  color:var(--muted,#888);
+  color:var(--muted);
   font-size:.7rem;font-weight:700;
   letter-spacing:.06em;text-transform:uppercase;
   border:1px solid transparent;
@@ -1419,7 +1419,7 @@ body.light-mode .date-strip__day--today{background:rgba(238,30,70,.1)}
 .bracket-slot__qmark-icon{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.06);font-size:.7rem;font-weight:800;color:rgba(255,255,255,.35)}
 .bracket-slot__header{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 10px 3px;border-bottom:1px solid var(--border);background:var(--surface2)}
 .bracket-slot__date{font-size:.6rem;color:var(--muted);font-weight:600;white-space:nowrap}
-.bracket-slot__badge{font-size:.55rem;font-weight:700;color:#888;background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;white-space:nowrap}
+.bracket-slot__badge{font-size:.55rem;font-weight:700;color:var(--muted);background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;white-space:nowrap}
 .bracket-slot__badge--live{color:var(--accent);background:rgba(238,30,70,.12)}
 .bracket-slot__team{display:flex;align-items:center;gap:7px;padding:8px 10px}
 .bracket-slot__name{flex:1;font-size:.75rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

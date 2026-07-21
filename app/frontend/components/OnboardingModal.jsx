@@ -231,7 +231,7 @@ export default function OnboardingModal({ onDismiss }) {
                   <span style={{ fontSize: "1.4rem" }}>⚽</span>
                 )}
                 <span style={{
-                  fontSize: "0.62rem", color: selected ? "var(--accent,#ee1e46)" : "var(--muted,#888)",
+                  fontSize: "0.62rem", color: selected ? "var(--accent,#ee1e46)" : "var(--muted)",
                   textAlign: "center", lineHeight: 1.2, fontWeight: selected ? 600 : 400,
                 }}>
                   {translateTeam(team.name, i18n.language) || team.name}
@@ -281,7 +281,7 @@ export default function OnboardingModal({ onDismiss }) {
                   onError={e => { e.target.style.display = "none" }}
                 />
                 <span style={{
-                  fontSize: "0.62rem", color: selected ? "var(--accent,#ee1e46)" : "var(--muted,#888)",
+                  fontSize: "0.62rem", color: selected ? "var(--accent,#ee1e46)" : "var(--muted)",
                   textAlign: "center", lineHeight: 1.2, fontWeight: selected ? 600 : 400,
                 }}>
                   {translateTeam(team.name, i18n.language) || team.name}
@@ -315,7 +315,7 @@ export default function OnboardingModal({ onDismiss }) {
                   padding: "10px 16px", borderRadius: 20, cursor: "pointer",
                   background: selected ? "rgba(238,30,70,.18)" : "var(--surface2,#1a1a1a)",
                   border: `1px solid ${selected ? "var(--accent,#ee1e46)" : "var(--border,#2a2a2a)"}`,
-                  color: selected ? "var(--accent,#ee1e46)" : "var(--muted,#888)",
+                  color: selected ? "var(--accent,#ee1e46)" : "var(--muted)",
                   fontSize: "0.85rem", fontWeight: selected ? 600 : 400,
                   transition: "all .15s",
                 }}
@@ -493,7 +493,7 @@ export default function OnboardingModal({ onDismiss }) {
             onClick={finish}
             style={{
               position: "absolute", top: 20, right: 20,
-              background: "none", border: "none", color: "var(--muted,#888)",
+              background: "none", border: "none", color: "var(--muted)",
               fontSize: "0.8rem", cursor: "pointer", padding: "4px 8px",
             }}
           >
@@ -504,7 +504,7 @@ export default function OnboardingModal({ onDismiss }) {
         <h2 style={{ textAlign: "center", fontSize: "1.3rem", fontWeight: 700, margin: 0 }}>
           {current.title}
         </h2>
-        <p style={{ textAlign: "center", color: "var(--muted,#888)", fontSize: "0.9rem", marginTop: 8, marginBottom: 0 }}>
+        <p style={{ textAlign: "center", color: "var(--muted)", fontSize: "0.9rem", marginTop: 8, marginBottom: 0 }}>
           {current.subtitle}
         </p>
 
@@ -518,7 +518,7 @@ export default function OnboardingModal({ onDismiss }) {
                 style={{
                   flex: 1, maxWidth: 200, padding: "14px", borderRadius: 12,
                   background: "var(--surface2,#1a1a1a)", border: "1px solid var(--border,#2a2a2a)",
-                  color: "var(--muted,#888)", fontSize: "0.95rem", cursor: "pointer",
+                  color: "var(--muted)", fontSize: "0.95rem", cursor: "pointer",
                 }}
               >
                 {selectedTeams.length === 0 && step === 1

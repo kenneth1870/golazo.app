@@ -134,15 +134,29 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
     return (order[a.status] ?? 3) - (order[b.status] ?? 3) || new Date(a.kickoff_at) - new Date(b.kickoff_at)
   })
 
+  const leagueName = translateLeague(comp?.name, i18n.language) ?? "Other"
+
+  function handleHeaderKeyDown(e) {
+    if (!canNav) return
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      navigate(`/leagues/${comp.code}`)
+    }
+  }
+
   return (
     <div className="widget-next-match mb-4">
       <div
         className={`widget-title d-flex align-items-center${canNav ? " cursor-pointer" : ""}`}
         style={{ gap: 10, cursor: canNav ? "pointer" : "default" }}
+        role={canNav ? "button" : undefined}
+        tabIndex={canNav ? 0 : undefined}
+        aria-label={canNav ? t("a11y.viewLeague", { name: leagueName }) : undefined}
         onClick={canNav ? () => navigate(`/leagues/${comp.code}`) : undefined}
+        onKeyDown={handleHeaderKeyDown}
       >
         <FlagImg src={comp?.logo} name={comp?.name} size={20} className="logo-sm" />
-        <h3 style={{ margin: 0 }}>{translateLeague(comp?.name, i18n.language) ?? "Other"}</h3>
+        <h3 style={{ margin: 0 }}>{leagueName}</h3>
         <span className="widget-meta-country" style={{ marginLeft: "auto", fontSize: "0.72rem", color: "var(--muted)" }}>{translateCountry(comp?.country, i18n.language)}</span>
         {hasLive && <span className="live-badge">{t("status.live")}</span>}
         {canNav && <span style={{ fontSize: "0.75rem", color: "#ee1e46" }}>→</span>}
@@ -202,7 +216,7 @@ function FavTeamAlert({ match, onMatchClick, onDismiss }) {
         onClick={e => { e.stopPropagation(); onDismiss() }}
         aria-label={t("a11y.dismiss")}
         style={{
-          background: "none", border: "none", color: "#888",
+          background: "none", border: "none", color: "var(--muted)",
           fontSize: "1rem", cursor: "pointer", padding: "0 4px", flexShrink: 0,
         }}
       >✕</button>

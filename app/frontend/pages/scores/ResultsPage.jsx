@@ -40,7 +40,7 @@ function CompetitionBlock({ matches, onMatchClick }) {
             onError={e => (e.target.style.display = "none")} />
         )}
         <h3 style={{ margin: 0 }}>{translateLeague(comp?.name, i18n.language) ?? "Other"}</h3>
-        <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "#888" }}>{translateCountry(comp?.country, i18n.language)}</span>
+        <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "var(--muted)" }}>{translateCountry(comp?.country, i18n.language)}</span>
       </div>
       <div className="widget-body p-0">
         {sorted.map(m => (
@@ -141,7 +141,7 @@ export default function ResultsPage() {
           <button className="btn-nav" onClick={() => setDate(d => addDays(d, -1))}>←</button>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontWeight: 600, fontSize: "1rem" }}>{label}</div>
-            <div style={{ fontSize: "0.75rem", color: "#888" }}>{toISO(date)}</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{toISO(date)}</div>
           </div>
           <button
             className="btn-nav"
@@ -155,7 +155,7 @@ export default function ResultsPage() {
           <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
         ) : error ? (
           <div style={{ textAlign: "center", paddingTop: 60 }}>
-            <p style={{ color: "#888", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
+            <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
             <button className="btn btn-primary btn-sm" onClick={() => load(date)}>{t("error.retry")}</button>
           </div>
         ) : groups.length === 0 ? (
