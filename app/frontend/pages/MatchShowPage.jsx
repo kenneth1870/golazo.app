@@ -140,32 +140,32 @@ function EventIcon({ type, detail }) {
   const { t } = useTranslation()
   if (type === "Goal") {
     if (detail === "Own Goal")   return <span title={t("event.ownGoal")}>⚽<span style={{ fontSize: "0.55rem", verticalAlign: "top", color: "var(--danger)", fontWeight: 800 }}>OG</span></span>
-    if (detail === "Penalty")    return <span title="Penalty">⚽<span style={{ fontSize: "0.55rem", verticalAlign: "top", color: "var(--amber)", fontWeight: 800 }}>P</span></span>
-    if (detail === "Missed Penalty") return <span title="Missed Penalty" style={{ fontSize: "1.1rem" }}>❌</span>
+    if (detail === "Penalty")    return <span title={t("event.penalty")}>⚽<span style={{ fontSize: "0.55rem", verticalAlign: "top", color: "var(--amber)", fontWeight: 800 }}>P</span></span>
+    if (detail === "Missed Penalty") return <span title={t("event.missedPenalty")} style={{ fontSize: "1.1rem" }}>❌</span>
     return <span style={{ fontSize: "1.15rem" }}>⚽</span>
   }
   if (type === "Card") {
     if (detail === "Yellow Card") return (
-      <span style={{ display: "inline-block", width: 14, height: 18, background: "#f59e0b", borderRadius: 2, boxShadow: "0 2px 6px rgba(245,158,11,.5)", flexShrink: 0 }} title="Yellow Card" />
+      <span style={{ display: "inline-block", width: 14, height: 18, background: "#f59e0b", borderRadius: 2, boxShadow: "0 2px 6px rgba(245,158,11,.5)", flexShrink: 0 }} title={t("event.yellowCard")} />
     )
     if (detail === "Red Card") return (
       <span style={{ display: "inline-block", width: 14, height: 18, background: "#ef4444", borderRadius: 2, boxShadow: "0 2px 6px rgba(239,68,68,.5)", flexShrink: 0 }} title={t("event.redCard")} />
     )
     if (detail === "Second Yellow Card") return (
-      <span style={{ display: "inline-flex", gap: 2, alignItems: "center" }} title="Second Yellow">
+      <span style={{ display: "inline-flex", gap: 2, alignItems: "center" }} title={t("event.secondYellow")}>
         <span style={{ display: "inline-block", width: 10, height: 15, background: "#f59e0b", borderRadius: 2 }} />
         <span style={{ display: "inline-block", width: 10, height: 15, background: "#ef4444", borderRadius: 2 }} />
       </span>
     )
   }
-  if (type === "subst")   return <span style={{ fontSize: "1rem" }} title="Substitution">🔄</span>
+  if (type === "subst")   return <span style={{ fontSize: "1rem" }} title={t("event.substitution")}>🔄</span>
   if (type === "Var") {
     if (detail?.includes("cancelled") || detail?.includes("disallowed")) return <span title={detail}>📹❌</span>
     if (detail?.includes("Penalty confirmed"))  return <span title={detail}>📹✅</span>
     if (detail?.includes("Card upgrade"))       return <span title={detail}>📹🟥</span>
     return <span title={detail || t("event.var")}>📹</span>
   }
-  if (type === "injury")  return <span style={{ fontSize: "1rem" }} title="Injury">🩹</span>
+  if (type === "injury")  return <span style={{ fontSize: "1rem" }} title={t("event.injury")}>🩹</span>
   return <span>•</span>
 }
 

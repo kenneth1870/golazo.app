@@ -353,6 +353,12 @@
   "event": {
     "ownGoal": "Own Goal",
     "redCard": "Red Card",
+    "yellowCard": "Yellow Card",
+    "secondYellow": "Second Yellow",
+    "penalty": "Penalty",
+    "missedPenalty": "Missed Penalty",
+    "substitution": "Substitution",
+    "injury": "Injury",
     "var": "VAR"
   },
   "error": {
@@ -523,7 +529,8 @@
     "backToLeaderboard": "← Leaderboard",
     "predicted": "Predicted: {{home}}–{{away}}",
     "metaTitle": "Prediction Comparison",
-    "metaDesc": "Compare your FIFA World Cup 2026 score predictions with a friend."
+    "metaDesc": "Compare your FIFA World Cup 2026 score predictions with a friend.",
+    "loadError": "Couldn't load predictions."
   },
   "prediction": {
     "title": "🎯 Score Prediction",

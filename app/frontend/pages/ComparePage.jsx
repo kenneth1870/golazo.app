@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useSearchParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
@@ -40,21 +40,28 @@ export default function ComparePage() {
   const [myData,     setMyData]     = useState(null)
   const [friendData, setFriendData] = useState(null)
   const [loading,    setLoading]    = useState(true)
+  const [error,      setError]      = useState(false)
 
-  useEffect(() => {
+  const loadCompare = useCallback(() => {
+    setLoading(true)
+    setError(false)
     const fetchPreds = (deviceId) =>
       fetch(`/api/v1/score_predictions/by_device?device_id=${encodeURIComponent(deviceId)}`)
-        .then(r => r.json())
-        .catch(() => null)
+        .then(r => { if (!r.ok) throw new Error(); return r.json() })
 
     Promise.all([
       fetchPreds(myDeviceId),
       friendDeviceId ? fetchPreds(friendDeviceId) : Promise.resolve(null),
-    ]).then(([me, friend]) => {
-      setMyData(me)
-      setFriendData(friend)
-    }).finally(() => setLoading(false))
+    ])
+      .then(([me, friend]) => {
+        setMyData(me)
+        setFriendData(friend)
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false))
   }, [myDeviceId, friendDeviceId])
+
+  useEffect(() => { loadCompare() }, [loadCompare])
 
   // Share own link
   const shareUrl = `${window.location.origin}/compare?friend=${encodeURIComponent(myDeviceId)}`
@@ -147,6 +154,11 @@ export default function ComparePage() {
 
         {loading ? (
           <div className="loading-shimmer" style={{ height: 300, borderRadius: 12 }} />
+        ) : error ? (
+          <div style={{ textAlign: "center", padding: "40px 0" }}>
+            <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("compare.loadError", "Couldn't load predictions.")}</p>
+            <button className="btn btn-primary btn-sm" onClick={loadCompare}>{t("error.retry")}</button>
+          </div>
         ) : (
           <>
             {/* Score totals */}

@@ -234,21 +234,28 @@ export default function GroupDetailPage() {
   const navigate    = useNavigate()
   const onMatchClick = (m) => navigateToMatch(navigate, m)
   const [standings, setStandings] = useState([])
+  const [standingsLoading, setStandingsLoading] = useState(false)
+  const [standingsError, setStandingsError] = useState(false)
   const [activeTab, setActiveTab] = useState("standings")
 
   const { matches, loading, refetch: refetchMatches } = useMatches("all", { competition: "WC", group })
 
-  const loadStandings = () =>
-    fetch("/api/v1/standings?competition=WC", { cache: "no-store" })
-      .then(r => r.json())
+  const loadStandings = useCallback(() => {
+    setStandingsError(false)
+    setStandingsLoading(true)
+    return fetch("/api/v1/standings?competition=WC", { cache: "no-store" })
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(data => setStandings((Array.isArray(data) ? data.filter(s => s.group_name === group) : data[group]) || []))
+      .catch(() => { setStandings([]); setStandingsError(true) })
+      .finally(() => setStandingsLoading(false))
+  }, [group])
 
   const onStandingsUpdate = useCallback(() => {
     loadStandings()
     refetchMatches()
   }, [refetchMatches]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { loadStandings() }, [group]) // eslint-disable-line
+  useEffect(() => { loadStandings() }, [loadStandings])
   useStandingsChannel(onStandingsUpdate)
 
   // Auto-refresh standings every 30s when group has a live match (visible tabs only)
@@ -312,6 +319,15 @@ export default function GroupDetailPage() {
                 )}
               </div>
               <div className="widget-body p-0">
+                {standingsLoading ? (
+                  <div className="loading-shimmer" style={{ height: 200, margin: 16, borderRadius: 8 }} />
+                ) : standingsError ? (
+                  <div style={{ textAlign: "center", padding: "2rem" }}>
+                    <div style={{ fontSize: "1.5rem", marginBottom: 8, opacity: .3 }}>📊</div>
+                    <p style={{ color: "var(--muted)", fontSize: "0.82rem", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
+                    <button className="btn btn-sm btn-outline-light" onClick={loadStandings}>{t("error.retry")}</button>
+                  </div>
+                ) : (
                 <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
                   <table className="table custom-table mb-0" style={{ minWidth: 320 }}>
                     <thead>
@@ -368,9 +384,12 @@ export default function GroupDetailPage() {
                     </tbody>
                   </table>
                 </div>
+                )}
 
                 {/* Qualification scenarios */}
-                <QualificationPanel standings={standings} t={t} lang={i18n.language} />
+                {!standingsLoading && !standingsError && (
+                  <QualificationPanel standings={standings} t={t} lang={i18n.language} />
+                )}
               </div>
             </div>
           </div>

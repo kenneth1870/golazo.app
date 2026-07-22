@@ -5,6 +5,8 @@ import { isIosSafari, isStandalone } from "../utils/platform"
 import { dismissOverlayProps } from "../utils/dismissOverlay"
 
 const SHOWN_KEY = "golazo_ios_guide_shown"
+const DEFERRED_KEY = "golazo_ios_guide_deferred_at"
+const DEFER_TTL_MS = 7 * 24 * 60 * 60 * 1000 // re-prompt after 7 days
 
 const STEPS = [
   {
@@ -55,6 +57,8 @@ export default function IosInstallGuide({ paused = false }) {
     if (!isIosSafari()) return
     if (isStandalone()) return
     if (storageGet(SHOWN_KEY)) return
+    const deferredAt = parseInt(storageGet(DEFERRED_KEY) || "0", 10)
+    if (deferredAt && Date.now() - deferredAt < DEFER_TTL_MS) return
     const onboardedAt = parseInt(storageGet("golazo_onboarded_at") || "0", 10)
     if (onboardedAt && Date.now() - onboardedAt < 60 * 60 * 1000) return
 
@@ -64,6 +68,11 @@ export default function IosInstallGuide({ paused = false }) {
 
   function dismiss() {
     storageSet(SHOWN_KEY, "1")
+    setVisible(false)
+  }
+
+  function remindLater() {
+    storageSet(DEFERRED_KEY, Date.now().toString())
     setVisible(false)
   }
 
@@ -184,7 +193,7 @@ export default function IosInstallGuide({ paused = false }) {
             {t("ios.gotIt", "Got it!")}
           </button>
           <button
-            onClick={dismiss}
+            onClick={remindLater}
             style={{
               width: "100%", padding: "10px", borderRadius: 12,
               background: "none", border: "none",

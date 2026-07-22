@@ -354,6 +354,12 @@
   "event": {
     "ownGoal": "Autogol",
     "redCard": "Tarjeta roja",
+    "yellowCard": "Tarjeta amarilla",
+    "secondYellow": "Segunda amarilla",
+    "penalty": "Penalti",
+    "missedPenalty": "Penalti fallado",
+    "substitution": "Sustitución",
+    "injury": "Lesión",
     "var": "VAR"
   },
   "error": {
@@ -524,7 +530,8 @@
     "backToLeaderboard": "← Clasificación",
     "predicted": "Predicción: {{home}}–{{away}}",
     "metaTitle": "Comparar Predicciones",
-    "metaDesc": "Compara tus predicciones del Mundial FIFA 2026 con un amigo."
+    "metaDesc": "Compara tus predicciones del Mundial FIFA 2026 con un amigo.",
+    "loadError": "No se pudieron cargar las predicciones."
   },
   "prediction": {
     "title": "🎯 Predicción de Marcador",
