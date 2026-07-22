@@ -113,6 +113,100 @@ class Api::V1::CompetitionFixturesControllerTest < ActionDispatch::IntegrationTe
     assert_includes ids, 11
   end
 
+  test "display_name maps short escorpiones to escorpiones belen" do
+    assert_equal "Escorpiones Belén", TeamDisplayNames.display_name("Escorpiones")
+  end
+
+  test "dedup_slug aliases stale escorpiones slug" do
+    assert_equal "escorpiones-belen", TeamDisplayNames.dedup_slug("Escorpiones")
+    assert_equal "escorpiones-belen", TeamDisplayNames.dedup_slug("Escorpiones Belén")
+  end
+
+  test "fixtures tab dedupes escorpiones short name vs full rebrand name" do
+    placeholder = crc_match(
+      external_id: 101,
+      home: "LD Alajuelense",
+      away: "Escorpiones",
+      kickoff_at: Time.utc(2026, 8, 2, 20, 0, 0),
+      away_logo: "https://example.com/placeholder.png",
+      round: "Apertura - 2"
+    )
+    confirmed = crc_match(
+      external_id: 201,
+      home: "LD Alajuelense",
+      away: "Escorpiones Belén",
+      kickoff_at: Time.utc(2026, 7, 31, 2, 0, 0),
+      away_logo: TeamDisplayNames::ESCORPIONES_LOGO,
+      round: "Apertura - 2"
+    )
+    rows = [ placeholder, confirmed ]
+
+    fake_client = Class.new do
+      define_method(:current_season_for_league) { |_lid, _code| 2026 }
+      define_method(:matches_for_league) { |_lid, **| rows }
+    end
+
+    with_fake_live_client(fake_client) do
+      get "/api/v1/competitions/CRC/fixtures", params: { tab: "fixtures", tz: "America/Costa_Rica" }
+    end
+
+    assert_response :success
+    alajuelense = json_response.select { |m| m.dig(:home_team, :name) == "Alajuelense" }
+    assert_equal 1, alajuelense.size
+    assert_equal 201, alajuelense.first[:external_id]
+    assert_equal "Escorpiones Belén", alajuelense.first.dig(:away_team, :name)
+  end
+
+  test "fixtures tab dedupes stale rebrand duplicates for same jornada slot" do
+    placeholder = crc_match(
+      external_id: 100,
+      home: "San Carlos",
+      away: "Municipal Liberia",
+      kickoff_at: Time.utc(2026, 7, 26, 20, 0, 0),
+      away_logo: "https://example.com/placeholder.png"
+    )
+    confirmed = crc_match(
+      external_id: 200,
+      home: "San Carlos",
+      away: "Escorpiones Belén",
+      kickoff_at: Time.utc(2026, 7, 23, 23, 0, 0),
+      away_logo: TeamDisplayNames::ESCORPIONES_LOGO
+    )
+    rows = [ placeholder, confirmed ]
+
+    fake_client = Class.new do
+      define_method(:current_season_for_league) { |_lid, _code| 2026 }
+      define_method(:matches_for_league) { |_lid, **| rows }
+    end
+
+    with_fake_live_client(fake_client) do
+      get "/api/v1/competitions/CRC/fixtures", params: { tab: "fixtures", tz: "America/Costa_Rica" }
+    end
+
+    assert_response :success
+    san_carlos = json_response.select { |m| m.dig(:home_team, :name) == "San Carlos" }
+    assert_equal 1, san_carlos.size
+    match = san_carlos.first
+    assert_equal 200, match[:external_id]
+    assert_equal "Escorpiones Belén", match.dig(:away_team, :name)
+    refute match[:kickoff_tbc]
+  end
+
+  def crc_match(external_id:, home:, away:, kickoff_at:, away_logo: nil, round: "Apertura - 1")
+    {
+      external_id: external_id,
+      league_id: 162,
+      league_name: "Primera División",
+      league_logo: "https://example.com/crc.png",
+      league_country: "Costa-Rica",
+      round: round,
+      status: "scheduled",
+      kickoff_at: kickoff_at.iso8601,
+      home: { name: home, logo: nil, score: nil },
+      away: { name: away, logo: away_logo, score: nil }
+    }
+  end
+
   private
 
   def sample_match(external_id:, status:, kickoff_at:, home_score: nil, away_score: nil)

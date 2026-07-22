@@ -43,12 +43,13 @@ module Api
         ).reject { |m| m[:league_name].to_s.match?(/friendlies?\b/i) }
 
         seen = {}
-        raw.filter_map do |m|
+        normalized = raw.filter_map do |m|
           key = m[:external_id].to_s
           next if key.blank? || seen[key]
           seen[key] = true
           normalize_api_match(m)
         end
+        dedupe_fixture_matches(normalized)
       end
 
       def filter_for_tab(matches, tab, today: nil, tz: "UTC")

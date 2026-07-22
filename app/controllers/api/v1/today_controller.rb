@@ -178,6 +178,7 @@ module Api
           end
 
           normalized = filter_matches_for_focus(raw).map { |m| normalize_api_match(m) }
+          normalized = dedupe_fixture_matches(normalized) if AppFocus.wc_paused?
 
           if AppFocus.wc_paused?
             zone = TZInfo::Timezone.get(tz)
@@ -265,10 +266,11 @@ module Api
         client = LiveScoresClient.new
         raw = fetch_club_league_raw_matches(client, local_today, tz)
 
-        picks = filter_matches_for_focus(raw)
-          .select { |m| m[:status] == "scheduled" }
-          .map { |m| normalize_api_match(m) }
-          .select { |m| local_kickoff_date(m[:kickoff_at], zone)&.> local_today }
+        picks = dedupe_fixture_matches(
+          filter_matches_for_focus(raw)
+            .select { |m| m[:status] == "scheduled" }
+            .map { |m| normalize_api_match(m) }
+        ).select { |m| local_kickoff_date(m[:kickoff_at], zone)&.> local_today }
           .sort_by { |m| m[:kickoff_at].to_s }
           .first(limit)
           .map { |m| m.merge(upcoming_preview: true) }

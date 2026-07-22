@@ -146,14 +146,15 @@ const ES = {
 
 // Stale API names → current display names (all locales).
 const DISPLAY_NAMES = {
-  "Municipal Liberia":    "Escorpiones",
-  "AD Municipal Liberia": "Escorpiones",
+  "Municipal Liberia":    "Escorpiones Belén",
+  "AD Municipal Liberia": "Escorpiones Belén",
   "LD Alajuelense":       "Alajuelense",
   "CS Herediano":         "Herediano",
   "CS Cartagines":        "Cartaginés",
   "Deportivo Saprissa":   "Saprissa",
   "Perez Zeledon":        "Pérez Zeledón",
   "Sporting San Jose":    "Sporting FC",
+  "Escorpiones":           "Escorpiones Belén",
 }
 
 const LOGO_OVERRIDES = {

@@ -18,7 +18,7 @@ class SitemapClubTeamsTest < ActiveSupport::TestCase
 
     urls = SitemapClubTeams.new.build
     assert_includes urls, "/leagues/CRC/teams/saprissa"
-    assert_includes urls, "/leagues/CRC/teams/escorpiones"
+    assert_includes urls, "/leagues/CRC/teams/escorpiones-belen"
   ensure
     Rails.cache = original_cache if defined?(original_cache)
   end

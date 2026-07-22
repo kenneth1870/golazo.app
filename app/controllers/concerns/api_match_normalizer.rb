@@ -111,6 +111,42 @@ module ApiMatchNormalizer
     matches.select { |m| m[:league_id].to_i == league_id && !AppFocus.excluded_match?(m) }
   end
 
+  # API-Football can return two fixture ids for the same jornada slot after a rebrand
+  # (e.g. Municipal Liberia + Escorpiones Belén). Collapse by league, round, team pair, date.
+  def dedupe_fixture_matches(matches)
+    scheduled, rest = matches.partition { |m| m[:status].to_s == "scheduled" }
+    deduped = scheduled.each_with_object({}) do |m, acc|
+      key = fixture_dedup_key(m)
+      acc[key] = acc[key] ? pick_better_fixture(acc[key], m) : m
+    end.values
+    rest + deduped
+  end
+
+  def fixture_dedup_key(m)
+    code  = m.dig(:competition, :code).to_s
+    round = m[:round].to_s.downcase.strip
+    home  = TeamDisplayNames.dedup_slug(m.dig(:home_team, :name))
+    away  = TeamDisplayNames.dedup_slug(m.dig(:away_team, :name))
+    pair  = [ home, away ].sort.join("|")
+    # LATAM jornadas stack on Sunday with inconsistent placeholder dates — round + pair is enough.
+    if latam_league?(code) && m[:status].to_s == "scheduled"
+      "#{code}|#{round}|#{pair}"
+    else
+      date = m[:kickoff_at].to_s.first(10)
+      "#{code}|#{round}|#{pair}|#{date}"
+    end
+  end
+
+  def pick_better_fixture(a, b)
+    score = lambda do |m|
+      confirmed = m[:kickoff_tbc] ? 0 : 1
+      names     = m.dig(:home_team, :name).to_s.length + m.dig(:away_team, :name).to_s.length
+      ext       = m[:external_id].to_i
+      [ confirmed, names, ext ]
+    end
+    (score.call(a) <=> score.call(b)) >= 0 ? a : b
+  end
+
   def match_local_date?(kickoff_at, date, timezone)
     return false if kickoff_at.blank?
 
