@@ -109,14 +109,14 @@ function WhatIfPanel({ matches, standings, lang, t }) {
   if (!standings?.length) return (
     <div className="empty-state" style={{ paddingTop: 40 }}>
       <div className="empty-state__icon">🔮</div>
-      <h3>Standings not available yet</h3>
+      <h3>{t("groups.whatIfNoStandings")}</h3>
     </div>
   )
   if (!remaining.length) return (
     <div className="empty-state" style={{ paddingTop: 40 }}>
       <div className="empty-state__icon">✅</div>
-      <h3>All group matches completed</h3>
-      <p style={{ color: "var(--muted)", fontSize: "0.82rem" }}>No upcoming matches to simulate.</p>
+      <h3>{t("groups.whatIfAllComplete")}</h3>
+      <p style={{ color: "var(--muted)", fontSize: "0.82rem" }}>{t("groups.whatIfNoUpcoming")}</p>
     </div>
   )
 
@@ -152,7 +152,7 @@ function WhatIfPanel({ matches, standings, lang, t }) {
   return (
     <div>
       <div style={{ marginBottom: 16, fontSize: "0.78rem", color: "var(--muted)" }}>
-        Pick results for remaining matches to see the projected standings.
+        {t("groups.whatIfIntro")}
       </div>
 
       {/* Match result pickers */}
@@ -179,9 +179,9 @@ function WhatIfPanel({ matches, standings, lang, t }) {
                 <span style={{ flex: 1, textAlign: "left" }}>{translateTeam(m.away_team?.name, lang)}</span>
               </div>
               <div style={{ display: "flex", gap: 4 }}>
-                {btn(translateTeam(m.home_team?.name, lang)?.split(" ")?.[0] + " Win", "home")}
-                {btn("Draw", "draw")}
-                {btn(translateTeam(m.away_team?.name, lang)?.split(" ")?.[0] + " Win", "away")}
+                {btn(t("groups.whatIfWin", { team: translateTeam(m.home_team?.name, lang)?.split(" ")?.[0] }), "home")}
+                {btn(t("groups.whatIfDraw"), "draw")}
+                {btn(t("groups.whatIfWin", { team: translateTeam(m.away_team?.name, lang)?.split(" ")?.[0] }), "away")}
               </div>
             </div>
           )
@@ -192,7 +192,7 @@ function WhatIfPanel({ matches, standings, lang, t }) {
       {allSet && (
         <div>
           <div style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 10 }}>
-            Projected Standings
+            {t("groups.whatIfProjectedStandings")}
           </div>
           {sorted.map((s, i) => (
             <div key={s.team?.id ?? i} style={{
@@ -205,9 +205,9 @@ function WhatIfPanel({ matches, standings, lang, t }) {
               {s.team?.flag_url && <img src={s.team.flag_url} alt={s.team.name} style={{ width: 22, height: 22, objectFit: "contain" }} />}
               <span style={{ flex: 1, fontWeight: 700, fontSize: "0.85rem", color: "var(--text)" }}>{translateTeam(s.team?.name, lang)}</span>
               <span style={{ fontWeight: 900, fontSize: "0.9rem", color: "var(--text)" }}>{s.pts}</span>
-              <span style={{ fontSize: "0.65rem", color: "var(--muted)", marginLeft: 2 }}>pts</span>
+              <span style={{ fontSize: "0.65rem", color: "var(--muted)", marginLeft: 2 }}>{t("groups.whatIfPts")}</span>
               <span style={{ fontSize: "0.72rem", color: s.gd > 0 ? "#10b981" : s.gd < 0 ? "#ef4444" : "var(--muted)", marginLeft: 8, minWidth: 28, textAlign: "right" }}>
-                {s.gd > 0 ? `+${s.gd}` : s.gd} GD
+                {s.gd > 0 ? `+${s.gd}` : s.gd} {t("groups.whatIfGd")}
               </span>
             </div>
           ))}
@@ -219,7 +219,7 @@ function WhatIfPanel({ matches, standings, lang, t }) {
               color: "var(--muted)", cursor: "pointer",
             }}
           >
-            Reset
+            {t("groups.whatIfReset")}
           </button>
         </div>
       )}
@@ -230,7 +230,7 @@ function WhatIfPanel({ matches, standings, lang, t }) {
 export default function GroupDetailPage() {
   const { t, i18n } = useTranslation()
   const { group }   = useParams()
-  usePageMeta(`Group ${group} — World Cup 2026`, `FIFA World Cup 2026 Group ${group} standings and match results.`)
+  usePageMeta(t("groups.metaTitle", { letter: group }), t("groups.metaDesc", { letter: group }))
   const navigate    = useNavigate()
   const onMatchClick = (m) => navigateToMatch(navigate, m)
   const [standings, setStandings] = useState([])
@@ -278,7 +278,7 @@ export default function GroupDetailPage() {
   const TABS = [
     { key: "standings", label: t("groups.standings", { letter: group }) },
     { key: "schedule",  label: t("groups.schedule") },
-    { key: "whatif",    label: "What If?" },
+    { key: "whatif",    label: t("groups.whatIfTab") },
   ]
 
   return (
@@ -399,7 +399,7 @@ export default function GroupDetailPage() {
           {activeTab === "whatif" && (
             <div className="col-12">
               <div className="widget-next-match">
-                <div className="widget-title"><h3>🔮 What If?</h3></div>
+                <div className="widget-title"><h3>🔮 {t("groups.whatIfTab")}</h3></div>
                 <div className="widget-body" style={{ padding: "16px" }}>
                   <WhatIfPanel matches={matches} standings={standings} lang={i18n.language} t={t} />
                 </div>

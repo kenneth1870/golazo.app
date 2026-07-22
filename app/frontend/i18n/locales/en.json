@@ -167,7 +167,20 @@
     "matches_other": "{{count}} matches",
     "matchday": "Matchday {{n}}",
     "schedule": "Schedule",
-    "liveUpdate": "Live · updating"
+    "liveUpdate": "Live · updating",
+    "whatIfTab": "What If?",
+    "whatIfNoStandings": "Standings not available yet",
+    "whatIfAllComplete": "All group matches completed",
+    "whatIfNoUpcoming": "No upcoming matches to simulate.",
+    "whatIfIntro": "Pick results for remaining matches to see the projected standings.",
+    "whatIfDraw": "Draw",
+    "whatIfWin": "{{team}} Win",
+    "whatIfProjectedStandings": "Projected Standings",
+    "whatIfReset": "Reset",
+    "whatIfPts": "pts",
+    "whatIfGd": "GD",
+    "metaTitle": "Group {{letter}} — World Cup 2026",
+    "metaDesc": "FIFA World Cup 2026 Group {{letter}} standings and match results."
   },
   "mundial": {
     "subtitle": "FIFA World Cup · USA · Canada · Mexico · June 11 – July 19",
@@ -198,6 +211,7 @@
     "appearsWhenPlayed": "Data will appear when matches begin",
     "venueMatchesTitle": "Matches at this venue",
     "venueNoMatches": "No matches have been assigned to this venue yet.",
+    "venuesLoadError": "Couldn't load venues.",
     "tabNavTeams": "Teams",
     "tabNavSchedule": "Schedule",
     "tabNavVenues": "Venues",
@@ -518,6 +532,7 @@
     "title": "Predictions vs Friend",
     "vsSubtitle": "You vs {{name}}",
     "sharePrompt": "Share your link with a friend to compare your World Cup predictions:",
+    "sharePromptTitle": "Share your link with a friend to compare predictions",
     "matchResults": "Match Results",
     "noGradedYet": "No graded predictions yet",
     "predictBeforeKickoff": "Predict match scores before kickoff — points are awarded at full time",
@@ -542,7 +557,10 @@
     "closesIn": "Closes in {{time}}",
     "exact": "⭐ Exact!",
     "correct": "✓ Correct",
-    "wrong": "✗ Wrong"
+    "wrong": "✗ Wrong",
+    "errorMatchStarted": "Predictions locked — match has already started",
+    "errorMatchGraded": "This prediction can no longer be changed",
+    "errorDeviceRequired": "Unable to save prediction — please refresh and try again"
   },
   "bracket": {
     "title": "Bracket Predictor",

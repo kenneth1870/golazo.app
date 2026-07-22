@@ -117,7 +117,7 @@ export default function ComparePage() {
           <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: 0 }}>
             {friendData?.display_name
               ? t("compare.vsSubtitle", { name: friendData.display_name })
-              : t("compare.sharePrompt").split(":")[0]}
+              : t("compare.sharePromptTitle")}
           </p>
         </div>
 

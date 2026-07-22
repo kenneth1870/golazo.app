@@ -168,7 +168,20 @@
     "matches_other": "{{count}} partidos",
     "matchday": "Jornada {{n}}",
     "schedule": "Calendario",
-    "liveUpdate": "En vivo · actualizando"
+    "liveUpdate": "En vivo · actualizando",
+    "whatIfTab": "¿Y si…?",
+    "whatIfNoStandings": "Clasificación no disponible aún",
+    "whatIfAllComplete": "Todos los partidos del grupo completados",
+    "whatIfNoUpcoming": "No hay partidos pendientes para simular.",
+    "whatIfIntro": "Elige resultados para los partidos restantes y ve la clasificación proyectada.",
+    "whatIfDraw": "Empate",
+    "whatIfWin": "Victoria {{team}}",
+    "whatIfProjectedStandings": "Clasificación Proyectada",
+    "whatIfReset": "Reiniciar",
+    "whatIfPts": "pts",
+    "whatIfGd": "DG",
+    "metaTitle": "Grupo {{letter}} — Mundial 2026",
+    "metaDesc": "Clasificación y resultados del Grupo {{letter}} del Mundial FIFA 2026."
   },
   "mundial": {
     "subtitle": "FIFA Mundial · EE.UU. · Canadá · México · 11 Jun – 19 Jul",
@@ -199,6 +212,7 @@
     "appearsWhenPlayed": "Aparecerán cuando comiencen los partidos",
     "venueMatchesTitle": "Partidos en este estadio",
     "venueNoMatches": "No hay partidos asignados a este estadio aún.",
+    "venuesLoadError": "No se pudieron cargar los estadios.",
     "tabNavTeams": "Equipos",
     "tabNavSchedule": "Calend.",
     "tabNavVenues": "Sedes",
@@ -519,6 +533,7 @@
     "title": "Predicciones vs Amigo",
     "vsSubtitle": "Tú vs {{name}}",
     "sharePrompt": "Comparte este enlace con un amigo para comparar tus predicciones del Mundial:",
+    "sharePromptTitle": "Comparte tu enlace con un amigo para comparar predicciones",
     "matchResults": "Resultados de Partidos",
     "noGradedYet": "Sin predicciones puntuadas aún",
     "predictBeforeKickoff": "Predice marcadores antes del inicio — los puntos se otorgan al final",
@@ -543,7 +558,10 @@
     "closesIn": "Cierra en {{time}}",
     "exact": "⭐ ¡Exacto!",
     "correct": "✓ Correcto",
-    "wrong": "✗ Incorrecto"
+    "wrong": "✗ Incorrecto",
+    "errorMatchStarted": "Predicciones cerradas — el partido ya ha comenzado",
+    "errorMatchGraded": "Esta predicción ya no se puede modificar",
+    "errorDeviceRequired": "No se pudo guardar la predicción — recarga la página e inténtalo de nuevo"
   },
   "bracket": {
     "title": "Predictor de Cuadro",

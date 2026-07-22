@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useMatches } from "../../hooks/useMatches"
@@ -121,16 +121,20 @@ export default function GroupStagePage() {
   const navigate = useNavigate()
   const [standings, setStandings] = useState({})
   const [bestThirds, setBestThirds] = useState([])
+  const [standingsError, setStandingsError] = useState(false)
 
   const hasLiveOrRecent = matches.some(m =>
     m.status === "live" ||
     (m.status === "finished" && m.kickoff_at && new Date() - new Date(m.kickoff_at) < 3 * 60 * 60 * 1000)
   )
 
-  const loadStandings = () => fetch("/api/v1/standings?competition=WC", { cache: "no-store" })
-    .then(r => r.json())
-    .then(setStandings)
-    .catch(() => {})
+  const loadStandings = useCallback(() => {
+    setStandingsError(false)
+    return fetch("/api/v1/standings?competition=WC", { cache: "no-store" })
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      .then(setStandings)
+      .catch(() => { setStandings({}); setStandingsError(true) })
+  }, [])
 
   const loadBestThirds = () => fetch("/api/v1/standings/best_thirds", { cache: "no-store" })
     .then(r => r.json())
@@ -159,6 +163,12 @@ export default function GroupStagePage() {
   return (
     <div className="site-section">
       <div className="container">
+        {standingsError && (
+          <div style={{ textAlign: "center", padding: "16px", marginBottom: 20, background: "var(--surface)", borderRadius: 8 }}>
+            <p style={{ color: "var(--muted)", fontSize: "0.82rem", marginBottom: 12 }}>{t("error.failedToLoad")}</p>
+            <button className="btn btn-sm btn-outline-light" onClick={loadStandings}>{t("error.retry")}</button>
+          </div>
+        )}
         <div className="row">
           {GROUPS.filter(g => byGroup[g].length > 0).map(g => (
             <div key={g} className="col-lg-6 mb-5">
@@ -171,7 +181,7 @@ export default function GroupStagePage() {
                 </div>
 
                 {/* Mini standings table */}
-                <MiniStandingsTable group={g} rows={standings[g]} />
+                {!standingsError && <MiniStandingsTable group={g} rows={standings[g]} />}
 
                 {/* Matches */}
                 <div className="match-list match-list--compact" style={{ marginTop: 10 }}>

@@ -40,6 +40,15 @@ function pointsLabel(pts, t) {
   return t("prediction.wrong")
 }
 
+function predictionErrorMessage(code, t) {
+  const key = {
+    match_already_started: "prediction.errorMatchStarted",
+    match_already_graded: "prediction.errorMatchGraded",
+    "device_id required": "prediction.errorDeviceRequired",
+  }[code]
+  return key ? t(key) : code
+}
+
 export default function ScorePredictionPanel({ matchId, homeName, awayName, matchStatus, kickoffAt, t }) {
   const [myPred, setMyPred]     = useState(null)   // { home_guess, away_guess, points_earned }
   const [homeVal, setHomeVal]   = useState("")
@@ -94,7 +103,7 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
         }),
       })
       const data = await res.json()
-      if (data.error) setError(data.error)
+      if (data.error) setError(predictionErrorMessage(data.error, t))
       else setMyPred(data)
     } catch {
       setError(t("error.dataUnavailable"))

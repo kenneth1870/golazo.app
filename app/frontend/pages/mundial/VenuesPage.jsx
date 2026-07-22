@@ -11,15 +11,30 @@ export default function VenuesPage() {
   const navigate = useNavigate()
   const [venues, setVenues] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
-  useEffect(() => {
+  const load = () => {
+    setError(false)
+    setLoading(true)
     fetch("/api/v1/venues")
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(data => setVenues(Array.isArray(data) ? data : []))
+      .catch(() => setError(true))
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { load() }, [])
 
   if (loading) return <div className="site-section container"><div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} /></div>
+
+  if (error) return (
+    <div className="site-section">
+      <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
+        <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("mundial.venuesLoadError")}</p>
+        <button className="btn btn-primary btn-sm" onClick={load}>{t("error.retry")}</button>
+      </div>
+    </div>
+  )
 
   const byCountry = venues.reduce((acc, v) => {
     if (!acc[v.country]) acc[v.country] = []
