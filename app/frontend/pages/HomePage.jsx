@@ -547,7 +547,7 @@ export default function HomePage() {
 
       {/* ── Favorite team section ── */}
       <div className="container" style={{ paddingTop: 16, paddingBottom: 4 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <div className="home-favorite-bar" style={{ marginBottom: 10 }}>
           <span style={{ fontSize: "0.65rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--muted)" }}>
             {fav ? t("home.yourTeam", "Your Team") : t("home.followTeam", "Follow a team")}
           </span>

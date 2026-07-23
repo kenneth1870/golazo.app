@@ -440,6 +440,29 @@ button:focus:not(:focus-visible){outline:none}
 }
 .mobile-drawer-link.active{color:var(--accent)!important}
 .mobile-drawer-link__icon{font-size:.95rem;width:22px;text-align:center;flex-shrink:0;margin-right:8px}
+.mobile-drawer-link,.mobile-quick-item{min-height:44px}
+
+/* Favorite team picker — avoid clipping off-screen on mobile */
+.favorite-team-picker__label{
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;
+}
+@media(max-width:991px){
+  .favorite-team-picker__menu{
+    left:auto!important;right:0;
+    width:min(280px,calc(100vw - 24px))!important;
+  }
+}
+.home-favorite-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+@media(max-width:576px){
+  .home-favorite-bar{flex-direction:column;align-items:stretch}
+  .home-favorite-bar .favorite-team-picker{align-self:flex-start;max-width:100%}
+  .favorite-team-picker__label{max-width:100%}
+}
+.league-hero__row{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
 
 /* Drawer footer */
 .mobile-drawer-footer{
@@ -613,6 +636,11 @@ button:focus:not(:focus-visible){outline:none}
   .flag-xs{width:22px;height:22px}
   .match-row__meta{max-width:44px;font-size:.6rem}
   .score-pill{min-width:54px;padding:4px 7px;font-size:.85rem}
+}
+@media(max-width:360px){
+  .match-row__meta{display:none}
+  .match-row__status{width:62px}
+  .team-name{max-width:88px}
 }
 
 /* ─── Competition blocks ─────────────────────────────── */
@@ -1549,7 +1577,7 @@ body.light-mode .date-strip__day--today{background:rgba(238,30,70,.1)}
   .col-6{flex:0 0 50%;max-width:50%}
   .venue-card{padding:14px}
   .news-card{padding:16px}
-  .tab-link{padding:6px 4px;font-size:.62rem;flex:1;text-align:center;flex-shrink:1}
+  .tab-link{padding:6px 12px;font-size:.62rem;flex-shrink:0;text-align:center}
   .tab-bar__inner{gap:0;padding:6px 8px}
   /* Prediction bars: tighter on mobile */
   .prediction-bar-row{grid-template-columns:1fr 2fr 32px;gap:6px}

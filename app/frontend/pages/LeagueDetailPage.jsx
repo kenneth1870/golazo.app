@@ -367,7 +367,7 @@ export default function LeagueDetailPage() {
     <div>
       <div className="page-hero" style={heroStyle}>
         <div className="container">
-          <div className="d-flex align-items-center" style={{ gap: 16 }}>
+          <div className="league-hero__row d-flex align-items-center" style={{ gap: 16 }}>
             {competition?.logo && (
               <img
                 src={competition.logo}

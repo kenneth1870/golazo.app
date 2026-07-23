@@ -270,10 +270,10 @@ export default function Navbar() {
 
   // Mobile sections
   const MOBILE_MUNDIAL = [
-    { label: t("nav.teams"),      path: "/mundial/teams" },
-    { label: t("nav.schedule"),   path: "/mundial/schedule" },
-    { label: t("nav.venues"),     path: "/mundial/venues" },
-    { label: t("nav.topScorers"), path: "/mundial/scorers" },
+    { label: t("nav.teams"),      path: "/mundial/teams",      emoji: "🏟️" },
+    { label: t("nav.schedule"),   path: "/mundial/schedule",   emoji: "📅" },
+    { label: t("nav.venues"),     path: "/mundial/venues",     emoji: "🗺️" },
+    { label: t("nav.topScorers"), path: "/mundial/scorers",    emoji: "⚽" },
   ]
   const MOBILE_LEAGUES = [
     { label: t("nav.allLeagues"), path: "/leagues", emoji: "🌍" },
@@ -348,7 +348,8 @@ export default function Navbar() {
               <div className="mobile-drawer-divider">{t("teamComparison.title")}</div>
               <div className="mobile-link-group">
                 <NavLink to="/compare/teams" className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
-                  ⚔️ {t("teamComparison.compare")}
+                  <span className="mobile-drawer-link__icon" aria-hidden="true">⚔️</span>
+                  {t("teamComparison.compare")}
                 </NavLink>
               </div>
             </>
@@ -362,13 +363,16 @@ export default function Navbar() {
           <div className="mobile-link-group">
             {MOBILE_MUNDIAL.map(item => (
               <NavLink key={item.path} to={item.path} className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
+                {item.emoji && <span className="mobile-drawer-link__icon" aria-hidden="true">{item.emoji}</span>}
                 {item.label}
               </NavLink>
             ))}
             <NavLink to="/scores/groups" className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
+              <span className="mobile-drawer-link__icon" aria-hidden="true">📊</span>
               {t("nav.groupStage")}
             </NavLink>
             <NavLink to="/scores/knockout" className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
+              <span className="mobile-drawer-link__icon" aria-hidden="true">🏆</span>
               {t("nav.knockout")}
             </NavLink>
           </div>

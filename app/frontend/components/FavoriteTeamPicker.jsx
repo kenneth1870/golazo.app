@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import { useFavoriteTeam } from "../hooks/useFavoriteTeam"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { usePushNotifications } from "../hooks/usePushNotifications"
-import { resolveTeamLogo } from "../i18n/teamNames"
+import { resolveTeamLogo, translateTeam } from "../i18n/teamNames"
 import { loadClubTeams } from "../utils/loadClubTeams"
 import { syncTeamFollowToPush } from "../utils/favoritePush"
 
@@ -26,7 +26,7 @@ function FlagOrInitial({ src, name }) {
 }
 
 export default function FavoriteTeamPicker() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { clubs_primary: clubsPrimary } = useAppFocus()
   const [fav, setFav]     = useFavoriteTeam()
   const { addTeams, subscribed } = usePushNotifications()
@@ -58,9 +58,13 @@ export default function FavoriteTeamPicker() {
     }
   }, [])
 
-  const filtered = teams.filter(t =>
-    t.name?.toLowerCase().includes(query.toLowerCase())
-  )
+  const displayName = name => translateTeam(name, i18n.language) || name
+
+  const filtered = teams.filter(tm => {
+    const label = displayName(tm.name)?.toLowerCase() || ""
+    const q = query.toLowerCase()
+    return label.includes(q) || tm.name?.toLowerCase().includes(q)
+  })
 
   function pick(team) {
     setFav({ id: team.id, name: team.name, flag_url: team.flag_url, group: team.group, league_code: team.league_code })
@@ -70,24 +74,26 @@ export default function FavoriteTeamPicker() {
   }
 
   return (
-    <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
+    <div ref={ref} className="favorite-team-picker" style={{ position: "relative", display: "inline-block", maxWidth: "100%" }}>
       <button
         onClick={() => setOpen(o => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
+        className="favorite-team-picker__trigger"
         style={{
           display: "flex", alignItems: "center", gap: 8,
           background: fav ? "rgba(238,30,70,.12)" : "var(--surface2)",
           border: fav ? "1px solid rgba(238,30,70,.35)" : "1px solid var(--border)",
-          borderRadius: 20, padding: "6px 14px", cursor: "pointer", color: "var(--text)",
+          borderRadius: 20, padding: "8px 14px", cursor: "pointer", color: "var(--text)",
           fontSize: "0.78rem", fontWeight: 600, transition: ".2s",
+          maxWidth: "100%", minHeight: 44,
         }}
       >
         {fav ? (
           <>
             <FlagOrInitial src={fav.flag_url} name={fav.name} />
-            <span>{fav.name}</span>
-            <span style={{ color: "var(--muted)", marginLeft: 2 }}>★</span>
+            <span className="favorite-team-picker__label">{displayName(fav.name)}</span>
+            <span style={{ color: "var(--muted)", marginLeft: 2, flexShrink: 0 }}>★</span>
           </>
         ) : (
           <span>★ {t("home.followTeam", "Seguir un equipo")}</span>
@@ -98,6 +104,7 @@ export default function FavoriteTeamPicker() {
         <div
           role="listbox"
           aria-label={t("home.followTeam")}
+          className="favorite-team-picker__menu"
           style={{
             position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 200,
             background: "var(--surface2)", border: "1px solid var(--border)",
@@ -112,14 +119,15 @@ export default function FavoriteTeamPicker() {
             aria-label={t("team.searchPlaceholder", "Buscar equipo…")}
             style={{
               width: "100%", background: "var(--surface)", border: "1px solid var(--border)",
-              borderRadius: 6, padding: "7px 10px", color: "var(--text)", fontSize: "0.8rem", marginBottom: 8,
+              borderRadius: 6, padding: "10px", color: "var(--text)", fontSize: "0.8rem", marginBottom: 8,
+              minHeight: 44,
             }}
           />
-          <div style={{ maxHeight: 240, overflowY: "auto" }}>
+          <div style={{ maxHeight: "min(240px, 50vh)", overflowY: "auto" }}>
             {fav && (
               <button
                 onClick={() => { setFav(null); setOpen(false) }}
-                style={{ width: "100%", textAlign: "left", background: "transparent", border: "none", color: "#ef4444", padding: "6px 8px", borderRadius: 6, cursor: "pointer", fontSize: "0.75rem", marginBottom: 4 }}
+                style={{ width: "100%", textAlign: "left", background: "transparent", border: "none", color: "var(--danger)", padding: "10px 8px", borderRadius: 6, cursor: "pointer", fontSize: "0.75rem", marginBottom: 4, minHeight: 44 }}
               >
                 ✕ {t("team.removeFavorite", "Quitar favorito")}
               </button>
@@ -132,13 +140,13 @@ export default function FavoriteTeamPicker() {
                 onClick={() => pick(tm)}
                 style={{
                   width: "100%", textAlign: "left", background: fav?.id === tm.id ? "rgba(238,30,70,.15)" : "transparent",
-                  border: "none", color: "var(--text)", padding: "7px 8px", borderRadius: 6, cursor: "pointer",
-                  fontSize: "0.8rem", display: "flex", alignItems: "center", gap: 8,
+                  border: "none", color: "var(--text)", padding: "10px 8px", borderRadius: 6, cursor: "pointer",
+                  fontSize: "0.8rem", display: "flex", alignItems: "center", gap: 8, minHeight: 44,
                 }}
               >
                 <FlagOrInitial src={tm.flag_url} name={tm.name} />
-                <span>{tm.name}</span>
-                {tm.group && <span style={{ marginLeft: "auto", fontSize: "0.65rem", color: "var(--muted)" }}>{t("nav.group", { letter: tm.group })}</span>}
+                <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName(tm.name)}</span>
+                {tm.group && <span style={{ marginLeft: "auto", fontSize: "0.65rem", color: "var(--muted)", flexShrink: 0 }}>{t("nav.group", { letter: tm.group })}</span>}
               </button>
             ))}
             {filtered.length === 0 && (

@@ -100,6 +100,12 @@ function QualificationPanel({ standings, t, lang }) {
 }
 
 // ─── Scenario builder: simulate remaining results ─────
+function shortTeamLabel(name, lang) {
+  const full = translateTeam(name, lang) || name || ""
+  if (full.length <= 14) return full
+  return full.split(/\s+/)[0]
+}
+
 function WhatIfPanel({ matches, standings, lang, t }) {
   const remaining = matches.filter(m => m.status === "scheduled" || m.status === "ns" || m.status === "NS")
 
@@ -179,9 +185,9 @@ function WhatIfPanel({ matches, standings, lang, t }) {
                 <span style={{ flex: 1, textAlign: "left" }}>{translateTeam(m.away_team?.name, lang)}</span>
               </div>
               <div style={{ display: "flex", gap: 4 }}>
-                {btn(t("groups.whatIfWin", { team: translateTeam(m.home_team?.name, lang)?.split(" ")?.[0] }), "home")}
+                {btn(t("groups.whatIfWin", { team: shortTeamLabel(m.home_team?.name, lang) }), "home")}
                 {btn(t("groups.whatIfDraw"), "draw")}
-                {btn(t("groups.whatIfWin", { team: translateTeam(m.away_team?.name, lang)?.split(" ")?.[0] }), "away")}
+                {btn(t("groups.whatIfWin", { team: shortTeamLabel(m.away_team?.name, lang) }), "away")}
               </div>
             </div>
           )
