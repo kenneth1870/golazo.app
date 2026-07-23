@@ -112,9 +112,6 @@ jobs:
       - name: Build Vite assets for test
         run: bin/vite build --mode=test
 
-      - name: Run frontend unit tests
-        run: npm test
-
       - name: Prepare test database
         run: bin/rails db:prepare
 

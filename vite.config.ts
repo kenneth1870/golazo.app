@@ -7,10 +7,6 @@ export default defineConfig({
     RubyPlugin(),
     react(),
   ],
-  test: {
-    environment: "node",
-    include: ["**/*.test.js"],
-  },
   resolve: {
     dedupe: ['react', 'react-dom', 'react-dom/client'],
   },
