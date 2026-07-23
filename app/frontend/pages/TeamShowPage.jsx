@@ -93,9 +93,8 @@ export default function TeamShowPage() {
   useEffect(() => {
     if (activeTab !== "squad" || squad !== null) return
     setSquadLoading(true)
-    fetch(`/api/v1/teams/${id}/squad`)
-      .then(r => r.json())
-      .then(d => setSquad(d))
+    fetchJson(`/api/v1/teams/${id}/squad`, { soft: true })
+      .then(({ data, ok, offline }) => setSquad(ok && !offline && data ? data : { players: [], coach: null }))
       .catch(() => setSquad({ players: [], coach: null }))
       .finally(() => setSquadLoading(false))
   }, [activeTab, id, squad])

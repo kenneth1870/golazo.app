@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAuthContext } from "../contexts/AuthContext"
+import { fetchJson } from "../utils/fetchJson"
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
@@ -50,14 +51,14 @@ export default function LoginPage() {
     setGLoading(true)
     setGError(null)
     try {
-      const res = await fetch("/api/v1/sessions/google", {
+      const { data, ok, offline } = await fetchJson("/api/v1/sessions/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ credential }),
+        soft: true,
       })
-      const data = await res.json()
-      if (!res.ok) {
-        setGError(data.error || "Google sign-in failed")
+      if (!ok || offline) {
+        setGError(data?.error || "Google sign-in failed")
         return
       }
       localStorage.setItem("golazo_token", data.token)

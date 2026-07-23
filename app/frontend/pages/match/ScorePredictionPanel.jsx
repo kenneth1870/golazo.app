@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { storageGet, storageSet } from "../../utils/safeStorage"
+import { fetchJson } from "../../utils/fetchJson"
 
 const DEVICE_KEY = "golazo_device_id"
 
@@ -66,13 +67,12 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
 
   useEffect(() => {
     if (!matchId) return
-    fetch(`/api/v1/score_predictions/${matchId}?device_id=${deviceId}`)
-      .then(r => r.json())
-      .then(d => {
-        if (!d.none) {
-          setMyPred(d)
-          setHomeVal(String(d.home_guess))
-          setAwayVal(String(d.away_guess))
+    fetchJson(`/api/v1/score_predictions/${matchId}?device_id=${deviceId}`, { soft: true })
+      .then(({ data, ok, offline }) => {
+        if (ok && !offline && data && !data.none) {
+          setMyPred(data)
+          setHomeVal(String(data.home_guess))
+          setAwayVal(String(data.away_guess))
         }
         setLoaded(true)
       })
@@ -89,7 +89,7 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
     setSaving(true)
     setError(null)
     try {
-      const res = await fetch(`/api/v1/score_predictions/${matchId}`, {
+      const { data, ok, offline } = await fetchJson(`/api/v1/score_predictions/${matchId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -102,9 +102,10 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
           home_team_name: homeName,
           away_team_name: awayName,
         }),
+        soft: true,
       })
-      const data = await res.json()
-      if (data.error) setError(predictionErrorMessage(data.error, t))
+      if (!ok || offline) setError(t("error.dataUnavailable"))
+      else if (data?.error) setError(predictionErrorMessage(data.error, t))
       else setMyPred(data)
     } catch {
       setError(t("error.dataUnavailable"))

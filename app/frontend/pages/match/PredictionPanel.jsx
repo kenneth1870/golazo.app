@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { storageGet, storageSet } from "../../utils/safeStorage"
+import { fetchJson } from "../../utils/fetchJson"
 
 // Fan-poll panel: shows tap-to-vote buttons, then a results bar chart once the
 // visitor has voted (vote persisted in localStorage so it survives reloads).
@@ -14,21 +15,23 @@ export default function PredictionPanel({ matchId, homeTeamName, awayTeamName, t
     if (saved) {
       try { setMyVote(JSON.parse(saved).vote) } catch {}
     }
-    fetch(`/api/v1/predictions/${matchId}`).then(r => r.json()).then(setPred).catch(() => {})
+    fetchJson(`/api/v1/predictions/${matchId}`, { soft: true })
+      .then(({ data, ok, offline }) => { if (ok && !offline && data) setPred(data) })
+      .catch(() => {})
   }, [matchId])
 
   function castVote(choice) {
     if (myVote || voting) return
     setVoting(true)
     const token = Math.random().toString(36).slice(2) + Date.now().toString(36)
-    fetch(`/api/v1/predictions/${matchId}/vote`, {
+    fetchJson(`/api/v1/predictions/${matchId}/vote`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || "" },
       body: JSON.stringify({ choice, token }),
+      soft: true,
     })
-      .then(r => r.json())
-      .then(data => {
-        if (!data.error) {
+      .then(({ data, ok, offline }) => {
+        if (ok && !offline && data && !data.error) {
           setPred(data)
           setMyVote(choice)
           storageSet(TOKEN_KEY, JSON.stringify({ vote: choice, token }))

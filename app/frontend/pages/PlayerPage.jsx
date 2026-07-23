@@ -32,9 +32,8 @@ function TrophiesTab({ playerId, t }) {
   useEffect(() => {
     if (fetchedRef.current) return
     fetchedRef.current = true
-    fetch(`/api/v1/players/${playerId}/trophies`)
-      .then(r => r.json())
-      .then(setTrophies)
+    fetchJson(`/api/v1/players/${playerId}/trophies`, { soft: true })
+      .then(({ data, ok, offline }) => setTrophies(ok && !offline && Array.isArray(data) ? data : []))
       .catch(() => setTrophies([]))
   }, [playerId])
 
@@ -118,9 +117,8 @@ function InjuriesTab({ playerId, t }) {
   useEffect(() => {
     if (fetchedRef.current) return
     fetchedRef.current = true
-    fetch(`/api/v1/players/${playerId}/sidelined`)
-      .then(r => r.json())
-      .then(setInjuries)
+    fetchJson(`/api/v1/players/${playerId}/sidelined`, { soft: true })
+      .then(({ data, ok, offline }) => setInjuries(ok && !offline && Array.isArray(data) ? data : []))
       .catch(() => setInjuries([]))
   }, [playerId])
 

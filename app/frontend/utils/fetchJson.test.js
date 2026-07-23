@@ -23,7 +23,7 @@ describe("fetchJson", () => {
   it("returns parsed data on success", async () => {
     fetch.mockResolvedValue(mockResponse({ body: { items: [1] } }))
     const result = await fetchJson("/api/test")
-    expect(result).toEqual({ data: { items: [1] }, stale: false, offline: false, ok: true })
+    expect(result).toEqual({ data: { items: [1] }, stale: false, offline: false, ok: true, status: 200 })
   })
 
   it("flags stale cache responses", async () => {
@@ -53,5 +53,30 @@ describe("fetchJson", () => {
     const pending = fetchJson("/api/slow", 50)
     vi.advanceTimersByTime(60)
     await expect(pending).rejects.toMatchObject({ name: "AbortError" })
+  })
+
+  it("supports POST with soft HTTP errors", async () => {
+    fetch.mockResolvedValue(mockResponse({ ok: false, status: 422, body: { error: "already_voted" } }))
+    const result = await fetchJson("/api/vote", {
+      method: "POST",
+      body: JSON.stringify({ choice: "home" }),
+      soft: true,
+    })
+    expect(result).toEqual({
+      data: { error: "already_voted" },
+      stale: false,
+      offline: false,
+      ok: false,
+      status: 422,
+    })
+  })
+
+  it("passes fetch init through to fetch", async () => {
+    fetch.mockResolvedValue(mockResponse({ body: { ok: true } }))
+    await fetchJson("/api/test", { method: "PATCH", headers: { "X-Test": "1" } })
+    expect(fetch).toHaveBeenCalledWith("/api/test", expect.objectContaining({
+      method: "PATCH",
+      headers: { "X-Test": "1" },
+    }))
   })
 })

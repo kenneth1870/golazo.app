@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react"
+import { fetchJson } from "../utils/fetchJson"
 
 const TOKEN_KEY = "golazo_auth_token"
 const USER_KEY  = "golazo_auth_user"
@@ -34,14 +35,14 @@ export function useAuth() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("/api/v1/sessions", {
+      const { data, ok, offline } = await fetchJson("/api/v1/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        soft: true,
       })
-      const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || "Login failed")
+      if (!ok || offline) {
+        setError(data?.error || "Login failed")
         return false
       }
       persist(data.token, data.user)
@@ -56,9 +57,10 @@ export function useAuth() {
 
   const logout = useCallback(async () => {
     try {
-      await fetch("/api/v1/sessions", {
+      await fetchJson("/api/v1/sessions", {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
+        soft: true,
       })
     } catch {}
     clear()

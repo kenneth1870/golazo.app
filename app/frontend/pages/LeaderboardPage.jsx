@@ -47,13 +47,14 @@ export default function LeaderboardPage() {
   function saveName() {
     const name = nameInput.trim()
     if (!name) return
-    fetch("/api/v1/score_predictions/update_name", {
+    fetchJson("/api/v1/score_predictions/update_name", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ device_id: deviceId, display_name: name }),
+      soft: true,
     })
-      .then(r => r.json())
-      .then(() => {
+      .then(({ data, ok, offline }) => {
+        if (!ok || offline || data?.error) return
         setNameSaved(true)
         setEditingName(false)
         setRows(prev => prev.map(r => r.device_id === deviceId ? { ...r, display_name: name } : r))
@@ -81,9 +82,10 @@ export default function LeaderboardPage() {
   useEffect(() => { loadLeaderboard() }, [loadLeaderboard])
 
   useEffect(() => {
-    fetch(`/api/v1/score_predictions/by_device?device_id=${encodeURIComponent(deviceId)}`)
-      .then(r => r.json())
-      .then(d => { if (d.predictions?.length) setMyPreds(d) })
+    fetchJson(`/api/v1/score_predictions/by_device?device_id=${encodeURIComponent(deviceId)}`)
+      .then(({ data, ok, offline }) => {
+        if (ok && !offline && data?.predictions?.length) setMyPreds(data)
+      })
       .catch(() => {})
   }, []) // eslint-disable-line
 

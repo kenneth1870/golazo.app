@@ -1611,10 +1611,10 @@ export default function MatchShowPage() {
   useEffect(() => {
     if (stateList.length > 0 || !kickoffAt) return          // already have list
     const date = kickoffAt.slice(0, 10)                      // "YYYY-MM-DD"
-    fetch(`/api/v1/today?date=${date}`)
-      .then(r => r.ok ? r.json() : [])
-      .then(items => {
-        if (!Array.isArray(items) || items.length === 0) return
+    fetchJson(`/api/v1/today?date=${date}`, { soft: true })
+      .then(({ data, ok, offline }) => {
+        const items = ok && !offline && Array.isArray(data) ? data : []
+        if (items.length === 0) return
         const idx = items.findIndex(m => String(m.external_id) === String(id))
         if (idx === -1) return
         setFallbackList(items)
@@ -1798,20 +1798,17 @@ export default function MatchShowPage() {
       ? `/api/v1/matches/${matchDbId}/ai_summary?lang=${lang}`
       : `/api/v1/match_detail/${id}/ai_summary?lang=${lang}`
 
-    const controller = new AbortController()
+    let cancelled = false
     setAiLoading(true)
-    fetch(summaryUrl, { signal: controller.signal })
-      .then(r => {
-        if (!r.ok) throw new Error(r.status)
-        return r.json()
-      })
-      .then(d => {
-        if (d.summary) setAiSummary(d)
+    fetchJson(summaryUrl, { timeoutMs: 30_000, soft: true })
+      .then(({ data: d, ok, offline }) => {
+        if (cancelled) return
+        if (ok && !offline && d?.summary) setAiSummary(d)
         else setAiError(true)
       })
-      .catch(err => { if (err.name !== "AbortError") setAiError(true) })
-      .finally(() => setAiLoading(false))
-    return () => controller.abort()
+      .catch(err => { if (!cancelled && err.name !== "AbortError") setAiError(true) })
+      .finally(() => { if (!cancelled) setAiLoading(false) })
+    return () => { cancelled = true }
   }, [data?.fixture?.fixture?.status?.short, aiSummary, aiError]) // eslint-disable-line
 
   // Auto-select "preview" tab for pre-kickoff matches on first load
