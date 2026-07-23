@@ -1,8 +1,11 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useParams, useSearchParams, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useAppFocus } from "../hooks/useAppFocus"
+import { fetchJson } from "../utils/fetchJson"
+import OfflineBanner from "../components/OfflineBanner"
+import EmptyState from "../components/EmptyState"
 
 function StatBox({ label, value, highlight }) {
   return (
@@ -203,6 +206,27 @@ export default function PlayerPage() {
   const [player, setPlayer] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]    = useState(false)
+  const [stale, setStale]    = useState(false)
+
+  const loadPlayer = useCallback(() => {
+    setLoading(true)
+    setError(false)
+    setStale(false)
+    const qs = new URLSearchParams()
+    if (league) qs.set("league", league)
+    if (season) qs.set("season", season)
+    const query = qs.toString()
+    fetchJson(`/api/v1/players/${id}${query ? `?${query}` : ""}`)
+      .then(({ data: d, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline || d?.error) { setError(true); return }
+        setPlayer(d)
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false))
+  }, [id, league, season])
+
+  useEffect(() => { loadPlayer() }, [loadPlayer])
 
   usePageMeta(
     player?.name || t("player.notFound"),
@@ -212,23 +236,6 @@ export default function PlayerPage() {
           : t("meta.playerDescWC", { name: player.name }))
       : null
   )
-
-  useEffect(() => {
-    setLoading(true)
-    setError(false)
-    const qs = new URLSearchParams()
-    if (league) qs.set("league", league)
-    if (season) qs.set("season", season)
-    const query = qs.toString()
-    fetch(`/api/v1/players/${id}${query ? `?${query}` : ""}`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.error) setError(true)
-        else setPlayer(d)
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false))
-  }, [id, league, season])
 
   if (loading) return (
     <div className="site-section">
@@ -244,11 +251,8 @@ export default function PlayerPage() {
         <div className="match-back-bar">
           <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back")}</button>
         </div>
-        <div className="empty-state">
-          <div className="empty-state__icon">👤</div>
-          <h3>{t("player.notFound")}</h3>
-          <p>{t("player.statsUnavailable")}</p>
-        </div>
+        <OfflineBanner stale={stale} onRetry={loadPlayer} />
+        <EmptyState icon="👤" title={t("player.notFound")} description={t("player.statsUnavailable")} />
       </div>
     </div>
   )
@@ -257,6 +261,7 @@ export default function PlayerPage() {
 
   return (
     <div className="site-section">
+      <OfflineBanner stale={stale} onRetry={loadPlayer} />
       <div className="container" style={{ maxWidth: 600 }}>
         {/* Back bar */}
         <div className="match-back-bar">

@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react"
 import { useSearchParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
+import { fetchJson } from "../utils/fetchJson"
+import OfflineBanner from "../components/OfflineBanner"
 import { storageGet, storageSet } from "../utils/safeStorage"
 
 const DEVICE_KEY = "golazo_device_id"
@@ -41,13 +43,19 @@ export default function ComparePage() {
   const [friendData, setFriendData] = useState(null)
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState(false)
+  const [stale,      setStale]      = useState(false)
 
   const loadCompare = useCallback(() => {
     setLoading(true)
     setError(false)
+    setStale(false)
     const fetchPreds = (deviceId) =>
-      fetch(`/api/v1/score_predictions/by_device?device_id=${encodeURIComponent(deviceId)}`)
-        .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      fetchJson(`/api/v1/score_predictions/by_device?device_id=${encodeURIComponent(deviceId)}`)
+        .then(({ data, stale: isStale, offline, ok }) => {
+          if (isStale) setStale(true)
+          if (!ok || offline) throw new Error()
+          return data
+        })
 
     Promise.all([
       fetchPreds(myDeviceId),
@@ -104,6 +112,7 @@ export default function ComparePage() {
 
   return (
     <div className="site-section">
+      <OfflineBanner stale={stale} onRetry={loadCompare} />
       <div className="container" style={{ maxWidth: 640 }}>
         {/* Back */}
         <div className="match-back-bar" style={{ marginBottom: 0 }}>

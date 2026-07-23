@@ -2,6 +2,8 @@ import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { fetchJson } from "../../utils/fetchJson"
+import OfflineBanner from "../../components/OfflineBanner"
 import { translateTeam } from "../../i18n/teamNames"
 
 export default function TeamsPage() {
@@ -10,13 +12,18 @@ export default function TeamsPage() {
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [stale, setStale] = useState(false)
 
   const load = () => {
     setError(false)
+    setStale(false)
     setLoading(true)
-    fetch("/api/v1/teams?competition=WC")
-      .then(r => r.json())
-      .then(setTeams)
+    fetchJson("/api/v1/teams?competition=WC")
+      .then(({ data, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline) { setError(true); return }
+        setTeams(Array.isArray(data) ? data : data?.teams || [])
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }
@@ -43,6 +50,7 @@ export default function TeamsPage() {
 
   return (
     <div className="site-section">
+      <OfflineBanner stale={stale} onRetry={load} />
       <div className="container">
         <div className="row">
           {Object.entries(byGroup).sort().map(([group, groupTeams]) => (

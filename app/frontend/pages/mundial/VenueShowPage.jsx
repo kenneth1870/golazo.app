@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam } from "../../i18n/teamNames"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { fetchJson } from "../../utils/fetchJson"
+import OfflineBanner from "../../components/OfflineBanner"
 import { navigateToMatch, navIdFor } from "../../utils/matchDetailCache"
 
 const COUNTRY_FLAG = { "USA": "🇺🇸", "Canada": "🇨🇦", "Mexico": "🇲🇽" }
@@ -69,15 +71,24 @@ export default function VenueShowPage() {
   const [venue, setVenue]       = useState(null)
   const [loading, setLoading]   = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [stale, setStale] = useState(false)
   const venueImg = venue?.image_url || null
 
-  useEffect(() => {
-    fetch(`/api/v1/venues/${slug}`)
-      .then(r => { if (!r.ok) throw new Error("not found"); return r.json() })
-      .then(setVenue)
+  const load = useCallback(() => {
+    setLoading(true)
+    setNotFound(false)
+    setStale(false)
+    fetchJson(`/api/v1/venues/${slug}`)
+      .then(({ data, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline || !data) { setNotFound(true); return }
+        setVenue(data)
+      })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
   }, [slug])
+
+  useEffect(() => { load() }, [load])
 
   usePageMeta(
     venue ? `${venue.name} — Mundial 2026` : "Estadio",
@@ -119,6 +130,7 @@ export default function VenueShowPage() {
 
   return (
     <div>
+      <OfflineBanner stale={stale} onRetry={load} />
       {/* ── Full-bleed stadium hero ── */}
       <div style={{ position: "relative", minHeight: 300, overflow: "hidden" }}>
         {/* Background: photo or country gradient */}

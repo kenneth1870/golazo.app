@@ -2049,3 +2049,8 @@ body.light-mode .offline-banner{background:rgba(245,158,11,.12);border-color:rgb
 body.light-mode .offline-banner__retry{color:#92400e;border-color:rgba(245,158,11,.45)}
 body.light-mode .prefs-sheet__backdrop{background:rgba(0,0,0,.35)}
 body.light-mode .pull-indicator__spinner svg{stroke:var(--accent)}
+body.light-mode .consent-banner{background:var(--surface);border-color:var(--border);color:var(--text)}
+body.light-mode .consent-banner__message{color:var(--muted)}
+body.light-mode .install-prompt{background:var(--surface);border-color:var(--border);color:var(--text)}
+body.light-mode .onboarding-modal{background:var(--surface);color:var(--text)}
+body.light-mode .ios-install-panel{background:var(--surface)!important;color:var(--text)}

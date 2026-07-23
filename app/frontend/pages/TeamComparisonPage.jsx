@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { translateTeam } from "../i18n/teamNames"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useAppFocus } from "../hooks/useAppFocus"
+import { fetchJson } from "../utils/fetchJson"
 import { loadClubTeams } from "../utils/loadClubTeams"
 import { clubTeamPath, clubTeamSlug } from "../utils/clubTeamPath"
 
@@ -35,9 +36,11 @@ function WcTeamPicker({ value, onChange, label }) {
   const { t, i18n } = useTranslation()
   const [teams, setTeams] = useState([])
   useEffect(() => {
-    fetch("/api/v1/teams?competition=WC")
-      .then(r => r.json())
-      .then(d => setTeams(Array.isArray(d) ? d : d.teams || []))
+    fetchJson("/api/v1/teams?competition=WC")
+      .then(({ data: d, ok }) => {
+        if (!ok || !d) return
+        setTeams(Array.isArray(d) ? d : d.teams || [])
+      })
       .catch(() => {})
   }, [])
 
@@ -102,8 +105,8 @@ function fetchClubTeam(key) {
   const parsed = parseClubKey(key)
   if (!parsed) return Promise.resolve(null)
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-  return fetch(`/api/v1/club_teams/${parsed.code}/${parsed.slug}?tz=${encodeURIComponent(tz)}`)
-    .then(r => r.ok ? r.json() : null)
+  return fetchJson(`/api/v1/club_teams/${parsed.code}/${parsed.slug}?tz=${encodeURIComponent(tz)}`)
+    .then(({ data, ok, offline }) => (!ok || offline ? null : data))
     .catch(() => null)
 }
 
@@ -180,8 +183,8 @@ function WcTeamComparison() {
     if (!homeId && !awayId) return
     setLoading(true)
     const fetches = []
-    if (homeId) fetches.push(fetch(`/api/v1/teams/${homeId}`).then(r => r.json()).catch(() => null))
-    if (awayId) fetches.push(fetch(`/api/v1/teams/${awayId}`).then(r => r.json()).catch(() => null))
+    if (homeId) fetches.push(fetchJson(`/api/v1/teams/${homeId}`).then(({ data, ok }) => ok ? data : null).catch(() => null))
+    if (awayId) fetches.push(fetchJson(`/api/v1/teams/${awayId}`).then(({ data, ok }) => ok ? data : null).catch(() => null))
     Promise.all(fetches).then(results => {
       let i = 0
       if (homeId) setHomeData(results[i++])

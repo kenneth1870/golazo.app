@@ -662,6 +662,8 @@ export default function HomePage() {
                       { label: `📊 ${t("nav.results")}`, path: "/scores/results" },
                       { label: `🏆 ${t("nav.allLeagues")}`, path: "/leagues" },
                       { label: `⚔️ ${t("teamComparison.compare")}`, path: "/compare/teams" },
+                      { label: `🎯 ${t("nav.predictor")}`, path: "/predictor" },
+                      { label: `📊 ${t("nav.leaderboard")}`, path: "/leaderboard" },
                       { label: `📰 ${t("nav.news")}`, path: "/news" },
                     ].map(({ label, path }) => (
                       <Link key={path} to={path} style={{

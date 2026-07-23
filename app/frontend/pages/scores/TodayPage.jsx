@@ -14,7 +14,8 @@ import { navIdFor } from "../../utils/matchDetailCache"
 import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 import { useAppFocus } from "../../hooks/useAppFocus"
 import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
-import { matchTeamName } from "../../utils/matchTeamName"
+import PullIndicator from "../../components/PullIndicator"
+import { usePullRefresh } from "../../hooks/usePullRefresh"
 
 // ─── Helpers ──────────────────────────────────────────
 function toISO(date) {
@@ -262,47 +263,8 @@ function SkeletonBlock({ rows = 3 }) {
   )
 }
 
-// ─── Pull-to-refresh indicator ────────────────────────
-function PullIndicator({ distance, refreshing }) {
-  const size   = Math.min(distance / 64, 1)
-  const radius = 10
-  const circ   = 2 * Math.PI * radius
-  const dash   = circ * size
-
-  return (
-    <div style={{
-      display: "flex", justifyContent: "center", alignItems: "center",
-      height: refreshing ? 48 : Math.min(distance * 0.6, 48),
-      overflow: "hidden", transition: "height 0.3s ease",
-    }}>
-      <svg width={28} height={28} viewBox="0 0 28 28"
-        style={{
-          transform: refreshing ? "none" : `rotate(${size * 360}deg)`,
-          transition: refreshing ? "none" : "none",
-          opacity: Math.max(size, refreshing ? 1 : 0),
-        }}
-      >
-        <circle cx={14} cy={14} r={radius} fill="none" stroke="rgba(238,30,70,.25)" strokeWidth={2.5} />
-        {refreshing ? (
-          <circle cx={14} cy={14} r={radius} fill="none" stroke="var(--accent)" strokeWidth={2.5}
-            strokeDasharray={`${circ * 0.6} ${circ * 0.4}`}
-            strokeLinecap="round"
-            style={{ transformOrigin: "50% 50%", animation: "spin 0.8s linear infinite" }}
-          />
-        ) : (
-          <circle cx={14} cy={14} r={radius} fill="none" stroke="var(--accent)" strokeWidth={2.5}
-            strokeDasharray={`${dash} ${circ - dash}`}
-            strokeDashoffset={circ / 4}
-            strokeLinecap="round"
-          />
-        )}
-      </svg>
-    </div>
-  )
-}
-
-// ─── Empty state with upcoming WC teaser ──────────────
-function EmptyState({ label, t }) {
+// ─── Empty state with date label ──────────────────────
+function TodayEmptyState({ label, t }) {
   return (
     <div className="empty-state">
       <div className="empty-state__pitch" />
@@ -314,8 +276,6 @@ function EmptyState({ label, t }) {
 }
 
 // ─── Main page ────────────────────────────────────────
-const PULL_THRESHOLD = 64
-
 export default function TodayPage() {
   const { t, i18n } = useTranslation()
   const { clubs_primary: clubsPrimary } = useAppFocus()
@@ -330,16 +290,12 @@ export default function TodayPage() {
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState(false)
   const [stale, setStale]       = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
-  const [pullDist, setPullDist]     = useState(0)
   const [alertDismissed, setAlertDismissed] = useState(false)
   const [flashIds, setFlashIds] = useState(new Set())
   const [filterMyTeams, setFilterMyTeams] = useState(false)
   const prevMatchesRef = useRef([])
   const flashTimerRef  = useRef(null)
   useEffect(() => () => clearTimeout(flashTimerRef.current), [])
-  const pullStartY  = useRef(null)
-  const isPulling   = useRef(false)
   const navigate     = useNavigate()
   const onMatchClick = (match) => {
     const navId = navIdFor(match)
@@ -368,8 +324,7 @@ export default function TodayPage() {
   const favTeam = favoriteTeams[0] ?? null
 
   const load = useCallback((date, isRefresh = false) => {
-    if (isRefresh) setRefreshing(true)
-    else setLoading(true)
+    if (!isRefresh) setLoading(true)
     const iso    = toISO(date)
     const today  = toISO(new Date())
     const tz     = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
@@ -433,8 +388,10 @@ export default function TodayPage() {
         })
       })
       .catch(() => { setError(true); setMatches([]) })
-      .finally(() => { setLoading(false); setTimeout(() => setRefreshing(false), 350) })
+      .finally(() => { setLoading(false) })
   }, [])
+
+  const ptr = usePullRefresh(() => load(selected, true), { disabled: loading })
 
   useEffect(() => { load(selected); setAlertDismissed(false) }, [selected, load])
 
@@ -499,28 +456,6 @@ export default function TodayPage() {
   // Instant refresh when a WC match finishes (standings broadcast fires after FT)
   useStandingsChannel(() => load(selected))
 
-  // Pull-to-refresh touch handlers
-  function onPTRStart(e) {
-    if (window.scrollY > 0) return
-    pullStartY.current = e.touches[0].clientY
-    isPulling.current = true
-  }
-  function onPTRMove(e) {
-    if (!isPulling.current || pullStartY.current === null) return
-    const dy = e.touches[0].clientY - pullStartY.current
-    if (dy <= 0) { setPullDist(0); return }
-    setPullDist(Math.min(dy, PULL_THRESHOLD * 1.5))
-  }
-  function onPTREnd() {
-    if (!isPulling.current) return
-    isPulling.current = false
-    if (pullDist >= PULL_THRESHOLD && !refreshing && !loading) {
-      load(selected, true)
-    }
-    setPullDist(0)
-    pullStartY.current = null
-  }
-
   // Separate upcoming WC preview matches (injected when today is empty)
   const upcomingPreview = matches.filter(m => m.upcoming_preview)
   const todayMatches    = matches.filter(m => !m.upcoming_preview)
@@ -577,14 +512,11 @@ export default function TodayPage() {
   return (
     <div
       className="site-section"
-      onTouchStart={onPTRStart}
-      onTouchMove={onPTRMove}
-      onTouchEnd={onPTREnd}
+      onTouchStart={ptr.onTouchStart}
+      onTouchMove={ptr.onTouchMove}
+      onTouchEnd={ptr.onTouchEnd}
     >
-      {/* Pull-to-refresh indicator */}
-      {(pullDist > 4 || refreshing) && (
-        <PullIndicator distance={pullDist} refreshing={refreshing} />
-      )}
+      {ptr.showIndicator && <PullIndicator distance={ptr.pullDist} refreshing={ptr.refreshing} />}
 
       {/* Push notification prompt — shown 3s after load */}
 
@@ -727,7 +659,7 @@ export default function TodayPage() {
           </div>
         ) : groups.length === 0 ? (
           <>
-            {todayMatches.length === 0 && <EmptyState label={label} t={t} />}
+            {todayMatches.length === 0 && <TodayEmptyState label={label} t={t} />}
             {upcomingPreview.length > 0 && isToday && (
               <div style={{ marginTop: todayMatches.length === 0 ? 4 : 0 }}>
                 <div style={{

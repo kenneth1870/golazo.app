@@ -1,21 +1,17 @@
-import { useState, useEffect, useRef, useCallback, memo, lazy, Suspense } from "react"
-
-// Decorative logo/flag image — returns null on error instead of hiding with display:none
-// which leaves a DOM hole and can break flex layouts.
-const SafeImg = memo(function SafeImg({ src, alt, className, style }) {
-  const [err, setErr] = useState(false)
-  if (!src || err) return null
-  return <img src={src} alt={alt || ""} className={className} style={style} onError={() => setErr(true)} />
-})
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react"
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague } from "../i18n/leagueNames"
 import { translateTeam } from "../i18n/teamNames"
+import SafeImg from "../components/SafeImg"
 import { useExternalMatchChannel } from "../hooks/useExternalMatchChannel"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
 import { useLiveMinute, useGoalNotifications } from "./match/useMatchLive"
 const ScorePredictionPanel = lazy(() => import("./match/ScorePredictionPanel"))
+const MatchPreviewPanel = lazy(() => import("./match/MatchPreviewPanel"))
+const PlayerRatingsPanel = lazy(() => import("./match/PlayerRatingsPanel"))
+import FirstScorerOdds from "./match/FirstScorerOdds"
 import MatchReactions from "../components/MatchReactions"
 import { useReminders } from "../hooks/useReminders"
 import { usePushNotifications } from "../hooks/usePushNotifications"
@@ -443,11 +439,11 @@ function Scoreboard({ fixture, isLive, liveMinute, liveExtra, matchId, onShare, 
   const venueId = fixture?.fixture?.venue?.id
   useEffect(() => {
     if (!venueId) return
-    fetch(`/api/v1/venue_detail/${venueId}`)
-      .then(r => r.json())
-      .then(d => {
-        if (d?.image) setVenueImg(d.image)
-        if (d?.capacity) setVenueCap(d.capacity)
+    fetchJson(`/api/v1/venue_detail/${venueId}`)
+      .then(({ data: d, ok }) => {
+        if (!ok || !d) return
+        if (d.image) setVenueImg(d.image)
+        if (d.capacity) setVenueCap(d.capacity)
       })
       .catch(() => {})
   }, [venueId])
@@ -1090,246 +1086,6 @@ function PosLegend() {
 
 // ─── Match Preview Panel (predictions) ────────────────────────────────────────
 
-function ComparisonBar({ label, home, away }) {
-  const h = parseFloat(home) || 0
-  return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", marginBottom: 4 }}>
-        <span style={{ color: "var(--accent)", fontWeight: 700 }}>{home}</span>
-        <span style={{ color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", fontSize: "0.62rem" }}>{label}</span>
-        <span style={{ color: "var(--away-blue)", fontWeight: 700 }}>{away}</span>
-      </div>
-      <div style={{ display: "flex", height: 5, borderRadius: 3, overflow: "hidden", background: "var(--border)" }}>
-        <div style={{ width: `${h}%`, background: "var(--accent)", transition: "width .5s" }} />
-        <div style={{ flex: 1, background: "var(--away-blue)" }} />
-      </div>
-    </div>
-  )
-}
-
-function InjuriesSection({ fixtureId, homeName, awayName }) {
-  const { t } = useTranslation()
-  const [injuries, setInjuries] = useState(null)
-
-  useEffect(() => {
-    const apiId = String(fixtureId).replace(/^ext-/, "")
-    let cancelled = false
-    fetch(`/api/v1/fixture_injuries/${apiId}`)
-      .then(r => r.json())
-      .then(d => { if (!cancelled) setInjuries(Array.isArray(d) && d.length ? d : []) })
-      .catch(() => { if (!cancelled) setInjuries([]) })
-    return () => { cancelled = true }
-  }, [fixtureId])
-
-  if (!injuries?.length) return null
-
-  const byTeam = injuries.reduce((acc, inj) => {
-    const name = inj.team?.name || "?"
-    if (!acc[name]) acc[name] = []
-    acc[name].push(inj)
-    return acc
-  }, {})
-
-  return (
-    <section className="match-section" style={{ marginBottom: 20 }}>
-      <h3 className="match-section__title">🚑 {t("match.injuries")}</h3>
-      {Object.entries(byTeam).map(([teamName, list]) => (
-        <div key={teamName} style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: ".08em" }}>{teamName}</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {list.map((inj, i) => (
-              <div key={inj.player?.name ? `${inj.player.name}-${i}` : i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px", background: "var(--surface2)", borderRadius: 8 }}>
-                {inj.player?.photo && (
-                  <SafeImg src={inj.player.photo} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {inj.player?.name}
-                  </div>
-                  <div style={{ fontSize: "0.7rem", color: "var(--muted)" }}>{inj.reason}</div>
-                </div>
-                <span style={{
-                  fontSize: "0.65rem", fontWeight: 700,
-                  padding: "3px 8px", borderRadius: 10,
-                  background: inj.type === "Missing Fixture" ? "rgba(239,68,68,.15)" : "rgba(245,158,11,.15)",
-                  color: inj.type === "Missing Fixture" ? "var(--danger)" : "var(--amber)",
-                  whiteSpace: "nowrap",
-                }}>
-                  {inj.type === "Missing Fixture" ? t("match.injuryOut") : t("match.injuryDoubt")}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </section>
-  )
-}
-
-function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
-  const [pred, setPred]       = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch(`/api/v1/fixture_predictions/${fixtureId}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(d => setPred(d?.percent ? d : null))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [fixtureId])
-
-  if (loading) return (
-    <div style={{ padding: "20px 0" }}>
-      {[1, 2, 3].map(i => (
-        <div key={i} className="loading-shimmer" style={{ height: 22, borderRadius: 6, marginBottom: 14 }} />
-      ))}
-    </div>
-  )
-
-  if (!pred) return (
-    <div style={{ paddingBottom: 8 }}>
-      <InjuriesSection fixtureId={fixtureId} homeName={homeName} awayName={awayName} />
-      <div className="empty-state" style={{ paddingTop: 20 }}>
-        <div className="empty-state__icon">🔮</div>
-        <h3>{t("match.noPrediction")}</h3>
-      </div>
-    </div>
-  )
-
-  const { winner, percent, goals, advice, under_over, comparison } = pred
-  const COMP_ROWS = [
-    { key: "form",  label: t("match.predForm") },
-    { key: "att",   label: t("match.predAttack") },
-    { key: "def",   label: t("match.predDefense") },
-    { key: "h2h",   label: t("match.h2h") },
-    { key: "goals", label: t("match.predGoals") },
-    { key: "total", label: t("match.predTotal") },
-  ]
-
-  return (
-    <div style={{ paddingBottom: 8 }}>
-      <InjuriesSection fixtureId={fixtureId} homeName={homeName} awayName={awayName} />
-      {/* Win probability */}
-      <div className="match-section" style={{ marginBottom: 20 }}>
-        <div className="match-section__title">{t("match.winProbability")}</div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 12, marginTop: 10 }}>
-          {[
-            { label: homeName, pct: percent?.home, color: "var(--accent)" },
-            { label: t("match.draw"),  pct: percent?.draw, color: "var(--amber)" },
-            { label: awayName, pct: percent?.away, color: "var(--away-blue)" },
-          ].map(({ label, pct, color }) => (
-            <div key={label} style={{ flex: 1, textAlign: "center" }}>
-              <div style={{ fontSize: "1.4rem", fontWeight: 900, color }}>{pct ?? "—"}</div>
-              <div style={{ fontSize: "0.62rem", color: "var(--muted)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden" }}>
-          <div style={{ width: percent?.home, background: "var(--accent)" }} />
-          <div style={{ width: percent?.draw, background: "var(--amber)" }} />
-          <div style={{ flex: 1, background: "var(--away-blue)" }} />
-        </div>
-      </div>
-
-      {/* Comparison bars */}
-      {comparison && Object.values(comparison).some(Boolean) && (
-        <div className="match-section" style={{ marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", fontWeight: 700, marginBottom: 14 }}>
-            <span style={{ color: "var(--accent)" }}>{homeName}</span>
-            <span style={{ color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", fontSize: "0.6rem" }}>{t("match.comparison")}</span>
-            <span style={{ color: "var(--away-blue)" }}>{awayName}</span>
-          </div>
-          {COMP_ROWS.map(({ key, label }) => {
-            const val = comparison[key]
-            if (!val?.home) return null
-            return <ComparisonBar key={key} label={label} home={val.home} away={val.away} />
-          })}
-        </div>
-      )}
-
-      {/* Goals + Under/Over chips */}
-      {(goals?.home || under_over) && (
-        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-          {goals?.home && (
-            <div style={{ flex: 1, background: "var(--surface2)", borderRadius: 10, padding: "12px 10px", textAlign: "center" }}>
-              <div style={{ fontSize: "0.6rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 5 }}>{t("match.expectedGoals")}</div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 800 }}>
-                <span style={{ color: "var(--accent)" }}>{goals.home}</span>
-                <span style={{ color: "var(--muted)", margin: "0 4px" }}>–</span>
-                <span style={{ color: "var(--away-blue)" }}>{goals.away}</span>
-              </div>
-            </div>
-          )}
-          {under_over && (
-            <div style={{ flex: 1, background: "var(--surface2)", borderRadius: 10, padding: "12px 10px", textAlign: "center" }}>
-              <div style={{ fontSize: "0.6rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 5 }}>{t("match.underOver")}</div>
-              <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "var(--amber)" }}>{under_over}</div>
-            </div>
-          )}
-        </div>
-      )}
-
-      <div style={{ fontSize: "0.6rem", color: "var(--muted)", textAlign: "center", paddingTop: 4 }}>
-        {t("match.predPoweredBy")}
-      </div>
-    </div>
-  )
-}
-
-// ─── First Goal Scorer Odds ───────────────────────────────────────────────────
-
-function FirstScorerOdds({ fixtureId, t }) {
-  const [scorers, setScorers] = useState(null)
-
-  useEffect(() => {
-    if (!fixtureId) return
-    setScorers(null)
-    const controller = new AbortController()
-    fetch(`/api/v1/fixture_odds/${fixtureId}`, { signal: controller.signal })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        if (!d?.bets) return
-        const list =
-          d.bets["First Goal Scorer"] ||
-          d.bets["Anytime Goal Scorer"] ||
-          d.bets["Home First Goal Scorer"] || []
-        if (list.length > 0) {
-          setScorers([...list].sort((a, b) => parseFloat(a.odd) - parseFloat(b.odd)).slice(0, 8))
-        }
-      })
-      .catch(() => {})
-    return () => controller.abort()
-  }, [fixtureId])
-
-  if (!scorers?.length) return null
-
-  return (
-    <div className="match-section" style={{ marginTop: 20 }}>
-      <div className="match-section__title" style={{ marginBottom: 12 }}>⚽ {t("match.firstGoalScorer")}</div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {scorers.map((s, i) => (
-          <div key={s.value} style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "8px 12px",
-            background: i === 0 ? "rgba(238,30,70,.07)" : "var(--surface2)",
-            borderRadius: 8,
-            border: i === 0 ? "1px solid rgba(238,30,70,.18)" : "1px solid transparent",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: "0.7rem", color: "var(--muted)", width: 18, textAlign: "center" }}>{i + 1}</span>
-              <span style={{ fontWeight: i === 0 ? 700 : 500, fontSize: "0.85rem", color: "var(--text)" }}>{s.value}</span>
-            </div>
-            <span style={{
-              background: i === 0 ? "rgba(238,30,70,.15)" : "var(--surface)",
-              color: i === 0 ? "var(--accent)" : "var(--muted)",
-              borderRadius: 6, padding: "3px 10px", fontSize: "0.8rem", fontWeight: 700,
-            }}>{s.odd}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 // ─── Lineups Panel ────────────────────────────────────────────────────────────
 
@@ -1467,126 +1223,6 @@ function H2HPanel({ h2h, homeTeamName, awayTeamName, t, lang }) {
 }
 
 // ─── Player Ratings tab ───────────────────────────────
-const RATING_COLOR = r => {
-  const n = parseFloat(r)
-  if (isNaN(n)) return "var(--muted)"
-  if (n >= 8)   return "var(--green)"
-  if (n >= 6.5) return "var(--amber)"
-  return "var(--danger)"
-}
-
-function PlayerRatingsPanel({ fixtureId }) {
-  const { t, i18n } = useTranslation()
-  const [teams, setTeams]     = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const apiId = String(fixtureId).replace(/^ext-/, "")
-    fetch(`/api/v1/fixture_ratings/${apiId}`)
-      .then(r => r.json())
-      .then(d => setTeams(Array.isArray(d) && d.length ? d : null))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [fixtureId])
-
-  // Find MOTM: highest-rated player across both teams
-  const motmKey = teams ? (() => {
-    let best = null, bestVal = -1
-    teams.forEach(team => {
-      ;(team.players || []).forEach(p => {
-        const v = parseFloat(p.rating)
-        if (!isNaN(v) && v > bestVal) { bestVal = v; best = `${team.team?.id}-${p.name}` }
-      })
-    })
-    return best
-  })() : null
-
-  if (loading) return (
-    <div style={{ paddingTop: 16 }}>
-      {[...Array(6)].map((_, i) => (
-        <div key={i} className="loading-shimmer" style={{ height: 56, borderRadius: 8, marginBottom: 6 }} />
-      ))}
-    </div>
-  )
-
-  if (!teams) return (
-    <div className="empty-state" style={{ paddingTop: 40 }}>
-      <div className="empty-state__icon">📊</div>
-      <h3>{t("match.ratingsEmpty")}</h3>
-      <p>{t("match.ratingsAppear")}</p>
-    </div>
-  )
-
-  return (
-    <div style={{ paddingBottom: 8 }}>
-      {teams.map((team, ti) => (
-        <section key={ti} className="match-section" style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <SafeImg src={team.team?.logo} style={{ width: 22, height: 22, objectFit: "contain" }} />
-            <h3 className="match-section__title" style={{ margin: 0 }}>{translateTeam(team.team?.name, i18n.language)}</h3>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {(team.players || [])
-              .sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0))
-              .map((p, pi) => {
-                const rating  = parseFloat(p.rating)
-                const color   = RATING_COLOR(p.rating)
-                const isMotm  = motmKey === `${team.team?.id}-${p.name}`
-                return (
-                  <div key={pi} style={{
-                    display: "grid", gridTemplateColumns: "22px 1fr 80px 44px",
-                    gap: 8, alignItems: "center",
-                    padding: "8px 12px",
-                    background: isMotm ? "rgba(245,158,11,.07)" : pi % 2 === 0 ? "transparent" : "var(--surface2)",
-                    borderRadius: 6,
-                    border: isMotm ? "1px solid rgba(245,158,11,.25)" : "1px solid transparent",
-                  }}>
-                    <span style={{ fontSize: "0.72rem", color: "var(--muted)", textAlign: "center", fontWeight: 700 }}>
-                      {p.number ?? ""}
-                    </span>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {isMotm && <span style={{ marginRight: 4 }} title="Man of the Match">👑</span>}
-                        {p.captain ? "©" : ""}{p.name}
-                      </div>
-                      <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>
-                        {p.position ?? ""}{p.minutes ? ` · ${p.minutes}'` : ""}
-                        {(p.goals?.total > 0) ? ` ⚽×${p.goals.total}` : ""}
-                        {(p.goals?.assists > 0) ? ` 🎯×${p.goals.assists}` : ""}
-                        {(p.cards?.yellow > 0) ? " 🟨" : ""}
-                        {(p.cards?.red > 0) ? " 🟥" : ""}
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                      {p.passes?.total != null && (
-                        <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>
-                          {p.passes.total} pases {p.passes.accuracy != null ? `· ${p.passes.accuracy}%` : ""}
-                        </div>
-                      )}
-                      {p.shots?.total != null && (
-                        <div style={{ fontSize: "0.65rem", color: "var(--muted)" }}>
-                          {p.shots.total} tiros{p.shots.on != null ? ` (${p.shots.on} a puerta)` : ""}
-                        </div>
-                      )}
-                    </div>
-                    <div style={{
-                      fontWeight: 900, fontSize: "1rem", color,
-                      textAlign: "right",
-                      padding: "4px 8px",
-                      background: `${color}18`,
-                      borderRadius: 6,
-                    }}>
-                      {isNaN(rating) ? "–" : rating.toFixed(1)}
-                    </div>
-                  </div>
-                )
-              })}
-          </div>
-        </section>
-      ))}
-    </div>
-  )
-}
 
 // ─── Live event feed / commentary ─────────────────────
 function LiveCommentaryPanel({ events, homeTeamRaw, homeName, awayName }) {
@@ -1859,12 +1495,11 @@ function RelatedNewsPanel({ homeName, awayName, leagueName, lang, t }) {
 
     // Send keywords server-side — avoids fetching 60 articles to filter 3
     const q = encodeURIComponent(words.join(","))
-    const controller = new AbortController()
-    fetch(`/api/v1/news?lang=${lang}&q=${q}`, { signal: controller.signal })
-      .then(r => r.ok ? r.json() : [])
-      .then(items => { if (Array.isArray(items) && items.length > 0) setArticles(items) })
+    let cancelled = false
+    fetchJson(`/api/v1/news?lang=${lang}&q=${q}`)
+      .then(({ data: items, ok }) => { if (ok && Array.isArray(items) && items.length > 0) setArticles(items) })
       .catch(() => {})
-    return () => controller.abort()
+    return () => { cancelled = true }
   }, [homeName, awayName, leagueName, lang])
 
   if (articles.length === 0) return null
@@ -2409,12 +2044,14 @@ export default function MatchShowPage() {
                 <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} kickoffAt={kickoffAt} t={t} />
               </Suspense>
             )}
-            <MatchPreviewPanel
-              fixtureId={id}
-              homeName={homeName}
-              awayName={awayName}
-              t={t}
-            />
+            <Suspense fallback={<div className="loading-shimmer" style={{ height: 120, borderRadius: 12 }} />}>
+              <MatchPreviewPanel
+                fixtureId={id}
+                homeName={homeName}
+                awayName={awayName}
+                t={t}
+              />
+            </Suspense>
           </>
         )}
 
@@ -2494,7 +2131,9 @@ export default function MatchShowPage() {
         )}
 
         {tab === "ratings" && (
-          <PlayerRatingsPanel fixtureId={id} />
+          <Suspense fallback={<div className="loading-shimmer" style={{ height: 200, borderRadius: 12 }} />}>
+            <PlayerRatingsPanel fixtureId={id} />
+          </Suspense>
         )}
 
         {tab === "feed" && (

@@ -2,6 +2,8 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { fetchJson } from "../../utils/fetchJson"
+import OfflineBanner from "../../components/OfflineBanner"
 
 const COUNTRY_FLAG = { "USA": "🇺🇸", "Canada": "🇨🇦", "Mexico": "🇲🇽" }
 
@@ -12,13 +14,18 @@ export default function VenuesPage() {
   const [venues, setVenues] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [stale, setStale] = useState(false)
 
   const load = () => {
     setError(false)
+    setStale(false)
     setLoading(true)
-    fetch("/api/v1/venues")
-      .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then(data => setVenues(Array.isArray(data) ? data : []))
+    fetchJson("/api/v1/venues")
+      .then(({ data, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline) { setError(true); return }
+        setVenues(Array.isArray(data) ? data : [])
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }
@@ -46,6 +53,7 @@ export default function VenuesPage() {
 
   return (
     <div className="site-section">
+      <OfflineBanner stale={stale} onRetry={load} />
       <div className="container">
         {Object.entries(byCountry).map(([country, countryVenues]) => (
           <div key={country} className="mb-5">

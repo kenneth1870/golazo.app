@@ -254,13 +254,12 @@ export default function LeagueDetailPage() {
     setCompetition(null)
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     Promise.all([
-      fetch(`/api/v1/competitions/${code}`).then(async r => {
-        const data = await r.json().catch(() => ({}))
-        if (!r.ok || data?.error === "not_found") return { notFound: true }
+      fetchJson(`/api/v1/competitions/${code}`).then(({ data, ok, offline }) => {
+        if (!ok || offline || data?.error === "not_found") return { notFound: true }
         return { comp: data }
       }),
-      fetch(`/api/v1/competitions/${code}/fixtures?tab=today&tz=${encodeURIComponent(tz)}`).then(r => r.ok ? r.json() : []),
-      fetch(`/api/v1/standings?competition=${code}`).then(r => r.ok ? r.json() : {}).catch(() => ({})),
+      fetchJson(`/api/v1/competitions/${code}/fixtures?tab=today&tz=${encodeURIComponent(tz)}`).then(({ data, ok }) => ok && Array.isArray(data) ? data : []),
+      fetchJson(`/api/v1/standings?competition=${code}`).then(({ data, ok }) => ok ? data : {}).catch(() => ({})),
     ]).then(([compResult, matchData, standData]) => {
       if (compResult.notFound) {
         setNotFound(true)

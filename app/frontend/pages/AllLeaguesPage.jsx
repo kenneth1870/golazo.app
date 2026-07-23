@@ -81,9 +81,8 @@ export default function AllLeaguesPage() {
 
   const loadLive = () => {
     if (document.hidden) return
-    fetch("/api/v1/live_scores")
-      .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) setLiveMatches(data) })
+    fetchJson("/api/v1/live_scores")
+      .then(({ data, ok }) => { if (ok && Array.isArray(data)) setLiveMatches(data) })
       .catch(() => {})
   }
 
