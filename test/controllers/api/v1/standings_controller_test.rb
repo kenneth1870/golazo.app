@@ -19,13 +19,19 @@ class Api::V1::StandingsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "best_thirds returns empty array when WC competition is missing" do
-    Competition.where(code: "WC").delete_all
     Rails.cache.clear
+    wc = Competition.find_by(code: "WC")
+    original_code = wc&.code
 
-    get "/api/v1/standings/best_thirds"
-
-    assert_response :success
-    assert_equal [], json_response
+    begin
+      wc&.update_column(:code, "WC_MISSING_TEST")
+      get "/api/v1/standings/best_thirds"
+      assert_response :success
+      assert_equal [], json_response
+    ensure
+      wc&.update_column(:code, original_code) if wc && original_code
+      Rails.cache.clear
+    end
   end
 
   private

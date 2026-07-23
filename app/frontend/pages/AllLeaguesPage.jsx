@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { fetchJson } from "../utils/fetchJson"
 import OfflineBanner from "../components/OfflineBanner"
+import PullIndicator from "../components/PullIndicator"
+import EmptyState from "../components/EmptyState"
+import { usePullRefresh } from "../hooks/usePullRefresh"
 import { translateLeague, translateCountry } from "../i18n/leagueNames"
 
 const TYPE_ORDER = { world_cup: 0, latam: 1, cup: 2, league: 3 }
@@ -86,7 +89,7 @@ export default function AllLeaguesPage() {
       .catch(() => {})
   }
 
-  const load = () => {
+  const load = useCallback(() => {
     setLoading(true)
     setError(false)
     setStale(false)
@@ -102,7 +105,9 @@ export default function AllLeaguesPage() {
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
-  }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const ptr = usePullRefresh(() => load(), { disabled: loading })
 
   useEffect(() => {
     load()
@@ -177,7 +182,12 @@ export default function AllLeaguesPage() {
   }
 
   return (
-    <>
+    <div
+      onTouchStart={ptr.onTouchStart}
+      onTouchMove={ptr.onTouchMove}
+      onTouchEnd={ptr.onTouchEnd}
+    >
+      {ptr.showIndicator && <PullIndicator distance={ptr.pullDist} refreshing={ptr.refreshing} />}
       <OfflineBanner stale={stale} onRetry={load} />
       <div className="page-hero" style={{ backgroundImage: "url('/images/hero_5.jpg')" }}>
         <div className="container">
@@ -235,14 +245,14 @@ export default function AllLeaguesPage() {
           ))}
 
           {competitions.length === 0 && (
-            <div className="empty-state">
-              <div className="empty-state__icon">🌍</div>
-              <h3>{t("leagues.available", { count: 0 })}</h3>
-              <p>{t("leagues.checkBack")}</p>
-            </div>
+            <EmptyState
+              icon="🌍"
+              title={t("leagues.available", { count: 0 })}
+              description={t("leagues.checkBack")}
+            />
           )}
         </div>
       </div>
-    </>
+    </div>
   )
 }

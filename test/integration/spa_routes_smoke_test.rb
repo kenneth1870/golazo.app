@@ -1,7 +1,7 @@
 require "test_helper"
 
 class SpaRoutesSmokeTest < ActionDispatch::IntegrationTest
-  %w[/ /scores/today /news /leagues].each do |path|
+  %w[/ /scores/today /scores/live /news /leagues].each do |path|
     test "GET #{path} returns SPA shell" do
       get path
       assert_response :success

@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react"
+import { fetchJson } from "../utils/fetchJson"
 
 // Module-level cache so every component sharing the same filter/params
 // reuses one in-flight request and one polling interval.
-const cache       = new Map()  // key → { data, ts, error }
+const cache       = new Map()  // key → { data, ts, error, stale }
 const subs        = new Map()  // key → Set of setState callbacks
 const timers      = new Map()  // key → { interval, onVisible }
 const controllers = new Map()  // key → AbortController (current in-flight fetch)
@@ -10,7 +11,6 @@ const controllers = new Map()  // key → AbortController (current in-flight fet
 const MAX_CACHE_ENTRIES = 15
 function evictLRU() {
   if (cache.size <= MAX_CACHE_ENTRIES) return
-  // Only evict keys that have no active subscribers
   let oldest = null, oldestTs = Infinity
   for (const [key, entry] of cache) {
     if (subs.has(key)) continue
@@ -37,18 +37,20 @@ async function fetchKey(key, filter, opts) {
   controllers.set(key, controller)
 
   try {
-    const res  = await fetch(`/api/v1/matches?${params}`, { signal: controller.signal })
-    if (!res.ok) throw new Error("fetch failed")
-    const data = await res.json()
-    cache.set(key, { data, ts: Date.now(), error: null })
+    const { data, ok, offline, stale } = await fetchJson(`/api/v1/matches?${params}`, {
+      soft: true,
+      signal: controller.signal,
+    })
+    if (!ok || offline || !Array.isArray(data)) throw new Error("fetch failed")
+    cache.set(key, { data, ts: Date.now(), error: null, stale })
     evictLRU()
-    notify(key, { data, loading: false, error: null })
+    notify(key, { data, loading: false, error: null, stale })
     return data
   } catch (e) {
-    if (e.name === "AbortError") return  // cancelled when last subscriber left — no notify
+    if (e.name === "AbortError") return
     const prev = cache.get(key)
-    cache.set(key, { ...(prev || {}), error: e.message })
-    notify(key, { data: prev?.data || [], loading: false, error: e.message })
+    cache.set(key, { ...(prev || {}), error: e.message, stale: prev?.stale || false })
+    notify(key, { data: prev?.data || [], loading: false, error: e.message, stale: prev?.stale || false })
   } finally {
     if (controllers.get(key) === controller) controllers.delete(key)
   }
@@ -61,8 +63,6 @@ function subscribe(key, filter, opts, setState) {
   if (!timers.has(key)) {
     fetchKey(key, filter, opts)
 
-    // Skip polling when the tab is hidden; re-fetch immediately on return
-    // if data is stale (older than the poll interval).
     const poll = () => { if (!document.hidden) fetchKey(key, filter, opts) }
     const onVisible = () => {
       if (document.hidden) return
@@ -75,7 +75,14 @@ function subscribe(key, filter, opts, setState) {
     timers.set(key, { interval, onVisible })
   } else {
     const cached = cache.get(key)
-    if (cached?.data) setState({ data: cached.data, loading: false, error: cached.error || null })
+    if (cached?.data) {
+      setState({
+        data: cached.data,
+        loading: false,
+        error: cached.error || null,
+        stale: cached.stale || false,
+      })
+    }
   }
 }
 
@@ -109,9 +116,6 @@ function applyScorePatch(m, d) {
   }
 }
 
-// Patch a live score update directly into cached list filters so list views
-// reflect goals without waiting for the 60s poll. "live|" keys drop finished
-// matches; "all|" keys update them in place (needed by the knockout bracket).
 export function patchLiveScore(d) {
   for (const [key, entry] of cache) {
     const isLiveKey     = key.startsWith("live|")
@@ -129,7 +133,7 @@ export function patchLiveScore(d) {
         ? entry.data.filter(m => !isHit(m))
         : entry.data.map(m => isHit(m) ? applyScorePatch(m, d) : m)
       cache.set(key, { ...entry, data: next })
-      notify(key, { data: next, loading: false, error: null })
+      notify(key, { data: next, loading: false, error: null, stale: entry.stale || false })
       continue
     }
 
@@ -143,7 +147,7 @@ export function patchLiveScore(d) {
     })
     if (patched) {
       cache.set(key, { ...entry, data: next })
-      notify(key, { data: next, loading: false, error: null })
+      notify(key, { data: next, loading: false, error: null, stale: entry.stale || false })
     }
   }
 }
@@ -152,7 +156,7 @@ export function useMatches(filter = "all", opts = {}) {
   const key = cacheKey(filter, opts)
   const [state, setState] = useState(() => {
     const cached = cache.get(key)
-    return { data: cached?.data || [], loading: !cached, error: null }
+    return { data: cached?.data || [], loading: !cached, error: null, stale: cached?.stale || false }
   })
 
   const setStateRef = useRef(setState)
@@ -166,7 +170,7 @@ export function useMatches(filter = "all", opts = {}) {
 
   const refetch = useCallback(() => fetchKey(key, filter, opts), [key]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { matches: state.data, loading: state.loading, error: state.error, refetch }
+  return { matches: state.data, loading: state.loading, error: state.error, stale: state.stale, refetch }
 }
 
 export function useMatch(matchId) {
@@ -177,9 +181,10 @@ export function useMatch(matchId) {
     if (!matchId) return
     let cancelled = false
     setLoading(true)
-    fetch(`/api/v1/matches/${matchId}`)
-      .then(r => (r.ok ? r.json() : null))
-      .then(data => { if (!cancelled) setMatch(data) })
+    fetchJson(`/api/v1/matches/${matchId}`, { soft: true })
+      .then(({ data, ok, offline }) => {
+        if (!cancelled) setMatch(ok && !offline ? data : null)
+      })
       .catch(() => { if (!cancelled) setMatch(null) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }

@@ -40,10 +40,7 @@ function TrophiesTab({ playerId, t }) {
   if (!trophies) return <div className="loading-shimmer" style={{ height: 200, borderRadius: 12, margin: "20px 0" }} />
 
   if (!trophies.length) return (
-    <div className="empty-state" style={{ paddingTop: 40 }}>
-      <div className="empty-state__icon">🏆</div>
-      <h3>{t("player.noTrophies")}</h3>
-    </div>
+    <EmptyState icon="🏆" title={t("player.noTrophies")} />
   )
 
   const winners  = trophies.filter(t => t.place === "Winner")
@@ -125,10 +122,7 @@ function InjuriesTab({ playerId, t }) {
   if (!injuries) return <div className="loading-shimmer" style={{ height: 200, borderRadius: 12, margin: "20px 0" }} />
 
   if (!injuries.length) return (
-    <div className="empty-state" style={{ paddingTop: 40 }}>
-      <div className="empty-state__icon">🏥</div>
-      <h3>{t("player.noInjuries")}</h3>
-    </div>
+    <EmptyState icon="🏥" title={t("player.noInjuries")} />
   )
 
   function daysBetween(start, end) {

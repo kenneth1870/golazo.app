@@ -4,7 +4,8 @@ require "rails/test_help"
 
 module ActiveSupport
   class TestCase
-    parallelize(workers: :number_of_processors)
+    workers = ENV.key?("PARALLEL_WORKERS") ? ENV["PARALLEL_WORKERS"].to_i : :number_of_processors
+    parallelize(workers: workers)
 
     fixtures :all
   end

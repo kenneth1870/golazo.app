@@ -1,12 +1,16 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague } from "../../i18n/leagueNames"
 import MatchRow from "../../components/MatchRow"
+import EmptyState from "../../components/EmptyState"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useAppFocus } from "../../hooks/useAppFocus"
 import { useVisiblePolling } from "../../hooks/useVisiblePolling"
-import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
+import { usePullRefresh } from "../../hooks/usePullRefresh"
+import PullIndicator from "../../components/PullIndicator"
+import OfflineBanner from "../../components/OfflineBanner"
+import { fetchJson } from "../../utils/fetchJson"
 import { navigateToMatch } from "../../utils/matchDetailCache"
 
 function toMatchRowMatch(m) {
@@ -63,26 +67,34 @@ export default function LivePage() {
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(false)
+  const [stale, setStale]     = useState(false)
   const [lastUpdated, setLastUpdated] = useState(null)
   const navigate = useNavigate()
   const onMatchClick = (match) => navigateToMatch(navigate, match)
 
-  const load = () =>
-    fetchWithTimeout("/api/v1/live_scores")
-      .then(r => r.json())
-      .then(data => {
+  const load = useCallback((isRefresh = false) => {
+    if (!isRefresh) setLoading(true)
+    setError(false)
+    setStale(false)
+    return fetchJson("/api/v1/live_scores")
+      .then(({ data, ok, offline, stale: isStale }) => {
+        setStale(isStale)
+        if (!ok || offline || !Array.isArray(data)) {
+          setError(true)
+          return
+        }
         setMatches(data)
         setLastUpdated(new Date())
-        setError(false)
       })
       .catch(() => setError(true))
-
-  useEffect(() => {
-    load().finally(() => setLoading(false))
+      .finally(() => { if (!isRefresh) setLoading(false) })
   }, [])
 
-  // Refresh every 30s, but only while the tab is visible.
-  useVisiblePolling(load, 30000)
+  const ptr = usePullRefresh(() => load(true), { disabled: loading && !matches.length })
+
+  useEffect(() => { load() }, [load])
+
+  useVisiblePolling(() => load(true), 30000)
 
   const byLeague = matches.reduce((acc, m) => {
     const key = m.league_id ?? m.league_name ?? "other"
@@ -95,7 +107,7 @@ export default function LivePage() {
     (a.leagueName ?? "").localeCompare(b.leagueName ?? "")
   )
 
-  if (loading) {
+  if (loading && matches.length === 0) {
     return (
       <div className="site-section">
         <div className="container">
@@ -105,41 +117,54 @@ export default function LivePage() {
     )
   }
 
-  if (error) {
+  if (error && matches.length === 0) {
     return (
       <div className="site-section">
         <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
-          <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
-          <button className="btn btn-primary btn-sm" onClick={() => { setError(false); setLoading(true); load().finally(() => setLoading(false)) }}>
-            {t("error.retry")}
-          </button>
+          <EmptyState
+            icon="⚠️"
+            title={t("error.failedToLoad")}
+            action={
+              <button className="btn btn-primary btn-sm" onClick={() => load()}>
+                {t("error.retry")}
+              </button>
+            }
+          />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="site-section">
+    <div
+      className="site-section"
+      onTouchStart={ptr.onTouchStart}
+      onTouchMove={ptr.onTouchMove}
+      onTouchEnd={ptr.onTouchEnd}
+    >
+      {ptr.showIndicator && <PullIndicator distance={ptr.pullDist} refreshing={ptr.refreshing} />}
       <div className="container">
+        <OfflineBanner stale={stale} onRetry={() => load(true)} />
+
         <div className="d-flex align-items-center justify-content-between mb-4">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span className="live-dot" />
             <span style={{ fontWeight: 600 }}>{t("live.matchesLive", { count: matches.length })}</span>
           </div>
           {lastUpdated && (
-            <span style={{ fontSize: "0.72rem", color: "#666" }}>
+            <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>
               {t("live.updated")} {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-              <span style={{ marginLeft: 6, color: "#555" }}>· {t("live.refreshes")}</span>
+              <span style={{ marginLeft: 6 }}>· {t("live.refreshes")}</span>
             </span>
           )}
         </div>
 
         {groups.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state__pitch" /><div className="empty-state__icon">⚽</div>
-            <h3>{clubsPrimary ? t("scores.noLiveClubs") : t("scores.noLive")}</h3>
-            <p>{t("live.checkBack")}</p>
-          </div>
+          <EmptyState
+            icon="⚽"
+            title={clubsPrimary ? t("scores.noLiveClubs") : t("scores.noLive")}
+            description={t("live.checkBack")}
+          />
         ) : (
           groups.map((g, i) => (
             <CompetitionBlock

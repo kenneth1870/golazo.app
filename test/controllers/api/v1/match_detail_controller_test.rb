@@ -25,7 +25,7 @@ class Api::V1::MatchDetailControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show resolves db-prefixed id from local match" do
-    comp  = Competition.create!(name: "World Cup 2026", code: "WC")
+    comp  = Competition.create!(name: "Test Cup", code: "ZMD")
     home  = Team.create!(name: "Brazil", code: "BRA", flag_url: "https://example.com/bra.png")
     away  = Team.create!(name: "France", code: "FRA", flag_url: "https://example.com/fra.png")
     match = Match.create!(

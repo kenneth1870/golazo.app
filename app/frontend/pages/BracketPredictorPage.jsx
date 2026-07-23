@@ -3,7 +3,9 @@ import { useSearchParams } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam } from "../i18n/teamNames"
 import { usePageMeta } from "../hooks/usePageMeta"
-import { fetchWithTimeout } from "../utils/fetchWithTimeout"
+import { useFetchJson } from "../hooks/useFetchJson"
+import OfflineBanner from "../components/OfflineBanner"
+import EmptyState from "../components/EmptyState"
 
 // Official FIFA 2026 R32 pairings — mirrors WorldCupKnockout::R32_SLOTS.
 // Slot codes use predictor format: A1 = 1st in group A, A2 = 2nd, T1–T8 = 3rd-placed.
@@ -137,32 +139,26 @@ export default function BracketPredictorPage() {
   const { t } = useTranslation()
   usePageMeta(t("bracket.title"), t("bracket.metaDesc"))
   const [searchParams, setSearchParams] = useSearchParams()
-  const [standings, setStandings] = useState({})
-  const [standingsLoading, setStandingsLoading] = useState(true)
-  const [standingsError, setStandingsError] = useState(false)
   const [picks, setPicks] = useState(() => decodePicks(searchParams.get("p")))
   const [copied, setCopied] = useState(false)
   const [champion, setChampion] = useState(null)
 
-  const loadStandings = useCallback(() => {
-    setStandingsLoading(true)
-    setStandingsError(false)
-    fetchWithTimeout("/api/v1/standings?competition=WC")
-      .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then(setStandings)
-      .catch(() => setStandingsError(true))
-      .finally(() => setStandingsLoading(false))
-  }, [])
+  const {
+    data: standings,
+    loading: standingsLoading,
+    error: standingsError,
+    stale: standingsStale,
+    reload: loadStandings,
+  } = useFetchJson("/api/v1/standings?competition=WC")
 
-  useEffect(() => { loadStandings() }, [loadStandings])
-
-  const rounds = buildBracket(standings, picks)
+  const standingsData = standings || {}
+  const rounds = buildBracket(standingsData, picks)
 
   // Track champion
   useEffect(() => {
     const final = rounds[4]?.[0]
     setChampion(final?.winner || null)
-  }, [picks, standings])
+  }, [picks, standingsData]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePick = useCallback((matchId, side) => {
     setPicks(prev => {
@@ -221,6 +217,8 @@ export default function BracketPredictorPage() {
   return (
     <div className="site-section">
       <div className="container">
+        <OfflineBanner stale={standingsStale} onRetry={loadStandings} />
+
         {/* Header */}
         <div style={{ marginBottom: 24, display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <div>
@@ -267,10 +265,13 @@ export default function BracketPredictorPage() {
 
         {/* Bracket */}
         {standingsError ? (
-          <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.tryAgain")}</p>
-            <button className="btn btn-primary btn-sm" onClick={loadStandings}>{t("error.retry")}</button>
-          </div>
+          <EmptyState
+            icon="⚠️"
+            title={t("error.tryAgain")}
+            action={
+              <button className="btn btn-primary btn-sm" onClick={loadStandings}>{t("error.retry")}</button>
+            }
+          />
         ) : standingsLoading ? (
           <div style={{ display: "flex", gap: 12, overflow: "hidden" }}>
             {[16, 8, 4, 2, 1].map((count, ri) => (

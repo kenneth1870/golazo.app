@@ -27,7 +27,7 @@ function BestThirdsTable({ rows }) {
 export default function GroupStagePage() {
   const { t } = useTranslation()
   usePageMeta(t("nav.groupStage"), "FIFA World Cup 2026 group stage matches — all 72 group fixtures across 12 groups.")
-  const { matches, loading } = useMatches("all", { competition: "WC" })
+  const { matches, loading, stale: matchesStale, refetch: refetchMatches } = useMatches("all", { competition: "WC" })
   const navigate = useNavigate()
   const [standings, setStandings] = useState({})
   const [bestThirds, setBestThirds] = useState([])
@@ -77,7 +77,7 @@ export default function GroupStagePage() {
   return (
     <div className="site-section">
       <div className="container">
-        <OfflineBanner stale={stale} onRetry={loadStandings} />
+        <OfflineBanner stale={stale || matchesStale} onRetry={() => { loadStandings(); refetchMatches() }} />
         {standingsError && (
           <div style={{ textAlign: "center", padding: "16px", marginBottom: 20, background: "var(--surface)", borderRadius: 8 }}>
             <p style={{ color: "var(--muted)", fontSize: "0.82rem", marginBottom: 12 }}>{t("error.failedToLoad")}</p>

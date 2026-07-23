@@ -2054,3 +2054,12 @@ body.light-mode .consent-banner__message{color:var(--muted)}
 body.light-mode .install-prompt{background:var(--surface);border-color:var(--border);color:var(--text)}
 body.light-mode .onboarding-modal{background:var(--surface);color:var(--text)}
 body.light-mode .ios-install-panel{background:var(--surface)!important;color:var(--text)}
+body.light-mode .bk2-card{background:var(--surface);border-color:var(--border)}
+body.light-mode .bk2-card--empty{background:var(--surface2)}
+body.light-mode .bk2-row{color:var(--text)}
+body.light-mode .bk2-code{color:var(--text)}
+body.light-mode .bk2-code--tbd{color:var(--muted)}
+body.light-mode .pred-team{background:var(--surface2);border-color:var(--border);color:var(--text)}
+body.light-mode .pred-team--picked{background:rgba(238,30,70,.1);border-color:rgba(238,30,70,.35)}
+body.light-mode .pred-match{background:var(--surface);border-color:var(--border)}
+body.light-mode .pred-match__vs{color:var(--muted)}

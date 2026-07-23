@@ -2,7 +2,7 @@ require "test_helper"
 
 class Api::V1::ScorePredictionsControllerTest < ActionDispatch::IntegrationTest
   test "create rejects prediction when match already started" do
-    comp  = Competition.create!(name: "World Cup 2026", code: "WC")
+    comp  = Competition.create!(name: "Test Cup", code: "ZSP")
     home  = Team.create!(name: "Japan", code: "JPN", flag_url: "https://example.com/jpn.png")
     away  = Team.create!(name: "Spain", code: "ESP", flag_url: "https://example.com/esp.png")
     match = Match.create!(
@@ -34,7 +34,7 @@ class Api::V1::ScorePredictionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create stores prediction for upcoming match" do
-    comp  = Competition.create!(name: "World Cup 2026", code: "WC")
+    comp  = Competition.create!(name: "Test Cup", code: "ZSP")
     home  = Team.create!(name: "Mexico", code: "MEX", flag_url: "https://example.com/mex.png")
     away  = Team.create!(name: "Canada", code: "CAN", flag_url: "https://example.com/can.png")
     match = Match.create!(

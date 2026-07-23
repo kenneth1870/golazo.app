@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { resolveTeamLogo } from "../i18n/teamNames"
 import { clubTeamPath } from "../utils/clubTeamPath"
+import { fetchJson } from "../utils/fetchJson"
 
 function FlagOrInitials({ name, flagUrl, size = 24 }) {
   const [err, setErr] = useState(false)
@@ -86,9 +87,14 @@ export default function SearchBar({ onClose, returnFocusRef }) {
     setLoading(true)
     timerRef.current = setTimeout(() => {
       abortRef.current = new AbortController()
-      fetch(`/api/v1/search?q=${encodeURIComponent(query)}`, { signal: abortRef.current.signal })
-        .then(r => r.json())
-        .then(data => { setResults(data); setFocused(0) })
+      fetchJson(`/api/v1/search?q=${encodeURIComponent(query)}`, {
+        soft: true,
+        signal: abortRef.current.signal,
+      })
+        .then(({ data, ok, offline }) => {
+          setResults(ok && !offline && Array.isArray(data) ? data : [])
+          setFocused(0)
+        })
         .catch(err => { if (err.name !== "AbortError") setResults([]) })
         .finally(() => setLoading(false))
     }, 280)

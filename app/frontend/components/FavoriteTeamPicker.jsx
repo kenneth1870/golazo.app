@@ -6,6 +6,7 @@ import { usePushNotifications } from "../hooks/usePushNotifications"
 import { resolveTeamLogo, translateTeam } from "../i18n/teamNames"
 import { loadClubTeams } from "../utils/loadClubTeams"
 import { syncTeamFollowToPush } from "../utils/favoritePush"
+import { fetchJson } from "../utils/fetchJson"
 
 function FlagOrInitial({ src, name }) {
   const [err, setErr] = useState(false)
@@ -41,9 +42,10 @@ export default function FavoriteTeamPicker() {
       return
     }
 
-    fetch("/api/v1/teams?wc=1")
-      .then(r => r.json())
-      .then(data => setTeams(Array.isArray(data) ? data : []))
+    fetchJson("/api/v1/teams?wc=1", { soft: true })
+      .then(({ data, ok, offline }) => {
+        setTeams(ok && !offline && Array.isArray(data) ? data : [])
+      })
       .catch(() => {})
   }, [clubsPrimary])
 

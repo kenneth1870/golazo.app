@@ -1,12 +1,13 @@
 import { NAV_LEAGUES } from "../components/ClubCompetitionChips"
+import { fetchJson } from "./fetchJson"
 
 const CLUB_LEAGUE_CODES = NAV_LEAGUES.map(l => l.path.split("/").pop())
 
 export function loadClubTeams(setTeams) {
   Promise.all(
     CLUB_LEAGUE_CODES.map(code =>
-      fetch(`/api/v1/standings?competition=${code}`)
-        .then(r => r.ok ? r.json().then(data => ({ code, data })) : { code, data: {} })
+      fetchJson(`/api/v1/standings?competition=${code}`, { soft: true })
+        .then(({ data, ok, offline }) => ({ code, data: ok && !offline ? data : {} }))
     )
   )
     .then(pairs => {

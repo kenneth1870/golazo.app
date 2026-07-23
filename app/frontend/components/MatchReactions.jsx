@@ -10,6 +10,7 @@
  */
 import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
+import { fetchJson } from "../utils/fetchJson"
 
 const EMOJIS = [
   { emoji: "⚽", labelKey: "reactions.goal" },
@@ -48,8 +49,8 @@ export default function MatchReactions({ matchId, compact = false }) {
 
   const fetchCounts = useCallback(async () => {
     try {
-      const res = await fetch(`/api/v1/matches/${matchId}/reactions`)
-      if (res.ok) setCounts(await res.json())
+      const { data, ok, offline } = await fetchJson(`/api/v1/matches/${matchId}/reactions`, { soft: true })
+      if (ok && !offline && data) setCounts(data)
     } catch {}
     finally { setLoading(false) }
   }, [matchId])
@@ -66,12 +67,13 @@ export default function MatchReactions({ matchId, compact = false }) {
     setTimeout(() => setBouncing(null), 400)
 
     try {
-      const res = await fetch(`/api/v1/matches/${matchId}/reactions`, {
+      const { data, ok, offline } = await fetchJson(`/api/v1/matches/${matchId}/reactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emoji }),
+        soft: true,
       })
-      if (res.ok) setCounts(await res.json())
+      if (ok && !offline && data) setCounts(data)
     } catch {}
   }
 

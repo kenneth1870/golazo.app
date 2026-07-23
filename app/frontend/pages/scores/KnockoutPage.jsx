@@ -1,5 +1,6 @@
 import { useMatches, patchLiveScore } from "../../hooks/useMatches"
 import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
+import OfflineBanner from "../../components/OfflineBanner"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../../hooks/usePageMeta"
@@ -281,7 +282,7 @@ export default function KnockoutPage() {
     "FIFA World Cup 2026 knockout bracket — Round of 32, Round of 16, Quarter Finals, Semi Finals and Final."
   )
 
-  const { matches, loading, refetch } = useMatches("knockout", { competition: "WC" })
+  const { matches, loading, refetch, stale } = useMatches("knockout", { competition: "WC" })
   const navigate = useNavigate()
   const onMatchClick = (match) => navigateToMatch(navigate, match)
 
@@ -376,6 +377,7 @@ export default function KnockoutPage() {
   return (
     <div className="site-section">
       <div className="container">
+        <OfflineBanner stale={stale} onRetry={refetch} />
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
           <Link to="/predictor" style={{
             background: "rgba(238,30,70,.12)", border: "1px solid rgba(238,30,70,.3)",

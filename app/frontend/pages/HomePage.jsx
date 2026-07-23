@@ -20,6 +20,8 @@ import ClubCompetitionChips from "../components/ClubCompetitionChips"
 import EmptyState from "../components/EmptyState"
 import { fetchJson } from "../utils/fetchJson"
 import OfflineBanner from "../components/OfflineBanner"
+import PullIndicator from "../components/PullIndicator"
+import { usePullRefresh } from "../hooks/usePullRefresh"
 import { useStandingsChannel } from "../hooks/useStandingsChannel"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
 
@@ -497,7 +499,7 @@ export default function HomePage() {
     "url": "https://golazo.app/world-cup-2026"
   })
 
-  const { matches: upcomingMatches } = useMatches("upcoming", { competition: clubsPrimary ? undefined : "WC" })
+  const { matches: upcomingMatches, refetch: refetchUpcoming, stale: matchesStale } = useMatches("upcoming", { competition: clubsPrimary ? undefined : "WC" })
   useLiveScoresChannel(patchLiveScore)
   const { todayMatches, upcomingPreview, loading: todayLoading, todayError, todayStale, retryToday } = useTodayFeed(!clubsPrimary)
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -529,12 +531,26 @@ export default function HomePage() {
     new Date(m.kickoff_at).toLocaleDateString("en-CA", { timeZone: tz }) !== todayStr
   )
 
+  const refreshAll = useCallback(() => {
+    retryToday()
+    retryNews()
+    refetchUpcoming()
+  }, [retryToday, retryNews, refetchUpcoming])
+
+  const ptr = usePullRefresh(refreshAll, { disabled: todayLoading && newsLoading })
+
   return (
+    <div
+      onTouchStart={ptr.onTouchStart}
+      onTouchMove={ptr.onTouchMove}
+      onTouchEnd={ptr.onTouchEnd}
+    >
+      {ptr.showIndicator && <PullIndicator distance={ptr.pullDist} refreshing={ptr.refreshing} />}
     <>
       <Hero nextMatch={nextMatch} liveCount={liveCount} clubsPrimary={clubsPrimary} />
 
       <div className="container">
-        <OfflineBanner stale={todayStale || newsStale} onRetry={() => { retryToday(); retryNews() }} />
+        <OfflineBanner stale={todayStale || newsStale || matchesStale} onRetry={refreshAll} />
       </div>
 
       {clubsPrimary && (
@@ -914,5 +930,6 @@ export default function HomePage() {
       </div>}
 
     </>
+    </div>
   )
 }
