@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useAppFocus } from "../hooks/useAppFocus"
+import { fetchJson } from "../utils/fetchJson"
+import OfflineBanner from "../components/OfflineBanner"
 import { translateLeague, translateCountry } from "../i18n/leagueNames"
 
 const TYPE_ORDER = { world_cup: 0, latam: 1, cup: 2, league: 3 }
@@ -74,6 +76,7 @@ export default function AllLeaguesPage() {
   const [liveMatches, setLiveMatches]   = useState([])
   const [loading, setLoading]           = useState(true)
   const [error, setError]               = useState(false)
+  const [stale, setStale]               = useState(false)
   const navigate = useNavigate()
 
   const loadLive = () => {
@@ -87,13 +90,17 @@ export default function AllLeaguesPage() {
   const load = () => {
     setLoading(true)
     setError(false)
-    // Fetch competitions and live scores independently so a live-scores
-    // failure doesn't block the competitions list from rendering.
-    Promise.all([
-      fetch("/api/v1/competitions").then(r => r.json()),
-      loadLive(),                      // runs concurrently, handles own errors
-    ])
-      .then(([comps]) => { if (Array.isArray(comps)) setCompetitions(comps) })
+    setStale(false)
+    fetchJson("/api/v1/competitions")
+      .then(({ data: comps, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline) {
+          setError(true)
+          return
+        }
+        if (Array.isArray(comps)) setCompetitions(comps)
+        loadLive()
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }
@@ -172,6 +179,7 @@ export default function AllLeaguesPage() {
 
   return (
     <>
+      <OfflineBanner stale={stale} onRetry={load} />
       <div className="page-hero" style={{ backgroundImage: "url('/images/hero_5.jpg')" }}>
         <div className="container">
           <h1 className="page-hero__title">{t("leagues.title")}</h1>

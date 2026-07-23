@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, memo } from "react"
 import { formatKickoff, formatMatchDate } from "../hooks/useLocalTime"
 import { useTranslation } from "react-i18next"
 import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
@@ -21,7 +21,7 @@ function FlagOrPlaceholder({ src, name }) {
   )
 }
 
-export default function MatchRow({
+function MatchRow({
   match,
   onClick,
   showDate = false,
@@ -132,3 +132,5 @@ export default function MatchRow({
     </div>
   )
 }
+
+export default memo(MatchRow)

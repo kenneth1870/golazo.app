@@ -1,17 +1,19 @@
 import { useTranslation } from "react-i18next"
 import { dismissOverlayProps } from "../utils/dismissOverlay"
+import { useFocusTrap } from "../hooks/useFocusTrap"
 import ThemeToggle from "./ThemeToggle"
 import LanguageSwitcher from "./LanguageSwitcher"
 import { NotifToggle } from "./Navbar"
 
 export default function PreferencesSheet({ open, onClose }) {
   const { t } = useTranslation()
+  const panelRef = useFocusTrap(open)
   if (!open) return null
 
   return (
     <div className="prefs-sheet" role="dialog" aria-modal="true" aria-label={t("preferences.title")}>
       <div className="prefs-sheet__backdrop" {...dismissOverlayProps(onClose)} />
-      <div className="prefs-sheet__panel">
+      <div ref={panelRef} className="prefs-sheet__panel">
         <div className="prefs-sheet__handle" aria-hidden="true" />
         <div className="prefs-sheet__header">
           <h2 className="prefs-sheet__title">{t("preferences.title")}</h2>

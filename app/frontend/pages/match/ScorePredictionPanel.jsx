@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
 import { storageGet, storageSet } from "../../utils/safeStorage"
 
 const DEVICE_KEY = "golazo_device_id"
@@ -136,23 +137,28 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
       </div>
 
       {myPred ? (
-        /* Already predicted — show their guess */
-        <div style={{
-          background: "var(--surface2)", borderRadius: 10, padding: "16px 20px",
-          display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
-        }}>
-          <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>{homeName}</span>
-          <span style={{
-            fontWeight: 900, fontSize: "1.4rem", color: "var(--text)",
-            background: "var(--surface)", padding: "4px 16px", borderRadius: 6,
-            letterSpacing: 2,
+        <>
+          <div style={{
+            background: "var(--surface2)", borderRadius: 10, padding: "16px 20px",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
           }}>
-            {myPred.home_guess} – {myPred.away_guess}
-          </span>
-          <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>{awayName}</span>
-        </div>
+            <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>{homeName}</span>
+            <span style={{
+              fontWeight: 900, fontSize: "1.4rem", color: "var(--text)",
+              background: "var(--surface)", padding: "4px 16px", borderRadius: 6,
+              letterSpacing: 2,
+            }}>
+              {myPred.home_guess} – {myPred.away_guess}
+            </span>
+            <span style={{ fontSize: "0.82rem", color: "var(--muted)" }}>{awayName}</span>
+          </div>
+          <p style={{ textAlign: "center", marginTop: 12, marginBottom: 0 }}>
+            <Link to="/leaderboard" style={{ color: "var(--accent)", fontSize: "0.78rem", fontWeight: 700 }}>
+              {t("prediction.viewLeaderboard", "See the leaderboard →")}
+            </Link>
+          </p>
+        </>
       ) : canPredict ? (
-        /* Input form */
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 12 }}>
             <span style={{ fontSize: "0.82rem", color: "var(--muted)", flex: 1, textAlign: "right" }}>{homeName}</span>

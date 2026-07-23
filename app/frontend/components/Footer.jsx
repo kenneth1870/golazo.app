@@ -70,6 +70,8 @@ export default function Footer() {
               <li><Link to="/mundial/schedule">{t("nav.schedule")}</Link></li>
               <li><Link to="/mundial/venues">{t("nav.venues")}</Link></li>
               <li><Link to="/mundial/scorers">{t("nav.topScorers")}</Link></li>
+              <li><Link to="/predictor">{t("nav.predictor")}</Link></li>
+              <li><Link to="/leaderboard">{t("nav.leaderboard")}</Link></li>
               <li><Link to="/news">{t("nav.news")}</Link></li>
             </ul>
           </div>

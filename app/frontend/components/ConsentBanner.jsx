@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { consentDecided, setConsent } from "../utils/consent"
+import { useFocusTrap } from "../hooks/useFocusTrap"
 
 export default function ConsentBanner() {
   const { t } = useTranslation()
   const [visible, setVisible] = useState(false)
+  const panelRef = useFocusTrap(visible)
 
   useEffect(() => {
     if (consentDecided()) return
@@ -25,7 +27,7 @@ export default function ConsentBanner() {
   }
 
   return (
-    <div className="consent-banner" role="dialog" aria-label={t("consent.title")}>
+    <div ref={panelRef} className="consent-banner" role="dialog" aria-modal="true" aria-label={t("consent.title")}>
       <div>
         <div className="consent-banner__title">{t("consent.title")}</div>
         <div className="consent-banner__message">{t("consent.message")}</div>

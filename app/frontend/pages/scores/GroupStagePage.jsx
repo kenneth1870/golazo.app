@@ -7,7 +7,9 @@ import { usePageMeta } from "../../hooks/usePageMeta"
 import { navigateToMatch, navIdFor } from "../../utils/matchDetailCache"
 import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 import { useVisiblePolling } from "../../hooks/useVisiblePolling"
-import { GroupStandingsCompact } from "../../components/GroupStandingsView"
+import { GroupStandingsCompact, BestThirdsView } from "../../components/GroupStandingsView"
+import OfflineBanner from "../../components/OfflineBanner"
+import { fetchJson } from "../../utils/fetchJson"
 
 const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
@@ -18,59 +20,8 @@ function MiniStandingsTable({ group, rows }) {
 }
 
 function BestThirdsTable({ rows }) {
-  const { t } = useTranslation()
-  if (!rows?.length) return null
-  return (
-    <div>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem", minWidth: 300 }}>
-        <thead>
-          <tr style={{ color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>
-            <th style={{ textAlign: "center", padding: "3px 6px", fontWeight: 600, width: 28 }}>#</th>
-            <th style={{ textAlign: "left",   padding: "3px 6px", fontWeight: 600 }}>{t("table.team")}</th>
-            <th style={{ textAlign: "center", padding: "3px 4px", fontWeight: 600 }}>{t("table.played")}</th>
-            <th style={{ textAlign: "center", padding: "3px 4px", fontWeight: 600 }}>{t("table.won")}</th>
-            <th style={{ textAlign: "center", padding: "3px 4px", fontWeight: 600 }}>{t("table.drawn")}</th>
-            <th style={{ textAlign: "center", padding: "3px 4px", fontWeight: 600 }}>{t("table.lost")}</th>
-            <th style={{ textAlign: "center", padding: "3px 4px", fontWeight: 600 }}>{t("table.gd")}</th>
-            <th style={{ textAlign: "center", padding: "3px 4px", fontWeight: 700, color: "var(--accent)" }}>{t("table.points")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((s, i) => {
-            const advances = i < 8
-            const bg = advances
-              ? `rgba(16,185,129,${i < 4 ? 0.1 : 0.05})`
-              : "rgba(239,68,68,0.04)"
-            return (
-              <tr key={s.team?.id ?? i} style={{ borderTop: "1px solid var(--border)", background: bg }}>
-                <td style={{ textAlign: "center", padding: "5px 6px", color: "var(--muted)", fontWeight: 600 }}>
-                  {s.rank}
-                </td>
-                <td style={{ padding: "5px 6px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    {advances && <span style={{ width: 3, height: 14, borderRadius: 2, background: "#10b981", display: "inline-block", flexShrink: 0 }} />}
-                    {s.team?.flag_url && <img src={s.team.flag_url} alt={s.team.name} loading="eager" style={{ width: 16, height: 11, objectFit: "cover", borderRadius: 1, flexShrink: 0 }} onError={e => (e.target.style.display = "none")} />}
-                    <Link to={`/teams/${s.team?.id}`} style={{ color: "var(--text)", textDecoration: "none", fontWeight: advances ? 700 : 400 }}>
-                      {s.team?.code || s.team?.name}
-                    </Link>
-                    {s.team?.group && <span style={{ fontSize: "0.65rem", color: "var(--muted)", marginLeft: 2 }}>({s.team.group})</span>}
-                  </div>
-                </td>
-                <td style={{ textAlign: "center", padding: "5px 4px", color: "var(--muted)" }}>{s.played ?? 0}</td>
-                <td style={{ textAlign: "center", padding: "5px 4px", color: "var(--muted)" }}>{s.won ?? 0}</td>
-                <td style={{ textAlign: "center", padding: "5px 4px", color: "var(--muted)" }}>{s.drawn ?? 0}</td>
-                <td style={{ textAlign: "center", padding: "5px 4px", color: "var(--muted)" }}>{s.lost ?? 0}</td>
-                <td style={{ textAlign: "center", padding: "5px 4px", color: "var(--muted)" }}>
-                  {(s.goal_diff ?? 0) > 0 ? `+${s.goal_diff}` : s.goal_diff ?? 0}
-                </td>
-                <td style={{ textAlign: "center", padding: "5px 4px", fontWeight: 800, color: "var(--text)" }}>{s.points ?? 0}</td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
-  )
+  const { t, i18n } = useTranslation()
+  return <BestThirdsView rows={rows} t={t} lang={i18n.language} />
 }
 
 export default function GroupStagePage() {
@@ -81,6 +32,7 @@ export default function GroupStagePage() {
   const [standings, setStandings] = useState({})
   const [bestThirds, setBestThirds] = useState([])
   const [standingsError, setStandingsError] = useState(false)
+  const [stale, setStale]                   = useState(false)
 
   const hasLiveOrRecent = matches.some(m =>
     m.status === "live" ||
@@ -89,15 +41,18 @@ export default function GroupStagePage() {
 
   const loadStandings = useCallback(() => {
     setStandingsError(false)
-    return fetch("/api/v1/standings?competition=WC", { cache: "no-store" })
-      .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then(setStandings)
+    setStale(false)
+    return fetchJson("/api/v1/standings?competition=WC")
+      .then(({ data, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline) throw new Error()
+        setStandings(data || {})
+      })
       .catch(() => { setStandings({}); setStandingsError(true) })
   }, [])
 
-  const loadBestThirds = () => fetch("/api/v1/standings/best_thirds", { cache: "no-store" })
-    .then(r => r.json())
-    .then(setBestThirds)
+  const loadBestThirds = () => fetchJson("/api/v1/standings/best_thirds")
+    .then(({ data, ok }) => { if (ok && Array.isArray(data)) setBestThirds(data) })
     .catch(() => {})
 
   useEffect(() => {
@@ -122,6 +77,7 @@ export default function GroupStagePage() {
   return (
     <div className="site-section">
       <div className="container">
+        <OfflineBanner stale={stale} onRetry={loadStandings} />
         {standingsError && (
           <div style={{ textAlign: "center", padding: "16px", marginBottom: 20, background: "var(--surface)", borderRadius: 8 }}>
             <p style={{ color: "var(--muted)", fontSize: "0.82rem", marginBottom: 12 }}>{t("error.failedToLoad")}</p>

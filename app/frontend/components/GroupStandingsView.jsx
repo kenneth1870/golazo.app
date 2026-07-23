@@ -171,3 +171,76 @@ export function GroupStandingsCompact({ rows, t, lang }) {
     </>
   )
 }
+
+/** Best third-place teams — cards on mobile, table on md+. */
+export function BestThirdsView({ rows, t, lang }) {
+  if (!rows?.length) return null
+  return (
+    <>
+      <div className="d-none d-md-block">
+        <table className="table custom-table mb-0" style={{ fontSize: "0.75rem" }}>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>{t("table.team")}</th>
+              <th>{t("table.played")}</th>
+              <th>{t("table.won")}</th>
+              <th>{t("table.drawn")}</th>
+              <th>{t("table.lost")}</th>
+              <th>{t("table.gd")}</th>
+              <th>{t("table.points")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((s, i) => {
+              const advances = i < 8
+              const gd = s.goal_diff ?? 0
+              return (
+                <tr key={s.team?.id ?? i} style={{ background: advances ? "rgba(16,185,129,.06)" : "rgba(239,68,68,.04)" }}>
+                  <td>{s.rank}</td>
+                  <td>
+                    <Link to={`/teams/${s.team?.id}`}>{translateTeam(s.team?.name, lang)}</Link>
+                    {s.team?.group && <span style={{ fontSize: ".65rem", color: "var(--muted)", marginLeft: 4 }}>({s.team.group})</span>}
+                  </td>
+                  <td>{s.played ?? 0}</td>
+                  <td>{s.won ?? 0}</td>
+                  <td>{s.drawn ?? 0}</td>
+                  <td>{s.lost ?? 0}</td>
+                  <td>{gd > 0 ? `+${gd}` : gd}</td>
+                  <td><strong>{s.points ?? 0}</strong></td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div className="standings-cards d-md-none">
+        {rows.map((s, i) => {
+          const advances = i < 8
+          const gd = s.goal_diff ?? 0
+          return (
+            <div
+              key={s.team?.id ?? i}
+              className="standings-card"
+              style={{ borderLeft: `3px solid ${advances ? "#10b981" : "#ef4444"}` }}
+            >
+              <div className="standings-card__rank">{s.rank ?? i + 1}</div>
+              <div className="standings-card__team">
+                <Link to={`/teams/${s.team?.id}`} style={{ color: "inherit", textDecoration: "none", fontWeight: 700 }}>
+                  {translateTeam(s.team?.name, lang)}
+                </Link>
+                {s.team?.group && <span style={{ fontSize: ".65rem", color: "var(--muted)", marginLeft: 4 }}>({s.team.group})</span>}
+              </div>
+              <div className="standings-card__stats">
+                <span className="standings-card__pts"><strong>{s.points ?? 0}</strong> {t("table.points")}</span>
+                <span className="standings-card__gd" style={{ color: gd >= 0 ? "#10b981" : "#ef4444" }}>
+                  {gd > 0 ? `+${gd}` : gd} {t("table.gd")}
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </>
+  )
+}

@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 import { usePageMeta } from "../../hooks/usePageMeta"
+import { fetchJson } from "../../utils/fetchJson"
+import OfflineBanner from "../../components/OfflineBanner"
 import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 import { translateTeam } from "../../i18n/teamNames"
 
@@ -141,6 +143,7 @@ export default function ScorersPage() {
   const [data, setData]           = useState({})
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState(false)
+  const [stale, setStale]         = useState(false)
 
   const TABS = TAB_DEFS.map(d => ({ ...d, label: t(d.labelKey), unit: t(d.unitKey) }))
   const tab = TABS.find(tab => tab.key === activeTab)
@@ -149,10 +152,12 @@ export default function ScorersPage() {
     const t = TABS.find(t => t.key === tabKey)
     if (!t) return
     setError(false)
+    setStale(false)
     setLoading(true)
-    fetch(t.endpoint)
-      .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then(json => {
+    fetchJson(t.endpoint)
+      .then(({ data: json, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline) throw new Error()
         const rows = Array.isArray(json) ? json : []
         cache[tabKey] = { rows, ts: Date.now() }
         setData(prev => ({ ...prev, [tabKey]: rows }))
@@ -185,27 +190,23 @@ export default function ScorersPage() {
     <div className="site-section">
       <div className="container">
 
-        {/* Sub-tab bar */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 20, overflowX: "auto", paddingBottom: 2 }} role="tablist">
+        <div className="tab-bar__inner tab-bar__inner--scroll" role="tablist" style={{ marginBottom: 20 }}>
           {TABS.map(tb => (
             <button
               key={tb.key}
+              type="button"
               role="tab"
               aria-selected={activeTab === tb.key}
               aria-controls="scorers-tab-panel"
+              className={`tab-link${activeTab === tb.key ? " tab-link--active" : ""}`}
               onClick={() => setActiveTab(tb.key)}
-              style={{
-                padding: "7px 14px", borderRadius: 20, border: "1px solid var(--border)",
-                background: activeTab === tb.key ? "var(--accent)" : "var(--surface2)",
-                color: activeTab === tb.key ? "#fff" : "var(--muted)",
-                fontWeight: 700, fontSize: "0.78rem", cursor: "pointer", whiteSpace: "nowrap",
-                display: "flex", alignItems: "center", gap: 6,
-              }}
             >
               {tb.icon} {tb.label}
             </button>
           ))}
         </div>
+
+        <OfflineBanner stale={stale} onRetry={() => fetchTab(activeTab)} />
 
         <div id="scorers-tab-panel" role="tabpanel">
         {loading && (

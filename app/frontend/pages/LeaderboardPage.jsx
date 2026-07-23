@@ -3,6 +3,9 @@ import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useAppFocus } from "../hooks/useAppFocus"
+import { fetchJson } from "../utils/fetchJson"
+import OfflineBanner from "../components/OfflineBanner"
+import EmptyState from "../components/EmptyState"
 import { storageGet, storageSet } from "../utils/safeStorage"
 
 const DEVICE_KEY = "golazo_device_id"
@@ -30,6 +33,7 @@ export default function LeaderboardPage() {
   const [editingName, setEditingName] = useState(false)
   const [nameInput, setNameInput]     = useState("")
   const [nameSaved, setNameSaved]     = useState(false)
+  const [stale, setStale]             = useState(false)
   const deviceId = getDeviceId()
 
   function copyShareLink() {
@@ -61,9 +65,11 @@ export default function LeaderboardPage() {
   const loadLeaderboard = useCallback(() => {
     setLoading(true)
     setError(false)
-    fetch("/api/v1/score_predictions/leaderboard")
-      .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then(data => {
+    setStale(false)
+    fetchJson("/api/v1/score_predictions/leaderboard")
+      .then(({ data, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline || !Array.isArray(data)) throw new Error()
         setRows(data)
         const myIdx = data.findIndex(r => r.device_id === deviceId)
         if (myIdx > 24) setVisible(myIdx + 5)
@@ -86,6 +92,7 @@ export default function LeaderboardPage() {
   return (
     <div className="site-section">
       <div className="container" style={{ maxWidth: 600 }}>
+        <OfflineBanner stale={stale} onRetry={loadLeaderboard} />
         <div className="match-back-bar" style={{ marginBottom: 0 }}>
           <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back")}</button>
         </div>
@@ -219,11 +226,7 @@ export default function LeaderboardPage() {
             <button className="btn btn-primary btn-sm" onClick={loadLeaderboard}>{t("error.retry")}</button>
           </div>
         ) : rows.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state__icon">🎯</div>
-            <h3>{t("leaderboard.noPredictions")}</h3>
-            <p>{t("leaderboard.beFirst")}</p>
-          </div>
+          <EmptyState icon="🎯" title={t("leaderboard.noPredictions")} description={t("leaderboard.beFirst")} />
         ) : (
           <>
           <div className="widget-next-match">

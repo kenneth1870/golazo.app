@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
@@ -6,6 +6,8 @@ import { useAppFocus } from "../hooks/useAppFocus"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { navigateToMatch } from "../utils/matchDetailCache"
 import { clubTeamPath } from "../utils/clubTeamPath"
+import { fetchJson } from "../utils/fetchJson"
+import OfflineBanner from "../components/OfflineBanner"
 import { useFavorites } from "../hooks/useFavorites"
 import { getTeamColor } from "../utils/teamColors"
 
@@ -35,6 +37,7 @@ export default function TeamShowPage() {
   const [squad, setSquad]           = useState(null)
   const [squadLoading, setSquadLoading] = useState(false)
   const [activeTab, setActiveTab]   = useState("overview")
+  const [stale, setStale]           = useState(false)
 
   const { clubs_primary: clubsPrimary } = useAppFocus()
   const displayName = team ? (translateTeam(team.name, i18n.language) ?? team.name) : null
@@ -48,18 +51,21 @@ export default function TeamShowPage() {
   )
 
   useEffect(() => {
-    fetch(`/api/v1/teams/${id}`)
-      .then(r => r.json())
-      .then(data => {
+    setLoading(true)
+    setStale(false)
+    fetchJson(`/api/v1/teams/${id}`)
+      .then(({ data, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline || !data) return
         if (clubsPrimary && data.redirect) {
           navigate(data.redirect, { replace: true })
           return
         }
         setTeam(data)
         if (data.group && !clubsPrimary) {
-          fetch("/api/v1/standings?competition=WC")
-            .then(r => r.json())
-            .then(grouped => {
+          fetchJson("/api/v1/standings?competition=WC")
+            .then(({ data: grouped, ok: sOk, offline: sOff }) => {
+              if (!sOk || sOff || !grouped) return
               const rows = grouped[data.group] || []
               setStanding(rows.find(s => s.team?.name === data.name) || null)
             })
@@ -69,6 +75,19 @@ export default function TeamShowPage() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [id, clubsPrimary, navigate])
+
+  const reloadTeam = useCallback(() => {
+    setLoading(true)
+    setStale(false)
+    fetchJson(`/api/v1/teams/${id}`)
+      .then(({ data, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline || !data) return
+        setTeam(data)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [id])
 
   // Lazy-load squad when user taps the Squad tab
   useEffect(() => {
@@ -194,6 +213,7 @@ export default function TeamShowPage() {
 
   return (
     <div>
+      <OfflineBanner stale={stale} onRetry={reloadTeam} />
       {/* Back bar */}
       <div className="match-back-bar">
         <div className="container" style={{ maxWidth: 700, display: "flex", alignItems: "center", justifyContent: "space-between" }}>

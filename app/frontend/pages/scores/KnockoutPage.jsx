@@ -386,6 +386,11 @@ export default function KnockoutPage() {
       </div>
 
       {/* Full-width bracket — desktop: auto-scale; mobile: horizontal scroll */}
+      <div className="container d-md-none">
+        <div className="bracket-scroll-hint" aria-hidden="true">
+          <span>←</span> {t("bracket.swipeHint")} <span>→</span>
+        </div>
+      </div>
       <div ref={containerRef} style={{ width: "100%", padding: "0 8px", boxSizing: "border-box" }}>
         {/* scroll shell only on mobile */}
         <div style={isMobile ? { overflowX: "auto", WebkitOverflowScrolling: "touch", paddingBottom: 16 } : {}}>

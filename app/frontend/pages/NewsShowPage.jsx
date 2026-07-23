@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
 import { useAppFocus } from "../hooks/useAppFocus"
+import { fetchJson } from "../utils/fetchJson"
+import OfflineBanner from "../components/OfflineBanner"
 
 const SOURCE_COLORS = {
   "BBC Sport": "#b80000",
@@ -36,27 +38,31 @@ export default function NewsShowPage() {
   const [loading, setLoading]   = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [copied, setCopied]     = useState(false)
+  const [stale, setStale]       = useState(false)
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true)
     setArticle(null)
     setContent(null)
+    setNotFound(false)
+    setStale(false)
 
-    // Fetch article meta and full content in parallel, passing lang so the
-    // controller searches the correct locale's feed (e.g. Spanish articles
-    // have IDs derived from Spanish URLs — not found in the English feed)
     Promise.all([
-      fetch(`/api/v1/news/${id}?lang=${lang}`).then(r => r.ok ? r.json() : null),
-      fetch(`/api/v1/news/${id}/content?lang=${lang}`).then(r => r.ok ? r.json() : null),
+      fetchJson(`/api/v1/news/${id}?lang=${lang}`),
+      fetchJson(`/api/v1/news/${id}/content?lang=${lang}`),
     ])
-      .then(([meta, body]) => {
+      .then(([metaRes, bodyRes]) => {
+        setStale(metaRes.stale || bodyRes.stale)
+        const meta = metaRes.ok && metaRes.data ? metaRes.data : null
         if (!meta) { setNotFound(true); return }
         setArticle(meta)
-        setContent(body)
+        setContent(bodyRes.ok ? bodyRes.data : null)
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
   }, [id, lang])
+
+  useEffect(() => { load() }, [load])
 
   // Hooks must be unconditional — pass null when article not loaded yet
   const heroImageEarly = content?.hero_image || article?.image
@@ -121,6 +127,7 @@ export default function NewsShowPage() {
 
   return (
     <article style={{ paddingBottom: 60 }}>
+      <OfflineBanner stale={stale} onRetry={load} />
 
       {/* Back bar */}
       <div className="match-back-bar">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, memo } from "react"
+import { useState, useEffect, useRef, useCallback, memo, lazy, Suspense } from "react"
 
 // Decorative logo/flag image — returns null on error instead of hiding with display:none
 // which leaves a DOM hole and can break flex layouts.
@@ -15,7 +15,7 @@ import { useExternalMatchChannel } from "../hooks/useExternalMatchChannel"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
 import { useLiveMinute, useGoalNotifications } from "./match/useMatchLive"
-import ScorePredictionPanel from "./match/ScorePredictionPanel"
+const ScorePredictionPanel = lazy(() => import("./match/ScorePredictionPanel"))
 import MatchReactions from "../components/MatchReactions"
 import { useReminders } from "../hooks/useReminders"
 import { usePushNotifications } from "../hooks/usePushNotifications"
@@ -2405,7 +2405,9 @@ export default function MatchShowPage() {
         {tab === "preview" && (
           <>
             {hasFixture && isNS && !clubsPrimary && (
-              <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} kickoffAt={kickoffAt} t={t} />
+              <Suspense fallback={null}>
+                <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} kickoffAt={kickoffAt} t={t} />
+              </Suspense>
             )}
             <MatchPreviewPanel
               fixtureId={id}
@@ -2423,7 +2425,11 @@ export default function MatchShowPage() {
               <MatchReactions matchId={id} compact={["1H","HT","2H","ET","BT","P"].includes(statusShort)} />
             </div>
 
-            {hasFixture && !clubsPrimary && <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} kickoffAt={kickoffAt} t={t} />}
+            {hasFixture && !clubsPrimary && (
+              <Suspense fallback={null}>
+                <ScorePredictionPanel matchId={id} homeName={homeName} awayName={awayName} matchStatus={statusShort} kickoffAt={kickoffAt} t={t} />
+              </Suspense>
+            )}
 
             {/* AI Match Summary — shown after full time */}
             {["FT","AET","PEN"].includes(statusShort) && (

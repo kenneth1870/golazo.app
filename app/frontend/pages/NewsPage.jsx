@@ -5,6 +5,8 @@ import { useAppFocus } from "../hooks/useAppFocus"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { fetchJson } from "../utils/fetchJson"
 import OfflineBanner from "../components/OfflineBanner"
+import PullIndicator from "../components/PullIndicator"
+import { usePullRefresh } from "../hooks/usePullRefresh"
 import { useFavorites } from "../hooks/useFavorites"
 import { translateTeam } from "../i18n/teamNames"
 
@@ -214,6 +216,8 @@ export default function NewsPage() {
     setReloadToken(n => n + 1)
   }, [])
 
+  const ptr = usePullRefresh(retryNews, { disabled: loading })
+
   const uniqueArticles = useMemo(() => dedupeArticles(articles), [articles])
 
   const allLabel = t("news.all", "All")
@@ -258,7 +262,13 @@ export default function NewsPage() {
   }, [hasMore, tab, source])
 
   return (
-    <div className="news-page">
+    <div
+      className="news-page"
+      onTouchStart={ptr.onTouchStart}
+      onTouchMove={ptr.onTouchMove}
+      onTouchEnd={ptr.onTouchEnd}
+    >
+      {ptr.showIndicator && <PullIndicator distance={ptr.pullDist} refreshing={ptr.refreshing} />}
       <div className="page-hero" style={{ backgroundImage: "url('/images/hero_6.jpg')" }}>
         <div className="container">
           <h1 className="page-hero__title">{t("news.title")}</h1>

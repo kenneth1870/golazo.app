@@ -195,6 +195,7 @@ export default function LeagueDetailPage() {
   const [standingsLoading, setStandingsLoading] = useState(false)
   const [standingsError, setStandingsError]     = useState(false)
   const [stale, setStale]                       = useState(false)
+  const [matchesStale, setMatchesStale]         = useState(false)
 
   const favKey = competition?.code ?? code
   const heroRef = useRef({ code: null, style: null })
@@ -236,9 +237,13 @@ export default function LeagueDetailPage() {
     if (!code || tab === "standings") return Promise.resolve()
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     const url = `/api/v1/competitions/${code}/fixtures?tab=${tabParam || "today"}&tz=${encodeURIComponent(tz)}`
-    return fetch(url)
-      .then(r => r.ok ? r.json() : [])
-      .then(data => setMatches(Array.isArray(data) ? data : []))
+    setMatchesStale(false)
+    return fetchJson(url)
+      .then(({ data, stale: isStale, offline, ok }) => {
+        setMatchesStale(isStale)
+        if (!ok || offline) { setMatches([]); return }
+        setMatches(Array.isArray(data) ? data : [])
+      })
       .catch(() => setMatches([]))
   }, [code, tab, tabParam])
 
@@ -434,7 +439,10 @@ export default function LeagueDetailPage() {
 
       <div className="site-section" id="league-tab-panel" role="tabpanel">
         <div className="container">
-          <OfflineBanner stale={stale} onRetry={loadStandings} />
+          <OfflineBanner
+            stale={tab === "standings" ? stale : matchesStale}
+            onRetry={tab === "standings" ? loadStandings : loadMatches}
+          />
           {tab === "standings" ? (
             standingsLoading ? (
               <div className="loading-shimmer" style={{ height: 240, borderRadius: 12 }} />

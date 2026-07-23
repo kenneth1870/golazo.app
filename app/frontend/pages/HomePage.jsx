@@ -18,6 +18,8 @@ import MatchRow from "../components/MatchRow"
 import FavoriteTeamPicker from "../components/FavoriteTeamPicker"
 import ClubCompetitionChips from "../components/ClubCompetitionChips"
 import EmptyState from "../components/EmptyState"
+import { fetchJson } from "../utils/fetchJson"
+import OfflineBanner from "../components/OfflineBanner"
 import { useStandingsChannel } from "../hooks/useStandingsChannel"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
 
@@ -26,17 +28,22 @@ function useTodayFeed(wcOnly = false) {
   const [upcomingPreview, setUpcomingPreview] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [stale, setStale] = useState(false)
   const loadRef = useRef(null)
 
   const load = useCallback((isRetry = false) => {
     if (document.hidden) return
     setError(false)
+    setStale(false)
     if (isRetry) setLoading(true)
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-    fetch(`/api/v1/today?tz=${encodeURIComponent(tz)}`)
-      .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then(all => {
-        if (!Array.isArray(all)) return
+    fetchJson(`/api/v1/today?tz=${encodeURIComponent(tz)}`)
+      .then(({ data: all, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline || !Array.isArray(all)) {
+          setError(true)
+          return
+        }
         const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: tz })
         const filtered = wcOnly ? all.filter(m => m.competition?.code === "WC") : all
         setUpcomingPreview(filtered.filter(m => m.upcoming_preview))
@@ -85,7 +92,7 @@ function useTodayFeed(wcOnly = false) {
   useLiveScoresChannel(applyLiveScore)
   useStandingsChannel(load)
 
-  return { todayMatches, upcomingPreview, loading, todayError: error, retryToday: () => load(true) }
+  return { todayMatches, upcomingPreview, loading, todayError: error, todayStale: stale, retryToday: () => load(true) }
 }
 
 const FEATURED_NEWS_LEAGUES = [ "CRC", "LMX", "PL", "LAL" ]
@@ -94,23 +101,31 @@ function useLatestNews(leagueCodes = []) {
   const { i18n } = useTranslation()
   const [news, setNews]     = useState([])
   const [error, setError]   = useState(false)
+  const [stale, setStale]   = useState(false)
   const [loading, setLoading] = useState(true)
 
   const load = () => {
     setError(false)
+    setStale(false)
     setLoading(true)
     const leaguesParam = leagueCodes.length
       ? `&leagues=${encodeURIComponent(leagueCodes.join(","))}`
       : ""
-    fetch(`/api/v1/news?lang=${i18n.language}${leaguesParam}`)
-      .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then(data => setNews(data.slice(0, 3)))
+    fetchJson(`/api/v1/news?lang=${i18n.language}${leaguesParam}`)
+      .then(({ data, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline || !Array.isArray(data)) {
+          setError(true)
+          return
+        }
+        setNews(data.slice(0, 3))
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }
 
   useEffect(() => { load() }, [i18n.language, leagueCodes.join(",")]) // eslint-disable-line react-hooks/exhaustive-deps
-  return { news, newsError: error, newsLoading: loading, retryNews: load }
+  return { news, newsError: error, newsStale: stale, newsLoading: loading, retryNews: load }
 }
 
 function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = false }) {
@@ -484,7 +499,7 @@ export default function HomePage() {
 
   const { matches: upcomingMatches } = useMatches("upcoming", { competition: clubsPrimary ? undefined : "WC" })
   useLiveScoresChannel(patchLiveScore)
-  const { todayMatches, upcomingPreview, loading: todayLoading, todayError, retryToday } = useTodayFeed(!clubsPrimary)
+  const { todayMatches, upcomingPreview, loading: todayLoading, todayError, todayStale, retryToday } = useTodayFeed(!clubsPrimary)
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
   const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: tz })
   const clubFixtures = clubsPrimary
@@ -497,7 +512,7 @@ export default function HomePage() {
     ? [...new Set(favoriteCompetitions.map(f => f.code).filter(Boolean))]
     : []
   const newsLeagueFilter = newsLeagues.length > 0 ? newsLeagues : (clubsPrimary ? FEATURED_NEWS_LEAGUES : [])
-  const { news: latestNews, newsError, newsLoading, retryNews } = useLatestNews(newsLeagueFilter)
+  const { news: latestNews, newsError, newsStale, newsLoading, retryNews } = useLatestNews(newsLeagueFilter)
 
   // Prefer the next match with a known future kickoff; only fall back to TBD
   // if nothing has a time yet (avoids showing a placeholder knockout slot in hero).
@@ -517,6 +532,10 @@ export default function HomePage() {
   return (
     <>
       <Hero nextMatch={nextMatch} liveCount={liveCount} clubsPrimary={clubsPrimary} />
+
+      <div className="container">
+        <OfflineBanner stale={todayStale || newsStale} onRetry={() => { retryToday(); retryNews() }} />
+      </div>
 
       {clubsPrimary && (
         <div className="container" style={{ paddingTop: 24, paddingBottom: 0 }}>
@@ -676,6 +695,8 @@ export default function HomePage() {
                       { label: `📅 ${t("nav.schedule")}`, path: "/mundial/schedule" },
                       { label: `📊 ${t("nav.groups")}`, path: "/scores/groups" },
                       { label: `🏆 ${t("nav.knockout")}`, path: "/scores/knockout" },
+                      { label: `🎯 ${t("nav.predictor", "Predictor")}`, path: "/predictor" },
+                      { label: `📊 ${t("nav.leaderboard", "Leaderboard")}`, path: "/leaderboard" },
                       { label: `⭐ ${t("mundial.tabGoals")}`, path: "/mundial/scorers" },
                       { label: `🏟️ ${t("nav.venues")}`, path: "/mundial/venues" },
                       { label: `👥 ${t("nav.teams")}`, path: "/mundial/teams" },
@@ -719,6 +740,8 @@ export default function HomePage() {
                     { label: `📅 ${t("nav.schedule")}`,  path: "/mundial/schedule" },
                     { label: `📊 ${t("nav.groups")}`,    path: "/scores/groups" },
                     { label: `🏆 ${t("nav.knockout")}`,  path: "/scores/knockout" },
+                    { label: `🎯 ${t("nav.predictor", "Predictor")}`, path: "/predictor" },
+                    { label: `📊 ${t("nav.leaderboard", "Leaderboard")}`, path: "/leaderboard" },
                     { label: `⭐ ${t("mundial.tabGoals")}`,   path: "/mundial/scorers" },
                     { label: `🏟️ ${t("nav.venues")}`,   path: "/mundial/venues" },
                     { label: `👥 ${t("nav.teams")}`,     path: "/mundial/teams" },

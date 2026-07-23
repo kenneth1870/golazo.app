@@ -11,6 +11,9 @@ import { usePageMeta } from "../hooks/usePageMeta"
 import { navigateToMatch, navIdFor } from "../utils/matchDetailCache"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
 import { leagueHeroStyle } from "../utils/leagueHeroImages"
+import { fetchJson } from "../utils/fetchJson"
+import OfflineBanner from "../components/OfflineBanner"
+import EmptyState from "../components/EmptyState"
 
 export default function ClubTeamPage() {
   const { t, i18n } = useTranslation()
@@ -20,6 +23,7 @@ export default function ClubTeamPage() {
   const { addTeams, subscribed } = usePushNotifications()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [stale, setStale] = useState(false)
   const [tab, setTab] = useState("upcoming")
   const heroKey = `${code}|${slug}`
   const heroRef = useRef({ key: null, style: null })
@@ -37,16 +41,22 @@ export default function ClubTeamPage() {
     { image: resolveTeamLogo(team?.name, team?.flag_url) || undefined }
   )
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!code || !slug) return
     setLoading(true)
+    setStale(false)
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-    fetch(`/api/v1/club_teams/${code}/${slug}?tz=${encodeURIComponent(tz)}`)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(setData)
+    fetchJson(`/api/v1/club_teams/${code}/${slug}?tz=${encodeURIComponent(tz)}`)
+      .then(({ data: d, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline) { setData(null); return }
+        setData(d)
+      })
       .catch(() => setData(null))
       .finally(() => setLoading(false))
   }, [code, slug])
+
+  useEffect(() => { load() }, [load])
 
   const applyLiveScore = useCallback((d) => {
     setData(prev => {
@@ -77,11 +87,12 @@ export default function ClubTeamPage() {
   if (!data?.team) {
     return (
       <div className="site-section container">
-        <div className="empty-state">
-          <div className="empty-state__icon">⚽</div>
-          <h3>{t("error.notFound", "Not found")}</h3>
-          <Link to={`/leagues/${code}`} className="btn btn-primary btn-sm">{t("nav.leagues")}</Link>
-        </div>
+        <OfflineBanner stale={stale} onRetry={load} />
+        <EmptyState
+          icon="⚽"
+          title={t("team.notFound", "Team not found")}
+          action={<Link to={`/leagues/${code}`} className="btn btn-primary btn-sm">{t("nav.back")}</Link>}
+        />
       </div>
     )
   }
@@ -188,14 +199,20 @@ export default function ClubTeamPage() {
 
       <div className="tab-bar sticky-tabs">
         <div className="container">
-          <div className="tab-bar__inner tab-bar__inner--scroll">
+          <div className="tab-bar__inner tab-bar__inner--scroll" role="tablist" aria-label={displayName}>
             <button
+              role="tab"
+              aria-selected={tab === "upcoming"}
+              id="club-tab-upcoming"
               className={`tab-link${tab === "upcoming" ? " tab-link--active" : ""}`}
               onClick={() => setTab("upcoming")}
             >
               {t("nav.fixtures")}
             </button>
             <button
+              role="tab"
+              aria-selected={tab === "recent"}
+              id="club-tab-recent"
               className={`tab-link${tab === "recent" ? " tab-link--active" : ""}`}
               onClick={() => setTab("recent")}
             >
@@ -205,21 +222,24 @@ export default function ClubTeamPage() {
         </div>
       </div>
 
-      <div className="site-section">
+      <div className="site-section" role="tabpanel" aria-labelledby={tab === "upcoming" ? "club-tab-upcoming" : "club-tab-recent"}>
         <div className="container">
+          <OfflineBanner stale={stale} onRetry={load} />
           {matches.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state__icon">📅</div>
-              <h3>{tab === "upcoming" ? t("home.noUpcoming") : t("scores.noResults")}</h3>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginTop: 12 }}>
-                <Link to={`/leagues/${code}`} className="btn btn-primary btn-sm">{t("nav.standings")}</Link>
-                {!following && (
-                  <button className="btn btn-outline-light btn-sm" onClick={handleFollowToggle}>
-                    {t("team.follow")} {displayName}
-                  </button>
-                )}
-              </div>
-            </div>
+            <EmptyState
+              icon="📅"
+              title={tab === "upcoming" ? t("home.noUpcoming") : t("scores.noResults")}
+              action={
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+                  <Link to={`/leagues/${code}`} className="btn btn-primary btn-sm">{t("nav.standings")}</Link>
+                  {!following && (
+                    <button className="btn btn-outline-light btn-sm" onClick={handleFollowToggle}>
+                      {t("team.follow")} {displayName}
+                    </button>
+                  )}
+                </div>
+              }
+            />
           ) : (
             <div className="match-list">
               {matches.map(m => (

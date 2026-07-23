@@ -32,7 +32,9 @@
     "search": "Buscar",
     "back": "Volver",
     "allGroups": "Todos los Grupos",
-    "mundialShort": "Mundial"
+    "mundialShort": "Mundial",
+    "predictor": "Predictor",
+    "leaderboard": "Ranking"
   },
   "hero": {
     "title": "Marcadores en Vivo, Estadísticas y Noticias",
@@ -562,7 +564,8 @@
     "wrong": "✗ Incorrecto",
     "errorMatchStarted": "Predicciones cerradas — el partido ya ha comenzado",
     "errorMatchGraded": "Esta predicción ya no se puede modificar",
-    "errorDeviceRequired": "No se pudo guardar la predicción — recarga la página e inténtalo de nuevo"
+    "errorDeviceRequired": "No se pudo guardar la predicción — recarga la página e inténtalo de nuevo",
+    "viewLeaderboard": "Ver la clasificación →"
   },
   "bracket": {
     "title": "Predictor de Cuadro",

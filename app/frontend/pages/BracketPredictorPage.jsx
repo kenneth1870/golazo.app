@@ -284,6 +284,10 @@ export default function BracketPredictorPage() {
           </div>
         ) : null}
         {!standingsError && (
+        <>
+        <div className="bracket-scroll-hint d-md-none" aria-hidden="true">
+          <span>←</span> {t("bracket.swipeHint")} <span>→</span>
+        </div>
         <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16, display: standingsLoading ? "none" : undefined }}>
           <div style={{ display: "flex", gap: 12, minWidth: "max-content", paddingBottom: 16 }} role="list" aria-label={t("bracket.title")}>
             {rounds.map((round, ri) => (
@@ -314,6 +318,7 @@ export default function BracketPredictorPage() {
             ))}
           </div>
         </div>
+        </>
         )}
 
         {!standingsError && (

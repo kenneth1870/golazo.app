@@ -22,12 +22,12 @@ import { useAppFocus } from "./hooks/useAppFocus"
 import { isIosSafari, isStandalone } from "./utils/platform"
 import { storageGet } from "./utils/safeStorage"
 
-// Critical path — loaded eagerly (always needed on first paint)
-import HomePage   from "./pages/HomePage"
+// Critical path — loaded eagerly (scores shell + today tab)
 import ScoresPage from "./pages/ScoresPage"
 import TodayPage  from "./pages/scores/TodayPage"
 
-// Secondary — lazy-loaded so they don't bloat the initial bundle
+// Home + secondary routes — lazy-loaded to keep initial bundle smaller
+const HomePage        = lazy(() => import("./pages/HomePage"))
 const ResultsPage     = lazy(() => import("./pages/scores/ResultsPage"))
 const GroupStagePage  = lazy(() => import("./pages/scores/GroupStagePage"))
 const KnockoutPage    = lazy(() => import("./pages/scores/KnockoutPage"))
@@ -173,13 +173,14 @@ export default function App() {
 
   return (
     <div className="site-wrap">
+      <a href="#main-content" className="skip-link">Skip to content</a>
       <ScrollToTop />
       <Navbar />
       {showOnboarding && <OnboardingModal onDismiss={dismissOnboarding} />}
       <PushPrompt favoriteTeamName={favTeamName} paused={showOnboarding} />
       <IosInstallGuide paused={showOnboarding} />
 
-      <main key={location.pathname} className="main-content page-transition">
+      <main id="main-content" key={location.pathname} className="main-content page-transition">
         <ErrorBoundary>
           <Suspense fallback={<PageLoader />}>
             <Routes>

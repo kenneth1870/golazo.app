@@ -3,8 +3,12 @@ import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague, translateCountry } from "../../i18n/leagueNames"
 import MatchRow from "../../components/MatchRow"
+import EmptyState from "../../components/EmptyState"
+import OfflineBanner from "../../components/OfflineBanner"
+import PullIndicator from "../../components/PullIndicator"
 import { navigateToMatch } from "../../utils/matchDetailCache"
-import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
+import { fetchJson } from "../../utils/fetchJson"
+import { usePullRefresh } from "../../hooks/usePullRefresh"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useAppFocus } from "../../hooks/useAppFocus"
 
@@ -91,16 +95,23 @@ export default function ResultsPage() {
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState(false)
+  const [stale, setStale]     = useState(false)
   const navigate = useNavigate()
   const onMatchClick = (match) => navigateToMatch(navigate, match)
 
-  const load = useCallback((d) => {
-    setLoading(true)
+  const load = useCallback((d, isRefresh = false) => {
+    if (!isRefresh) setLoading(true)
     setError(false)
+    setStale(false)
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-    fetchWithTimeout(`/api/v1/results?date=${toISO(d)}&tz=${encodeURIComponent(tz)}`)
-      .then(r => r.json())
-      .then(data => {
+    return fetchJson(`/api/v1/results?date=${toISO(d)}&tz=${encodeURIComponent(tz)}`)
+      .then(({ data, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline || !Array.isArray(data)) {
+          setError(true)
+          setMatches([])
+          return
+        }
         const finished = data.map(normalizeMatch).filter(m => m.status === "finished")
         setMatches(finished)
       })
@@ -109,6 +120,8 @@ export default function ResultsPage() {
   }, [])
 
   useEffect(() => { load(date) }, [date, load])
+
+  const ptr = usePullRefresh(() => load(date, true), { disabled: loading })
 
   useEffect(() => {
     function onKey(e) {
@@ -135,15 +148,24 @@ export default function ResultsPage() {
   const label = useResultLabel(date, t)
 
   return (
-    <div className="site-section">
+    <div
+      className="site-section"
+      onTouchStart={ptr.onTouchStart}
+      onTouchMove={ptr.onTouchMove}
+      onTouchEnd={ptr.onTouchEnd}
+    >
+      {ptr.showIndicator && <PullIndicator distance={ptr.pullDist} refreshing={ptr.refreshing} />}
       <div className="container">
+        <OfflineBanner stale={stale} onRetry={() => load(date, true)} />
+
         <div className="d-flex align-items-center justify-content-between mb-4" style={{ gap: 12 }}>
-          <button className="btn-nav" onClick={() => setDate(d => addDays(d, -1))}>←</button>
+          <button type="button" className="btn-nav" onClick={() => setDate(d => addDays(d, -1))}>←</button>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontWeight: 600, fontSize: "1rem" }}>{label}</div>
             <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{toISO(date)}</div>
           </div>
           <button
+            type="button"
             className="btn-nav"
             onClick={() => setDate(d => addDays(d, 1))}
             disabled={toISO(date) >= today}
@@ -154,16 +176,22 @@ export default function ResultsPage() {
         {loading ? (
           <div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} />
         ) : error ? (
-          <div style={{ textAlign: "center", paddingTop: 60 }}>
-            <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
-            <button className="btn btn-primary btn-sm" onClick={() => load(date)}>{t("error.retry")}</button>
-          </div>
+          <EmptyState
+            icon="📡"
+            title={t("error.failedToLoad")}
+            action={<button type="button" className="btn btn-primary btn-sm" onClick={() => load(date)}>{t("error.retry")}</button>}
+          />
         ) : groups.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state__icon">🏆</div>
-            <h3>{t("time.noMatches", { date: label })}</h3>
-            <p>{t("time.tryDifferent")}</p>
-          </div>
+          <EmptyState
+            icon="🏆"
+            title={t("time.noMatches", { date: label })}
+            description={t("time.tryDifferent")}
+            action={
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setDate(d => addDays(d, -1))}>
+                ← {t("time.yesterday")}
+              </button>
+            }
+          />
         ) : (
           groups.map((g, i) => (
             <CompetitionBlock key={g[0]?.competition?.id ?? i} matches={g} onMatchClick={onMatchClick} />

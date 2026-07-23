@@ -4,6 +4,7 @@ import { storageGet, storageSet } from "../utils/safeStorage"
 import { isIosSafari, isStandalone } from "../utils/platform"
 import { dismissOverlayProps } from "../utils/dismissOverlay"
 import { claimPrompt, releasePrompt } from "../utils/promptCoordinator"
+import { useFocusTrap } from "../hooks/useFocusTrap"
 
 const SHOWN_KEY = "golazo_ios_guide_shown"
 const DEFERRED_KEY = "golazo_ios_guide_deferred_at"
@@ -52,6 +53,7 @@ const STEPS = [
 export default function IosInstallGuide({ paused = false }) {
   const { t } = useTranslation()
   const [visible, setVisible] = useState(false)
+  const panelRef = useFocusTrap(visible)
 
   useEffect(() => {
     if (paused) return
@@ -102,6 +104,7 @@ export default function IosInstallGuide({ paused = false }) {
       }}
     >
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label={t("ios.title", "Get the full experience")}

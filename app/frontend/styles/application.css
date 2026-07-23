@@ -2013,3 +2013,39 @@ body.light-mode .date-strip__day--today{background:rgba(238,30,70,.1)}
 }
 .prefs-sheet__row--block{flex-direction:column;align-items:stretch}
 .prefs-sheet__label{font-size:.82rem;font-weight:700;color:var(--muted)}
+
+/* ─── Skip link (a11y) ───────────────────────────────── */
+.skip-link{
+  position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:10000;
+  background:var(--accent);color:#fff;padding:10px 16px;border-radius:8px;font-weight:700;text-decoration:none;
+}
+.skip-link:focus{
+  position:fixed;left:16px;top:16px;width:auto;height:auto;overflow:visible;
+  outline:2px solid #fff;outline-offset:2px;
+}
+
+/* ─── Pull-to-refresh indicator ──────────────────────── */
+.pull-indicator{
+  display:flex;align-items:flex-end;justify-content:center;overflow:hidden;
+  transition:height .15s ease;
+}
+.pull-indicator__spinner{
+  display:flex;align-items:center;justify-content:center;padding-bottom:6px;
+  animation:spin 1s linear infinite;
+}
+.pull-indicator__spinner:not(:has(svg)){animation:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ─── Light mode: bracket / standings / offline / prefs ─ */
+body.light-mode .bracket-slot__tbd{color:var(--muted)}
+body.light-mode .bracket-slot--empty{border-color:var(--border)}
+body.light-mode .bracket-slot__qmark{color:rgba(0,0,0,.12)}
+body.light-mode .bracket-slot__qmark-icon{background:rgba(0,0,0,.05);color:rgba(0,0,0,.25)}
+body.light-mode .bracket-slot__name--winner{color:var(--text)}
+body.light-mode .bracket-slot__score{color:var(--text)}
+body.light-mode .bracket-preview__label{color:var(--muted)}
+body.light-mode .standings-card{background:var(--surface);border-color:var(--border)}
+body.light-mode .offline-banner{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.35);color:#92400e}
+body.light-mode .offline-banner__retry{color:#92400e;border-color:rgba(245,158,11,.45)}
+body.light-mode .prefs-sheet__backdrop{background:rgba(0,0,0,.35)}
+body.light-mode .pull-indicator__spinner svg{stroke:var(--accent)}

@@ -32,7 +32,9 @@
     "search": "Search",
     "back": "Back",
     "allGroups": "All Groups",
-    "mundialShort": "Mundial"
+    "mundialShort": "Mundial",
+    "predictor": "Predictor",
+    "leaderboard": "Leaderboard"
   },
   "hero": {
     "title": "Live Football Scores, Stats & News",
@@ -561,7 +563,8 @@
     "wrong": "✗ Wrong",
     "errorMatchStarted": "Predictions locked — match has already started",
     "errorMatchGraded": "This prediction can no longer be changed",
-    "errorDeviceRequired": "Unable to save prediction — please refresh and try again"
+    "errorDeviceRequired": "Unable to save prediction — please refresh and try again",
+    "viewLeaderboard": "See the leaderboard →"
   },
   "bracket": {
     "title": "Bracket Predictor",
