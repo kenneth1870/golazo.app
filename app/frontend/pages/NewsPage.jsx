@@ -3,7 +3,6 @@ import { Link, useSearchParams } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { usePageMeta } from "../hooks/usePageMeta"
-import { fetchWithTimeout } from "../utils/fetchWithTimeout"
 import { useFavorites } from "../hooks/useFavorites"
 import { translateTeam } from "../i18n/teamNames"
 
@@ -32,6 +31,23 @@ function CompactList({ articles, mobileOnly = false }) {
     <div className={`nc-compact-grid news-feed-grid${mobileOnly ? " news-feed-grid--mobile" : ""}`}>
       {articles.map((article, i) => (
         <CompactCard key={article.id ?? `${article.link ?? "article"}-${i}`} article={article} />
+      ))}
+    </div>
+  )
+}
+
+function NewsLoadingSkeleton() {
+  return (
+    <div className="nc-compact-grid news-feed-grid news-loading" aria-hidden="true">
+      {[0, 1, 2, 3].map(i => (
+        <div key={i} className="nc-compact news-loading__row">
+          <div className="loading-shimmer news-loading__thumb" />
+          <div className="news-loading__body">
+            <div className="loading-shimmer news-loading__line news-loading__line--sm" />
+            <div className="loading-shimmer news-loading__line news-loading__line--title" />
+            <div className="loading-shimmer news-loading__line news-loading__line--summary" />
+          </div>
+        </div>
       ))}
     </div>
   )
@@ -132,6 +148,7 @@ export default function NewsPage() {
   const [loading, setLoading]         = useState(true)
   const [error, setError]             = useState(false)
   const [source, setSource]           = useState(null)   // null = "All"
+  const [reloadToken, setReloadToken]   = useState(0)
   const tab = searchParams.get("tab") === "foryou" ? "foryou" : "all"
 
   const selectTab = useCallback((key) => {
@@ -153,20 +170,46 @@ export default function NewsPage() {
     return [...new Set(favoriteCompetitions.map(f => f.code).filter(Boolean))].sort().join(",")
   }, [clubsPrimary, favoriteCompetitions])
 
-  const loadNews = useCallback(() => {
+  useEffect(() => {
+    let cancelled = false
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 12_000)
+
     setLoading(true)
     setError(false)
+
+    const leaguesParam = leagueCodesKey ? `&leagues=${encodeURIComponent(leagueCodesKey)}` : ""
+    fetch(`/api/v1/news?lang=${i18n.language}${leaguesParam}`, { signal: controller.signal })
+      .then(r => {
+        if (!r.ok) throw new Error(String(r.status))
+        return r.json()
+      })
+      .then(data => {
+        if (!cancelled) setArticles(Array.isArray(data) ? data : [])
+      })
+      .catch(err => {
+        if (!cancelled && err.name !== "AbortError") {
+          setError(true)
+          setArticles([])
+        }
+      })
+      .finally(() => {
+        clearTimeout(timer)
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+      controller.abort()
+      clearTimeout(timer)
+    }
+  }, [i18n.language, leagueCodesKey, reloadToken])
+
+  const retryNews = useCallback(() => {
     setSource(null)
     setVisibleCount(PAGE_SIZE)
-    const leaguesParam = leagueCodesKey ? `&leagues=${encodeURIComponent(leagueCodesKey)}` : ""
-    fetchWithTimeout(`/api/v1/news?lang=${i18n.language}${leaguesParam}`)
-      .then(r => r.json())
-      .then(setArticles)
-      .catch(() => { setError(true); setArticles([]) })
-      .finally(() => setLoading(false))
-  }, [i18n.language, leagueCodesKey])
-
-  useEffect(() => { loadNews() }, [loadNews])
+    setReloadToken(n => n + 1)
+  }, [])
 
   const uniqueArticles = useMemo(() => dedupeArticles(articles), [articles])
 
@@ -288,22 +331,11 @@ export default function NewsPage() {
       <div className="site-section" id="news-tab-panel" role="tabpanel">
         <div className="container">
           {loading ? (
-            <div className="news-editorial-grid">
-              <div className="loading-shimmer" style={{ borderRadius: 14, aspectRatio: "16/7" }} />
-              <div className="nc-medium-row">
-                <div className="loading-shimmer" style={{ borderRadius: 12, aspectRatio: "4/3" }} />
-                <div className="loading-shimmer" style={{ borderRadius: 12, aspectRatio: "4/3" }} />
-              </div>
-              <div className="nc-compact-grid">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="loading-shimmer" style={{ borderRadius: 12, height: 200 }} />
-                ))}
-              </div>
-            </div>
+            <NewsLoadingSkeleton />
           ) : error ? (
             <div style={{ textAlign: "center", paddingTop: 60 }}>
               <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoadNews")}</p>
-              <button className="btn btn-primary btn-sm" onClick={loadNews}>{t("error.retry")}</button>
+              <button className="btn btn-primary btn-sm" onClick={retryNews}>{t("error.retry")}</button>
             </div>
           ) : visible.length === 0 && tab !== "foryou" ? (
             <div className="empty-state">
