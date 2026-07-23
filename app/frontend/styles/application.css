@@ -439,6 +439,7 @@ button:focus:not(:focus-visible){outline:none}
   background:var(--surface);color:#fff;
 }
 .mobile-drawer-link.active{color:var(--accent)!important}
+.mobile-drawer-link__icon{font-size:.95rem;width:22px;text-align:center;flex-shrink:0;margin-right:8px}
 
 /* Drawer footer */
 .mobile-drawer-footer{

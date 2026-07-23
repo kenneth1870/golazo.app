@@ -276,8 +276,8 @@ export default function Navbar() {
     { label: t("nav.topScorers"), path: "/mundial/scorers" },
   ]
   const MOBILE_LEAGUES = [
-    { label: t("nav.allLeagues"), path: "/leagues" },
-    ...NAV_LEAGUES.map(({ key, path }) => ({ label: t(key), path })),
+    { label: t("nav.allLeagues"), path: "/leagues", emoji: "🌍" },
+    ...NAV_LEAGUES.map(({ emoji, key, path }) => ({ label: t(key), path, emoji })),
   ]
 
   return (
@@ -337,6 +337,7 @@ export default function Navbar() {
           <div className="mobile-link-group">
             {MOBILE_LEAGUES.map(item => (
               <NavLink key={item.path} to={item.path} className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
+                {item.emoji && <span className="mobile-drawer-link__icon" aria-hidden="true">{item.emoji}</span>}
                 {item.label}
               </NavLink>
             ))}
