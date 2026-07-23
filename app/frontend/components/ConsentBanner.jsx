@@ -25,43 +25,16 @@ export default function ConsentBanner() {
   }
 
   return (
-    <div style={{
-      position: "fixed", bottom: "calc(56px + env(safe-area-inset-bottom))", left: 0, right: 0, zIndex: 950,
-      background: "#111827",
-      borderTop: "1px solid rgba(255,255,255,.1)",
-      padding: "14px 16px",
-      display: "flex", flexDirection: "column", gap: 10,
-      boxShadow: "0 -4px 24px rgba(0,0,0,.45)",
-      animation: "slideUp .3s ease",
-    }}>
+    <div className="consent-banner" role="dialog" aria-label={t("consent.title")}>
       <div>
-        <div style={{ fontWeight: 700, fontSize: "0.88rem", color: "#fff", marginBottom: 4 }}>
-          {t("consent.title")}
-        </div>
-        <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,.55)", lineHeight: 1.5 }}>
-          {t("consent.message")}
-        </div>
+        <div className="consent-banner__title">{t("consent.title")}</div>
+        <div className="consent-banner__message">{t("consent.message")}</div>
       </div>
-      <div style={{ display: "flex", gap: 8 }}>
-        <button
-          onClick={accept}
-          style={{
-            background: "var(--accent)", color: "#fff", border: "none",
-            borderRadius: 8, padding: "8px 18px", fontSize: "0.82rem",
-            fontWeight: 700, cursor: "pointer", flex: 1,
-          }}
-        >
+      <div className="consent-banner__actions">
+        <button type="button" className="consent-banner__accept" onClick={accept}>
           {t("consent.accept")}
         </button>
-        <button
-          onClick={decline}
-          style={{
-            background: "transparent", color: "rgba(255,255,255,.45)",
-            border: "1px solid rgba(255,255,255,.15)",
-            borderRadius: 8, padding: "8px 18px", fontSize: "0.82rem",
-            cursor: "pointer", flex: 1,
-          }}
-        >
+        <button type="button" className="consent-banner__decline" onClick={decline}>
           {t("consent.decline")}
         </button>
       </div>

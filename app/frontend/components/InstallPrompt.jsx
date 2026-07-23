@@ -22,14 +22,7 @@ function wasDismissed() {
 function AndroidBanner({ onInstall, onDismiss }) {
   const { t } = useTranslation()
   return (
-    <div style={{
-      position: "fixed", bottom: "calc(64px + env(safe-area-inset-bottom))", left: 12, right: 12,
-      background: "#161b22", border: "1px solid rgba(238,30,70,.3)",
-      borderRadius: 14, padding: "16px 18px", zIndex: 1500,
-      boxShadow: "0 8px 40px rgba(0,0,0,.6)",
-      display: "flex", alignItems: "center", gap: 14,
-      animation: "pageIn .25s ease",
-    }}>
+    <div className="install-prompt">
       <span style={{ fontSize: "2rem", flexShrink: 0 }}>⚽</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 800, fontSize: ".9rem", color: "#fff", marginBottom: 2 }}>
@@ -51,11 +44,9 @@ function AndroidBanner({ onInstall, onDismiss }) {
           {t("install.installApp")}
         </button>
         <button
+          type="button"
           onClick={onDismiss}
-          style={{
-            background: "none", color: "#7d8590", border: "none",
-            fontSize: ".72rem", cursor: "pointer", fontFamily: "inherit", padding: "2px 0",
-          }}
+          className="install-prompt__dismiss focus-brand"
         >
           {t("push.notNow")}
         </button>

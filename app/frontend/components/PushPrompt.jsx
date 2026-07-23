@@ -117,10 +117,8 @@ export default function PushPrompt({ favoriteTeamName = null, paused = false }) 
       </div>
       <button
         onClick={dismiss}
-        style={{
-          background: "none", border: "none", color: "rgba(255,255,255,.3)",
-          fontSize: "1rem", cursor: "pointer", padding: 0, flexShrink: 0,
-        }}
+        type="button"
+        className="push-prompt__dismiss focus-brand"
         aria-label={t("a11y.dismiss")}
       >✕</button>
     </div>

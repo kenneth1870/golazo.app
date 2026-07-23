@@ -726,6 +726,12 @@
     "total_one": "{{count}} reaction",
     "total_other": "{{count}} reactions"
   },
+  "preferences": {
+    "title": "Preferences",
+    "theme": "Theme",
+    "language": "Language",
+    "notifications": "Notifications"
+  },
   "a11y": {
     "previousDay": "Previous day",
     "nextDay": "Next day",

@@ -6,6 +6,9 @@ import MatchRow from "../components/MatchRow"
 import { navigateToMatch, navIdFor } from "../utils/matchDetailCache"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { translateTeam } from "../i18n/teamNames"
+import { GroupStandingsFullTable } from "../components/GroupStandingsView"
+import { fetchJson } from "../utils/fetchJson"
+import OfflineBanner from "../components/OfflineBanner"
 import { useStandingsChannel } from "../hooks/useStandingsChannel"
 import { useVisiblePolling } from "../hooks/useVisiblePolling"
 
@@ -242,16 +245,24 @@ export default function GroupDetailPage() {
   const [standings, setStandings] = useState([])
   const [standingsLoading, setStandingsLoading] = useState(false)
   const [standingsError, setStandingsError] = useState(false)
+  const [stale, setStale]                   = useState(false)
   const [activeTab, setActiveTab] = useState("standings")
 
   const { matches, loading, refetch: refetchMatches } = useMatches("all", { competition: "WC", group })
 
   const loadStandings = useCallback(() => {
     setStandingsError(false)
+    setStale(false)
     setStandingsLoading(true)
-    return fetch("/api/v1/standings?competition=WC", { cache: "no-store" })
-      .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then(data => setStandings((Array.isArray(data) ? data.filter(s => s.group_name === group) : data[group]) || []))
+    return fetchJson("/api/v1/standings?competition=WC")
+      .then(({ data, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline) {
+          setStandingsError(true)
+          return
+        }
+        setStandings((Array.isArray(data) ? data.filter(s => s.group_name === group) : data[group]) || [])
+      })
       .catch(() => { setStandings([]); setStandingsError(true) })
       .finally(() => setStandingsLoading(false))
   }, [group])
@@ -290,6 +301,7 @@ export default function GroupDetailPage() {
   return (
     <div className="site-section">
       <div className="container">
+        <OfflineBanner stale={stale} onRetry={loadStandings} />
 
         {/* Mobile tabs */}
         <div className="tab-bar d-lg-none" style={{ marginBottom: 16 }}>
@@ -334,62 +346,7 @@ export default function GroupDetailPage() {
                     <button className="btn btn-sm btn-outline-light" onClick={loadStandings}>{t("error.retry")}</button>
                   </div>
                 ) : (
-                <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-                  <table className="table custom-table mb-0" style={{ minWidth: 320 }}>
-                    <thead>
-                      <tr>
-                        <th>{t("table.pos")}</th>
-                        <th>{t("table.team")}</th>
-                        <th title="Matches Played">{t("table.played")}</th>
-                        <th title="Won">{t("table.won")}</th>
-                        <th title="Drawn">{t("table.drawn")}</th>
-                        <th title="Lost">{t("table.lost")}</th>
-                        <th title="Goals For">{t("table.gf")}</th>
-                        <th title="Goals Against">{t("table.ga")}</th>
-                        <th title="Goal Difference">{t("table.gd")}</th>
-                        <th>{t("table.points")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {standings.length === 0 ? (
-                        <tr>
-                          <td colSpan={10} style={{ textAlign: "center", padding: "2rem" }}>
-                            <div style={{ fontSize: "1.5rem", marginBottom: 8, opacity: .3 }}>🏆</div>
-                            <div style={{ color: "var(--muted)", fontSize: "0.82rem" }}>{t("groups.noStandingsYet")}</div>
-                          </td>
-                        </tr>
-                      ) : standings.map((s, i) => {
-                        const complete  = standings.every(r => (r.played ?? 0) >= 3)
-                        const a         = complete ? 1 : 0.4
-                        const bg        = i === 0 ? `rgba(16,185,129,${0.1*a})` : i === 1 ? `rgba(16,185,129,${0.05*a})` : i === 2 ? `rgba(245,158,11,${0.05*a})` : `rgba(239,68,68,${0.04*a})`
-                        const rankColor = i === 0 || i === 1 ? "#10b981" : i === 2 ? "#f59e0b" : "#666"
-                        const teamName  = translateTeam(s.team?.name, i18n.language)
-                        const gd        = s.goal_diff ?? (s.goals_for != null ? s.goals_for - (s.goals_against ?? 0) : null)
-                        return (
-                          <tr key={s.team?.id ?? i} style={{ background: bg }}>
-                            <td style={{ color: rankColor, fontWeight: 700 }}>{s.rank ?? i + 1}</td>
-                            <td>
-                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                {s.team.flag_url && <img src={s.team.flag_url} alt={s.team.name} className="flag-xs" />}
-                                <Link to={`/teams/${s.team.id}`} style={{ color: "var(--text)", fontWeight: 700 }}>{teamName}</Link>
-                              </div>
-                            </td>
-                            <td>{s.played ?? 0}</td>
-                            <td>{s.won ?? 0}</td>
-                            <td>{s.drawn ?? 0}</td>
-                            <td>{s.lost ?? 0}</td>
-                            <td>{s.goals_for ?? s.gf ?? "–"}</td>
-                            <td>{s.goals_against ?? s.ga ?? "–"}</td>
-                            <td style={{ color: gd > 0 ? "#10b981" : gd < 0 ? "#ef4444" : "inherit" }}>
-                              {gd != null ? (gd > 0 ? `+${gd}` : gd) : "–"}
-                            </td>
-                            <td><strong style={{ color: "var(--text)" }}>{s.points ?? 0}</strong></td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <GroupStandingsFullTable rows={standings} t={t} lang={i18n.language} />
                 )}
 
                 {/* Qualification scenarios */}

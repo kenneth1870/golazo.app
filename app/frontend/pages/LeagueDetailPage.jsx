@@ -11,6 +11,8 @@ import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
 import { clubTeamPath } from "../utils/clubTeamPath"
 import { matchTeamName } from "../utils/matchTeamName"
 import { leagueHeroStyle } from "../utils/leagueHeroImages"
+import { fetchJson } from "../utils/fetchJson"
+import OfflineBanner from "../components/OfflineBanner"
 
 const VALID_TABS = ["today", "fixtures", "results", "standings"]
 
@@ -192,6 +194,7 @@ export default function LeagueDetailPage() {
   const [tabLoading, setTabLoading]   = useState(false)
   const [standingsLoading, setStandingsLoading] = useState(false)
   const [standingsError, setStandingsError]     = useState(false)
+  const [stale, setStale]                       = useState(false)
 
   const favKey = competition?.code ?? code
   const heroRef = useRef({ code: null, style: null })
@@ -212,10 +215,14 @@ export default function LeagueDetailPage() {
   const loadStandings = useCallback(() => {
     if (!code) return Promise.resolve()
     setStandingsError(false)
+    setStale(false)
     setStandingsLoading(true)
-    return fetch(`/api/v1/standings?competition=${code}`)
-      .then(r => { if (!r.ok) throw new Error(); return r.json() })
-      .then(data => setStandings(flattenStandings(data)))
+    return fetchJson(`/api/v1/standings?competition=${code}`)
+      .then(({ data, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline) throw new Error()
+        setStandings(flattenStandings(data))
+      })
       .catch(() => { setStandings([]); setStandingsError(true) })
       .finally(() => setStandingsLoading(false))
   }, [code])
@@ -427,6 +434,7 @@ export default function LeagueDetailPage() {
 
       <div className="site-section" id="league-tab-panel" role="tabpanel">
         <div className="container">
+          <OfflineBanner stale={stale} onRetry={loadStandings} />
           {tab === "standings" ? (
             standingsLoading ? (
               <div className="loading-shimmer" style={{ height: 240, borderRadius: 12 }} />

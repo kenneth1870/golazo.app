@@ -7,34 +7,13 @@ import { useLiveCount } from "../contexts/LiveContext"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { NAV_LEAGUES } from "./ClubCompetitionChips"
+import ThemeToggle from "./ThemeToggle"
 import { dismissOverlayProps } from "../utils/dismissOverlay"
+import PreferencesSheet from "./PreferencesSheet"
 
 const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
-// ─── Theme toggle ─────────────────────────────────────
-function ThemeToggle() {
-  const { t } = useTranslation()
-  const [light, setLight] = useState(() => {
-    try { return localStorage.getItem("golazo_theme") === "light" } catch { return false }
-  })
-  useEffect(() => {
-    document.body.classList.toggle("light-mode", light)
-    try { localStorage.setItem("golazo_theme", light ? "light" : "dark") } catch {}
-  }, [light])
-  return (
-    <button
-      type="button"
-      onClick={() => setLight(v => !v)}
-      title={light ? t("a11y.themeDark") : t("a11y.themeLight")}
-      aria-label={light ? t("a11y.themeDark") : t("a11y.themeLight")}
-      className="theme-toggle focus-brand"
-    >
-      {light ? "☀️" : "🌙"}
-    </button>
-  )
-}
-
-// ─── Notification toggle — shared between mobile drawer and desktop nav ──────
+// ─── Theme toggle — see ThemeToggle.jsx ─────────────────
 export function NotifToggle({ variant = "drawer" }) {
   const { t } = useTranslation()
   const { supported, subscribed, loading, subscribe, unsubscribe, needsIosInstall } = usePushNotifications()
@@ -224,6 +203,7 @@ export default function Navbar() {
   const brandSubtitle = clubsPrimary ? t("hero.clubBadge") : t("nav.mundialShort")
   const [searchOpen, setSearchOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [prefsOpen, setPrefsOpen]   = useState(false)
   const [expanded, setExpanded]     = useState({})
   const searchTriggerRef = useRef(null)
 
@@ -371,6 +351,18 @@ export default function Navbar() {
             </>
           )}
 
+          <div className="mobile-drawer-divider">{t("preferences.title")}</div>
+          <div className="mobile-link-group">
+            <button
+              type="button"
+              className="mobile-drawer-link"
+              onClick={() => { setDrawerOpen(false); setPrefsOpen(true) }}
+            >
+              <span className="mobile-drawer-link__icon" aria-hidden="true">⚙️</span>
+              {t("preferences.title")}
+            </button>
+          </div>
+
           <div style={{ height: 80 }} />
         </nav>
 
@@ -473,6 +465,7 @@ export default function Navbar() {
           </div>
         </div>
       </header>
+      <PreferencesSheet open={prefsOpen} onClose={() => setPrefsOpen(false)} />
     </>
   )
 }

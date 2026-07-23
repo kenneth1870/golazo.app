@@ -1649,23 +1649,10 @@ function LiveCommentaryPanel({ events, homeTeamRaw, homeName, awayName }) {
 function GoalToast({ text, visible, onDismiss }) {
   if (!visible) return null
   return (
-    <div
-      onClick={onDismiss}
-      style={{
-        position: "fixed", bottom: "calc(72px + env(safe-area-inset-bottom))",
-        left: "50%", transform: "translateX(-50%)",
-        background: "var(--accent)", color: "#fff", fontWeight: 800, fontSize: "0.92rem",
-        padding: "11px 22px 11px 18px", borderRadius: 40, zIndex: 9999,
-        boxShadow: "0 8px 32px rgba(238,30,70,.55)",
-        animation: "pageIn .25s ease",
-        whiteSpace: "nowrap", cursor: "pointer",
-        display: "flex", alignItems: "center", gap: 8,
-        maxWidth: "calc(100vw - 32px)",
-      }}
-    >
-      <span style={{ fontSize: "1.1rem" }}>⚽</span>
-      <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{text}</span>
-      <span style={{ opacity: .6, fontSize: ".75rem", marginLeft: 4 }}>✕</span>
+    <div className="goal-toast" onClick={onDismiss} role="status">
+      <span className="goal-toast__icon">⚽</span>
+      <span className="goal-toast__text">{text}</span>
+      <span className="goal-toast__close">✕</span>
     </div>
   )
 }
@@ -2275,27 +2262,35 @@ export default function MatchShowPage() {
               {prevMatchNav && (
                 <button
                   type="button"
-                  className="match-back-bar__nav-btn"
+                  className="match-back-bar__nav-btn match-back-bar__nav-btn--compact"
                   onClick={() => {
                     const navId = navIdFor(prevMatchNav)
                     if (navId) navigate(`/matches/${navId}`, { state: { matchList, matchIdx: matchIdx - 1 } })
                   }}
                   title={`${prevMatchNav.home_team?.name} vs ${prevMatchNav.away_team?.name}`}
+                  aria-label={t("a11y.prevMatch", { defaultValue: "Previous match" })}
                 >
-                  ← {translateTeam(prevMatchNav.home_team?.name, i18n.language)?.split(" ")?.[0]}
+                  <span className="match-back-bar__nav-short">←</span>
+                  <span className="match-back-bar__nav-label">
+                    {translateTeam(prevMatchNav.home_team?.name, i18n.language)?.split(" ")?.[0]}
+                  </span>
                 </button>
               )}
               {nextMatchNav && (
                 <button
                   type="button"
-                  className="match-back-bar__nav-btn"
+                  className="match-back-bar__nav-btn match-back-bar__nav-btn--compact"
                   onClick={() => {
                     const navId = navIdFor(nextMatchNav)
                     if (navId) navigate(`/matches/${navId}`, { state: { matchList, matchIdx: matchIdx + 1 } })
                   }}
                   title={`${nextMatchNav.home_team?.name} vs ${nextMatchNav.away_team?.name}`}
+                  aria-label={t("a11y.nextMatch", { defaultValue: "Next match" })}
                 >
-                  {translateTeam(nextMatchNav.home_team?.name, i18n.language)?.split(" ")?.[0]} →
+                  <span className="match-back-bar__nav-label">
+                    {translateTeam(nextMatchNav.home_team?.name, i18n.language)?.split(" ")?.[0]}
+                  </span>
+                  <span className="match-back-bar__nav-short">→</span>
                 </button>
               )}
             </div>

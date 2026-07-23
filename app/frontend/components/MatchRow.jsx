@@ -108,6 +108,12 @@ export default function MatchRow({
           <span className="team-name">{awayName}</span>
           <FlagOrPlaceholder src={resolveTeamLogo(match.away_team?.name, match.away_team?.flag_url)} name={match.away_team?.name} />
         </div>
+
+        {showMeta && !showChevron && (match.competition?.code || match.round || match.group_stage || metaLabel) && (
+          <div className="match-row__context">
+            {metaLabel || [match.competition?.code, match.group_stage || match.round].filter(Boolean).join(" · ")}
+          </div>
+        )}
       </div>
 
       {showMeta && (
