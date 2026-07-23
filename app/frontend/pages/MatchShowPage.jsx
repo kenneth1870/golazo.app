@@ -2257,23 +2257,19 @@ export default function MatchShowPage() {
 
       {/* Back bar — visible on mobile above scoreboard */}
       <div className="match-back-bar">
-        <div className="container" style={{ maxWidth: 740, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-          <button onClick={goBack} className="btn-back" style={{ padding: "10px 0", flexShrink: 0 }}>← {t("nav.back")}</button>
+        <div className="container match-back-bar__inner">
+          <button onClick={goBack} className="btn-back match-back-bar__back">← {t("nav.back")}</button>
 
           {/* Prev / next match navigation */}
           {(prevMatchNav || nextMatchNav) && (
-            <div style={{ display: "flex", gap: 4, flex: 1, justifyContent: "center" }}>
+            <div className="match-back-bar__nav">
               {prevMatchNav && (
                 <button
+                  type="button"
+                  className="match-back-bar__nav-btn"
                   onClick={() => {
                     const navId = navIdFor(prevMatchNav)
                     if (navId) navigate(`/matches/${navId}`, { state: { matchList, matchIdx: matchIdx - 1 } })
-                  }}
-                  style={{
-                    background: "var(--surface2)", border: "1px solid var(--border)",
-                    borderRadius: 6, padding: "8px 14px", fontSize: "0.68rem",
-                    color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
-                    minHeight: 44,
                   }}
                   title={`${prevMatchNav.home_team?.name} vs ${prevMatchNav.away_team?.name}`}
                 >
@@ -2282,15 +2278,11 @@ export default function MatchShowPage() {
               )}
               {nextMatchNav && (
                 <button
+                  type="button"
+                  className="match-back-bar__nav-btn"
                   onClick={() => {
                     const navId = navIdFor(nextMatchNav)
                     if (navId) navigate(`/matches/${navId}`, { state: { matchList, matchIdx: matchIdx + 1 } })
-                  }}
-                  style={{
-                    background: "var(--surface2)", border: "1px solid var(--border)",
-                    borderRadius: 6, padding: "8px 14px", fontSize: "0.68rem",
-                    color: "var(--muted)", cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
-                    minHeight: 44,
                   }}
                   title={`${nextMatchNav.home_team?.name} vs ${nextMatchNav.away_team?.name}`}
                 >
@@ -2300,9 +2292,9 @@ export default function MatchShowPage() {
             </div>
           )}
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <div className="match-back-bar__actions">
             {isLive && (
-              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.7rem", color: "var(--muted)" }}>
+              <span className="match-back-bar__live-hint">
                 <span className="live-dot" /> {t("match.updatingEvery")}
               </span>
             )}
@@ -2342,7 +2334,7 @@ export default function MatchShowPage() {
       {/* Tab bar — always visible */}
       <div className="tab-bar sticky-tabs">
         <div className="container" style={{ maxWidth: 740 }}>
-          <div className="tab-bar__inner">
+          <div className="tab-bar__inner tab-bar__inner--scroll">
             {TABS.map(({ key, label }) => (
               <button
                 key={key}

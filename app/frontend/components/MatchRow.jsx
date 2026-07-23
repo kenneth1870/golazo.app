@@ -55,7 +55,7 @@ export default function MatchRow({
 
   return (
     <div
-      className={`match-row${isLive ? " match-row--live" : ""}${onClick ? " match-row--clickable" : ""}${flashing ? " match-row--score-flash" : ""}`}
+      className={`match-row${isLive ? " match-row--live" : ""}${onClick ? " match-row--clickable" : ""}${flashing ? " match-row--score-flash" : ""}${showChevron ? " match-row--nav" : ""}`}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       aria-label={onClick ? t("a11y.matchRow", { home: homeName, away: awayName }) : undefined}
