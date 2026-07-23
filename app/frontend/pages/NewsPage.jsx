@@ -72,16 +72,20 @@ function MediumCard({ article }) {
 
 // ── Compact card (3-col+): horizontal thumbnail + text ────────────────────
 function CompactCard({ article }) {
+  const [imgErr, setImgErr] = useState(false)
+  const imgSrc = article.image && !imgErr ? article.image : "/images/hero_2.jpg"
+
   return (
     <Link to={`/news/${article.id}`} className="nc-compact" style={{ textDecoration: "none" }}>
-      <div
-        className="nc-compact__thumb"
-        style={{
-          backgroundImage: article.image
-            ? `url(${article.image}), url('/images/hero_2.jpg')`
-            : "url('/images/hero_2.jpg')",
-        }}
-      />
+      <div className="nc-compact__thumb">
+        <img
+          src={imgSrc}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onError={() => setImgErr(true)}
+        />
+      </div>
       <div className="nc-compact__body">
         <div className="nc-compact__meta">
           <span className="nc-compact__date">{article.date_label}</span>
@@ -141,22 +145,26 @@ export default function NewsPage() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   const sentinelRef = useRef(null)
+  const poolLengthRef = useRef(0)
+  const loadingMoreRef = useRef(false)
+
+  const leagueCodesKey = useMemo(() => {
+    if (!clubsPrimary) return ""
+    return [...new Set(favoriteCompetitions.map(f => f.code).filter(Boolean))].sort().join(",")
+  }, [clubsPrimary, favoriteCompetitions])
 
   const loadNews = useCallback(() => {
     setLoading(true)
     setError(false)
     setSource(null)
     setVisibleCount(PAGE_SIZE)
-    const leagueCodes = clubsPrimary
-      ? [...new Set(favoriteCompetitions.map(f => f.code).filter(Boolean))]
-      : []
-    const leaguesParam = leagueCodes.length ? `&leagues=${encodeURIComponent(leagueCodes.join(","))}` : ""
+    const leaguesParam = leagueCodesKey ? `&leagues=${encodeURIComponent(leagueCodesKey)}` : ""
     fetchWithTimeout(`/api/v1/news?lang=${i18n.language}${leaguesParam}`)
       .then(r => r.json())
       .then(setArticles)
       .catch(() => { setError(true); setArticles([]) })
       .finally(() => setLoading(false))
-  }, [i18n.language, clubsPrimary, favoriteCompetitions])
+  }, [i18n.language, leagueCodesKey])
 
   useEffect(() => { loadNews() }, [loadNews])
 
@@ -177,20 +185,31 @@ export default function NewsPage() {
   )
   const visible = pool.slice(0, visibleCount)
   const hasMore = visibleCount < pool.length
+  poolLengthRef.current = pool.length
 
   // Reset visible count when filter/tab changes
   useEffect(() => { setVisibleCount(PAGE_SIZE) }, [source, tab])
 
+  useEffect(() => {
+    loadingMoreRef.current = false
+  }, [visibleCount])
+
   // IntersectionObserver — load next page when sentinel enters viewport
   useEffect(() => {
-    if (!sentinelRef.current || !hasMore) return
+    const node = sentinelRef.current
+    if (!node || !hasMore) return
+
     const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisibleCount(n => n + PAGE_SIZE) },
-      { rootMargin: "200px" }
+      ([entry]) => {
+        if (!entry.isIntersecting || loadingMoreRef.current) return
+        loadingMoreRef.current = true
+        setVisibleCount(n => Math.min(n + PAGE_SIZE, poolLengthRef.current))
+      },
+      { rootMargin: "120px" }
     )
-    observer.observe(sentinelRef.current)
+    observer.observe(node)
     return () => observer.disconnect()
-  }, [hasMore, visible.length])
+  }, [hasMore, tab, source])
 
   return (
     <div className="news-page">

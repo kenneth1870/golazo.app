@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { storageGet, storageSet, storageRemove } from "../utils/safeStorage"
 
 const KEY = "golazo_favorites"
@@ -79,9 +79,9 @@ export function useFavorites() {
     })
   }, [])
 
-  const favoriteTeams        = favorites.filter(f => f.type === "team")
-  const favoriteCompetitions = favorites.filter(f => f.type === "competition")
-  const favoriteTeamNames    = favoriteTeams.map(f => f.name)
+  const favoriteTeams        = useMemo(() => favorites.filter(f => f.type === "team"), [favorites])
+  const favoriteCompetitions = useMemo(() => favorites.filter(f => f.type === "competition"), [favorites])
+  const favoriteTeamNames    = useMemo(() => favoriteTeams.map(f => f.name), [favoriteTeams])
 
   return {
     favorites,
