@@ -27,7 +27,8 @@ import { clubTeamPath } from "../utils/clubTeamPath"
 import { leagueCodeFromApiId } from "../utils/leagueCodes"
 import { sourceColor } from "../utils/sourceColors"
 import { storageGet, storageSet } from "../utils/safeStorage"
-import { fetchWithTimeout } from "../utils/fetchWithTimeout"
+import { fetchJson } from "../utils/fetchJson"
+import OfflineBanner from "../components/OfflineBanner"
 import { formatKickoff } from "../hooks/useLocalTime"
 
 // ─── Reminder button ──────────────────────────────────
@@ -98,12 +99,13 @@ function ShareButton({ homeName, awayName }) {
 
   return (
     <button
+      type="button"
       onClick={share}
+      className="match-share-btn focus-brand"
+      aria-label={t("match.share")}
       style={{
-        background: "none", border: "none", cursor: "pointer",
         color: copied ? "var(--success)" : "var(--muted)",
-        fontSize: "0.75rem", display: "flex", alignItems: "center", gap: 4,
-        padding: "6px 0", transition: "color .2s",
+        transition: "color .2s",
       }}
     >
       {copied ? t("match.copied") : (
@@ -981,14 +983,14 @@ function StatsPanel({ stats, home, away, t, statusShort }) {
 
   return (
     <section className="match-section">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="match-stats-header">
+        <div className="match-stats-header__team match-stats-header__team--home">
           <SafeImg src={home?.logo} className="logo-sm" />
-          <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--accent)" }}>{translateTeam(home?.name, i18n.language)}</span>
+          <span>{translateTeam(home?.name, i18n.language)}</span>
         </div>
-        <h3 className="match-section__title" style={{ margin: 0 }}>{t("match.statistics")}</h3>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--away-blue)" }}>{translateTeam(away?.name, i18n.language)}</span>
+        <h3 className="match-section__title match-stats-header__title">{t("match.statistics")}</h3>
+        <div className="match-stats-header__team match-stats-header__team--away">
+          <span>{translateTeam(away?.name, i18n.language)}</span>
           <SafeImg src={away?.logo} className="logo-sm" />
         </div>
       </div>
@@ -1944,6 +1946,7 @@ export default function MatchShowPage() {
   // fall back to the list preview, then to a skeleton while the fetch runs.
   const [data, setData]         = useState(() => getCachedMatchDetail(id) || previewToFixture(preview))
   const [loading, setLoading]   = useState(() => !getCachedMatchDetail(id))
+  const [stale, setStale]       = useState(false)
   const [tab, setTab]           = useState("summary")
   const [toast, setToast]       = useState(null)
   const [showNotifBanner, setShowNotifBanner] = useState(false)
@@ -2077,12 +2080,14 @@ export default function MatchShowPage() {
       return Promise.resolve()
     }
     const fetchStarted = Date.now()
-    return fetchWithTimeout(`/api/v1/match_detail/${id}`, 10000)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        return r.json()
-      })
-      .then(d => {
+    setStale(false)
+    return fetchJson(`/api/v1/match_detail/${id}`, 10000)
+      .then(({ data: d, stale: isStale, offline, ok }) => {
+        setStale(isStale)
+        if (!ok || offline) {
+          setData(prev => (prev?.fixture ? prev : { error: "api_error" }))
+          return
+        }
         if (d?.fixture) setCachedMatchDetail(id, d)
         setData(prev => {
           if (fetchStarted < dataFetchedAt.current) return prev  // WS beat us — keep fresher data
@@ -2254,6 +2259,10 @@ export default function MatchShowPage() {
   return (
     <div>
       <GoalToast text={toast} visible={!!toast} onDismiss={() => setToast(null)} />
+
+      <div className="container">
+        <OfflineBanner stale={stale} onRetry={() => { setLoading(true); load().finally(() => setLoading(false)) }} />
+      </div>
 
       {/* Back bar — visible on mobile above scoreboard */}
       <div className="match-back-bar">

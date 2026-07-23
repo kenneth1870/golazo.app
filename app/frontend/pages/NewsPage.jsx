@@ -3,6 +3,8 @@ import { Link, useSearchParams } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { usePageMeta } from "../hooks/usePageMeta"
+import { fetchJson } from "../utils/fetchJson"
+import OfflineBanner from "../components/OfflineBanner"
 import { useFavorites } from "../hooks/useFavorites"
 import { translateTeam } from "../i18n/teamNames"
 
@@ -147,6 +149,7 @@ export default function NewsPage() {
   const [articles, setArticles]       = useState([])
   const [loading, setLoading]         = useState(true)
   const [error, setError]             = useState(false)
+  const [stale, setStale]             = useState(false)
   const [source, setSource]           = useState(null)   // null = "All"
   const [reloadToken, setReloadToken]   = useState(0)
   const tab = searchParams.get("tab") === "foryou" ? "foryou" : "all"
@@ -177,22 +180,22 @@ export default function NewsPage() {
 
     setLoading(true)
     setError(false)
+    setStale(false)
 
     const leaguesParam = leagueCodesKey ? `&leagues=${encodeURIComponent(leagueCodesKey)}` : ""
-    fetch(`/api/v1/news?lang=${i18n.language}${leaguesParam}`, { signal: controller.signal })
-      .then(r => {
-        if (!r.ok) throw new Error(String(r.status))
-        return r.json()
-      })
-      .then(data => {
-        if (!cancelled) setArticles(Array.isArray(data) ? data : [])
-      })
-      .catch(err => {
-        if (!cancelled && err.name !== "AbortError") {
+    fetchJson(`/api/v1/news?lang=${i18n.language}${leaguesParam}`)
+      .then(({ data, stale: isStale, offline, ok }) => {
+        if (cancelled) return
+        if (!ok || offline) {
           setError(true)
           setArticles([])
+          setStale(isStale)
+          return
         }
+        setArticles(Array.isArray(data) ? data : [])
+        setStale(isStale)
       })
+      .catch(() => { if (!cancelled) { setError(true); setArticles([]) } })
       .finally(() => {
         clearTimeout(timer)
         if (!cancelled) setLoading(false)
@@ -330,6 +333,7 @@ export default function NewsPage() {
 
       <div className="site-section" id="news-tab-panel" role="tabpanel">
         <div className="container">
+          <OfflineBanner stale={stale} onRetry={retryNews} />
           {loading ? (
             <NewsLoadingSkeleton />
           ) : error ? (

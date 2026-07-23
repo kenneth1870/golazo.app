@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { usePushNotifications } from "../hooks/usePushNotifications"
+import { claimPrompt, releasePrompt } from "../utils/promptCoordinator"
 import { storageGet } from "../utils/safeStorage"
 
 const DISMISSED_KEY = "golazo_push_dismissed_at"
@@ -31,7 +32,9 @@ export default function PushPrompt({ favoriteTeamName = null, paused = false }) 
     }
     const dismissedAt = parseInt(localStorage.getItem(DISMISSED_KEY) || "0", 10)
     if (dismissedAt && Date.now() - dismissedAt < DISMISS_TTL_MS) return
-    const timer = setTimeout(() => setVisible(true), 5000)
+    const timer = setTimeout(() => {
+      if (claimPrompt("push")) setVisible(true)
+    }, 20000)
     return () => clearTimeout(timer)
   }, [supported, needsIosInstall, permission, subscribed, paused])
 
@@ -39,6 +42,7 @@ export default function PushPrompt({ favoriteTeamName = null, paused = false }) 
   if (permission === "denied") return null
 
   const dismiss = () => {
+    releasePrompt("push")
     localStorage.setItem(DISMISSED_KEY, Date.now().toString())
     setVisible(false)
   }
@@ -50,6 +54,7 @@ export default function PushPrompt({ favoriteTeamName = null, paused = false }) 
     if (result.ok) {
       setDone(true)
       setVisible(false)
+      releasePrompt("push")
     } else if (result.error === "Permission denied") {
       dismiss()
     } else {
@@ -58,13 +63,7 @@ export default function PushPrompt({ favoriteTeamName = null, paused = false }) 
   }
 
   return (
-    <div style={{
-      position: "fixed", bottom: 72, left: 12, right: 12, zIndex: 900,
-      background: "linear-gradient(135deg,#1a1a2e,#16213e)",
-      border: "1px solid rgba(238,30,70,.35)",
-      borderRadius: 14, padding: "14px 16px",
-      boxShadow: "0 8px 32px rgba(0,0,0,.55)",
-      display: "flex", alignItems: "flex-start", gap: 12,
+    <div className="push-prompt" style={{
       animation: "slideUp .3s ease",
     }}>
       <span style={{ fontSize: "1.6rem", flexShrink: 0, marginTop: 2 }}>

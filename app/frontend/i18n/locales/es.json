@@ -388,6 +388,7 @@
     "failedToLoadNews": "No se pudieron cargar las noticias.",
     "newsUnavailable": "No se pueden cargar las noticias.",
     "tryAgain": "No se pudieron cargar los partidos. Comprueba tu conexión.",
+    "offlineStale": "Datos en caché — conéctate para actualizar.",
     "somethingWrong": "Algo salió mal",
     "unexpected": "Ocurrió un error inesperado.",
     "backHome": "Volver al Inicio"

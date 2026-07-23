@@ -8,7 +8,8 @@ import FlagImg from "../../components/FlagImg"
 import { useLocale } from "../../hooks/useLocale"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useFavorites } from "../../hooks/useFavorites"
-import { fetchWithTimeout } from "../../utils/fetchWithTimeout"
+import { fetchJson } from "../../utils/fetchJson"
+import OfflineBanner from "../../components/OfflineBanner"
 import { navIdFor } from "../../utils/matchDetailCache"
 import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 import { useAppFocus } from "../../hooks/useAppFocus"
@@ -328,6 +329,7 @@ export default function TodayPage() {
   const [matches, setMatches]   = useState([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState(false)
+  const [stale, setStale]       = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [pullDist, setPullDist]     = useState(0)
   const [alertDismissed, setAlertDismissed] = useState(false)
@@ -375,9 +377,15 @@ export default function TodayPage() {
       ? `/api/v1/today?tz=${encodeURIComponent(tz)}`
       : `/api/v1/today?date=${iso}&tz=${encodeURIComponent(tz)}`
     setError(false)
-    fetchWithTimeout(url)
-      .then(r => r.json())
-      .then(raw => {
+    setStale(false)
+    fetchJson(url)
+      .then(({ data: raw, stale: isStale, offline, ok }) => {
+        if (!ok || offline || !Array.isArray(raw)) {
+          setError(true)
+          setStale(isStale)
+          return
+        }
+        setStale(isStale)
         // Filter by local kickoff date — the API uses UTC dates which can bleed
         // into the previous/next day for users in non-UTC timezones.
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -676,6 +684,8 @@ export default function TodayPage() {
             </div>
           </div>
         )}
+
+        <OfflineBanner stale={stale} onRetry={() => load(selected, true)} />
 
         {/* Content */}
         {loading ? (

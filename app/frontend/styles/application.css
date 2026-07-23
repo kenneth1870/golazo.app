@@ -135,7 +135,7 @@ body.light-mode .bottom-nav { background: rgba(244,246,249,0.97); border-top-col
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:'Montserrat',sans-serif;font-weight:400;line-height:1.6;overflow-x:hidden}
-#root{min-height:100vh}
+#root{min-height:100dvh}
 a{color:var(--accent);text-decoration:none;transition:.2s}
 a:hover{color:var(--accent);opacity:.85}
 
@@ -1478,6 +1478,15 @@ body.light-mode .date-strip__day--today{background:rgba(238,30,70,.1)}
   .team-comparison__pickers{flex-direction:column;align-items:stretch}
   .team-comparison__vs{text-align:center;padding:4px 0}
 }
+.team-comparison__headers{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:12px;margin-bottom:20px;text-align:center;
+}
+.team-comparison__headers-vs{font-weight:900;font-size:1.2rem;color:var(--muted);flex-shrink:0}
+@media(max-width:480px){
+  .team-comparison__headers{flex-direction:column;gap:8px}
+  .team-comparison__headers-vs{font-size:1rem}
+}
 
 /* ─── Competition block — hide country on small phones ─ */
 @media(max-width:480px){.widget-meta-country{display:none}}
@@ -1824,3 +1833,78 @@ body.light-mode .date-strip__day--today{background:rgba(238,30,70,.1)}
 .rn-card__source-dot{width:14px;height:14px;border-radius:3px;background:var(--accent);flex-shrink:0}
 .rn-card__time{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rn-card__bookmark{color:var(--muted);opacity:.5;flex-shrink:0;font-size:.8rem}
+
+/* ─── PWA prompts & offline UX ───────────────────────── */
+.notif-toggle{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:44px;min-height:44px;padding:0;
+  background:none;border:1px solid var(--border);border-radius:10px;
+  font-size:1rem;cursor:pointer;flex-shrink:0;
+  color:var(--muted);transition:border-color .2s,color .2s,background .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.notif-toggle:disabled{opacity:.5;cursor:not-allowed}
+.notif-toggle--on{
+  background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.4);color:#10b981;
+}
+.push-prompt{
+  position:fixed;
+  bottom:calc(64px + env(safe-area-inset-bottom, 0px));
+  left:12px;right:12px;z-index:900;
+  background:linear-gradient(135deg,#1a1a2e,#16213e);
+  border:1px solid rgba(238,30,70,.35);
+  border-radius:14px;padding:14px 16px;
+  box-shadow:0 8px 32px rgba(0,0,0,.55);
+  display:flex;align-items:flex-start;gap:12px;
+}
+.offline-banner{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;margin:0 0 12px;padding:10px 14px;
+  background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.35);
+  border-radius:10px;font-size:.78rem;color:var(--text);
+}
+.offline-banner__retry{
+  flex-shrink:0;background:transparent;border:1px solid rgba(234,179,8,.5);
+  border-radius:8px;padding:6px 12px;font-size:.72rem;font-weight:700;
+  color:inherit;cursor:pointer;font-family:inherit;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* ─── Match detail mobile polish ─────────────────────── */
+.match-stats-header{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:8px;margin-bottom:20px;
+}
+.match-stats-header__team{
+  display:flex;align-items:center;gap:8px;min-width:0;flex:1;
+}
+.match-stats-header__team--home{justify-content:flex-start}
+.match-stats-header__team--away{justify-content:flex-end}
+.match-stats-header__team span{
+  font-size:.8rem;font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.match-stats-header__team--home span{color:var(--accent)}
+.match-stats-header__team--away span{color:var(--away-blue)}
+.match-stats-header__title{margin:0;flex-shrink:0;text-align:center}
+@media(max-width:480px){
+  .match-stats-header{flex-direction:column;align-items:stretch;text-align:center}
+  .match-stats-header__team{flex:none;justify-content:center!important}
+  .match-stats-header__title{order:-1;margin-bottom:4px}
+}
+.match-share-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  min-width:44px;min-height:44px;padding:6px 10px;
+  background:none;border:none;cursor:pointer;
+  font-size:.75rem;font-family:inherit;
+  -webkit-tap-highlight-color:transparent;
+}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .loading-shimmer,.live-dot,.match-row--score-flash,
+  .bracket-slot--live,.bracket-slot--score-updated,.bk2-card--live,.bk2-card--flash,
+  .page-transition,.mobile-overlay{
+    animation:none!important;
+  }
+}

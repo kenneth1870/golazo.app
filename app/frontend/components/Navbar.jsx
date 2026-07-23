@@ -55,17 +55,11 @@ export function NotifToggle({ variant = "drawer" }) {
     return (
       <>
         <button
+          type="button"
           onClick={handleClick}
           disabled={loading}
           title={subscribed ? t("push.disable") : needsIosInstall ? t("push.installForNotif") : t("push.enableShort")}
-          style={{
-            background: subscribed ? "rgba(16,185,129,.15)" : "none",
-            border: subscribed ? "1px solid rgba(16,185,129,.4)" : "1px solid var(--border)",
-            borderRadius: 8, width: 32, height: 32,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", fontSize: "0.9rem", color: subscribed ? "#10b981" : "var(--muted)",
-            transition: "border-color .2s, color .2s", flexShrink: 0, opacity: loading ? 0.5 : 1,
-          }}
+          className={`notif-toggle${subscribed ? " notif-toggle--on" : ""}`}
         >
           {subscribed ? "🔔" : "🔕"}
         </button>

@@ -387,6 +387,7 @@
     "failedToLoadNews": "Failed to load news.",
     "newsUnavailable": "Couldn't load news.",
     "tryAgain": "Couldn't load matches. Check your connection.",
+    "offlineStale": "Showing cached data — connect to refresh.",
     "somethingWrong": "Something went wrong",
     "unexpected": "An unexpected error occurred.",
     "backHome": "Back to Home"

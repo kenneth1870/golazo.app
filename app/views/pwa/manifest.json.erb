@@ -1,32 +1,32 @@
 {
-  "name": "Golazo",
+  "name": "<%= AppFocus.clubs_primary? ? "Golazo — Live Football" : "Golazo — Mundial 2026" %>",
   "short_name": "Golazo",
-  "description": "Marcadores en vivo del Mundial FIFA 2026.",
+  "description": "<%= AppFocus.clubs_primary? ? "Live scores, fixtures, and news for your favourite leagues." : "Live World Cup 2026 scores, fixtures, and stats." %>",
   "categories": ["sports", "news"],
   "orientation": "portrait",
   "display_override": ["standalone", "minimal-ui"],
   "shortcuts": [
-    { "name": "Partidos de Hoy",  "short_name": "Hoy",     "url": "/scores/today",    "icons": [{ "src": "/images/apple-touch-icon.png?v=2", "sizes": "192x192" }] },
-    { "name": "Mundial 2026",     "short_name": "Mundial",  "url": "/mundial",         "icons": [{ "src": "/images/apple-touch-icon.png?v=2", "sizes": "192x192" }] },
-    { "name": "Cuadro de Llaves", "short_name": "Bracket",  "url": "/scores/knockout", "icons": [{ "src": "/images/apple-touch-icon.png?v=2", "sizes": "192x192" }] },
-    { "name": "Grupos",           "short_name": "Grupos",   "url": "/scores/groups",   "icons": [{ "src": "/images/apple-touch-icon.png?v=2", "sizes": "192x192" }] }
+<% if AppFocus.clubs_primary? -%>
+    { "name": "Today's Matches", "short_name": "Today",   "url": "/scores/today",       "icons": [{ "src": "/images/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Leagues",         "short_name": "Leagues", "url": "/leagues",            "icons": [{ "src": "/images/icon-192.png", "sizes": "192x192" }] },
+    { "name": "News",            "short_name": "News",    "url": "/news?tab=foryou",    "icons": [{ "src": "/images/icon-192.png", "sizes": "192x192" }] }
+<% else -%>
+    { "name": "Today's Matches", "short_name": "Today",   "url": "/scores/today",    "icons": [{ "src": "/images/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Mundial 2026",    "short_name": "Mundial", "url": "/mundial",         "icons": [{ "src": "/images/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Knockout",        "short_name": "Bracket", "url": "/scores/knockout", "icons": [{ "src": "/images/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Groups",          "short_name": "Groups",  "url": "/scores/groups",   "icons": [{ "src": "/images/icon-192.png", "sizes": "192x192" }] }
+<% end -%>
   ],
   "icons": [
-    {
-      "src": "/icon.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    },
-    {
-      "src": "/icon.png",
-      "type": "image/png",
-      "sizes": "512x512",
-      "purpose": "maskable"
-    }
+    { "src": "/images/icon-192.png",       "sizes": "192x192",  "type": "image/png", "purpose": "any" },
+    { "src": "/images/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/images/icon-512.png",       "sizes": "512x512",  "type": "image/png", "purpose": "any" },
+    { "src": "/images/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
-  "start_url": "/",
+  "start_url": "/?source=pwa",
+  "id": "/?source=pwa",
   "display": "standalone",
   "scope": "/",
   "theme_color": "#ee1e46",
-  "background_color": "#060810"
+  "background_color": "#0d1117"
 }

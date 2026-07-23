@@ -71,7 +71,7 @@ export default function BottomNav() {
           <span className="bottom-nav__label">{t("time.today", "Today")}</span>
         </NavLink>
 
-        <NavLink to="/news" className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}>
+        <NavLink to="/news?tab=foryou" className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}>
           <NewsIcon />
           <span className="bottom-nav__label">{t("nav.news", "News")}</span>
         </NavLink>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
+import { claimPrompt, releasePrompt } from "../utils/promptCoordinator"
 import { storageGet, storageSet } from "../utils/safeStorage"
 import { isIosSafari, isStandalone } from "../utils/platform"
 
@@ -82,13 +83,16 @@ export default function InstallPrompt({ paused = false }) {
     const handler = e => {
       e.preventDefault()
       setDeferredPrompt(e)
-      setTimeout(() => setShowAndroid(true), 12000)
+      setTimeout(() => {
+        if (claimPrompt("android-install")) setShowAndroid(true)
+      }, 12000)
     }
     window.addEventListener("beforeinstallprompt", handler)
     return () => window.removeEventListener("beforeinstallprompt", handler)
   }, [paused])
 
   function dismiss() {
+    releasePrompt("android-install")
     storageSet(DISMISSED_KEY, Date.now().toString())
     setShowAndroid(false)
   }
@@ -98,6 +102,7 @@ export default function InstallPrompt({ paused = false }) {
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
     if (outcome === "accepted") storageSet(DISMISSED_KEY, Date.now().toString())
+    releasePrompt("android-install")
     setDeferredPrompt(null)
     setShowAndroid(false)
   }

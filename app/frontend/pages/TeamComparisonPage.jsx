@@ -145,9 +145,9 @@ function ComparisonShell({ subtitle, homePicker, awayPicker, homeId, awayId, set
 
         {showComparison && (
           <>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, textAlign: "center" }}>
+            <div className="team-comparison__headers">
               {homeHeader}
-              <div style={{ fontWeight: 900, fontSize: "1.2rem", color: "var(--muted)" }}>vs</div>
+              <div className="team-comparison__headers-vs">{t("status.vs")}</div>
               {awayHeader}
             </div>
             {statsSection}

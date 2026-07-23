@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import { storageGet, storageSet } from "../utils/safeStorage"
 import { isIosSafari, isStandalone } from "../utils/platform"
 import { dismissOverlayProps } from "../utils/dismissOverlay"
+import { claimPrompt, releasePrompt } from "../utils/promptCoordinator"
 
 const SHOWN_KEY = "golazo_ios_guide_shown"
 const DEFERRED_KEY = "golazo_ios_guide_deferred_at"
@@ -62,16 +63,20 @@ export default function IosInstallGuide({ paused = false }) {
     const onboardedAt = parseInt(storageGet("golazo_onboarded_at") || "0", 10)
     if (onboardedAt && Date.now() - onboardedAt < 60 * 60 * 1000) return
 
-    const timer = setTimeout(() => setVisible(true), 4000)
+    const timer = setTimeout(() => {
+      if (claimPrompt("ios-install")) setVisible(true)
+    }, 4000)
     return () => clearTimeout(timer)
   }, [paused])
 
   function dismiss() {
+    releasePrompt("ios-install")
     storageSet(SHOWN_KEY, "1")
     setVisible(false)
   }
 
   function remindLater() {
+    releasePrompt("ios-install")
     storageSet(DEFERRED_KEY, Date.now().toString())
     setVisible(false)
   }

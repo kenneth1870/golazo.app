@@ -7,4 +7,9 @@ class PwaController < ApplicationController
     response.headers["X-Content-Type-Options"] = "nosniff"
     render "pwa/service_worker", layout: false, content_type: "application/javascript"
   end
+
+  def manifest
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    render "pwa/manifest", layout: false, formats: :json
+  end
 end

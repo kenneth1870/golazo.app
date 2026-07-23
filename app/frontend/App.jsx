@@ -137,6 +137,10 @@ export default function App() {
           : target
         navigate(path)
       }
+      if (event.data?.type === "reload" && !window.__swReloading) {
+        window.__swReloading = true
+        window.location.reload()
+      }
     }
     navigator.serviceWorker.addEventListener("message", handler)
     return () => navigator.serviceWorker.removeEventListener("message", handler)
