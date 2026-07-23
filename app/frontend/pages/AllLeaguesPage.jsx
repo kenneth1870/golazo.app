@@ -173,9 +173,12 @@ export default function AllLeaguesPage() {
   if (error) {
     return (
       <div className="site-section">
-        <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
-          <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
-          <button className="btn btn-primary btn-sm" onClick={load}>{t("error.retry")}</button>
+        <div className="container">
+          <OfflineBanner stale={stale} onRetry={load} />
+          <div style={{ textAlign: "center", paddingTop: 60 }}>
+            <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
+            <button className="btn btn-primary btn-sm" onClick={load}>{t("error.retry")}</button>
+          </div>
         </div>
       </div>
     )

@@ -1423,7 +1423,7 @@ function MatchSkeleton() {
   return (
     <div>
       {/* Scoreboard skeleton */}
-      <div style={{ background: "#0d1117", padding: "48px 0 36px" }}>
+      <div style={{ background: "var(--bg)", padding: "48px 0 36px" }}>
         <div className="container" style={{ maxWidth: 700 }}>
           <div className="loading-shimmer" style={{ height: 16, width: 160, borderRadius: 6, margin: "0 auto 28px" }} />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1956,7 +1956,7 @@ export default function MatchShowPage() {
             events={data.events}
           />
         ) : (
-          <div style={{ background: "var(--surface1,#0d1117)", padding: "48px 0 36px" }}>
+          <div style={{ background: "var(--bg)", padding: "48px 0 36px" }}>
             <div className="container" style={{ maxWidth: 700, textAlign: "center" }}>
               <div style={{ fontSize: "2rem", marginBottom: 12, opacity: .3 }}>⚽</div>
               <div style={{ color: "var(--muted)", fontSize: "0.85rem" }}>

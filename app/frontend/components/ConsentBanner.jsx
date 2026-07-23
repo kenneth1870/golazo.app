@@ -2,28 +2,52 @@ import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { consentDecided, setConsent } from "../utils/consent"
 import { useFocusTrap } from "../hooks/useFocusTrap"
+import { claimPrompt, releasePrompt } from "../utils/promptCoordinator"
 
-export default function ConsentBanner() {
+export default function ConsentBanner({ paused = false }) {
   const { t } = useTranslation()
   const [visible, setVisible] = useState(false)
   const panelRef = useFocusTrap(visible)
 
   useEffect(() => {
-    if (consentDecided()) return
-    const timer = setTimeout(() => setVisible(true), 1000)
+    if (consentDecided() || paused) return
+    const timer = setTimeout(() => {
+      if (claimPrompt("consent")) setVisible(true)
+    }, 1500)
     return () => clearTimeout(timer)
-  }, [])
+  }, [paused])
+
+  useEffect(() => {
+    if (visible) {
+      document.body.classList.add("has-consent-banner")
+    } else {
+      document.body.classList.remove("has-consent-banner")
+    }
+    return () => document.body.classList.remove("has-consent-banner")
+  }, [visible])
+
+  useEffect(() => {
+    if (paused && visible) {
+      releasePrompt("consent")
+      setVisible(false)
+    }
+  }, [paused, visible])
 
   if (!visible) return null
 
+  function dismissPrompt() {
+    releasePrompt("consent")
+    setVisible(false)
+  }
+
   const accept = () => {
     setConsent("granted")
-    setVisible(false)
+    dismissPrompt()
   }
 
   const decline = () => {
     setConsent("denied")
-    setVisible(false)
+    dismissPrompt()
   }
 
   return (

@@ -234,6 +234,7 @@ export default function App() {
               <Route path="/world-cup-2026/scorers"   element={<Navigate to="/mundial/scorers"  replace />} />
               <Route path="/world-cup-2026/groups"    element={<Navigate to="/mundial/groups"   replace />} />
               <Route path="/world-cup-2026/bracket"   element={<Navigate to="/mundial/knockout" replace />} />
+              <Route path="/world-cup-2026/knockout"  element={<Navigate to="/mundial/knockout" replace />} />
               <Route path="/world-cup-2026/results"   element={<Navigate to="/scores/results" replace />} />
               <Route path="/world-cup-2026/fixtures"  element={<Navigate to="/scores/today" replace />} />
 
@@ -244,7 +245,7 @@ export default function App() {
       </main>
 
       <Footer />
-      <ConsentBanner />
+      <ConsentBanner paused={showOnboarding} />
       <BottomNav />
       <InstallPrompt paused={showOnboarding} />
     </div>

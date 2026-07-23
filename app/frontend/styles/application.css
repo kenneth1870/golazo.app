@@ -450,19 +450,57 @@ button:focus:not(:focus-visible){outline:none}
 .favorite-team-picker__label{
   min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;
 }
-@media(max-width:991px){
-  .favorite-team-picker__menu{
-    left:auto!important;right:0;
-    width:min(280px,calc(100vw - 24px))!important;
-  }
-}
 .home-favorite-bar{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
 }
+.favorite-team-card{
+  background:linear-gradient(135deg, rgba(238,30,70,.12) 0%, rgba(238,30,70,.04) 100%);
+  border:1px solid rgba(238,30,70,.25);border-radius:12px;
+  padding:16px 18px;margin-bottom:16px;
+  display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px 14px;
+  max-width:100%;min-width:0;overflow:hidden;
+}
+.favorite-team-card__main{
+  display:flex;align-items:center;gap:10px;flex:1 1 140px;min-width:0;
+}
+.favorite-team-card__crest{flex-shrink:0}
+.favorite-team-card__info{min-width:0}
+.favorite-team-card__name{
+  display:block;font-weight:800;color:var(--text);font-size:1rem;
+  text-decoration:none;overflow-wrap:anywhere;
+}
+.favorite-team-card__meta{font-size:.68rem;color:var(--muted);margin-top:2px}
+.favorite-team-card__aside{
+  flex:1 1 180px;min-width:0;max-width:100%;
+}
+.favorite-team-card__aside--match{
+  cursor:pointer;text-align:right;margin-left:auto;
+}
+.favorite-team-card__aside-label{
+  font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;
+}
+.favorite-team-card__matchup{
+  font-weight:700;color:var(--text);font-size:.9rem;line-height:1.35;
+  overflow-wrap:anywhere;
+}
+.favorite-team-card__kickoff{font-size:.72rem;color:var(--accent);margin-top:2px}
+.favorite-team-card__aside--empty{
+  font-size:.82rem;color:var(--muted);line-height:1.45;overflow-wrap:anywhere;
+}
+.schedule-fixture{transition:background .15s}
+.schedule-fixture--clickable{cursor:pointer}
+.schedule-fixture--clickable:hover{background:rgba(255,255,255,.1)}
+body.light-mode .schedule-fixture--clickable:hover{background:rgba(0,0,0,.04)}
 @media(max-width:576px){
   .home-favorite-bar{flex-direction:column;align-items:stretch}
-  .home-favorite-bar .favorite-team-picker{align-self:flex-start;max-width:100%}
+  .home-favorite-bar .favorite-team-picker{align-self:stretch;width:100%;max-width:100%}
+  .home-favorite-bar .favorite-team-picker__trigger{width:100%;justify-content:center}
   .favorite-team-picker__label{max-width:100%}
+  .favorite-team-card__aside,
+  .favorite-team-card__aside--match{
+    flex:1 1 100%;margin-left:0;text-align:left;
+    padding-top:12px;border-top:1px solid rgba(238,30,70,.15);
+  }
 }
 .league-hero__row{
   display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;
@@ -1300,7 +1338,7 @@ body.light-mode .date-strip__day--today{background:rgba(238,30,70,.1)}
 .empty-state p{color:var(--muted);font-size:.88rem;max-width:320px;margin:0 auto;line-height:1.6}
 
 /* ─── Page transitions ───────────────────────────────── */
-@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pageIn{from{opacity:0}to{opacity:1}}
 @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .page-transition{animation:pageIn .22s ease both}
 
@@ -1558,10 +1596,17 @@ body.light-mode .date-strip__day--today{background:rgba(238,30,70,.1)}
   background:var(--accent);border:2px solid #0d1117;
   animation:livePulse 1.4s ease-in-out infinite;
 }
-.bottom-nav__label{line-height:1;margin-top:1px}
+.bottom-nav__label{
+  line-height:1.1;margin-top:1px;max-width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:clamp(.58rem, 2.4vw, .65rem);
+}
 @media(max-width:991px){
   .bottom-nav{display:flex}
   .site-wrap{padding-bottom:calc(74px + env(safe-area-inset-bottom))}
+  body.has-consent-banner .site-wrap{
+    padding-bottom:calc(74px + 132px + env(safe-area-inset-bottom));
+  }
 }
 
 /* ─── RTL support ────────────────────────────────────── */
@@ -2050,6 +2095,7 @@ body.light-mode .offline-banner__retry{color:#92400e;border-color:rgba(245,158,1
 body.light-mode .prefs-sheet__backdrop{background:rgba(0,0,0,.35)}
 body.light-mode .pull-indicator__spinner svg{stroke:var(--accent)}
 body.light-mode .consent-banner{background:var(--surface);border-color:var(--border);color:var(--text)}
+body.light-mode .consent-banner__title{color:var(--text)}
 body.light-mode .consent-banner__message{color:var(--muted)}
 body.light-mode .install-prompt{background:var(--surface);border-color:var(--border);color:var(--text)}
 body.light-mode .onboarding-modal{background:var(--surface);color:var(--text)}

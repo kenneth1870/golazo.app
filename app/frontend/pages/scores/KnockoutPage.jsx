@@ -1,6 +1,8 @@
 import { useMatches, patchLiveScore } from "../../hooks/useMatches"
 import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
+import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 import OfflineBanner from "../../components/OfflineBanner"
+import EmptyState from "../../components/EmptyState"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { usePageMeta } from "../../hooks/usePageMeta"
@@ -282,7 +284,7 @@ export default function KnockoutPage() {
     "FIFA World Cup 2026 knockout bracket — Round of 32, Round of 16, Quarter Finals, Semi Finals and Final."
   )
 
-  const { matches, loading, refetch, stale } = useMatches("knockout", { competition: "WC" })
+  const { matches, loading, error, refetch, stale } = useMatches("knockout", { competition: "WC" })
   const navigate = useNavigate()
   const onMatchClick = (match) => navigateToMatch(navigate, match)
 
@@ -342,10 +344,33 @@ export default function KnockoutPage() {
     )
   }
 
+  if (error && !hasData) {
+    return (
+      <div className="site-section">
+        <div className="container">
+          <OfflineBanner stale={stale} onRetry={refetch} />
+          <EmptyState
+            icon="⚠️"
+            title={t("error.dataUnavailable", "Data unavailable")}
+            description={t("error.tryAgain", "Couldn't load matches. Check your connection.")}
+            action={
+              <button type="button" className="btn btn-primary btn-sm mt-3" onClick={refetch}>
+                {t("error.retry", "Retry")}
+              </button>
+            }
+          />
+        </div>
+      </div>
+    )
+  }
+
   if (!hasData) {
     return (
       <div className="site-section">
-        <div className="container"><Placeholder /></div>
+        <div className="container">
+          <OfflineBanner stale={stale} onRetry={refetch} />
+          <Placeholder />
+        </div>
       </div>
     )
   }

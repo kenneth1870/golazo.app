@@ -239,6 +239,8 @@ export default function Navbar() {
     { label: t("nav.schedule"),   path: "/mundial/schedule",   emoji: "📅" },
     { label: t("nav.venues"),     path: "/mundial/venues",     emoji: "🗺️" },
     { label: t("nav.topScorers"), path: "/mundial/scorers",    emoji: "⚽" },
+    { label: t("nav.groupStage"), path: "/mundial/groups",     emoji: "📊" },
+    { label: t("nav.knockout"),   path: "/mundial/knockout",   emoji: "🏆" },
     { label: t("nav.predictor", "Predictor"), path: "/predictor", emoji: "🎯" },
     { label: t("nav.leaderboard", "Leaderboard"), path: "/leaderboard", emoji: "📊" },
   ]
@@ -334,14 +336,6 @@ export default function Navbar() {
                 {item.label}
               </NavLink>
             ))}
-            <NavLink to="/scores/groups" className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
-              <span className="mobile-drawer-link__icon" aria-hidden="true">📊</span>
-              {t("nav.groupStage")}
-            </NavLink>
-            <NavLink to="/scores/knockout" className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
-              <span className="mobile-drawer-link__icon" aria-hidden="true">🏆</span>
-              {t("nav.knockout")}
-            </NavLink>
             <NavLink to="/predictor" className={({ isActive }) => `mobile-drawer-link${isActive ? " active" : ""}`}>
               <span className="mobile-drawer-link__icon" aria-hidden="true">🎯</span>
               {t("nav.predictor", "Predictor")}

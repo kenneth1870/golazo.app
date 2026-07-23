@@ -6,6 +6,8 @@ import { navigateToMatch, navIdFor } from "../../utils/matchDetailCache"
 import FlagImg from "../../components/FlagImg"
 import { translateTeam } from "../../i18n/teamNames"
 import { formatKickoff } from "../../hooks/useLocalTime"
+import OfflineBanner from "../../components/OfflineBanner"
+import EmptyState from "../../components/EmptyState"
 
 // ── Round name i18n ────────────────────────────────────
 const ROUND_KEYS = {
@@ -81,6 +83,7 @@ function FixtureCard({ match, onClick }) {
       aria-label={onClick ? t("a11y.matchRow", { home: homeName, away: awayName }) : undefined}
       onClick={onClick}
       onKeyDown={handleKeyDown}
+      className={onClick ? "schedule-fixture schedule-fixture--clickable" : "schedule-fixture"}
       style={{
         background: "var(--surface2, rgba(255,255,255,.06))",
         border: "1px solid var(--border, rgba(255,255,255,.08))",
@@ -89,11 +92,7 @@ function FixtureCard({ match, onClick }) {
         display: "flex",
         alignItems: "center",
         gap: 12,
-        cursor: onClick ? "pointer" : "default",
-        transition: "background .15s",
       }}
-      onMouseEnter={e => onClick && (e.currentTarget.style.background = "rgba(255,255,255,.1)")}
-      onMouseLeave={e => (e.currentTarget.style.background = "var(--surface2, rgba(255,255,255,.06))")}
     >
       {/* Teams */}
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -215,7 +214,7 @@ function Skeleton() {
 export default function SchedulePage() {
   const { t, i18n } = useTranslation()
   usePageMeta(t("mundial.scheduleTitle"), "Full FIFA World Cup 2026 schedule — all 104 matches, kickoff times and venues.")
-  const { matches, loading } = useMatches("all", { competition: "WC" })
+  const { matches, loading, error, stale, refetch } = useMatches("all", { competition: "WC" })
   const navigate = useNavigate()
 
   const onMatchClick = (m) => navigateToMatch(navigate, m)
@@ -232,6 +231,7 @@ export default function SchedulePage() {
     if (!byDate[dateLabel][phase]) byDate[dateLabel][phase] = []
     byDate[dateLabel][phase].push(m)
   }
+  const dateEntries = Object.entries(byDate)
 
   if (loading) {
     return (
@@ -244,14 +244,34 @@ export default function SchedulePage() {
   return (
     <div className="site-section">
       <div className="container">
-        {Object.entries(byDate).map(([dateLabel, phaseGroups]) => (
-          <DateSection
-            key={dateLabel}
-            dateLabel={dateLabel}
-            phaseGroups={phaseGroups}
-            onMatchClick={onMatchClick}
+        <OfflineBanner stale={stale} onRetry={refetch} />
+        {error && matches.length === 0 ? (
+          <EmptyState
+            icon="⚠️"
+            title={t("error.dataUnavailable", "Data unavailable")}
+            description={t("error.tryAgain", "Couldn't load matches. Check your connection.")}
+            action={
+              <button type="button" className="btn btn-primary btn-sm mt-3" onClick={refetch}>
+                {t("error.retry", "Retry")}
+              </button>
+            }
           />
-        ))}
+        ) : dateEntries.length === 0 ? (
+          <EmptyState
+            icon="📅"
+            title={t("mundial.scheduleTitle")}
+            description={t("time.noMatches", { date: t("nav.schedule") })}
+          />
+        ) : (
+          dateEntries.map(([dateLabel, phaseGroups]) => (
+            <DateSection
+              key={dateLabel}
+              dateLabel={dateLabel}
+              phaseGroups={phaseGroups}
+              onMatchClick={onMatchClick}
+            />
+          ))
+        )}
       </div>
     </div>
   )

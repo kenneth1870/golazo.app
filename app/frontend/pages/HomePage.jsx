@@ -140,38 +140,34 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
   const teamHref = fav.league_code
     ? clubTeamPath(fav.league_code, fav.name)
     : (/^\d+$/.test(String(fav.id)) ? `/teams/${fav.id}` : null)
+  const teamLabel = translateTeam(fav.name, i18n.language) || fav.name
 
   return (
-    <div style={{
-      background: "linear-gradient(135deg, rgba(238,30,70,.12) 0%, rgba(238,30,70,.04) 100%)",
-      border: "1px solid rgba(238,30,70,.25)", borderRadius: 12,
-      padding: "16px 20px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        {fav.flag_url && <img src={fav.flag_url} alt={fav.name} className="logo-sm" onError={e => (e.target.style.display="none")} />}
-        <div>
-          <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>{t("home.yourTeam")}</div>
+    <div className="favorite-team-card">
+      <div className="favorite-team-card__main">
+        {fav.flag_url && (
+          <img src={fav.flag_url} alt="" className="logo-sm favorite-team-card__crest" onError={e => (e.target.style.display = "none")} />
+        )}
+        <div className="favorite-team-card__info">
           {teamHref ? (
-            <Link to={teamHref} style={{ fontWeight: 800, color: "var(--text)", fontSize: "1rem", textDecoration: "none" }}>
-              {translateTeam(fav.name, i18n.language) || fav.name}
-            </Link>
+            <Link to={teamHref} className="favorite-team-card__name">{teamLabel}</Link>
           ) : (
-            <div style={{ fontWeight: 800, color: "var(--text)", fontSize: "1rem" }}>{translateTeam(fav.name, i18n.language) || fav.name}</div>
+            <div className="favorite-team-card__name">{teamLabel}</div>
           )}
           {fav.group && !fav.league_code && !clubsPrimary && (
-            <div style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{t("nav.group", { letter: fav.group })}</div>
+            <div className="favorite-team-card__meta">{t("nav.group", { letter: fav.group })}</div>
           )}
         </div>
       </div>
       {next ? (
         <div
+          className="favorite-team-card__aside favorite-team-card__aside--match"
           role="button"
           tabIndex={0}
           aria-label={t("a11y.matchRow", {
             home: translateTeam(next.home_team?.name, i18n.language),
             away: translateTeam(next.away_team?.name, i18n.language),
           })}
-          style={{ marginLeft: "auto", cursor: "pointer", textAlign: "right" }}
           onClick={() => navigateToMatch(navigate, next)}
           onKeyDown={e => {
             if (e.key === "Enter" || e.key === " ") {
@@ -180,13 +176,13 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
             }
           }}
         >
-          <div style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em" }}>
+          <div className="favorite-team-card__aside-label">
             {next.status === "live" ? t("home.playingNow") : t("hero.nextMatch")}
           </div>
-          <div style={{ fontWeight: 700, color: "var(--text)", fontSize: "0.9rem" }}>
+          <div className="favorite-team-card__matchup">
             {translateTeam(next.home_team?.name, i18n.language)} vs {translateTeam(next.away_team?.name, i18n.language)}
           </div>
-          <div style={{ fontSize: "0.72rem", color: "var(--accent)" }}>
+          <div className="favorite-team-card__kickoff">
             {next.status === "live"
               ? `${t("status.live")}${next.minute ? ` ${next.minute}'` : ""}`
               : next.kickoff_at
@@ -195,7 +191,9 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
           </div>
         </div>
       ) : (
-        <div style={{ marginLeft: "auto", fontSize: "0.78rem", color: "var(--muted)" }}>{t("home.noUpcoming")}</div>
+        <div className="favorite-team-card__aside favorite-team-card__aside--empty">
+          {t("home.noUpcoming")}
+        </div>
       )}
     </div>
   )
@@ -610,9 +608,9 @@ export default function HomePage() {
       <div className="latest-news">
         <div className="container">
           <div className="row">
-            <div className="col-12 title-section">
-              <h2 className="heading">{t("home.latestNews")}</h2>
-              <Link to="/news" style={{ fontSize: ".78rem", color: "var(--accent)", textDecoration: "none", fontWeight: 700 }}>
+            <div className="col-12 title-section" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <h2 className="heading" style={{ marginBottom: 0, flex: "1 1 auto", minWidth: 0 }}>{t("home.latestNews")}</h2>
+              <Link to="/news" style={{ fontSize: ".78rem", color: "var(--accent)", textDecoration: "none", fontWeight: 700, flexShrink: 0, whiteSpace: "nowrap" }}>
                 {t("home.viewAll")}
               </Link>
             </div>
@@ -635,7 +633,19 @@ export default function HomePage() {
                   <div className="loading-shimmer" style={{ height: 60, borderRadius: 8, marginTop: 8 }} />
                 </div>
               ))
-            ) : newsError ? null : latestNews.length === 0 ? (
+            ) : newsError ? (
+              <div className="col-12">
+                <EmptyState
+                  icon="🗞️"
+                  title={t("error.newsUnavailable", "Couldn't load news.")}
+                  action={
+                    <button type="button" className="btn btn-primary btn-sm mt-3" onClick={retryNews}>
+                      {t("error.retry", "Retry")}
+                    </button>
+                  }
+                />
+              </div>
+            ) : latestNews.length === 0 ? (
               <div className="col-12">
                 <EmptyState
                   icon="🗞️"
@@ -711,8 +721,8 @@ export default function HomePage() {
                     {[
                       { label: `🏆 ${t("nav.mundialShort")}`, path: "/world-cup-2026" },
                       { label: `📅 ${t("nav.schedule")}`, path: "/mundial/schedule" },
-                      { label: `📊 ${t("nav.groups")}`, path: "/scores/groups" },
-                      { label: `🏆 ${t("nav.knockout")}`, path: "/scores/knockout" },
+                      { label: `📊 ${t("nav.groups")}`, path: "/mundial/groups" },
+                      { label: `🏆 ${t("nav.knockout")}`, path: "/mundial/knockout" },
                       { label: `🎯 ${t("nav.predictor", "Predictor")}`, path: "/predictor" },
                       { label: `📊 ${t("nav.leaderboard", "Leaderboard")}`, path: "/leaderboard" },
                       { label: `⭐ ${t("mundial.tabGoals")}`, path: "/mundial/scorers" },
@@ -756,8 +766,8 @@ export default function HomePage() {
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                   {[
                     { label: `📅 ${t("nav.schedule")}`,  path: "/mundial/schedule" },
-                    { label: `📊 ${t("nav.groups")}`,    path: "/scores/groups" },
-                    { label: `🏆 ${t("nav.knockout")}`,  path: "/scores/knockout" },
+                    { label: `📊 ${t("nav.groups")}`,    path: "/mundial/groups" },
+                    { label: `🏆 ${t("nav.knockout")}`,  path: "/mundial/knockout" },
                     { label: `🎯 ${t("nav.predictor", "Predictor")}`, path: "/predictor" },
                     { label: `📊 ${t("nav.leaderboard", "Leaderboard")}`, path: "/leaderboard" },
                     { label: `⭐ ${t("mundial.tabGoals")}`,   path: "/mundial/scorers" },

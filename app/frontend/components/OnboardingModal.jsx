@@ -70,7 +70,7 @@ const LANGS = [
   { code: "es", label: "Español", flag: "🇪🇸" },
 ]
 
-const INERT_SELECTORS = [".site-wrap > main", ".site-wrap > footer", ".bottom-nav", ".site-navbar", ".site-mobile-menu"]
+const INERT_SELECTORS = [".site-wrap > main", ".site-wrap > footer", ".bottom-nav", ".site-navbar", ".site-mobile-menu", ".consent-banner"]
 
 export function useOnboarding() {
   const [show, setShow] = useState(false)
@@ -395,7 +395,7 @@ export default function OnboardingModal({ onDismiss, returnFocusRef }) {
                 display: "flex", alignItems: "center", gap: 10,
                 padding: "9px 14px", borderRadius: 10,
                 background: "var(--surface2,#1a1a1a)", border: "1px solid var(--border,#2a2a2a)",
-                fontSize: "0.85rem", color: "#ccc",
+                fontSize: "0.85rem", color: "var(--text)",
               }}>
                 <span>{item}</span>
               </div>

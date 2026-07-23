@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useLayoutEffect } from "react"
+import { createPortal } from "react-dom"
 import { useTranslation } from "react-i18next"
 import { useFavoriteTeam } from "../hooks/useFavoriteTeam"
 import { useAppFocus } from "../hooks/useAppFocus"
@@ -34,7 +35,9 @@ export default function FavoriteTeamPicker() {
   const [teams, setTeams] = useState([])
   const [open, setOpen]   = useState(false)
   const [query, setQuery] = useState("")
+  const [menuStyle, setMenuStyle] = useState(null)
   const ref = useRef(null)
+  const triggerRef = useRef(null)
 
   useEffect(() => {
     if (clubsPrimary) {
@@ -50,15 +53,69 @@ export default function FavoriteTeamPicker() {
   }, [clubsPrimary])
 
   useEffect(() => {
-    function onOutside(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
-    function onEscape(e)  { if (e.key === "Escape") setOpen(false) }
+    function onOutside(e) {
+      if (ref.current?.contains(e.target)) return
+      if (e.target.closest?.(".favorite-team-picker__menu")) return
+      setOpen(false)
+    }
+    function onEscape(e) { if (e.key === "Escape") setOpen(false) }
     document.addEventListener("mousedown", onOutside)
+    document.addEventListener("touchstart", onOutside)
     document.addEventListener("keydown", onEscape)
     return () => {
       document.removeEventListener("mousedown", onOutside)
+      document.removeEventListener("touchstart", onOutside)
       document.removeEventListener("keydown", onEscape)
     }
   }, [])
+
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) {
+      setMenuStyle(null)
+      return
+    }
+
+    const update = () => {
+      const rect = triggerRef.current.getBoundingClientRect()
+      const width = Math.min(280, window.innerWidth - 24)
+      const left = Math.max(12, Math.min(rect.left, window.innerWidth - width - 12))
+      const bottomInset = parseInt(
+        getComputedStyle(document.documentElement).getPropertyValue("--fixed-above-nav") || "64",
+        10
+      ) + 12
+      const maxMenuHeight = Math.min(320, window.innerHeight - bottomInset - 24)
+      const spaceBelow = window.innerHeight - rect.bottom - bottomInset
+      const spaceAbove = rect.top - 12
+      const openUp = spaceBelow < 220 && spaceAbove > spaceBelow
+      const listMaxHeight = Math.max(
+        120,
+        Math.min(240, openUp ? spaceAbove - 72 : spaceBelow - 72)
+      )
+      const top = openUp
+        ? Math.max(12, rect.top - Math.min(maxMenuHeight, listMaxHeight + 72) - 8)
+        : rect.bottom + 8
+
+      setMenuStyle({
+        position: "fixed",
+        top,
+        left,
+        width,
+        zIndex: 2000,
+        maxHeight: maxMenuHeight,
+        display: "flex",
+        flexDirection: "column",
+        listMaxHeight,
+      })
+    }
+
+    update()
+    window.addEventListener("resize", update)
+    window.addEventListener("scroll", update, true)
+    return () => {
+      window.removeEventListener("resize", update)
+      window.removeEventListener("scroll", update, true)
+    }
+  }, [open])
 
   const displayName = name => translateTeam(name, i18n.language) || name
 
@@ -75,9 +132,71 @@ export default function FavoriteTeamPicker() {
     setQuery("")
   }
 
+  const menu = open && menuStyle && (() => {
+    const { listMaxHeight, ...menuPos } = menuStyle
+    return (
+    <div
+      role="listbox"
+      aria-label={t("home.followTeam")}
+      className="favorite-team-picker__menu"
+      style={{
+        ...menuPos,
+        background: "var(--surface2)", border: "1px solid var(--border)",
+        borderRadius: 10, padding: 12, boxShadow: "0 8px 32px rgba(0,0,0,.5)",
+      }}
+    >
+      <input
+        autoFocus
+        placeholder={t("team.searchPlaceholder", "Buscar equipo…")}
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        aria-label={t("team.searchPlaceholder", "Buscar equipo…")}
+        style={{
+          width: "100%", background: "var(--surface)", border: "1px solid var(--border)",
+          borderRadius: 6, padding: "10px", color: "var(--text)", fontSize: "0.8rem", marginBottom: 8,
+          minHeight: 44,
+        }}
+      />
+      <div style={{ maxHeight: listMaxHeight ?? "min(240px, 50vh)", overflowY: "auto", minHeight: 0 }}>
+        {fav && (
+          <button
+            onClick={() => { setFav(null); setOpen(false) }}
+            style={{ width: "100%", textAlign: "left", background: "transparent", border: "none", color: "var(--danger)", padding: "10px 8px", borderRadius: 6, cursor: "pointer", fontSize: "0.75rem", marginBottom: 4, minHeight: 44 }}
+          >
+            ✕ {t("team.removeFavorite", "Quitar favorito")}
+          </button>
+        )}
+        {filtered.map(tm => (
+          <button
+            key={tm.id}
+            role="option"
+            aria-selected={fav?.id === tm.id}
+            onClick={() => pick(tm)}
+            style={{
+              width: "100%", textAlign: "left", background: fav?.id === tm.id ? "rgba(238,30,70,.15)" : "transparent",
+              border: "none", color: "var(--text)", padding: "10px 8px", borderRadius: 6, cursor: "pointer",
+              fontSize: "0.8rem", display: "flex", alignItems: "center", gap: 8, minHeight: 44,
+            }}
+          >
+            <FlagOrInitial src={tm.flag_url} name={tm.name} />
+            <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName(tm.name)}</span>
+            {tm.group && <span style={{ marginLeft: "auto", fontSize: "0.65rem", color: "var(--muted)", flexShrink: 0 }}>{t("nav.group", { letter: tm.group })}</span>}
+          </button>
+        ))}
+        {filtered.length === 0 && (
+          <div style={{ color: "var(--muted)", fontSize: "0.78rem", textAlign: "center", padding: "12px 0" }}>
+            {t("team.noTeamsFound", "Sin equipos encontrados")}
+          </div>
+        )}
+      </div>
+    </div>
+    )
+  })()
+
   return (
     <div ref={ref} className="favorite-team-picker" style={{ position: "relative", display: "inline-block", maxWidth: "100%" }}>
       <button
+        ref={triggerRef}
         onClick={() => setOpen(o => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -102,63 +221,7 @@ export default function FavoriteTeamPicker() {
         )}
       </button>
 
-      {open && (
-        <div
-          role="listbox"
-          aria-label={t("home.followTeam")}
-          className="favorite-team-picker__menu"
-          style={{
-            position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 200,
-            background: "var(--surface2)", border: "1px solid var(--border)",
-            borderRadius: 10, padding: 12, width: 260, boxShadow: "0 8px 32px rgba(0,0,0,.5)",
-          }}
-        >
-          <input
-            autoFocus
-            placeholder={t("team.searchPlaceholder", "Buscar equipo…")}
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            aria-label={t("team.searchPlaceholder", "Buscar equipo…")}
-            style={{
-              width: "100%", background: "var(--surface)", border: "1px solid var(--border)",
-              borderRadius: 6, padding: "10px", color: "var(--text)", fontSize: "0.8rem", marginBottom: 8,
-              minHeight: 44,
-            }}
-          />
-          <div style={{ maxHeight: "min(240px, 50vh)", overflowY: "auto" }}>
-            {fav && (
-              <button
-                onClick={() => { setFav(null); setOpen(false) }}
-                style={{ width: "100%", textAlign: "left", background: "transparent", border: "none", color: "var(--danger)", padding: "10px 8px", borderRadius: 6, cursor: "pointer", fontSize: "0.75rem", marginBottom: 4, minHeight: 44 }}
-              >
-                ✕ {t("team.removeFavorite", "Quitar favorito")}
-              </button>
-            )}
-            {filtered.map(tm => (
-              <button
-                key={tm.id}
-                role="option"
-                aria-selected={fav?.id === tm.id}
-                onClick={() => pick(tm)}
-                style={{
-                  width: "100%", textAlign: "left", background: fav?.id === tm.id ? "rgba(238,30,70,.15)" : "transparent",
-                  border: "none", color: "var(--text)", padding: "10px 8px", borderRadius: 6, cursor: "pointer",
-                  fontSize: "0.8rem", display: "flex", alignItems: "center", gap: 8, minHeight: 44,
-                }}
-              >
-                <FlagOrInitial src={tm.flag_url} name={tm.name} />
-                <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName(tm.name)}</span>
-                {tm.group && <span style={{ marginLeft: "auto", fontSize: "0.65rem", color: "var(--muted)", flexShrink: 0 }}>{t("nav.group", { letter: tm.group })}</span>}
-              </button>
-            ))}
-            {filtered.length === 0 && (
-              <div style={{ color: "var(--muted)", fontSize: "0.78rem", textAlign: "center", padding: "12px 0" }}>
-                {t("team.noTeamsFound", "Sin equipos encontrados")}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {menu && createPortal(menu, document.body)}
     </div>
   )
 }

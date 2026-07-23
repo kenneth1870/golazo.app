@@ -248,7 +248,7 @@ export default function GroupDetailPage() {
   const [stale, setStale]                   = useState(false)
   const [activeTab, setActiveTab] = useState("standings")
 
-  const { matches, loading, refetch: refetchMatches } = useMatches("all", { competition: "WC", group })
+  const { matches, loading, refetch: refetchMatches, stale: matchesStale } = useMatches("all", { competition: "WC", group })
 
   const loadStandings = useCallback(() => {
     setStandingsError(false)
@@ -301,7 +301,7 @@ export default function GroupDetailPage() {
   return (
     <div className="site-section">
       <div className="container">
-        <OfflineBanner stale={stale} onRetry={loadStandings} />
+        <OfflineBanner stale={stale || matchesStale} onRetry={() => { loadStandings(); refetchMatches() }} />
 
         {/* Mobile tabs */}
         <div className="tab-bar d-lg-none" style={{ marginBottom: 16 }}>

@@ -388,7 +388,7 @@ export default function TodayPage() {
           })
         })
       })
-      .catch(() => { setError(true); setMatches([]) })
+      .catch(() => { setError(true) })
       .finally(() => { setLoading(false) })
   }, [])
 
@@ -627,7 +627,7 @@ export default function TodayPage() {
             <SkeletonBlock rows={2} />
             <SkeletonBlock rows={4} />
           </>
-        ) : error ? (
+        ) : error && matches.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state__icon" aria-hidden="true">⚠️</div>
             <h3>{t("error.dataUnavailable", "Data unavailable")}</h3>
@@ -698,15 +698,25 @@ export default function TodayPage() {
             )}
           </>
         ) : (
-          groups.map((g, i) => (
-            <CompetitionBlock
-              key={g[0]?.competition?.id ?? i}
-              matches={g}
-              navigate={navigate}
-              onMatchClick={onMatchClick}
-              flashIds={flashIds}
-            />
-          ))
+          <>
+            {error && (
+              <div style={{ textAlign: "center", color: "var(--muted)", fontSize: "0.82rem", marginBottom: 12 }}>
+                {t("error.tryAgain", "Couldn't load matches. Check your connection.")}
+                <button onClick={() => load(selected)} style={{ marginLeft: 8, background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "0.82rem", textDecoration: "underline" }}>
+                  {t("error.retry", "Retry")}
+                </button>
+              </div>
+            )}
+            {groups.map((g, i) => (
+              <CompetitionBlock
+                key={g[0]?.competition?.id ?? i}
+                matches={g}
+                navigate={navigate}
+                onMatchClick={onMatchClick}
+                flashIds={flashIds}
+              />
+            ))}
+          </>
         )}
       </div>
     </div>

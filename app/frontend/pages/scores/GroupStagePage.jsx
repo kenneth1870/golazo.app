@@ -9,6 +9,7 @@ import { useStandingsChannel } from "../../hooks/useStandingsChannel"
 import { useVisiblePolling } from "../../hooks/useVisiblePolling"
 import { GroupStandingsCompact, BestThirdsView } from "../../components/GroupStandingsView"
 import OfflineBanner from "../../components/OfflineBanner"
+import EmptyState from "../../components/EmptyState"
 import { fetchJson } from "../../utils/fetchJson"
 
 const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
@@ -27,7 +28,7 @@ function BestThirdsTable({ rows }) {
 export default function GroupStagePage() {
   const { t } = useTranslation()
   usePageMeta(t("nav.groupStage"), "FIFA World Cup 2026 group stage matches — all 72 group fixtures across 12 groups.")
-  const { matches, loading, stale: matchesStale, refetch: refetchMatches } = useMatches("all", { competition: "WC" })
+  const { matches, loading, error, stale: matchesStale, refetch: refetchMatches } = useMatches("all", { competition: "WC" })
   const navigate = useNavigate()
   const [standings, setStandings] = useState({})
   const [bestThirds, setBestThirds] = useState([])
@@ -71,6 +72,7 @@ export default function GroupStagePage() {
     acc[g] = groupMatches.filter(m => m.group_stage === g)
     return acc
   }, {})
+  const activeGroups = GROUPS.filter(g => byGroup[g].length > 0)
 
   if (loading) return <div className="site-section container"><div className="loading-shimmer" style={{ height: 400, borderRadius: 12 }} /></div>
 
@@ -84,8 +86,26 @@ export default function GroupStagePage() {
             <button className="btn btn-sm btn-outline-light" onClick={loadStandings}>{t("error.retry")}</button>
           </div>
         )}
+        {error && groupMatches.length === 0 ? (
+          <EmptyState
+            icon="⚠️"
+            title={t("error.dataUnavailable", "Data unavailable")}
+            description={t("error.tryAgain", "Couldn't load matches. Check your connection.")}
+            action={
+              <button type="button" className="btn btn-primary btn-sm mt-3" onClick={refetchMatches}>
+                {t("error.retry", "Retry")}
+              </button>
+            }
+          />
+        ) : activeGroups.length === 0 ? (
+          <EmptyState
+            icon="📊"
+            title={t("nav.groupStage")}
+            description={t("time.noMatches", { date: t("nav.groupStage") })}
+          />
+        ) : (
         <div className="row">
-          {GROUPS.filter(g => byGroup[g].length > 0).map(g => (
+          {activeGroups.map(g => (
             <div key={g} className="col-lg-6 mb-5">
               <div className="group-matches-card">
                 <div className="group-matches-card__header">
@@ -114,6 +134,7 @@ export default function GroupStagePage() {
             </div>
           ))}
         </div>
+        )}
 
         {/* Best Third-placed Teams */}
         {bestThirds.length > 0 && (
