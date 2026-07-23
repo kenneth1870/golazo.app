@@ -122,6 +122,38 @@ class Api::V1::CompetitionFixturesControllerTest < ActionDispatch::IntegrationTe
     assert_equal "escorpiones-belen", TeamDisplayNames.dedup_slug("Escorpiones Belén")
   end
 
+  test "fixtures tab keeps real CRC kickoff dates and opener first" do
+    rows = [
+      crc_match(
+        external_id: 1551648,
+        home: "CS Herediano",
+        away: "Puntarenas FC",
+        kickoff_at: Time.new(2026, 7, 23, 20, 0, 0, "-06:00")
+      ),
+      crc_match(
+        external_id: 1551649,
+        home: "San Carlos",
+        away: "Escorpiones Belén",
+        kickoff_at: Time.new(2026, 7, 26, 17, 0, 0, "-06:00")
+      )
+    ]
+
+    fake_client = Class.new do
+      define_method(:current_season_for_league) { |_lid, _code| 2026 }
+      define_method(:matches_for_league) { |_lid, **| rows }
+    end
+
+    with_fake_live_client(fake_client) do
+      get "/api/v1/competitions/CRC/fixtures", params: { tab: "fixtures", tz: "America/Costa_Rica" }
+    end
+
+    assert_response :success
+    assert_equal 2, json_response.size
+    assert_equal 1551648, json_response.first[:external_id]
+    assert_equal "Herediano", json_response.first.dig(:home_team, :name)
+    assert_match(/2026-07-26/, json_response.last[:kickoff_at].to_s)
+  end
+
   test "fixtures tab dedupes escorpiones short name vs full rebrand name" do
     placeholder = crc_match(
       external_id: 101,

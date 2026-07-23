@@ -80,7 +80,7 @@ Browser → Service Worker (network-first /api/*)
 
 ### LATAM kickoff normalization
 
-API-Football often stacks Liga Tica and Liga MX **jornadas on Sunday** even when real kickoffs span the week. `ApiMatchNormalizer#adjusted_kickoff` shifts Sunday jornada fixtures back three days (→ Thursday) so they appear on the correct local date in `/api/v1/today`. Placeholder 20:00 UTC times are flagged as TBC.
+API-Football often stacks Liga Tica and Liga MX **jornadas on Sunday at 20:00 UTC** when real kickoffs are not yet published. `ApiMatchNormalizer#adjusted_kickoff` shifts those **UTC placeholders** back three days (→ Thursday). Fixtures with real local timestamps (e.g. `-06:00`) keep their API dates. Placeholder times are flagged as TBC.
 
 ### Background jobs
 

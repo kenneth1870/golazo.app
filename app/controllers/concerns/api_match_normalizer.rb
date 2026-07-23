@@ -39,25 +39,29 @@ module ApiMatchNormalizer
     LATAM_LEAGUES.include?(code.to_s.upcase)
   end
 
-  # API-Football uses 20:00 UTC placeholders until real kickoff times are published.
-  def crc_placeholder_kickoff?(kickoff_at, code, round)
+  # Stacked jornada placeholders from API-Football are stored as Sunday 20:00 UTC (Z).
+  # Real local kickoffs use offset timestamps (e.g. 2026-07-26T14:00:00-06:00) — do not shift those.
+  def latam_jornada_stack_placeholder?(kickoff_at, code, round)
     return false unless latam_league?(code)
     return false unless round.to_s.match?(/Apertura|Clausura|Regular Season|Jornada/i)
 
     kickoff = Time.iso8601(kickoff_at.to_s)
-    kickoff.utc.hour == 20 && kickoff.utc.min.zero? && kickoff.sec.zero?
+    kickoff.utc.hour == 20 && kickoff.utc.min.zero? && kickoff.sec.zero? &&
+      kickoff_at.to_s.match?(/(?:Z|\+00:00)\z/)
   rescue ArgumentError, TypeError
     false
   end
 
-  # API-Football stacks jornadas on one day; real fechas often start mid-week.
+  # API-Football uses 20:00 UTC placeholders until real kickoff times are published.
+  def crc_placeholder_kickoff?(kickoff_at, code, round)
+    latam_jornada_stack_placeholder?(kickoff_at, code, round)
+  end
+
+  # Shift only stacked Sunday placeholders back to Thursday; keep real per-fixture dates.
   def adjusted_kickoff(kickoff_at, code, round)
-    return kickoff_at unless latam_league?(code)
-    return kickoff_at unless round.to_s.match?(/Apertura|Clausura|Regular Season|Jornada/i)
+    return kickoff_at unless latam_jornada_stack_placeholder?(kickoff_at, code, round)
 
     kickoff = Time.iso8601(kickoff_at.to_s)
-    return kickoff_at unless kickoff.wday == 0
-
     (kickoff - 3.days).iso8601
   rescue ArgumentError, TypeError
     kickoff_at

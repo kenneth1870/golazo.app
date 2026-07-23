@@ -170,7 +170,10 @@ function groupMatchesByRound(matches) {
     }
     map.get(key).push(m)
   }
-  return order.map(key => ({ key, items: map.get(key) }))
+  return order.map(key => ({
+    key,
+    items: [ ...map.get(key) ].sort((a, b) => String(a.kickoff_at).localeCompare(String(b.kickoff_at)))
+  }))
 }
 
 export default function LeagueDetailPage() {
