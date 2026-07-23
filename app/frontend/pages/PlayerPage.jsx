@@ -306,7 +306,7 @@ export default function PlayerPage() {
 
         {/* Tab bar */}
         <div className="tab-bar" style={{ marginBottom: 0 }}>
-          <div className="tab-bar__inner">
+          <div className="tab-bar__inner tab-bar__inner--scroll">
             {PLAYER_TABS.map(k => (
               <button
                 key={k}

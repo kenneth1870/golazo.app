@@ -147,8 +147,8 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
   return (
     <div className="widget-next-match mb-4">
       <div
-        className={`widget-title d-flex align-items-center${canNav ? " cursor-pointer" : ""}`}
-        style={{ gap: 10, cursor: canNav ? "pointer" : "default" }}
+        className={`widget-title competition-block__header d-flex align-items-center${canNav ? " cursor-pointer" : ""}`}
+        style={{ cursor: canNav ? "pointer" : "default" }}
         role={canNav ? "button" : undefined}
         tabIndex={canNav ? 0 : undefined}
         aria-label={canNav ? t("a11y.viewLeague", { name: leagueName }) : undefined}
@@ -156,10 +156,10 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
         onKeyDown={handleHeaderKeyDown}
       >
         <FlagImg src={comp?.logo} name={comp?.name} size={20} className="logo-sm" />
-        <h3 style={{ margin: 0 }}>{leagueName}</h3>
-        <span className="widget-meta-country" style={{ marginLeft: "auto", fontSize: "0.72rem", color: "var(--muted)" }}>{translateCountry(comp?.country, i18n.language)}</span>
+        <h3 className="competition-block__title">{leagueName}</h3>
+        <span className="widget-meta-country competition-block__country" style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{translateCountry(comp?.country, i18n.language)}</span>
         {hasLive && <span className="live-badge">{t("status.live")}</span>}
-        {canNav && <span style={{ fontSize: "0.75rem", color: "var(--accent)" }}>→</span>}
+        {canNav && <span className="competition-block__nav">→</span>}
       </div>
       <div className="widget-body p-0">
         {sorted.map(m => {

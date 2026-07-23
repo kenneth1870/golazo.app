@@ -405,7 +405,7 @@ export default function LeagueDetailPage() {
 
       <div className="tab-bar sticky-tabs">
         <div className="container">
-          <div className="tab-bar__inner" role="tablist">
+          <div className="tab-bar__inner tab-bar__inner--scroll" role="tablist">
             {TABS.map(tabItem => (
               <button
                 key={tabItem.key}

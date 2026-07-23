@@ -188,7 +188,7 @@ export default function ClubTeamPage() {
 
       <div className="tab-bar sticky-tabs">
         <div className="container">
-          <div className="tab-bar__inner">
+          <div className="tab-bar__inner tab-bar__inner--scroll">
             <button
               className={`tab-link${tab === "upcoming" ? " tab-link--active" : ""}`}
               onClick={() => setTab("upcoming")}

@@ -293,7 +293,7 @@ export default function GroupDetailPage() {
 
         {/* Mobile tabs */}
         <div className="tab-bar d-lg-none" style={{ marginBottom: 16 }}>
-          <div className="tab-bar__inner" role="tablist">
+          <div className="tab-bar__inner tab-bar__inner--scroll" role="tablist">
             {TABS.map(tab => (
               <button key={tab.key}
                 role="tab"

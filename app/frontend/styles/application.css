@@ -520,7 +520,9 @@ button:focus:not(:focus-visible){outline:none}
 .tab-bar__inner{
   display:flex;gap:6px;padding:10px 16px;
   overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
-  align-items:center;
+  align-items:center;flex-wrap:nowrap;
+  -webkit-mask-image:linear-gradient(to right,black 88%,transparent 100%);
+  mask-image:linear-gradient(to right,black 88%,transparent 100%);
 }
 .tab-bar__inner::-webkit-scrollbar{display:none}
 .tab-bar__inner--scroll{flex-wrap:nowrap}
@@ -552,12 +554,6 @@ button:focus:not(:focus-visible){outline:none}
 }
 .tab-link--active:hover{
   background:color-mix(in srgb,var(--accent) 85%,#fff) !important;
-}
-
-/* Tab bar right-edge fade hint — scrollable tab rows (match detail, etc.) */
-.tab-bar__inner--scroll{
-  -webkit-mask-image:linear-gradient(to right,black 88%,transparent 100%);
-  mask-image:linear-gradient(to right,black 88%,transparent 100%);
 }
 
 /* ─── Section ────────────────────────────────────────── */
@@ -661,6 +657,15 @@ button:focus:not(:focus-visible){outline:none}
   font-size:.82rem!important;font-weight:800!important;
   color:#fff!important;letter-spacing:.04em;text-transform:uppercase;
 }
+.competition-block__header{gap:10px;min-width:0;overflow:hidden}
+.competition-block__title{
+  flex:1;min-width:0;margin:0!important;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.competition-block__country{margin-left:auto!important;flex-shrink:0}
+.competition-block__header .live-badge,
+.competition-block__nav{flex-shrink:0}
+.competition-block__nav{font-size:.75rem;color:var(--accent)}
 .live-badge{
   background:var(--accent);color:#fff;font-size:.6rem;font-weight:800;
   letter-spacing:.08em;padding:2px 7px;border-radius:4px;

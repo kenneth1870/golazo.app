@@ -175,7 +175,7 @@ export default function NewsPage() {
 
       <div className="tab-bar sticky-tabs">
         <div className="container">
-          <div className="tab-bar__inner" style={{ overflowX: "auto" }} role="tablist">
+          <div className="tab-bar__inner tab-bar__inner--scroll" role="tablist">
 
             {/* For You tab — always visible; empty state guides new users */}
             <button
