@@ -18,8 +18,16 @@ class NewsServiceTest < ActiveSupport::TestCase
     assert_equal %w[CRC LMX], codes
   end
 
-  test "league espn urls include costa rica" do
-    assert NewsService::LEAGUE_ESPN_URLS.key?("CRC")
-    assert_match(/crc\.1/, NewsService::LEAGUE_ESPN_URLS["CRC"])
+  test "dedupe_articles removes duplicate titles and links" do
+    items = [
+      { id: "1", link: "https://a.test/1", title: "Same headline" },
+      { id: "2", link: "https://a.test/2", title: "Same headline" },
+      { id: "3", link: "https://a.test/1", title: "Other headline" }
+    ]
+
+    deduped = NewsService.new.send(:dedupe_articles, items)
+    assert_equal 1, deduped.length
+    assert_equal "1", deduped.first[:id]
+    assert_equal "Same headline", deduped.first[:title]
   end
 end

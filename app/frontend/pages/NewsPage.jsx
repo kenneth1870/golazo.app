@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useAppFocus } from "../hooks/useAppFocus"
@@ -9,7 +9,33 @@ import { translateTeam } from "../i18n/teamNames"
 
 const PAGE_SIZE = 12
 
-// ── Featured card: full-bleed image with gradient overlay ─────────────────
+function dedupeArticles(list) {
+  const seenLinks = new Set()
+  const seenTitles = new Set()
+  return list.filter(a => {
+    const link = a.link?.trim()
+    const title = a.title?.toLowerCase()?.trim()
+    if (link) {
+      if (seenLinks.has(link)) return false
+      seenLinks.add(link)
+    }
+    if (title) {
+      if (seenTitles.has(title)) return false
+      seenTitles.add(title)
+    }
+    return !!(link || title || a.id)
+  })
+}
+
+function CompactList({ articles, mobileOnly = false }) {
+  return (
+    <div className={`nc-compact-grid news-feed-grid${mobileOnly ? " news-feed-grid--mobile" : ""}`}>
+      {articles.map((article, i) => (
+        <CompactCard key={article.id ?? `${article.link ?? "article"}-${i}`} article={article} />
+      ))}
+    </div>
+  )
+}
 function FeaturedCard({ article }) {
   const bg = article.image
     ? `url(${article.image}), url('/images/hero_2.jpg')`
@@ -134,18 +160,20 @@ export default function NewsPage() {
 
   useEffect(() => { loadNews() }, [loadNews])
 
+  const uniqueArticles = useMemo(() => dedupeArticles(articles), [articles])
+
   const allLabel = t("news.all", "All")
-  const sources  = [allLabel, ...new Set(articles.map(a => a.source))]
+  const sources  = [allLabel, ...new Set(uniqueArticles.map(a => a.source))]
   const active   = source ?? allLabel
 
   // For You: articles matching followed teams or competitions
   const followedTeamNames = favoriteTeams.map(f => f.name)
   const followedCompNames = favoriteCompetitions.map(f => f.name)
-  const forYouArticles = articles.filter(a => isRelevantTo(a, followedTeamNames, followedCompNames, i18n.language))
+  const forYouArticles = uniqueArticles.filter(a => isRelevantTo(a, followedTeamNames, followedCompNames, i18n.language))
 
   // Which pool to show depending on active tab
   const pool = tab === "foryou" ? forYouArticles : (
-    active === allLabel ? articles : articles.filter(a => a.source === active)
+    active === allLabel ? uniqueArticles : uniqueArticles.filter(a => a.source === active)
   )
   const visible = pool.slice(0, visibleCount)
   const hasMore = visibleCount < pool.length
@@ -165,7 +193,7 @@ export default function NewsPage() {
   }, [hasMore, visible.length])
 
   return (
-    <>
+    <div className="news-page">
       <div className="page-hero" style={{ backgroundImage: "url('/images/hero_6.jpg')" }}>
         <div className="container">
           <h1 className="page-hero__title">{t("news.title")}</h1>
@@ -266,12 +294,7 @@ export default function NewsPage() {
           ) : visible.length > 0 ? (
             <>
               {tab === "foryou" && (
-                <div style={{
-                  marginBottom: 20, padding: "10px 14px", borderRadius: 10,
-                  background: "rgba(238,30,70,.08)", border: "1px solid rgba(238,30,70,.2)",
-                  fontSize: "0.82rem", color: "var(--muted)",
-                  display: "flex", alignItems: "center", gap: 8,
-                }}>
+                <div className="news-for-you-banner">
                   <span>⭐</span>
                   <span>
                     {t("news.forYouShowing", "Showing news for {{teams}}", {
@@ -284,33 +307,28 @@ export default function NewsPage() {
               {(() => {
                 const isEditorial = tab === "all" && active === allLabel
                 if (!isEditorial) {
-                  // Filtered view: compact grid only
-                  return (
-                    <div className="nc-compact-grid">
-                      {visible.map((article, i) => (
-                        <CompactCard key={article.id ?? i} article={article} />
-                      ))}
-                    </div>
-                  )
+                  return <CompactList articles={visible} />
                 }
-                // Editorial layout: featured → medium row → compact grid
                 const [featured, ...rest] = visible
                 const mediumPair = rest.slice(0, 2)
                 const compacts   = rest.slice(2)
                 return (
-                  <div className="news-editorial-grid">
-                    {featured && <FeaturedCard article={featured} />}
-                    {mediumPair.length > 0 && (
-                      <div className="nc-medium-row">
-                        {mediumPair.map((a, i) => <MediumCard key={a.id ?? i} article={a} />)}
-                      </div>
-                    )}
-                    {compacts.length > 0 && (
-                      <div className="nc-compact-grid">
-                        {compacts.map((a, i) => <CompactCard key={a.id ?? i} article={a} />)}
-                      </div>
-                    )}
-                  </div>
+                  <>
+                    <div className="news-editorial-grid news-feed-grid--desktop">
+                      {featured && <FeaturedCard article={featured} />}
+                      {mediumPair.length > 0 && (
+                        <div className="nc-medium-row">
+                          {mediumPair.map((a, i) => <MediumCard key={a.id ?? i} article={a} />)}
+                        </div>
+                      )}
+                      {compacts.length > 0 && (
+                        <div className="nc-compact-grid">
+                          {compacts.map((a, i) => <CompactCard key={a.id ?? i} article={a} />)}
+                        </div>
+                      )}
+                    </div>
+                    <CompactList articles={visible} mobileOnly />
+                  </>
                 )
               })()}
 
@@ -329,6 +347,6 @@ export default function NewsPage() {
           ) : null}
         </div>
       </div>
-    </>
+    </div>
   )
 }

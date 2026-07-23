@@ -211,9 +211,11 @@ class NewsService
       espn_items = espn_threads.flat_map { |t| result = t.join(8)&.value || []; t.kill if t.alive?; result }
       rss_items  = rss_threads.flat_map  { |t| result = t.join(8)&.value || []; t.kill if t.alive?; result }
 
-      merged = (espn_items + rss_items)
-        .uniq { |a| a[:link] }
-        .sort_by { |a| a[:published_at] || Time.at(0) }.reverse
+      merged = dedupe_articles(
+        (espn_items + rss_items)
+          .uniq { |a| a[:link] }
+          .sort_by { |a| a[:published_at] || Time.at(0) }.reverse
+      )
 
       imageless = merged.select { |a| a[:image].blank? && a[:source]&.include?("ESPN") }.first(5)
       if imageless.any?
@@ -260,6 +262,7 @@ class NewsService
 
       (espn_items + rss_items)
         .uniq { |a| a[:link] }
+        .then { |items| dedupe_articles(items) }
         .sort_by { |a| a[:published_at] || Time.at(0) }.reverse
     end
   rescue => e
@@ -657,5 +660,26 @@ class NewsService
   def news_cache_key(lang)
     suffix = AppFocus.wc_paused? ? "clubs_v10" : "v8"
     "news_feed_#{suffix}_#{lang}"
+  end
+
+  def dedupe_articles(items)
+    seen_links = {}
+    seen_titles = {}
+    items.select do |article|
+      link = article[:link].to_s.strip
+      title = article[:title].to_s.downcase.strip
+
+      if link.present?
+        next false if seen_links[link]
+        seen_links[link] = true
+      end
+
+      if title.present?
+        next false if seen_titles[title]
+        seen_titles[title] = true
+      end
+
+      link.present? || title.present? || article[:id].present?
+    end
   end
 end
