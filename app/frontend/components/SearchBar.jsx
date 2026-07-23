@@ -174,17 +174,11 @@ export default function SearchBar({ onClose, returnFocusRef }) {
         role="dialog"
         aria-modal="true"
         aria-label={t("search.title", "Search")}
-        style={{
-          position: "fixed", top: "10%", left: "50%", transform: "translateX(-50%)",
-          width: "min(560px, 92vw)", zIndex: 3001,
-          background: "var(--surface)", border: "1px solid var(--border)",
-          borderRadius: 14, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.7)",
-          animation: "pageIn .15s ease",
-        }}
+        className="search-bar"
       >
         {/* Input */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderBottom: "1px solid var(--border)" }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2.5" style={{ flexShrink: 0 }}>
+        <div className="search-bar__header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2.5" className="search-bar__icon">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
           <input
@@ -197,27 +191,20 @@ export default function SearchBar({ onClose, returnFocusRef }) {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder={t("search.placeholder")}
-            style={{
-              flex: 1, background: "none", border: "none", outline: "none",
-              color: "var(--text)", fontSize: "1rem", fontFamily: "inherit",
-            }}
+            className="search-bar__input"
           />
-          {loading && <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>…</span>}
+          {loading && <span className="search-bar__loading">…</span>}
           <button
             type="button"
             onClick={close}
             aria-label={t("a11y.close")}
-            className="focus-brand"
-            style={{
-            background: "var(--surface2)", border: "1px solid var(--border)",
-            borderRadius: 6, padding: "4px 10px", fontSize: "0.72rem", color: "var(--muted)",
-            cursor: "pointer", fontFamily: "inherit", fontWeight: 600, flexShrink: 0,
-          }}>✕</button>
+            className="search-bar__close focus-brand"
+          >✕</button>
         </div>
 
         {/* Results */}
         {results.length > 0 ? (
-          <div style={{ maxHeight: 380, overflowY: "auto" }}>
+          <div className="search-bar__results">
             {results.map((r, i) => (
               <div
                 key={`${r.type}-${r.id}`}

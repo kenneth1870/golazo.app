@@ -27,16 +27,7 @@ function ThemeToggle() {
       onClick={() => setLight(v => !v)}
       title={light ? t("a11y.themeDark") : t("a11y.themeLight")}
       aria-label={light ? t("a11y.themeDark") : t("a11y.themeLight")}
-      className="focus-brand"
-      style={{
-        background: "none", border: "1px solid var(--border)",
-        borderRadius: 8, width: 32, height: 32,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        cursor: "pointer", fontSize: "0.9rem", color: "var(--muted)",
-        transition: "border-color .2s, color .2s", flexShrink: 0,
-      }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.25)"; e.currentTarget.style.color = "#fff" }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted)" }}
+      className="theme-toggle focus-brand"
     >
       {light ? "☀️" : "🌙"}
     </button>

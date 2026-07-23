@@ -124,9 +124,9 @@ function ComparisonShell({ subtitle, homePicker, awayPicker, homeId, awayId, set
           <p style={{ color: "var(--muted)", fontSize: "0.82rem", margin: 0 }}>{subtitle}</p>
         </div>
 
-        <div style={{ display: "flex", gap: 12, alignItems: "flex-end", marginBottom: 16 }}>
+        <div className="team-comparison__pickers">
           {homePicker}
-          <div style={{ fontSize: "1.1rem", paddingBottom: 10, color: "var(--muted)" }}>{t("status.vs")}</div>
+          <div className="team-comparison__vs">{t("status.vs")}</div>
           {awayPicker}
         </div>
         <button

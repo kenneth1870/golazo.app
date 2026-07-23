@@ -1351,13 +1351,72 @@ body.light-mode .date-strip__day--today{background:rgba(238,30,70,.1)}
 .lang-check{color:var(--accent);font-size:.85rem}
 .lang-switcher{display:flex;align-items:center}
 
+/* ─── Theme toggle ───────────────────────────────────── */
+.theme-toggle{
+  background:none;border:1px solid var(--border);border-radius:8px;
+  min-width:44px;min-height:44px;width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:.9rem;color:var(--muted);
+  transition:border-color .2s,color .2s;flex-shrink:0;
+}
+@media(hover:hover){
+  .theme-toggle:hover{border-color:rgba(255,255,255,.25);color:#fff}
+}
+
 /* ─── Search bar ─────────────────────────────────────── */
+.search-bar{
+  position:fixed;
+  top:max(12px, env(safe-area-inset-top, 0px));
+  left:50%;transform:translateX(-50%);
+  width:min(560px, calc(100vw - 16px));
+  max-height:calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px);
+  z-index:3001;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden;
+  box-shadow:0 24px 80px rgba(0,0,0,.7);
+  animation:pageIn .15s ease;
+  display:flex;flex-direction:column;
+}
+.search-bar__header{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.search-bar__icon{flex-shrink:0}
+.search-bar__input{
+  flex:1;background:none;border:none;outline:none;
+  color:var(--text);font-size:1rem;font-family:inherit;min-width:0;
+}
+.search-bar__loading{font-size:.72rem;color:var(--muted);flex-shrink:0}
+.search-bar__close{
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  min-width:44px;min-height:44px;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;color:var(--muted);cursor:pointer;
+  font-family:inherit;font-weight:600;flex-shrink:0;
+}
+.search-bar__results{max-height:min(380px, 60dvh);overflow-y:auto;flex:1;min-height:0}
 .search-bar__footer{
-  padding:8px 16px;border-top:1px solid var(--border);
-  display:flex;gap:16px;font-size:.68rem;color:#444;
+  padding:8px 16px;padding-bottom:max(8px, env(safe-area-inset-bottom, 0px));
+  border-top:1px solid var(--border);
+  display:flex;gap:16px;font-size:.68rem;color:#444;flex-shrink:0;
+}
+@media(max-width:576px){
+  .search-bar{
+    top:max(8px, env(safe-area-inset-top, 0px));
+    width:calc(100vw - 12px);
+    border-radius:12px;
+  }
 }
 /* Hide keyboard hints on touch-only devices */
 @media(hover:none){.search-bar__footer{display:none}}
+
+/* ─── Team comparison pickers ───────────────────────── */
+.team-comparison__pickers{display:flex;gap:12px;align-items:flex-end;margin-bottom:16px}
+.team-comparison__vs{font-size:1.1rem;padding-bottom:10px;color:var(--muted);flex-shrink:0}
+@media(max-width:576px){
+  .team-comparison__pickers{flex-direction:column;align-items:stretch}
+  .team-comparison__vs{text-align:center;padding:4px 0}
+}
 
 /* ─── Competition block — hide country on small phones ─ */
 @media(max-width:480px){.widget-meta-country{display:none}}
