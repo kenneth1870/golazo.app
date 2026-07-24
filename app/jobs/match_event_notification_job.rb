@@ -19,7 +19,7 @@ class MatchEventNotificationJob < ApplicationJob
   # across workers; large enough to avoid per-job overhead dominating.
   BATCH_SIZE = 100
 
-  def perform(event_type:, match_id:, home_name:, away_name:, home_score: nil, away_score: nil, match_url: nil, minute: nil, scorer: nil, reason: nil)
+  def perform(event_type:, match_id: nil, external_id: nil, home_name:, away_name:, home_score: nil, away_score: nil, match_url: nil, minute: nil, scorer: nil, reason: nil, competition_code: nil)
     return unless AppFocus.push_enabled?
 
     event_type = event_type.to_s
@@ -42,18 +42,17 @@ class MatchEventNotificationJob < ApplicationJob
     # sets status="finished" only after the final whistle, so trusting the DB
     # record is sufficient — no time-based gate needed.
     if event_type == "fulltime"
-      match = Match.find_by(id: match_id)
-      if match.nil? || match.status != "finished"
-        Rails.logger.info("[PushNotification] Skipping fulltime for match #{match_id}: status=#{match&.status.inspect}")
+      match = Match.find_by(id: match_id) if match_id.present?
+      if match && match.status != "finished"
+        Rails.logger.info("[PushNotification] Skipping fulltime for match #{match_id}: status=#{match.status.inspect}")
         return
       end
     end
 
-    # Deduplicate retried jobs — written only after all gates pass so a blocked
-    # fulltime gate doesn't consume the idempotency window prematurely.
-    dedup_key = "notif_sent_#{event_type}_#{match_id}_#{home_score}_#{away_score}_#{minute}"
+    dedup_id = match_id.presence || external_id.presence || "#{home_name}_#{away_name}"
+    dedup_key = "notif_sent_#{event_type}_#{dedup_id}_#{home_score}_#{away_score}_#{minute}"
     if Rails.cache.read(dedup_key)
-      Rails.logger.info("[PushNotification] Skipping duplicate #{event_type} for match #{match_id}")
+      Rails.logger.info("[PushNotification] Skipping duplicate #{event_type} for match #{dedup_id}")
       return
     end
     Rails.cache.write(dedup_key, 1, expires_in: 10.minutes)
@@ -61,8 +60,12 @@ class MatchEventNotificationJob < ApplicationJob
     score_str  = "#{home_score}–#{away_score}" if home_score && away_score
     url        = match_url || "/"
 
-    subs = PushSubscription.for_teams([ home_name, away_name ])
-    Rails.logger.info("[PushNotification] #{event_type} | #{home_name} vs #{away_name} | #{subs.size} subscribers found")
+    subs = PushSubscription.for_match(
+      home_name: home_name,
+      away_name: away_name,
+      competition_code: competition_code
+    )
+    Rails.logger.info("[PushNotification] #{event_type} | #{home_name} vs #{away_name} (#{competition_code || '?'}) | #{subs.size} subscribers found")
     return if subs.empty?
 
     # Copy + team names are localised per subscriber; memoise per locale so we
@@ -73,7 +76,7 @@ class MatchEventNotificationJob < ApplicationJob
       # Fall back to DB goals table only — skip the extra live-API round-trip so the
       # notification goes out immediately rather than waiting 1-2s for a fetch.
       scorer.presence ||
-        Goal.where(match_id: match_id).order(created_at: :desc).first&.player_name.presence
+        (match_id.present? ? Goal.where(match_id: match_id).order(created_at: :desc).first&.player_name.presence : nil)
     end
 
     # Filter by per-subscriber event preferences before building localized copy.

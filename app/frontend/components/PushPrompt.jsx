@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { usePushNotifications } from "../hooks/usePushNotifications"
+import { useFavorites } from "../hooks/useFavorites"
+import { scopeFromFavorites } from "../utils/pushScope"
 import { claimPrompt, releasePrompt } from "../utils/promptCoordinator"
 import { storageGet } from "../utils/safeStorage"
 
@@ -12,6 +14,7 @@ const ONBOARDING_GRACE_MS = 60 * 60 * 1000
 // Asks to enable goal alerts, optionally scoped to a favorite team.
 export default function PushPrompt({ favoriteTeamName = null, paused = false }) {
   const { t } = useTranslation()
+  const { favorites } = useFavorites()
   const { supported, permission, subscribed, loading, subscribe, needsIosInstall } = usePushNotifications()
   const [visible, setVisible] = useState(false)
   const [done,    setDone]    = useState(false)
@@ -48,9 +51,13 @@ export default function PushPrompt({ favoriteTeamName = null, paused = false }) 
   }
 
   const enable = async () => {
-    if (needsIosInstall) return // button shouldn't be reachable but guard anyway
+    if (needsIosInstall) return
     setErrMsg(null)
-    const result = await subscribe(favoriteTeamName ? [favoriteTeamName] : [])
+    const scope = scopeFromFavorites(favorites)
+    if (favoriteTeamName && !scope.teamNames.includes(favoriteTeamName)) {
+      scope.teamNames = [...scope.teamNames, favoriteTeamName]
+    }
+    const result = await subscribe(scope.teamNames, scope.competitionCodes)
     if (result.ok) {
       setDone(true)
       setVisible(false)

@@ -1366,7 +1366,7 @@ function NotifPrefsPanel() {
 }
 
 // ─── Push notification banner for live matches ────────
-function LivePushBanner({ homeName, awayName, teamNamesRaw, onDismiss }) {
+function LivePushBanner({ homeName, awayName, teamNamesRaw, leagueCode, onDismiss }) {
   const { t } = useTranslation()
   const { supported, permission, subscribed, loading, subscribe, needsIosInstall } = usePushNotifications()
   const [done,   setDone]   = useState(false)
@@ -1377,7 +1377,9 @@ function LivePushBanner({ homeName, awayName, teamNamesRaw, onDismiss }) {
   const enable = async () => {
     if (needsIosInstall) return
     setErrMsg(null)
-    const res = await subscribe((teamNamesRaw || [homeName, awayName]).filter(Boolean))
+    const teamNames = (teamNamesRaw || [homeName, awayName]).filter(Boolean)
+    const competitionCodes = leagueCode ? [leagueCode] : []
+    const res = await subscribe(teamNames, competitionCodes)
     if (res.ok) {
       setDone(true)
     } else if (res.error === "Permission denied") {
@@ -1593,6 +1595,7 @@ export default function MatchShowPage() {
   const awayTeamRaw = data?.fixture?.teams?.away?.name
   const homeName    = translateTeam(homeTeamRaw, i18n.language)
   const awayName    = translateTeam(awayTeamRaw, i18n.language)
+  const leagueCode  = leagueCodeFromApiId(data?.fixture?.league?.id)
   const kickoffAt   = data?.fixture?.fixture?.date
   const homeLogo    = data?.fixture?.teams?.home?.logo
 
@@ -2013,6 +2016,7 @@ export default function MatchShowPage() {
             homeName={homeName}
             awayName={awayName}
             teamNamesRaw={[homeTeamRaw, awayTeamRaw].filter(Boolean)}
+            leagueCode={leagueCode}
             onDismiss={() => setShowNotifBanner(false)}
           />
         )}

@@ -88,6 +88,10 @@ module AppFocus
     LEAGUE_IDS[code.to_s.upcase]
   end
 
+  def code_for_league_id(league_id)
+    LEAGUE_IDS.find { |_code, id| id == league_id.to_i }&.first
+  end
+
   # API-Football season year for standings/fixtures requests.
   def season_for(code, on: Date.current)
     year  = on.year

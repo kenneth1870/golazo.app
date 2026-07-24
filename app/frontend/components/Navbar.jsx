@@ -9,7 +9,7 @@ import { useAppFocus } from "../hooks/useAppFocus"
 import { NAV_LEAGUES } from "./ClubCompetitionChips"
 import ThemeToggle from "./ThemeToggle"
 import { dismissOverlayProps } from "../utils/dismissOverlay"
-import PreferencesSheet from "./PreferencesSheet"
+import { loadPushScope } from "../utils/pushScope"
 
 const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 
@@ -24,10 +24,9 @@ export function NotifToggle({ variant = "drawer" }) {
 
   async function handleClick() {
     if (needsIosInstall) { setIosHint(true); return }
-    // Carry saved team preferences so re-subscribe keeps the same scope
-    const saved = (() => { try { return JSON.parse(localStorage.getItem("push_sub_teams") || "[]") } catch { return [] } })()
+    const saved = loadPushScope()
     if (subscribed) await unsubscribe()
-    else await subscribe(saved)
+    else await subscribe(saved.teamNames, saved.competitionCodes)
   }
 
   if (variant === "desktop") {

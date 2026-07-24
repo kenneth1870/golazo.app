@@ -227,23 +227,23 @@ module Api
           # sync_match_from_live will see score_unchanged=true and skip it.
           # Use an atomic dedup key shared with the sync job — whichever sees
           # the score change first fires the notification, the other skips.
-          if local_match.competition&.code == "WC" && AppFocus.push_enabled?
+          if AppFocus.push_enabled?
             dedup = "goal_notified_#{local_match.id}_#{current[:h]}_#{current[:a]}"
             if Rails.cache.write(dedup, true, expires_in: 5.minutes, unless_exist: true)
-              # Events use symbol keys from LiveScoresClient#normalize_events
               scorer_name = data[:events]
                 &.select { |e| (e[:type] || e["type"]) == "Goal" && (e[:detail] || e["detail"]) != "Own Goal" && (e[:detail] || e["detail"]) != "Goal Disallowed" }
                 &.last&.then { |e| e[:player] || e.dig("player", "name") }.presence
               MatchEventNotificationJob.perform_later(
-                event_type: "goal",
-                match_id:   local_match.id,
-                home_name:  local_match.home_team&.name.to_s,
-                away_name:  local_match.away_team&.name.to_s,
-                home_score: current[:h].to_i,
-                away_score: current[:a].to_i,
-                minute:     minute,
-                scorer:     scorer_name,
-                match_url:  "/matches/#{fixture_id}"
+                event_type:       "goal",
+                match_id:         local_match.id,
+                home_name:        local_match.home_team&.name.to_s,
+                away_name:        local_match.away_team&.name.to_s,
+                home_score:       current[:h].to_i,
+                away_score:       current[:a].to_i,
+                minute:           minute,
+                scorer:           scorer_name,
+                competition_code: local_match.competition&.code,
+                match_url:        "/matches/#{fixture_id}"
               )
             end
           end

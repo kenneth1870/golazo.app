@@ -5,6 +5,8 @@ import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
 import { translateLeague, translateCountry } from "../i18n/leagueNames"
 import MatchRow from "../components/MatchRow"
 import { useFavorites } from "../hooks/useFavorites"
+import { usePushNotifications } from "../hooks/usePushNotifications"
+import { syncFavoriteToPush } from "../utils/favoritePush"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { navigateToMatch, navIdFor } from "../utils/matchDetailCache"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
@@ -184,6 +186,7 @@ export default function LeagueDetailPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { isFavorite, toggleFavorite, favoriteTeamNames } = useFavorites()
+  const { addTeams, removeTeams, addLeagues, removeLeagues, subscribed } = usePushNotifications()
   const [competition, setCompetition] = useState(null)
   const [notFound, setNotFound]         = useState(false)
   const [matches, setMatches]         = useState([])
@@ -397,7 +400,12 @@ export default function LeagueDetailPage() {
             </div>
             {competition && (
               <button
-                onClick={() => toggleFavorite({ type: "competition", id: favKey, name: competition.name, code: favKey, flag_url: competition.logo })}
+                onClick={() => {
+                  const item = { type: "competition", id: favKey, name: competition.name, code: favKey, flag_url: competition.logo }
+                  const willFollow = !isFavorite("competition", favKey)
+                  toggleFavorite(item)
+                  syncFavoriteToPush(item, { addTeams, removeTeams, addLeagues, removeLeagues, subscribed, following: willFollow })
+                }}
                 title={isFavorite("competition", favKey) ? t("team.unfollowLeague") : t("team.followLeague")}
                 style={{
                   background: isFavorite("competition", favKey) ? "rgba(238,30,70,.15)" : "var(--surface2)",

@@ -19,6 +19,7 @@ function persistLanguage(code) {
 }
 import { useFavorites } from "../hooks/useFavorites"
 import { usePushNotifications } from "../hooks/usePushNotifications"
+import { savePushScope } from "../utils/pushScope"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { isIosSafari, isStandalone } from "../utils/platform"
 import { translateTeam } from "../i18n/teamNames"
@@ -186,6 +187,10 @@ export default function OnboardingModal({ onDismiss, returnFocusRef }) {
     selectedLeagues.forEach(league => {
       addFavorite({ type: "competition", id: league.code, name: t(league.key), code: league.code })
     })
+    savePushScope({
+      teamNames: selectedTeams.map(t => t.name),
+      competitionCodes: selectedLeagues.map(l => l.code),
+    })
     storageSet(ONBOARDED_AT_KEY, Date.now().toString())
     onDismiss()
   }, [selectedTeams, selectedLeagues, addFavorite, t, onDismiss])
@@ -201,7 +206,10 @@ export default function OnboardingModal({ onDismiss, returnFocusRef }) {
   const requestNotifications = async () => {
     setNotifLoading(true)
     setNotifErr(null)
-    const result = await subscribe(selectedTeams.map(t => t.name))
+    const result = await subscribe(
+      selectedTeams.map(t => t.name),
+      selectedLeagues.map(l => l.code)
+    )
     setNotifLoading(false)
     if (result?.ok) {
       setNotifDone(true)

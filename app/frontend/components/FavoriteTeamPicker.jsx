@@ -6,7 +6,7 @@ import { useAppFocus } from "../hooks/useAppFocus"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 import { resolveTeamLogo, translateTeam } from "../i18n/teamNames"
 import { loadClubTeams } from "../utils/loadClubTeams"
-import { syncTeamFollowToPush } from "../utils/favoritePush"
+import { syncFavoriteToPush } from "../utils/favoritePush"
 import { fetchJson } from "../utils/fetchJson"
 
 function FlagOrInitial({ src, name }) {
@@ -31,7 +31,7 @@ export default function FavoriteTeamPicker() {
   const { t, i18n } = useTranslation()
   const { clubs_primary: clubsPrimary } = useAppFocus()
   const [fav, setFav]     = useFavoriteTeam()
-  const { addTeams, subscribed } = usePushNotifications()
+  const { addTeams, removeTeams, addLeagues, removeLeagues, subscribed } = usePushNotifications()
   const [teams, setTeams] = useState([])
   const [open, setOpen]   = useState(false)
   const [query, setQuery] = useState("")
@@ -127,7 +127,10 @@ export default function FavoriteTeamPicker() {
 
   function pick(team) {
     setFav({ id: team.id, name: team.name, flag_url: team.flag_url, group: team.group, league_code: team.league_code })
-    syncTeamFollowToPush(team.name, { addTeams, subscribed, following: true })
+    syncFavoriteToPush(
+      { type: "team", name: team.name },
+      { addTeams, removeTeams, addLeagues, removeLeagues, subscribed, following: true }
+    )
     setOpen(false)
     setQuery("")
   }

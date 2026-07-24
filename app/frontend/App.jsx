@@ -17,6 +17,7 @@ import ConsentBanner from "./components/ConsentBanner"
 import RequireAdmin from "./components/RequireAdmin"
 import LoginPage from "./pages/LoginPage"
 import { useFavorites } from "./hooks/useFavorites"
+import { scopeFromFavorites, hasPushScope } from "./utils/pushScope"
 import { usePushNotifications } from "./hooks/usePushNotifications"
 import { useAppFocus } from "./hooks/useAppFocus"
 import { isIosSafari, isStandalone } from "./utils/platform"
@@ -82,35 +83,37 @@ const ONBOARDING_GRACE_MS = 60 * 60 * 1000
 
 function useAutoSubscribePush() {
   const { push_enabled: pushEnabled = false } = useAppFocus()
+  const { favorites } = useFavorites()
   const { subscribe, subscribed } = usePushNotifications()
   useEffect(() => {
     if (!pushEnabled) return
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return
     if (subscribed) return
-    if (isIosSafari() && !isStandalone()) return // needs PWA install first
+    if (isIosSafari() && !isStandalone()) return
     if (storageGet(ONBOARDED_KEY) !== "1") return
     const onboardedAt = parseInt(storageGet("golazo_onboarded_at") || "0", 10)
     if (onboardedAt && Date.now() - onboardedAt < ONBOARDING_GRACE_MS) return
 
+    const pushScope = scopeFromFavorites(favorites)
+    if (!hasPushScope(pushScope)) return
+
     const permission = Notification.permission
 
     if (permission === "granted") {
-      // Permission already granted but subscription is missing — silently
-      // re-subscribe without any dialog. Happens when the server deletes a
-      // stale/failed subscription record or the browser clears its push state.
-      subscribe([])
+      subscribe(pushScope.teamNames, pushScope.competitionCodes)
       return
     }
 
-    if (permission !== "default") return // "denied" — nothing we can do
+    if (permission !== "default") return
 
-    // First-time: trigger the native browser dialog after a short delay.
     const last = parseInt(localStorage.getItem(PUSH_AUTO_KEY) || "0", 10)
     if (last && Date.now() - last < PUSH_AUTO_TTL) return
     localStorage.setItem(PUSH_AUTO_KEY, Date.now().toString())
-    const t = setTimeout(() => { subscribe([]) }, 2000)
+    const t = setTimeout(() => {
+      subscribe(pushScope.teamNames, pushScope.competitionCodes)
+    }, 2000)
     return () => clearTimeout(t)
-  }, [subscribe, subscribed, pushEnabled])
+  }, [subscribe, subscribed, pushEnabled, favorites])
 }
 
 export default function App() {

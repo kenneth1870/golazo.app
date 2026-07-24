@@ -16,6 +16,20 @@ class PushSubscription < ApplicationRecord
     self.team_ids = arr.to_json
   end
 
+  # competition_codes is stored as a JSON string array, e.g. '["PL","CRC"]'
+  def competition_codes_list
+    return [] unless has_attribute?(:competition_codes)
+    list = JSON.parse(competition_codes || "[]")
+    list.is_a?(Array) ? list.map(&:to_s).reject(&:blank?) : []
+  rescue JSON::ParserError => e
+    Rails.logger.warn("[PushSubscription##{id}] Invalid competition_codes JSON: #{e.message}")
+    []
+  end
+
+  def competition_codes_list=(arr)
+    self.competition_codes = Array(arr).map(&:to_s).reject(&:blank?).uniq.to_json
+  end
+
   VALID_EVENT_TYPES = %w[goal kickoff fulltime halftime red_card prematch].freeze
 
   # Returns the list of subscribed event types. Empty array means all events.
@@ -33,20 +47,52 @@ class PushSubscription < ApplicationRecord
     prefs.empty? || prefs.include?(event_type.to_s)
   end
 
+  # Subscribers who opted into specific teams and/or leagues only.
+  # Empty team_ids AND empty competition_codes means no notifications (must opt in).
+  def self.for_match(home_name:, away_name:, competition_code: nil)
+    home_name = home_name.to_s
+    away_name = away_name.to_s
+    competition_code = competition_code.to_s.upcase.presence
+
+    team_match_sql = <<~SQL.squish
+      EXISTS (
+        SELECT 1 FROM jsonb_array_elements_text(team_ids::jsonb) AS t(name)
+        WHERE lower(t.name) = lower(:home_name) OR lower(t.name) = lower(:away_name)
+      )
+    SQL
+
+    has_teams = "team_ids IS NOT NULL AND team_ids NOT IN ('[]', 'null') AND jsonb_array_length(team_ids::jsonb) > 0"
+    has_leagues = if column_names.include?("competition_codes")
+      "competition_codes IS NOT NULL AND competition_codes NOT IN ('[]', 'null') AND jsonb_array_length(competition_codes::jsonb) > 0"
+    end
+
+    binds = { home_name: home_name, away_name: away_name }
+    clauses = []
+
+    if has_leagues && competition_code.present?
+      league_match_sql = <<~SQL.squish
+        EXISTS (
+          SELECT 1 FROM jsonb_array_elements_text(competition_codes::jsonb) AS c(code)
+          WHERE upper(c.code) = :competition_code
+        )
+      SQL
+      binds[:competition_code] = competition_code
+      clauses << "(#{has_teams} AND (#{team_match_sql})) OR (#{has_leagues} AND (#{league_match_sql}))"
+    else
+      clauses << "(#{has_teams} AND (#{team_match_sql}))"
+    end
+
+    where(clauses.join(" OR "), **binds)
+  end
+
+  # Legacy helper — kept for admin broadcast by team name.
   def self.for_teams(names)
     names = Array(names).map(&:to_s).reject(&:blank?)
     return none if names.blank?
-    # Global subscribers: team_ids is empty array, NULL, or the JSON string 'null'
-    # (older rows may have NULL from before the column default was set).
-    # Team-specific: team_ids JSON array contains one of the match team names.
-    #
-    # Case-insensitive match: unnest the stored JSON array and compare lowercased
-    # values so subscriptions created with any casing ("brazil", "BRAZIL", etc.)
-    # still receive notifications. jsonb_exists_any is case-sensitive, so we use
-    # jsonb_array_elements_text + lower() instead.
+
     lower_names = names.map(&:downcase)
     where(
-      "team_ids IS NULL OR team_ids IN ('[]', 'null') OR " \
+      "team_ids IS NOT NULL AND team_ids NOT IN ('[]', 'null') AND " \
       "EXISTS (SELECT 1 FROM jsonb_array_elements_text(team_ids::jsonb) AS t(name) WHERE lower(t.name) = ANY(array[:names]))",
       names: lower_names
     )
@@ -72,8 +118,6 @@ class PushSubscription < ApplicationRecord
   end
 
   # ── Device introspection (for the admin device list) ──────────────────
-  # The push endpoint host reveals which push service the browser uses,
-  # which is a reliable proxy for the browser family.
   def push_provider
     host = (URI.parse(endpoint).host rescue nil).to_s
     case host
@@ -85,8 +129,9 @@ class PushSubscription < ApplicationRecord
     end
   end
 
-  # Compact summary used by the admin devices endpoint.
   def admin_summary
+    teams = team_names
+    leagues = competition_codes_list
     {
       id:           id,
       device_id:    device_id,
@@ -94,8 +139,9 @@ class PushSubscription < ApplicationRecord
       browser:      browser,
       os:           os,
       locale:       locale,
-      teams:        team_names,
-      global:       team_names.empty?,
+      teams:        teams,
+      leagues:      leagues,
+      global:       teams.empty? && leagues.empty?,
       last_seen_at: (last_seen_at || updated_at)&.iso8601,
       created_at:   created_at&.iso8601
     }

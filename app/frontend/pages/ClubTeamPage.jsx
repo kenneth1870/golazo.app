@@ -6,7 +6,7 @@ import { translateLeague, translateCountry } from "../i18n/leagueNames"
 import MatchRow from "../components/MatchRow"
 import { useFavorites } from "../hooks/useFavorites"
 import { usePushNotifications } from "../hooks/usePushNotifications"
-import { syncTeamFollowToPush } from "../utils/favoritePush"
+import { syncFavoriteToPush } from "../utils/favoritePush"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { navigateToMatch, navIdFor } from "../utils/matchDetailCache"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
@@ -20,7 +20,7 @@ export default function ClubTeamPage() {
   const { code, slug } = useParams()
   const navigate = useNavigate()
   const { isFavorite, toggleFavorite } = useFavorites()
-  const { addTeams, subscribed } = usePushNotifications()
+  const { addTeams, removeTeams, addLeagues, removeLeagues, subscribed } = usePushNotifications()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [stale, setStale] = useState(false)
@@ -112,7 +112,10 @@ export default function ClubTeamPage() {
       flag_url: team.flag_url,
       league_code: code,
     })
-    syncTeamFollowToPush(team.name, { addTeams, subscribed, following: willFollow })
+    syncFavoriteToPush(
+      { type: "team", name: team.name },
+      { addTeams, removeTeams, addLeagues, removeLeagues, subscribed, following: willFollow }
+    )
   }
 
   return (

@@ -733,7 +733,10 @@
     "title": "Preferences",
     "theme": "Theme",
     "language": "Language",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "notifScope": "Alerts for",
+    "notifScopeEmpty": "No teams or leagues selected — you won't receive match alerts.",
+    "syncFavorites": "Use my favorites"
   },
   "a11y": {
     "previousDay": "Previous day",

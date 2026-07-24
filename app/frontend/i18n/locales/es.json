@@ -734,7 +734,10 @@
     "title": "Preferencias",
     "theme": "Tema",
     "language": "Idioma",
-    "notifications": "Notificaciones"
+    "notifications": "Notificaciones",
+    "notifScope": "Alertas para",
+    "notifScopeEmpty": "Sin equipos ni ligas seleccionados — no recibirás alertas.",
+    "syncFavorites": "Usar mis favoritos"
   },
   "a11y": {
     "previousDay": "Día anterior",

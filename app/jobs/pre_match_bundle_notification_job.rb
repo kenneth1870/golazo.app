@@ -8,7 +8,7 @@ class PreMatchBundleNotificationJob < ApplicationJob
   # pile up (or collide) on the device.
   #
   # @param matches [Array<Hash>] one per match, with keys:
-  #   :id, :home, :away, :home_code, :away_code, :url
+  #   :id, :home, :away, :home_code, :away_code, :url, :competition_code
   BATCH_SIZE = 100
 
   def perform(matches:)
@@ -22,8 +22,14 @@ class PreMatchBundleNotificationJob < ApplicationJob
     matches = matches.map(&:symbolize_keys)
     team_names = matches.flat_map { |m| [ m[:home], m[:away] ] }.reject(&:blank?).uniq
 
-    # for_teams already includes global subscribers (empty team_ids).
-    subs = PushSubscription.for_teams(team_names).select { |s| s.receives_event?("prematch") }
+    subs = matches.flat_map { |m|
+      PushSubscription.for_match(
+        home_name: m[:home],
+        away_name: m[:away],
+        competition_code: m[:competition_code]
+      ).to_a
+    }.uniq
+    subs = subs.select { |s| s.receives_event?("prematch") }
     Rails.logger.info("[PreMatchBundle] #{matches.size} match(es) | #{subs.size} subscriber(s)")
     return if subs.empty?
 
@@ -66,13 +72,22 @@ class PreMatchBundleNotificationJob < ApplicationJob
 
   private
 
-  # Which of the window's matches this subscriber cares about. Global
-  # subscribers (no team filter) get all of them.
+  # Which of the window's matches this subscriber cares about — team and/or league scope.
   def relevant_matches(sub, matches)
-    followed = sub.team_names
-    return matches if followed.empty?
-    set = followed.to_set
-    matches.select { |m| set.include?(m[:home]) || set.include?(m[:away]) }
+    followed_teams = sub.team_names.map(&:downcase).to_set
+    followed_leagues = sub.competition_codes_list.map(&:upcase).to_set
+    has_teams = followed_teams.any?
+    has_leagues = followed_leagues.any?
+    return [] unless has_teams || has_leagues
+
+    matches.select do |m|
+      team_hit = has_teams && (
+        followed_teams.include?(m[:home].to_s.downcase) ||
+        followed_teams.include?(m[:away].to_s.downcase)
+      )
+      league_hit = has_leagues && followed_leagues.include?(m[:competition_code].to_s.upcase)
+      team_hit || league_hit
+    end
   end
 
   def build_copy(locale, matches)

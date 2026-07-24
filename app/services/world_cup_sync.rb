@@ -1382,6 +1382,7 @@ class WorldCupSync
       minute:     minute,
       scorer:     scorer,
       reason:     reason,
+      competition_code: match.competition&.code,
       match_url:  "/matches/#{match.external_id || "db-#{match.id}"}"
     )
     true

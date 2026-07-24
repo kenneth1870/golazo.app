@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react"
 import { isIosSafari, isStandalone } from "../utils/platform"
 import { getDeviceId } from "../utils/deviceId"
 import { useAppFocus } from "./useAppFocus"
+import { loadPushScope, savePushScope, hasPushScope } from "../utils/pushScope"
 import i18n from "../i18n"
 
 function urlBase64ToUint8Array(base64String) {
@@ -11,15 +12,33 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)))
 }
 
+async function persistScope(endpoint, { teamNames, competitionCodes, eventPrefs }) {
+  const body = {
+    endpoint,
+    team_ids: teamNames,
+    competition_codes: competitionCodes,
+  }
+  if (eventPrefs !== undefined) body.event_prefs = eventPrefs
+
+  await fetch("/api/v1/push_subscriptions/teams", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || "",
+    },
+    body: JSON.stringify(body),
+  })
+}
+
 export function usePushNotifications() {
   const { push_enabled: pushEnabled = false } = useAppFocus()
   const [permission, setPermission] = useState(
     typeof Notification !== "undefined" ? Notification.permission : "default"
   )
   const [subscribed, setSubscribed] = useState(false)
-  const [loading,    setLoading]    = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [scope, setScope] = useState(loadPushScope)
 
-  // Check if already subscribed on mount
   useEffect(() => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return
     navigator.serviceWorker.ready.then(reg => {
@@ -29,26 +48,31 @@ export function usePushNotifications() {
     })
   }, [])
 
-  const subscribe = useCallback(async (teamNames = [], eventPrefs = []) => {
+  const subscribe = useCallback(async (teamNames = [], competitionCodes = [], eventPrefs = []) => {
     if (!pushEnabled) return { error: "Push notifications are paused" }
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       return { error: "Push not supported in this browser" }
     }
 
+    const nextScope = {
+      teamNames: [...new Set(teamNames.filter(Boolean))],
+      competitionCodes: [...new Set(competitionCodes.filter(Boolean))],
+    }
+    if (!hasPushScope(nextScope)) {
+      return { error: "Select at least one team or league for notifications" }
+    }
+
     setLoading(true)
     try {
-      // Request notification permission
       const perm = await Notification.requestPermission()
       setPermission(perm)
       if (perm !== "granted") return { error: "Permission denied" }
 
-      // Fetch VAPID public key from server
       const keyRes = await fetch("/api/v1/vapid_public_key")
       if (!keyRes.ok) throw new Error("Failed to fetch server key")
       const { key } = await keyRes.json()
       if (!key) throw new Error("Push notifications are not configured on this server")
 
-      // Subscribe via PushManager
       const reg = await navigator.serviceWorker.ready
       const pushSub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
@@ -57,7 +81,6 @@ export function usePushNotifications() {
 
       const subJson = pushSub.toJSON()
 
-      // Save subscription to server
       await fetch("/api/v1/push_subscriptions", {
         method: "POST",
         headers: {
@@ -65,24 +88,22 @@ export function usePushNotifications() {
           "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || "",
         },
         body: JSON.stringify({
-          endpoint:     subJson.endpoint,
-          p256dh:       subJson.keys?.p256dh,
-          auth:         subJson.keys?.auth,
-          device_id:    getDeviceId(),
-          team_ids:     teamNames,
-          event_prefs:  eventPrefs,
-          locale:       i18n.language,
+          endpoint: subJson.endpoint,
+          p256dh: subJson.keys?.p256dh,
+          auth: subJson.keys?.auth,
+          device_id: getDeviceId(),
+          team_ids: nextScope.teamNames,
+          competition_codes: nextScope.competitionCodes,
+          event_prefs: eventPrefs,
+          locale: i18n.language,
         }),
       })
 
+      savePushScope(nextScope)
+      setScope(nextScope)
       setSubscribed(true)
-      // Persist the subscribed teams locally so addTeams can accumulate later
-      const existing = JSON.parse(localStorage.getItem("push_sub_teams") || "[]")
-      const merged = [...new Set([...existing, ...teamNames.filter(Boolean)])]
-      localStorage.setItem("push_sub_teams", JSON.stringify(merged))
       return { ok: true }
     } catch (err) {
-      // swallow — error returned to caller via { error: err.message }
       return { error: err.message }
     } finally {
       setLoading(false)
@@ -108,64 +129,78 @@ export function usePushNotifications() {
       }
       setSubscribed(false)
     } catch (err) {
-      // swallow unsubscribe failure — subscription may already be expired
+      // swallow unsubscribe failure
     } finally {
       setLoading(false)
     }
   }, [])
 
-  const updateTeams = useCallback(async (teamNames, eventPrefs) => {
+  const updateScope = useCallback(async (teamNames, competitionCodes, eventPrefs) => {
     try {
       const reg = await navigator.serviceWorker.ready
       const pushSub = await reg.pushManager.getSubscription()
       if (!pushSub) return
-      const body = { endpoint: pushSub.endpoint, team_ids: teamNames }
-      if (eventPrefs !== undefined) body.event_prefs = eventPrefs
-      await fetch("/api/v1/push_subscriptions/teams", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || "",
-        },
-        body: JSON.stringify(body),
+
+      const nextScope = {
+        teamNames: [...new Set((teamNames || []).filter(Boolean))],
+        competitionCodes: [...new Set((competitionCodes || []).filter(Boolean))],
+      }
+      await persistScope(pushSub.endpoint, {
+        teamNames: nextScope.teamNames,
+        competitionCodes: nextScope.competitionCodes,
+        eventPrefs,
       })
+      savePushScope(nextScope)
+      setScope(nextScope)
     } catch (err) {
-      // swallow — non-critical background sync
+      // swallow
     }
   }, [])
+
+  const updateTeams = useCallback(async (teamNames, eventPrefs) => {
+    const current = loadPushScope()
+    await updateScope(teamNames, current.competitionCodes, eventPrefs)
+  }, [updateScope])
 
   const updateEventPrefs = useCallback(async (eventPrefs) => {
-    try {
-      const reg = await navigator.serviceWorker.ready
-      const pushSub = await reg.pushManager.getSubscription()
-      if (!pushSub) return
-      const existing = JSON.parse(localStorage.getItem("push_sub_teams") || "[]")
-      await fetch("/api/v1/push_subscriptions/teams", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || "",
-        },
-        body: JSON.stringify({ endpoint: pushSub.endpoint, team_ids: existing, event_prefs: eventPrefs }),
-      })
-      localStorage.setItem("push_event_prefs", JSON.stringify(eventPrefs))
-    } catch (err) {
-      // swallow
-    }
-  }, [])
+    const current = loadPushScope()
+    await updateScope(current.teamNames, current.competitionCodes, eventPrefs)
+    localStorage.setItem("push_event_prefs", JSON.stringify(eventPrefs))
+  }, [updateScope])
 
-  // Add teams to the existing subscription without replacing others.
-  // Persists the cumulative team list in localStorage so it survives page loads.
   const addTeams = useCallback(async (newTeams) => {
-    try {
-      const existing = JSON.parse(localStorage.getItem("push_sub_teams") || "[]")
-      const merged = [...new Set([...existing, ...newTeams.filter(Boolean)])]
-      localStorage.setItem("push_sub_teams", JSON.stringify(merged))
-      await updateTeams(merged)
-    } catch (err) {
-      // swallow
-    }
-  }, [updateTeams])
+    const current = loadPushScope()
+    const merged = [...new Set([...current.teamNames, ...newTeams.filter(Boolean)])]
+    await updateScope(merged, current.competitionCodes)
+  }, [updateScope])
+
+  const removeTeams = useCallback(async (teamNames) => {
+    const current = loadPushScope()
+    const remove = new Set(teamNames.filter(Boolean))
+    const merged = current.teamNames.filter(name => !remove.has(name))
+    await updateScope(merged, current.competitionCodes)
+  }, [updateScope])
+
+  const addLeagues = useCallback(async (codes) => {
+    const current = loadPushScope()
+    const merged = [...new Set([...current.competitionCodes, ...codes.filter(Boolean)])]
+    await updateScope(current.teamNames, merged)
+  }, [updateScope])
+
+  const removeLeagues = useCallback(async (codes) => {
+    const current = loadPushScope()
+    const remove = new Set(codes.filter(Boolean))
+    const merged = current.competitionCodes.filter(code => !remove.has(code))
+    await updateScope(current.teamNames, merged)
+  }, [updateScope])
+
+  const syncScopeFromFavorites = useCallback(async (favorites) => {
+    if (!subscribed) return
+    const teamNames = favorites.filter(f => f.type === "team").map(f => f.name).filter(Boolean)
+    const competitionCodes = favorites.filter(f => f.type === "competition").map(f => f.code || f.id).filter(Boolean)
+    if (!hasPushScope({ teamNames, competitionCodes })) return
+    await updateScope(teamNames, competitionCodes)
+  }, [subscribed, updateScope])
 
   const supported = pushEnabled &&
     typeof window !== "undefined" &&
@@ -177,17 +212,42 @@ export function usePushNotifications() {
   const isIosPwa = iosSafari && isStandalone()
   const needsIosInstall = iosSafari && !isIosPwa
 
-  // Whether the given team names are covered by the current subscription
   const teamsSubscribed = useCallback((teamNames) => {
     if (!subscribed) return false
-    const saved = JSON.parse(localStorage.getItem("push_sub_teams") || "[]")
-    if (saved.length === 0) return true  // global subscription
+    const saved = loadPushScope().teamNames
     return teamNames.some(n => saved.includes(n))
+  }, [subscribed])
+
+  const leaguesSubscribed = useCallback((codes) => {
+    if (!subscribed) return false
+    const saved = new Set(loadPushScope().competitionCodes)
+    return codes.some(code => saved.has(code))
   }, [subscribed])
 
   const eventPrefs = (() => {
     try { return JSON.parse(localStorage.getItem("push_event_prefs") || "[]") } catch { return [] }
   })()
 
-  return { supported, pushEnabled, permission, subscribed, loading, subscribe, unsubscribe, updateTeams, addTeams, teamsSubscribed, needsIosInstall, updateEventPrefs, eventPrefs }
+  return {
+    supported,
+    pushEnabled,
+    permission,
+    subscribed,
+    loading,
+    scope,
+    subscribe,
+    unsubscribe,
+    updateTeams,
+    updateScope,
+    addTeams,
+    removeTeams,
+    addLeagues,
+    removeLeagues,
+    syncScopeFromFavorites,
+    teamsSubscribed,
+    leaguesSubscribed,
+    needsIosInstall,
+    updateEventPrefs,
+    eventPrefs,
+  }
 }

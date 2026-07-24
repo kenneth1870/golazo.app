@@ -4,7 +4,7 @@ module Api
       before_action :require_admin!, only: :test_push
 
       # POST /api/v1/push_subscriptions
-      # Body: { endpoint, p256dh, auth, device_id, team_ids: [] }
+      # Body: { endpoint, p256dh, auth, device_id, team_ids: [], competition_codes: [] }
       def create
         return render json: { error: "Push notifications are paused" }, status: :service_unavailable unless AppFocus.push_enabled?
 
@@ -20,8 +20,8 @@ module Api
           p256dh:       params[:p256dh].to_s,
           auth:         params[:auth].to_s,
           device_id:    params[:device_id].to_s.presence,
-          team_ids:     (params[:team_ids] || []).to_json,
-          **(PushSubscription.column_names.include?("event_prefs") ? { event_prefs: sanitize_event_prefs(params[:event_prefs]) } : {}),
+          team_ids:     sanitize_team_ids(params[:team_ids]),
+          **scope_attrs(params),
           locale:       locale,
           user_agent:   request.user_agent.to_s.first(500),
           last_seen_at: Time.current,
@@ -35,9 +35,6 @@ module Api
       end
 
       # POST /api/v1/push_subscriptions/refresh
-      # Called by the SW pushsubscriptionchange handler when Android Chrome rotates
-      # the FCM token. Migrates team preferences from old → new endpoint so the
-      # user keeps their notification settings without having to re-subscribe.
       def refresh
         return render json: { error: "Push notifications are paused" }, status: :service_unavailable unless AppFocus.push_enabled?
 
@@ -54,11 +51,15 @@ module Api
           p256dh:       params[:p256dh].to_s,
           auth:         params[:auth].to_s,
           team_ids:     old_sub&.team_ids || "[]",
+          **(old_sub ? scope_attrs_from_sub(old_sub) : scope_attrs(params)),
           locale:       old_sub&.locale || "es",
           device_id:    old_sub&.device_id || params[:device_id].to_s.presence,
           user_agent:   request.user_agent.to_s.first(500),
           last_seen_at: Time.current,
         )
+        if PushSubscription.column_names.include?("event_prefs")
+          new_sub.event_prefs = old_sub&.event_prefs || sanitize_event_prefs(params[:event_prefs])
+        end
 
         if new_sub.save
           old_sub.destroy if old_sub && old_endpoint != new_endpoint
@@ -68,37 +69,43 @@ module Api
         end
       end
 
-      # PUT /api/v1/push_subscriptions/:id/teams
-      # Updates the team_ids list for a subscription
+      # PUT /api/v1/push_subscriptions/teams
       def update_teams
         sub = PushSubscription.find_by(endpoint: params[:endpoint])
         return render json: { error: "Not found" }, status: :not_found unless sub
 
-        attrs = { team_ids: (params[:team_ids] || []).to_json, last_seen_at: Time.current }
+        attrs = {
+          team_ids: sanitize_team_ids(params[:team_ids]),
+          last_seen_at: Time.current,
+          **scope_attrs(params)
+        }
         if params.key?(:event_prefs) && PushSubscription.column_names.include?("event_prefs")
           attrs[:event_prefs] = sanitize_event_prefs(params[:event_prefs])
         end
         sub.update!(attrs)
-        render json: { ok: true, team_ids: sub.team_names, event_prefs: sub.event_prefs_list }
+        render json: {
+          ok: true,
+          team_ids: sub.team_names,
+          competition_codes: sub.competition_codes_list,
+          event_prefs: sub.event_prefs_list
+        }
       end
 
       # DELETE /api/v1/push_subscriptions
-      # Body: { endpoint }
       def destroy
         sub = PushSubscription.find_by(endpoint: params[:endpoint])
         sub&.destroy
         render json: { ok: true }
       end
 
-      # GET /api/v1/vapid_public_key — returns the public key so the frontend can subscribe
+      # GET /api/v1/vapid_public_key
       def vapid_key
         return render json: { key: nil, enabled: false } unless AppFocus.push_enabled?
 
         render json: { key: ENV["VAPID_PUBLIC_KEY"].to_s, enabled: true }
       end
 
-      # POST /api/v1/push_test — sends a test push to all stored subscriptions
-      # Use from the Rails console or curl to verify push delivery in production.
+      # POST /api/v1/push_test
       def test_push
         return render json: { error: "Push notifications are paused" }, status: :service_unavailable unless AppFocus.push_enabled?
 
@@ -157,7 +164,6 @@ module Api
 
       private
 
-      # Restrict push endpoints to known browser push services to prevent SSRF.
       ALLOWED_PUSH_HOSTS = %w[
         fcm.googleapis.com
         updates.push.services.mozilla.com
@@ -166,8 +172,25 @@ module Api
         push.apple.com
       ].freeze
 
-      # Accept only known event type strings; unknown values are dropped silently.
-      # Empty array (or nil) → subscriber receives all events.
+      def sanitize_team_ids(raw)
+        Array(raw).map(&:to_s).reject(&:blank?).uniq.to_json
+      end
+
+      def sanitize_competition_codes(raw)
+        return "[]" unless PushSubscription.column_names.include?("competition_codes")
+        Array(raw).map { |c| c.to_s.upcase }.reject(&:blank?).uniq.to_json
+      end
+
+      def scope_attrs(params)
+        return {} unless PushSubscription.column_names.include?("competition_codes")
+        { competition_codes: sanitize_competition_codes(params[:competition_codes]) }
+      end
+
+      def scope_attrs_from_sub(sub)
+        return {} unless PushSubscription.column_names.include?("competition_codes")
+        { competition_codes: sub.competition_codes }
+      end
+
       def sanitize_event_prefs(raw)
         return "[]" if raw.nil?
         allowed = PushSubscription::VALID_EVENT_TYPES
