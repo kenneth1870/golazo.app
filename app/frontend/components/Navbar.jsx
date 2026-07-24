@@ -9,6 +9,7 @@ import { useAppFocus } from "../hooks/useAppFocus"
 import { NAV_LEAGUES } from "./ClubCompetitionChips"
 import ThemeToggle from "./ThemeToggle"
 import { dismissOverlayProps } from "../utils/dismissOverlay"
+import PreferencesSheet from "./PreferencesSheet"
 import { loadPushScope } from "../utils/pushScope"
 
 const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
