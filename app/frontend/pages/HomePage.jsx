@@ -10,7 +10,7 @@ import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
 import { formatKickoff } from "../hooks/useLocalTime"
 import { translateTeam } from "../i18n/teamNames"
-import { clubTeamPath } from "../utils/clubTeamPath"
+import { clubTeamPath, clubTeamSlug } from "../utils/clubTeamPath"
 import { matchTeamName } from "../utils/matchTeamName"
 import { navIdFor, navigateToMatch } from "../utils/matchDetailCache"
 import Hero from "../components/Hero"
@@ -132,8 +132,47 @@ function useLatestNews(leagueCodes = []) {
 
 function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = false }) {
   const { i18n } = useTranslation()
+  const [teamUpcoming, setTeamUpcoming] = useState([])
+
   const matchesTeam = (name) => matchTeamName(name, fav.name, i18n.language)
-  const favMatches = upcomingMatches.filter(m =>
+
+  useEffect(() => {
+    if (!clubsPrimary || !fav?.league_code || !fav?.name) {
+      setTeamUpcoming([])
+      return
+    }
+    const inFeed = upcomingMatches.some(m =>
+      matchesTeam(m.home_team?.name) || matchesTeam(m.away_team?.name)
+    )
+    if (inFeed) {
+      setTeamUpcoming([])
+      return
+    }
+
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const slug = clubTeamSlug(fav.name)
+    let cancelled = false
+    fetchJson(`/api/v1/club_teams/${fav.league_code}/${slug}?tz=${encodeURIComponent(tz)}`, { soft: true })
+      .then(({ data, ok }) => {
+        if (cancelled) return
+        setTeamUpcoming(ok && Array.isArray(data?.upcoming) ? data.upcoming : [])
+      })
+      .catch(() => { if (!cancelled) setTeamUpcoming([]) })
+
+    return () => { cancelled = true }
+  }, [clubsPrimary, fav?.league_code, fav?.name, upcomingMatches, i18n.language])
+
+  const mergedMatches = (() => {
+    const seen = new Set()
+    return [...upcomingMatches, ...teamUpcoming].filter(m => {
+      const key = m.external_id ?? m.id
+      if (key == null || seen.has(key)) return false
+      seen.add(key)
+      return m.status === "live" || m.status === "scheduled"
+    })
+  })()
+
+  const favMatches = mergedMatches.filter(m =>
     matchesTeam(m.home_team?.name) || matchesTeam(m.away_team?.name)
   )
   const next = favMatches.find(m => m.status === "live") || favMatches[0]

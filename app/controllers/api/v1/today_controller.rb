@@ -57,6 +57,13 @@ module Api
           else
             fetch_upcoming_wc(6).map { |m| normalize_db(m).merge(upcoming_preview: true) }
           end
+        elsif AppFocus.wc_paused? && date == TZInfo::Timezone.get(tz).now.to_date
+          # Homepage still needs future fixtures for favorite-team cards even when
+          # today's schedule isn't empty (e.g. Liga Tica match on Saturday while
+          # other leagues play today).
+          existing = all.filter_map { |m| m[:external_id]&.to_s }.to_set
+          upcoming = fetch_upcoming_clubs(12, tz).reject { |m| existing.include?(m[:external_id]&.to_s) }
+          all = (all + upcoming).sort_by { |m| m[:kickoff_at].to_s } unless upcoming.empty?
         end
 
         render json: all
