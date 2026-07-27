@@ -15,6 +15,7 @@ import { matchTeamName } from "../utils/matchTeamName"
 import { leagueHeroStyle } from "../utils/leagueHeroImages"
 import { fetchJson } from "../utils/fetchJson"
 import OfflineBanner from "../components/OfflineBanner"
+import RelatedNewsStrip from "../components/RelatedNewsStrip"
 
 const VALID_TABS = ["today", "fixtures", "results", "standings"]
 
@@ -514,6 +515,20 @@ export default function LeagueDetailPage() {
           )}
         </div>
       </div>
+
+      {competition && (
+        <div className="site-section" style={{ paddingTop: 0 }}>
+          <div className="container">
+            <RelatedNewsStrip
+              title={t("news.leagueNews", { league: translateLeague(competition.name, i18n.language) ?? competition.name })}
+              lang={i18n.language.split("-")[0]}
+              leagues={code}
+              limit={8}
+              seeMoreTo={`/news?tab=all`}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

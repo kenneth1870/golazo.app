@@ -6,6 +6,8 @@ export const SOURCE_COLORS = {
   "ESPN Deportes":  "#cc0000",
   "Goal.com":       "#ee1e46",
   "Marca":          "#0f7bca",
+  "La Nación Deportes": "#0066cc",
+  "Teletica Deportes":  "#e85d04",
   "Radio Gol":      "#f97316",
   "OneFootball":    "#00c853",
   "Vermouth De…":   "#9c27b0",

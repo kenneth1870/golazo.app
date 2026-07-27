@@ -26,7 +26,8 @@ class NewsService
     ],
     "es" => [
       { url: "https://espndeportes.espn.com/espn/rss/deportes/soccer/noticias", source: "ESPN Deportes"  },
-      { url: "https://e00-marca.uecdn.es/rss/futbol.xml",                       source: "Marca"          }
+      { url: "https://e00-marca.uecdn.es/rss/futbol.xml",                       source: "Marca"          },
+      { url: "https://www.nacion.com/rss/deportes",                             source: "La Nación Deportes" }
     ],
     "pt" => [
       { url: "https://www.goal.com/feeds/pt/news",                             source: "Goal.com"        },
@@ -98,7 +99,11 @@ class NewsService
     www.skysports.com
     www.uefa.com
     www.fifa.com
+    www.nacion.com
+    www.teletica.com
   ].freeze
+
+  CONTENT_CACHE_TTL = 24.hours
 
   # Direct article lookup by id — O(1) via per-article cache populated during
   # feed fetch. Falls back to scanning the full feed so show/content never 404
@@ -124,6 +129,30 @@ class NewsService
     articles.first(limit)
   end
 
+  def related_articles(id:, lang:, limit: 4)
+    article = find_article(id: id, lang: lang)
+    return [] unless article
+
+    codes = Array(article[:competition_codes])
+    pool  = latest(limit: 100, lang: lang, league_codes: codes.presence)
+    pool.reject { |a| a[:id] == id }
+        .sort_by { |a| -related_score(article, a) }
+        .first(limit)
+  end
+
+  def warm_content_cache!(lang: "es", limit: 8)
+    latest(limit: limit, lang: lang).each do |article|
+      next if article[:link].blank?
+      next if article[:is_video]
+      fetch_content(article[:link])
+    end
+  end
+
+  def reading_time_for(paragraphs)
+    words = Array(paragraphs).join(" ").split(/\s+/).reject(&:blank?).length
+    [ (words / 200.0).ceil, 1 ].max
+  end
+
   # Boost articles matching followed league keywords (clubs mode).
   def rank_for_leagues(articles, league_codes)
     codes = Array(league_codes).map { |c| c.to_s.upcase }.uniq
@@ -139,8 +168,59 @@ class NewsService
     end
   end
 
+  # Fetches and parses the full article body from the original URL.
+  # Returns { paragraphs: [...], hero_image: url }
+  #
+  # ESPN article pages are protected by AWS WAF on desktop UAs; for those URLs
+  # we scrape with a mobile Safari UA or fall back to the ESPN JSON API.
+  def fetch_content(url)
+    return nil if url.blank?
+
+    begin
+      host = URI.parse(url).host.to_s.downcase.sub(/\Awww\./, "")
+      allowed = ALLOWED_CONTENT_DOMAINS.any? do |d|
+        bare = d.sub(/\Awww\./, "")
+        host == bare || host == "www.#{bare}"
+      end
+      unless allowed
+        Rails.logger.warn("[NewsService] Blocked fetch to disallowed host: #{host} (#{url})")
+        return nil
+      end
+
+      unless ssrf_safe?(host)
+        Rails.logger.warn("[NewsService] Blocked fetch to private/reserved IP for host: #{host}")
+        return nil
+      end
+    rescue URI::InvalidURIError
+      return nil
+    end
+
+    if url =~ %r{espn(?:deportes)?\.espn\.com/.*/nota/_/id/(\d+)/}
+      return fetch_espn_article_content($1, url)
+    end
+
+    Rails.cache.fetch("news_content_#{Digest::SHA1.hexdigest(url)}", expires_in: CONTENT_CACHE_TTL, race_condition_ttl: 30.seconds) do
+      response = Faraday.get(url) do |req|
+        req.options.timeout      = 8
+        req.options.open_timeout = 5
+        req.headers["User-Agent"] = USER_AGENTS.sample
+        req.headers["Accept"]     = "text/html"
+      end
+
+      doc = Nokogiri::HTML(response.body)
+      hero_img = extract_hero_image(doc)
+      paragraphs = extract_paragraphs(doc)
+      images = extract_inline_images(doc, hero_img)
+
+      { paragraphs: paragraphs, hero_image: hero_img, images: images }
+    end
+  rescue => e
+    Rails.logger.warn("[NewsService] fetch_content failed for #{url}: #{e.message}")
+    nil
+  end
+
   LEAGUE_NEWS_KEYWORDS = {
-    "CRC" => [ "costa rica", "liga tica", "saprissa", "herediano", "alajuelense", "escorpiones", "zeledón", "cartaginés", "sporting fc" ],
+    "CRC" => [ "costa rica", "liga tica", "saprissa", "herediano", "alajuelense", "escorpiones", "zeledón", "cartaginés", "sporting fc", "puntarenas", "guadalupe" ],
     "LMX" => [ "liga mx", "méxico", "mexico", "américa", "chivas", "tigres", "rayados", "cruz azul", "pumas", "toluca" ],
     "PL"  => [ "premier league", "manchester", "liverpool", "arsenal", "chelsea", "tottenham", "newcastle" ],
     "LAL" => [ "la liga", "real madrid", "barcelona", "atlético", "atletico", "sevilla", "villarreal" ],
@@ -157,7 +237,10 @@ class NewsService
     "LAL" => [ { url: "https://e00-marca.uecdn.es/rss/futbol/primera-division.xml", source: "Marca La Liga" } ],
     "LMX" => [ { url: "https://e00-marca.uecdn.es/rss/futbol/mx/mx.xml", source: "Marca Liga MX" } ],
     "MLS" => [ { url: "https://www.goal.com/feeds/en/news", source: "Goal.com MLS" } ],
-    "CRC" => [ { url: "https://www.nacion.com/rss/deportes", source: "La Nación Deportes" } ]
+    "CRC" => [
+      { url: "https://www.nacion.com/rss/deportes", source: "La Nación Deportes" },
+      { url: "https://www.teletica.com/rss/deportes", source: "Teletica Deportes" }
+    ]
   }.freeze
 
   # ESPN league JSON feeds — richer than generic soccer/all in clubs mode.
@@ -230,6 +313,7 @@ class NewsService
 
       merged
     end.tap do |items|
+      items.map! { |a| enrich_article(a) }
       Rails.cache.write("news_feed_stale_#{lang}", items, expires_in: 24.hours) if items.any?
       items.each do |a|
         next unless a[:id].present?
@@ -247,7 +331,7 @@ class NewsService
     return [] if codes.empty?
 
     espn_lang = %w[en es].include?(lang) ? lang : "en"
-    cache_key = "news_league_feeds_v10_#{lang}_#{codes.join('_')}"
+    cache_key = "news_league_feeds_v11_#{lang}_#{codes.join('_')}"
 
     Rails.cache.fetch(cache_key, expires_in: 30.minutes, race_condition_ttl: 30.seconds) do
       rss_feeds = codes.flat_map { |code| LEAGUE_FEEDS[code] || [] }.uniq { |f| f[:url] }
@@ -263,6 +347,7 @@ class NewsService
       (espn_items + rss_items)
         .uniq { |a| a[:link] }
         .then { |items| dedupe_articles(items) }
+        .map { |a| enrich_article(a) }
         .sort_by { |a| a[:published_at] || Time.at(0) }.reverse
     end
   rescue => e
@@ -274,61 +359,28 @@ class NewsService
     Array(raw).map { |c| c.to_s.upcase }.select { |c| AppFocus::FEATURED_CLUB_CODES.include?(c) }.uniq
   end
 
-  # Fetches and parses the full article body from the original URL.
-  # Returns { paragraphs: [...], hero_image: url }
-  #
-  # ESPN article pages are protected by AWS WAF and cannot be scraped
-  # server-side. For those URLs we fall back to the ESPN JSON API which
-  # returns description text + a proper CDN image without any auth requirement.
-  def fetch_content(url)
-    return nil if url.blank?
+  def enrich_article(item)
+    return item unless item.is_a?(Hash)
 
-    begin
-      host = URI.parse(url).host.to_s.downcase.sub(/\Awww\./, "")
-      # Normalise: compare bare domain and www. variant against the allowlist
-      allowed = ALLOWED_CONTENT_DOMAINS.any? do |d|
-        bare = d.sub(/\Awww\./, "")
-        host == bare || host == "www.#{bare}"
-      end
-      unless allowed
-        Rails.logger.warn("[NewsService] Blocked fetch to disallowed host: #{host} (#{url})")
-        return nil
-      end
+    text = "#{item[:title]} #{item[:summary]}".downcase
+    item[:competition_codes] = LEAGUE_NEWS_KEYWORDS.select { |_code, words|
+      words.any? { |w| text.include?(w) }
+    }.keys
+    item[:is_video] = item[:link].to_s.include?("/video/")
+    word_count = text.split(/\s+/).reject(&:blank?).length
+    item[:reading_time_min] = [ (word_count / 200.0).ceil, 1 ].max
+    item
+  end
 
-      unless ssrf_safe?(host)
-        Rails.logger.warn("[NewsService] Blocked fetch to private/reserved IP for host: #{host}")
-        return nil
-      end
-    rescue URI::InvalidURIError
-      return nil
-    end
-
-    # ESPN articles: use the public JSON API instead of scraping (WAF blocks curl)
-    if url =~ %r{espn(?:deportes)?\.espn\.com/.*/nota/_/id/(\d+)/}
-      return fetch_espn_article_content($1, url)
-    end
-
-    Rails.cache.fetch("news_content_#{Digest::SHA1.hexdigest(url)}", expires_in: 60.minutes, race_condition_ttl: 15.seconds) do
-      response = Faraday.get(url) do |req|
-        req.options.timeout      = 8
-        req.options.open_timeout = 5
-        req.headers["User-Agent"] = USER_AGENTS.sample
-        req.headers["Accept"]     = "text/html"
-      end
-
-      doc = Nokogiri::HTML(response.body)
-
-      # Hero image — prefer largest available from <figure> or <meta og:image>
-      hero_img = extract_hero_image(doc)
-
-      # Paragraphs — try progressively broader selectors
-      paragraphs = extract_paragraphs(doc)
-
-      { paragraphs: paragraphs, hero_image: hero_img }
-    end
-  rescue => e
-    Rails.logger.warn("[NewsService] fetch_content failed for #{url}: #{e.message}")
-    nil
+  def related_score(base, candidate)
+    score = 0
+    score += 8 if base[:source].present? && base[:source] == candidate[:source]
+    overlap = Array(base[:competition_codes]) & Array(candidate[:competition_codes])
+    score += overlap.length * 6
+    base_words = "#{base[:title]} #{base[:summary]}".downcase.split(/\W+/).select { |w| w.length > 4 }
+    cand_text  = "#{candidate[:title]} #{candidate[:summary]}".downcase
+    score += base_words.count { |w| cand_text.include?(w) }
+    score
   end
 
   private
@@ -373,7 +425,7 @@ class NewsService
       espn_id   = link.match(%r{/_/id/(\d+)/})&.[](1)
       id        = Digest::SHA1.hexdigest(link)[0, 12]
 
-      item = {
+      item = enrich_article({
         id:           id,
         title:        a["headline"].to_s.strip,
         link:         link,
@@ -382,7 +434,7 @@ class NewsService
         image:        img,
         published_at: published,
         date_label:   published ? published.strftime("%-d %b %Y") : nil
-      }
+      })
 
       # Side-cache so fetch_espn_article_content can look up by ESPN numeric ID
       if espn_id
@@ -409,7 +461,7 @@ class NewsService
   #   2. Side-cache written by fetch_espn_api — instant, has image + description.
   #   3. Direct ESPN JSON API call — last resort; returns description only.
   def fetch_espn_article_content(espn_id, original_url = nil)
-    Rails.cache.fetch("espn_content_v2_#{espn_id}", expires_in: 60.minutes, race_condition_ttl: 15.seconds) do
+    Rails.cache.fetch("espn_content_v3_#{espn_id}", expires_in: CONTENT_CACHE_TTL, race_condition_ttl: 30.seconds) do
       # ── 1. Mobile scrape (bypasses WAF) ──────────────────────────────────────
       if original_url.present?
         begin
@@ -430,12 +482,12 @@ class NewsService
             # If we got at least an image or real paragraphs, use this result
             if hero_img.present? || paragraphs.length >= 2
               Rails.logger.info("[NewsService] ESPN article #{espn_id} scraped via mobile UA (#{paragraphs.length} paras, image=#{hero_img.present?})")
-              # Persist better og:image so next feed rebuild uses it for the card
               if hero_img.present? && original_url.present?
                 og_key = "espn_og_#{Digest::SHA1.hexdigest(original_url)[0, 12]}"
                 Rails.cache.write(og_key, hero_img, expires_in: 6.hours)
               end
-              next { hero_image: hero_img, paragraphs: paragraphs }
+              images = extract_inline_images(doc, hero_img)
+              next { hero_image: hero_img, paragraphs: paragraphs, images: images }
             end
           else
             Rails.logger.warn("[NewsService] ESPN mobile scrape #{espn_id}: HTTP #{resp.status}")
@@ -448,7 +500,7 @@ class NewsService
       # ── 2. Side-cache (populated by fetch_espn_api during feed refresh) ──────
       cached = Rails.cache.read("espn_article_#{espn_id}")
       if cached
-        next { hero_image: cached[:image], paragraphs: [ cached[:summary] ].reject(&:blank?) }
+        next { hero_image: cached[:image], paragraphs: [ cached[:summary] ].reject(&:blank?), images: [] }
       end
 
       # ── 3. Direct ESPN JSON API fallback ─────────────────────────────────────
@@ -472,10 +524,10 @@ class NewsService
         img  = found["images"]&.find { |i| i["type"] == "header" }&.dig("url") ||
                found.dig("images", 0, "url")
         desc = found["description"].to_s.strip
-        { hero_image: img, paragraphs: [ desc ].reject(&:blank?) }
+        { hero_image: img, paragraphs: [ desc ].reject(&:blank?), images: [] }
       else
         Rails.logger.warn("[NewsService] ESPN article #{espn_id} not found via API")
-        { hero_image: nil, paragraphs: [] }
+        { hero_image: nil, paragraphs: [], images: [] }
       end
     end
   rescue => e
@@ -503,9 +555,11 @@ class NewsService
     doc.css("script, style, nav, header, footer, aside, figure figcaption, [class*='related'], [class*='promo'], [class*='advert'], [class*='cookie'], [class*='banner']").remove
 
     candidates = [
-      ".story-body__paragraph",            # ESPN mobile (primary)
-      "[class*='paragraph--text']",        # ESPN mobile alternate
-      "[data-testid='paragraph']",         # ESPN generic
+      ".story-body__paragraph",
+      "[class*='paragraph--text']",
+      "[data-testid='paragraph']",
+      ".ue-c-article__paragraph",
+      ".article-body p",
       "article p",
       "[data-component='text-block'] p",
       ".article-body p",
@@ -531,6 +585,17 @@ class NewsService
       .reject { |t| t.length < 20 }   # skip captions / labels
       .uniq
       .first(30)
+  end
+
+  def extract_inline_images(doc, hero_url = nil)
+    doc.css("article figure img[src], .article-body figure img[src], main figure img[src], .ue-c-article__media img[src]").filter_map do |img|
+      url = img["src"].to_s
+      next unless url.match?(/\Ahttps?:\/\//)
+      next if hero_url.present? && url == hero_url
+
+      caption = img.at_xpath("ancestor::figure//figcaption")&.text&.strip
+      { url: url, caption: caption.presence }
+    end.uniq { |i| i[:url] }.first(6)
   end
 
   def fetch_feed(url, source)
@@ -642,7 +707,7 @@ class NewsService
                   end
     id          = Digest::SHA1.hexdigest(link.to_s)[0, 12]
 
-    {
+    enrich_article({
       id:           id,
       title:        title,
       link:         link,
@@ -651,14 +716,14 @@ class NewsService
       image:        image,
       published_at: published,
       date_label:   published ? published.strftime("%-d %b %Y") : nil
-    }
+    })
   rescue => e
     Rails.logger.warn("[NewsService] parse error: #{e.message}")
     nil
   end
 
   def news_cache_key(lang)
-    suffix = AppFocus.wc_paused? ? "clubs_v10" : "v8"
+    suffix = AppFocus.wc_paused? ? "clubs_v11" : "v9"
     "news_feed_#{suffix}_#{lang}"
   end
 

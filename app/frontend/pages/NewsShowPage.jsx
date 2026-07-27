@@ -5,14 +5,11 @@ import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { fetchJson } from "../utils/fetchJson"
+import { consumePrefetchedArticle } from "../utils/newsPrefetch"
 import OfflineBanner from "../components/OfflineBanner"
-
-const SOURCE_COLORS = {
-  "BBC Sport":     "#b80000",
-  "ESPN FC":       "#cc0000",
-  "ESPN Deportes": "#cc0000",
-  "Goal.com":      "var(--accent)",
-}
+import RelatedNewsStrip from "../components/RelatedNewsStrip"
+import NewsArticleBody from "../components/NewsArticleBody"
+import { sourceColor } from "../utils/sourceColors"
 
 function ArticleSkeleton() {
   return (
@@ -34,38 +31,62 @@ export default function NewsShowPage() {
   const { clubs_primary: clubsPrimary } = useAppFocus()
   const navigate = useNavigate()
   const lang     = i18n.language.split("-")[0]
-  const [article, setArticle]   = useState(null)
-  const [content, setContent]   = useState(null)
-  const [loading, setLoading]   = useState(true)
-  const [notFound, setNotFound] = useState(false)
-  const [copied, setCopied]     = useState(false)
-  const [stale, setStale]       = useState(false)
+  const [article, setArticle]         = useState(null)
+  const [content, setContent]         = useState(null)
+  const [metaLoading, setMetaLoading] = useState(true)
+  const [contentLoading, setContentLoading] = useState(true)
+  const [notFound, setNotFound]       = useState(false)
+  const [copied, setCopied]           = useState(false)
+  const [stale, setStale]             = useState(false)
 
-  const load = useCallback(() => {
-    setLoading(true)
+  const load = useCallback(async () => {
+    setMetaLoading(true)
+    setContentLoading(true)
     setArticle(null)
     setContent(null)
     setNotFound(false)
     setStale(false)
 
-    Promise.all([
-      fetchJson(`/api/v1/news/${id}?lang=${lang}`),
-      fetchJson(`/api/v1/news/${id}/content?lang=${lang}`),
-    ])
-      .then(([metaRes, bodyRes]) => {
-        setStale(metaRes.stale || bodyRes.stale)
-        const meta = metaRes.ok && metaRes.data ? metaRes.data : null
+    const prefetched = consumePrefetchedArticle(id, lang)
+    if (prefetched) {
+      try {
+        const { meta, content: body } = await prefetched
         if (!meta) { setNotFound(true); return }
         setArticle(meta)
-        setContent(bodyRes.ok ? bodyRes.data : null)
+        setContent(body)
+        return
+      } catch {
+        // fall through to network fetch
+      } finally {
+        setMetaLoading(false)
+        setContentLoading(false)
+      }
+    }
+
+    try {
+      const metaRes = await fetchJson(`/api/v1/news/${id}?lang=${lang}`)
+      setStale(metaRes.stale)
+      const meta = metaRes.ok && metaRes.data ? metaRes.data : null
+      if (!meta) { setNotFound(true); return }
+      setArticle(meta)
+    } catch {
+      setNotFound(true)
+      return
+    } finally {
+      setMetaLoading(false)
+    }
+
+    fetchJson(`/api/v1/news/${id}/content?lang=${lang}`)
+      .then(bodyRes => {
+        setStale(prev => prev || bodyRes.stale)
+        if (bodyRes.ok) setContent(bodyRes.data)
       })
-      .catch(() => setNotFound(true))
-      .finally(() => setLoading(false))
+      .catch(() => {})
+      .finally(() => setContentLoading(false))
   }, [id, lang])
 
   useEffect(() => { load() }, [load])
 
-  // Hooks must be unconditional — pass null when article not loaded yet
   const heroImageEarly = content?.hero_image || article?.image
   usePageMeta(
     article?.title || null,
@@ -88,14 +109,23 @@ export default function NewsShowPage() {
     "url": typeof window !== "undefined" ? window.location.href : undefined,
   } : null)
 
-  function share() {
-    navigator.clipboard?.writeText(window.location.href).then(() => {
+  async function share() {
+    const url = window.location.href
+    if (navigator.share && article?.title) {
+      try {
+        await navigator.share({ title: article.title, url })
+        return
+      } catch (err) {
+        if (err?.name === "AbortError") return
+      }
+    }
+    navigator.clipboard?.writeText(url).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     })
   }
 
-  if (loading) {
+  if (metaLoading && !article) {
     return (
       <div style={{ padding: 0 }}>
         <div className="match-back-bar">
@@ -122,9 +152,15 @@ export default function NewsShowPage() {
     )
   }
 
-  const color      = SOURCE_COLORS[article.source] || "var(--accent)"
+  const color      = sourceColor(article.source)
   const heroImage  = content?.hero_image || article.image
-  const paragraphs = content?.paragraphs || []
+  const isVideo    = content?.is_video || article.is_video
+  const paragraphs = (() => {
+    const body = (content?.paragraphs || []).filter(Boolean)
+    if (body.length > 0) return body
+    return article.summary ? [article.summary] : []
+  })()
+  const readingMin = content?.reading_time_min || article.reading_time_min || Math.max(1, Math.ceil(paragraphs.join(" ").split(/\s+/).length / 200))
 
   return (
     <article className="news-article">
@@ -167,33 +203,33 @@ export default function NewsShowPage() {
           <span className="news-article__source" style={{ background: color }}>
             {article.source}
           </span>
+          {isVideo && (
+            <span className="news-article__video-badge">{t("news.videoArticle")}</span>
+          )}
           {article.date_label && (
             <time className="news-article__date">{article.date_label}</time>
+          )}
+          {readingMin > 0 && (
+            <span className="news-article__reading-time">
+              {t("news.readingTime", { count: readingMin })}
+            </span>
           )}
         </div>
 
         <h1 className="news-article__title">{article.title}</h1>
 
-        {paragraphs.length > 0 ? (
-          <div className="news-article__content">
-            {paragraphs.map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
-          </div>
-        ) : article.summary ? (
-          <p className="news-article__summary">{article.summary}</p>
-        ) : null}
+        <NewsArticleBody
+          paragraphs={paragraphs}
+          images={content?.images}
+          loading={contentLoading && !content}
+        />
 
-        {paragraphs.length < 3 && article.link && (
-          <a
-            href={article.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="news-article__cta"
-          >
-            {t("news.readOn", { source: article.source })}
-          </a>
-        )}
+        <RelatedNewsStrip
+          title={t("news.related")}
+          lang={lang}
+          relatedId={id}
+          limit={4}
+        />
 
         <footer className="news-article__footer">
           <Link to="/news" className="news-article__back">

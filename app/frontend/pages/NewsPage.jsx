@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { useAppFocus } from "../hooks/useAppFocus"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { fetchJson } from "../utils/fetchJson"
+import { attachNewsPrefetch } from "../utils/newsPrefetch"
 import OfflineBanner from "../components/OfflineBanner"
 import PullIndicator from "../components/PullIndicator"
 import { usePullRefresh } from "../hooks/usePullRefresh"
@@ -30,11 +31,11 @@ function dedupeArticles(list) {
   })
 }
 
-function CompactList({ articles, mobileOnly = false }) {
+function CompactList({ articles, mobileOnly = false, lang }) {
   return (
     <div className={`nc-compact-grid news-feed-grid${mobileOnly ? " news-feed-grid--mobile" : ""}`}>
       {articles.map((article, i) => (
-        <CompactCard key={article.id ?? `${article.link ?? "article"}-${i}`} article={article} />
+        <CompactCard key={article.id ?? `${article.link ?? "article"}-${i}`} article={article} lang={lang} />
       ))}
     </div>
   )
@@ -56,12 +57,17 @@ function NewsLoadingSkeleton() {
     </div>
   )
 }
-function FeaturedCard({ article }) {
+function FeaturedCard({ article, lang }) {
   const bg = article.image
     ? `url(${article.image}), url('/images/hero_2.jpg')`
     : "url('/images/hero_2.jpg')"
   return (
-    <Link to={`/news/${article.id}`} className="nc-featured" style={{ textDecoration: "none" }}>
+    <Link
+      to={`/news/${article.id}`}
+      className="nc-featured"
+      style={{ textDecoration: "none" }}
+      ref={el => attachNewsPrefetch(el, article.id, lang)}
+    >
       <div className="nc-featured__img" style={{ backgroundImage: bg }} />
       <div className="nc-featured__overlay">
         <div className="nc-featured__meta">
@@ -75,12 +81,17 @@ function FeaturedCard({ article }) {
 }
 
 // ── Medium card (2-col): overlay style ───────────────────────────────────
-function MediumCard({ article }) {
+function MediumCard({ article, lang }) {
   const bg = article.image
     ? `url(${article.image}), url('/images/hero_2.jpg')`
     : "url('/images/hero_2.jpg')"
   return (
-    <Link to={`/news/${article.id}`} className="nc-medium" style={{ textDecoration: "none" }}>
+    <Link
+      to={`/news/${article.id}`}
+      className="nc-medium"
+      style={{ textDecoration: "none" }}
+      ref={el => attachNewsPrefetch(el, article.id, lang)}
+    >
       <div className="nc-medium__img" style={{ backgroundImage: bg }} />
       <div className="nc-medium__overlay">
         <h3 className="nc-medium__title">{article.title}</h3>
@@ -91,12 +102,17 @@ function MediumCard({ article }) {
 }
 
 // ── Compact card (3-col+): horizontal thumbnail + text ────────────────────
-function CompactCard({ article }) {
+function CompactCard({ article, lang }) {
   const [imgErr, setImgErr] = useState(false)
   const imgSrc = article.image && !imgErr ? article.image : "/images/hero_2.jpg"
 
   return (
-    <Link to={`/news/${article.id}`} className="nc-compact" style={{ textDecoration: "none" }}>
+    <Link
+      to={`/news/${article.id}`}
+      className="nc-compact"
+      style={{ textDecoration: "none" }}
+      ref={el => attachNewsPrefetch(el, article.id, lang)}
+    >
       <div className="nc-compact__thumb">
         <img
           src={imgSrc}
@@ -165,6 +181,10 @@ export default function NewsPage() {
     }, { replace: true })
   }, [setSearchParams])
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const [searchInput, setSearchInput] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState(null)
+  const [searchLoading, setSearchLoading] = useState(false)
 
   const sentinelRef = useRef(null)
   const poolLengthRef = useRef(0)
@@ -210,6 +230,34 @@ export default function NewsPage() {
     }
   }, [i18n.language, leagueCodesKey, reloadToken])
 
+  useEffect(() => {
+    const timer = setTimeout(() => setSearchQuery(searchInput.trim()), 350)
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
+  useEffect(() => {
+    if (searchQuery.length < 3) {
+      setSearchResults(null)
+      setSearchLoading(false)
+      return
+    }
+
+    let cancelled = false
+    setSearchLoading(true)
+    const leaguesParam = leagueCodesKey ? `&leagues=${encodeURIComponent(leagueCodesKey)}` : ""
+    fetchJson(`/api/v1/news?lang=${i18n.language}${leaguesParam}&q=${encodeURIComponent(searchQuery)}&limit=30`)
+      .then(({ data, ok }) => {
+        if (cancelled) return
+        setSearchResults(ok && Array.isArray(data) ? data : [])
+      })
+      .catch(() => { if (!cancelled) setSearchResults([]) })
+      .finally(() => { if (!cancelled) setSearchLoading(false) })
+
+    return () => { cancelled = true }
+  }, [searchQuery, i18n.language, leagueCodesKey])
+
+  const lang = i18n.language.split("-")[0]
+
   const retryNews = useCallback(() => {
     setSource(null)
     setVisibleCount(PAGE_SIZE)
@@ -230,9 +278,12 @@ export default function NewsPage() {
   const forYouArticles = uniqueArticles.filter(a => isRelevantTo(a, followedTeamNames, followedCompNames, i18n.language))
 
   // Which pool to show depending on active tab
-  const pool = tab === "foryou" ? forYouArticles : (
-    active === allLabel ? uniqueArticles : uniqueArticles.filter(a => a.source === active)
-  )
+  const searching = searchQuery.length >= 3
+  const pool = searching
+    ? dedupeArticles(searchResults || [])
+    : tab === "foryou" ? forYouArticles : (
+      active === allLabel ? uniqueArticles : uniqueArticles.filter(a => a.source === active)
+    )
   const visible = pool.slice(0, visibleCount)
   const hasMore = visibleCount < pool.length
   poolLengthRef.current = pool.length
@@ -302,8 +353,18 @@ export default function NewsPage() {
               )}
             </button>
 
+            <button
+              role="tab"
+              aria-selected={tab === "all"}
+              aria-controls="news-tab-panel"
+              className={`tab-link${tab === "all" ? " tab-link--active" : ""}`}
+              onClick={() => { selectTab("all"); setSource(null) }}
+            >
+              {t("news.allNews", "All news")}
+            </button>
 
-            {/* "All news" button when in For You mode */}
+
+            {/* "All news" button when in For You mode — legacy quick switch */}
             {tab === "foryou" && (
               <button
                 role="tab"
@@ -316,7 +377,44 @@ export default function NewsPage() {
                 {t("news.allNews", "All news")}
               </button>
             )}
+
+            {tab === "all" && (
+              <>
+                <button
+                  role="tab"
+                  aria-selected={active === allLabel}
+                  className={`tab-link${active === allLabel ? " tab-link--active" : ""}`}
+                  onClick={() => setSource(null)}
+                >
+                  {allLabel}
+                </button>
+                {sources.slice(1).map(src => (
+                  <button
+                    key={src}
+                    role="tab"
+                    aria-selected={active === src}
+                    className={`tab-link${active === src ? " tab-link--active" : ""}`}
+                    onClick={() => setSource(src)}
+                  >
+                    {src}
+                  </button>
+                ))}
+              </>
+            )}
           </div>
+        </div>
+      </div>
+
+      <div className="news-search-bar">
+        <div className="container">
+          <input
+            type="search"
+            className="news-search-bar__input"
+            placeholder={t("news.searchPlaceholder")}
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            aria-label={t("news.searchPlaceholder")}
+          />
         </div>
       </div>
 
@@ -344,17 +442,17 @@ export default function NewsPage() {
       <div className="site-section" id="news-tab-panel" role="tabpanel">
         <div className="container">
           <OfflineBanner stale={stale} onRetry={retryNews} />
-          {loading ? (
+          {loading || (searching && searchLoading) ? (
             <NewsLoadingSkeleton />
           ) : error ? (
             <div style={{ textAlign: "center", paddingTop: 60 }}>
               <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoadNews")}</p>
               <button className="btn btn-primary btn-sm" onClick={retryNews}>{t("error.retry")}</button>
             </div>
-          ) : visible.length === 0 && tab !== "foryou" ? (
+          ) : visible.length === 0 && (tab !== "foryou" || searching) ? (
             <div className="empty-state">
               <div className="empty-state__icon">📰</div>
-              <h3>{t("news.noArticles")}</h3>
+              <h3>{searching ? t("news.searchEmpty") : t("news.noArticles")}</h3>
             </div>
           ) : visible.length > 0 ? (
             <>
@@ -370,9 +468,9 @@ export default function NewsPage() {
               )}
 
               {(() => {
-                const isEditorial = tab === "all" && active === allLabel
+                const isEditorial = tab === "all" && active === allLabel && !searching
                 if (!isEditorial) {
-                  return <CompactList articles={visible} />
+                  return <CompactList articles={visible} lang={lang} />
                 }
                 const [featured, ...rest] = visible
                 const mediumPair = rest.slice(0, 2)
@@ -380,19 +478,19 @@ export default function NewsPage() {
                 return (
                   <>
                     <div className="news-editorial-grid news-feed-grid--desktop">
-                      {featured && <FeaturedCard article={featured} />}
+                      {featured && <FeaturedCard article={featured} lang={lang} />}
                       {mediumPair.length > 0 && (
                         <div className="nc-medium-row">
-                          {mediumPair.map((a, i) => <MediumCard key={a.id ?? i} article={a} />)}
+                          {mediumPair.map((a, i) => <MediumCard key={a.id ?? i} article={a} lang={lang} />)}
                         </div>
                       )}
                       {compacts.length > 0 && (
                         <div className="nc-compact-grid">
-                          {compacts.map((a, i) => <CompactCard key={a.id ?? i} article={a} />)}
+                          {compacts.map((a, i) => <CompactCard key={a.id ?? i} article={a} lang={lang} />)}
                         </div>
                       )}
                     </div>
-                    <CompactList articles={visible} mobileOnly />
+                    <CompactList articles={visible} mobileOnly lang={lang} />
                   </>
                 )
               })()}

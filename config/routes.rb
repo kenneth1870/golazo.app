@@ -57,6 +57,7 @@ Rails.application.routes.draw do
       get "results",      to: "results#index"
       get "news",         to: "news#index"
       get "news/:id",         to: "news#show"
+      get "news/:id/related", to: "news#related"
       get "news/:id/content", to: "news#content"
       get "top_scorers",  to: "top_scorers#index"
       get "top_assists",  to: "top_scorers#assists"

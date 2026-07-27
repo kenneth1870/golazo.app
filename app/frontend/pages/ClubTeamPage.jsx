@@ -14,6 +14,8 @@ import { leagueHeroStyle } from "../utils/leagueHeroImages"
 import { fetchJson } from "../utils/fetchJson"
 import OfflineBanner from "../components/OfflineBanner"
 import EmptyState from "../components/EmptyState"
+import RelatedNewsStrip from "../components/RelatedNewsStrip"
+import { buildNewsQuery } from "../utils/newsQuery"
 
 export default function ClubTeamPage() {
   const { t, i18n } = useTranslation()
@@ -101,7 +103,9 @@ export default function ClubTeamPage() {
   const competition = data.competition
   const favId = team.name
   const following = isFavorite("team", favId)
-  const matches = tab === "upcoming" ? (data.upcoming || []) : (data.recent || [])
+  const matches = tab === "news" ? [] : tab === "upcoming" ? (data.upcoming || []) : (data.recent || [])
+  const newsQuery = team ? buildNewsQuery([team.name], i18n.language.split("-")[0], translateTeam) : null
+  const lang = i18n.language.split("-")[0]
 
   function handleFollowToggle() {
     const willFollow = !following
@@ -221,14 +225,39 @@ export default function ClubTeamPage() {
             >
               {t("nav.results")}
             </button>
+            <button
+              role="tab"
+              aria-selected={tab === "news"}
+              id="club-tab-news"
+              className={`tab-link${tab === "news" ? " tab-link--active" : ""}`}
+              onClick={() => setTab("news")}
+            >
+              {t("nav.news")}
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="site-section" role="tabpanel" aria-labelledby={tab === "upcoming" ? "club-tab-upcoming" : "club-tab-recent"}>
+      <div className="site-section" role="tabpanel" aria-labelledby={tab === "upcoming" ? "club-tab-upcoming" : tab === "recent" ? "club-tab-recent" : "club-tab-news"}>
         <div className="container">
           <OfflineBanner stale={stale} onRetry={load} />
-          {matches.length === 0 ? (
+          {tab === "news" ? (
+            <RelatedNewsStrip
+              title={t("news.teamNews", { team: displayName })}
+              lang={lang}
+              query={newsQuery}
+              leagues={code}
+              limit={8}
+              seeMoreTo={`/news?tab=foryou`}
+              empty={
+                <EmptyState
+                  icon="📰"
+                  title={t("news.noArticles")}
+                  action={<Link to="/news" className="btn btn-primary btn-sm">{t("news.allNews")}</Link>}
+                />
+              }
+            />
+          ) : matches.length === 0 ? (
             <EmptyState
               icon="📅"
               title={tab === "upcoming" ? t("home.noUpcoming") : t("scores.noResults")}

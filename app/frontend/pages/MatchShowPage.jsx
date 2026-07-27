@@ -12,7 +12,8 @@ const ScorePredictionPanel = lazy(() => import("./match/ScorePredictionPanel"))
 const MatchPreviewPanel = lazy(() => import("./match/MatchPreviewPanel"))
 const PlayerRatingsPanel = lazy(() => import("./match/PlayerRatingsPanel"))
 import FirstScorerOdds from "./match/FirstScorerOdds"
-import MatchReactions from "../components/MatchReactions"
+import RelatedNewsStrip from "../components/RelatedNewsStrip"
+import { buildMatchNewsQuery } from "../utils/newsQuery"
 import { useReminders } from "../hooks/useReminders"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 import { useVisiblePolling } from "../hooks/useVisiblePolling"
@@ -1454,90 +1455,6 @@ function MatchSkeleton() {
   )
 }
 
-// ─── Related News ──────────────────────────────────────
-
-function relativeTime(published_at, t) {
-  if (!published_at || !t) return ""
-  const diff = Math.floor((Date.now() - new Date(published_at).getTime()) / 1000)
-  if (diff <= 0)    return t("time.agoJustNow")
-  if (diff < 60)    return t("time.agoSeconds", { count: diff })
-  if (diff < 3600)  return t("time.agoMinutes", { count: Math.floor(diff / 60) })
-  if (diff < 86400) return t("time.agoHours", { count: Math.floor(diff / 3600) })
-  return t("time.agoDays", { count: Math.floor(diff / 86400) })
-}
-
-// Leagues whose names are specific enough to improve article matching.
-// Generic values like "Friendlies", "World Cup" flood results or match nothing.
-const NEWS_SEARCHABLE_LEAGUES = new Set([
-  "premier league", "la liga", "serie a", "bundesliga", "ligue 1",
-  "eredivisie", "primeira liga", "champions league", "europa league",
-  "conference league", "copa del rey", "fa cup", "carabao cup",
-  "mls", "copa america", "euros", "nations league", "libertadores",
-])
-
-function RelatedNewsPanel({ homeName, awayName, leagueName, lang, t }) {
-  const [articles, setArticles] = useState([])
-
-  useEffect(() => {
-    if (!homeName && !awayName) return
-
-    // Build keyword list — only include league when it's specific enough
-    const leagueWords = leagueName &&
-      NEWS_SEARCHABLE_LEAGUES.has(leagueName.toLowerCase().trim())
-        ? leagueName.toLowerCase().split(/[\s\-\/]+/).filter(k => k.length > 3)
-        : []
-    const GENERIC = new Set(["real", "city", "club", "united", "atletico", "atleticó"])
-    const words = [...[homeName, awayName]
-      .filter(Boolean)
-      .flatMap(n => n.toLowerCase().split(/[\s\-\/]+/))
-      .filter(k => k.length > 3 && !GENERIC.has(k)),
-      ...leagueWords,
-    ]
-    if (words.length === 0) return
-
-    // Send keywords server-side — avoids fetching 60 articles to filter 3
-    const q = encodeURIComponent(words.join(","))
-    let cancelled = false
-    fetchJson(`/api/v1/news?lang=${lang}&q=${q}`)
-      .then(({ data: items, ok }) => { if (ok && Array.isArray(items) && items.length > 0) setArticles(items) })
-      .catch(() => {})
-    return () => { cancelled = true }
-  }, [homeName, awayName, leagueName, lang])
-
-  if (articles.length === 0) return null
-
-  return (
-    <section className="related-news">
-      <div className="related-news__header">
-        <h3 className="related-news__title">{t("match.relatedNews")}</h3>
-        <Link to="/news" className="related-news__more">{t("news.seeMore")}</Link>
-      </div>
-      <div className="related-news__scroll">
-        {articles.map(a => {
-          const color = sourceColor(a.source)
-          return (
-            <Link key={a.id} to={`/news/${a.id}`} className="rn-card">
-              {a.image
-                ? <div className="rn-card__img" style={{ backgroundImage: `url(${a.image})` }} />
-                : <div className="rn-card__img rn-card__img--placeholder" />
-              }
-              <div className="rn-card__body">
-                <span className="rn-card__tag" style={{ background: color }}>{a.source}</span>
-                <p className="rn-card__title">{a.title}</p>
-                <div className="rn-card__footer">
-                  <div className="rn-card__source-dot" style={{ background: color }} />
-                  <span className="rn-card__time">{relativeTime(a.published_at, t)}</span>
-                  <span className="rn-card__bookmark">🔖</span>
-                </div>
-              </div>
-            </Link>
-          )
-        })}
-      </div>
-    </section>
-  )
-}
-
 // ─── Main Page ─────────────────────────────────────────
 // TAB_KEYS is built dynamically in the component based on match status
 
@@ -2143,12 +2060,11 @@ export default function MatchShowPage() {
 
         {/* Related News — shown on every tab when fixture is loaded */}
         {hasFixture && (
-          <RelatedNewsPanel
-            homeName={homeName}
-            awayName={awayName}
-            leagueName={data?.fixture?.league?.name}
+          <RelatedNewsStrip
+            title={t("match.relatedNews")}
             lang={i18n.language?.slice(0, 2) || "en"}
-            t={t}
+            query={buildMatchNewsQuery(homeName, awayName, data?.fixture?.league?.name)}
+            limit={4}
           />
         )}
         </div>

@@ -38,6 +38,11 @@ production:
     schedule: "every 30 minutes"
     queue: default
 
+  warm_news_content:
+    class: WarmNewsContentJob
+    schedule: "every 15 minutes"
+    queue: default
+
   heal_wc_matches:
     class: ResyncAllWcMatchesJob
     schedule: "every 3 hours"
