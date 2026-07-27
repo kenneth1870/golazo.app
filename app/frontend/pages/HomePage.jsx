@@ -133,12 +133,16 @@ function useLatestNews(leagueCodes = []) {
 function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = false }) {
   const { i18n } = useTranslation()
   const [teamUpcoming, setTeamUpcoming] = useState([])
+  const [teamLoading, setTeamLoading] = useState(false)
 
   const matchesTeam = (name) => matchTeamName(name, fav.name, i18n.language)
 
+  const leagueCode = fav.league_code || (clubsPrimary ? "CRC" : null)
+
   useEffect(() => {
-    if (!clubsPrimary || !fav?.league_code || !fav?.name) {
+    if (!clubsPrimary || !leagueCode || !fav?.name) {
       setTeamUpcoming([])
+      setTeamLoading(false)
       return
     }
     const inFeed = upcomingMatches.some(m =>
@@ -146,21 +150,24 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
     )
     if (inFeed) {
       setTeamUpcoming([])
+      setTeamLoading(false)
       return
     }
 
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     const slug = clubTeamSlug(fav.name)
     let cancelled = false
-    fetchJson(`/api/v1/club_teams/${fav.league_code}/${slug}?tz=${encodeURIComponent(tz)}`, { soft: true })
+    setTeamLoading(true)
+    fetchJson(`/api/v1/club_teams/${leagueCode}/${slug}?tz=${encodeURIComponent(tz)}`, { soft: true })
       .then(({ data, ok }) => {
         if (cancelled) return
         setTeamUpcoming(ok && Array.isArray(data?.upcoming) ? data.upcoming : [])
       })
       .catch(() => { if (!cancelled) setTeamUpcoming([]) })
+      .finally(() => { if (!cancelled) setTeamLoading(false) })
 
     return () => { cancelled = true }
-  }, [clubsPrimary, fav?.league_code, fav?.name, upcomingMatches, i18n.language])
+  }, [clubsPrimary, leagueCode, fav?.name, upcomingMatches, i18n.language])
 
   const mergedMatches = (() => {
     const seen = new Set()
@@ -176,14 +183,14 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
     matchesTeam(m.home_team?.name) || matchesTeam(m.away_team?.name)
   )
   const next = favMatches.find(m => m.status === "live") || favMatches[0]
-  const teamHref = fav.league_code
-    ? clubTeamPath(fav.league_code, fav.name)
+  const teamHref = leagueCode
+    ? clubTeamPath(leagueCode, fav.name)
     : (/^\d+$/.test(String(fav.id)) ? `/teams/${fav.id}` : null)
   const teamLabel = translateTeam(fav.name, i18n.language) || fav.name
 
   return (
     <div className="favorite-team-card">
-      <div className="favorite-team-card__main">
+      <div className="favorite-team-card__header">
         {fav.flag_url && (
           <img src={fav.flag_url} alt="" className="logo-sm favorite-team-card__crest" onError={e => (e.target.style.display = "none")} />
         )}
@@ -198,39 +205,27 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
           )}
         </div>
       </div>
-      {next ? (
-        <div
-          className="favorite-team-card__aside favorite-team-card__aside--match"
-          role="button"
-          tabIndex={0}
-          aria-label={t("a11y.matchRow", {
-            home: translateTeam(next.home_team?.name, i18n.language),
-            away: translateTeam(next.away_team?.name, i18n.language),
-          })}
-          onClick={() => navigateToMatch(navigate, next)}
-          onKeyDown={e => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault()
-              navigateToMatch(navigate, next)
-            }
-          }}
-        >
-          <div className="favorite-team-card__aside-label">
+
+      {teamLoading ? (
+        <div className="favorite-team-card__body">
+          <div className="loading-shimmer" style={{ height: 52, borderRadius: 10 }} />
+        </div>
+      ) : next ? (
+        <div className="favorite-team-card__body">
+          <div className="favorite-team-card__label">
             {next.status === "live" ? t("home.playingNow") : t("hero.nextMatch")}
           </div>
-          <div className="favorite-team-card__matchup">
-            {translateTeam(next.home_team?.name, i18n.language)} vs {translateTeam(next.away_team?.name, i18n.language)}
-          </div>
-          <div className="favorite-team-card__kickoff">
-            {next.status === "live"
-              ? `${t("status.live")}${next.minute ? ` ${next.minute}'` : ""}`
-              : next.kickoff_at
-              ? new Date(next.kickoff_at).toLocaleString(i18n.language || undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-              : t("time.tbd")}
+          <div className="match-list match-list--compact favorite-team-card__match-list">
+            <MatchRow
+              match={next}
+              showDate={next.status !== "live"}
+              showMeta={false}
+              onClick={() => navigateToMatch(navigate, next)}
+            />
           </div>
         </div>
       ) : (
-        <div className="favorite-team-card__aside favorite-team-card__aside--empty">
+        <div className="favorite-team-card__body favorite-team-card__body--empty">
           {t("home.noUpcoming")}
         </div>
       )}

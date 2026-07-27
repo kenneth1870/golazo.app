@@ -456,37 +456,34 @@ button:focus:not(:focus-visible){outline:none}
 .favorite-team-card{
   background:linear-gradient(135deg, rgba(238,30,70,.12) 0%, rgba(238,30,70,.04) 100%);
   border:1px solid rgba(238,30,70,.25);border-radius:12px;
-  padding:16px 18px;margin-bottom:16px;
-  display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px 14px;
+  padding:14px 16px;margin-bottom:16px;
+  display:flex;flex-direction:column;align-items:stretch;gap:12px;
   max-width:100%;min-width:0;overflow:hidden;
 }
-.favorite-team-card__main{
-  display:flex;align-items:center;gap:10px;flex:1 1 140px;min-width:0;
+.favorite-team-card__header{
+  display:flex;align-items:center;gap:10px;min-width:0;
 }
 .favorite-team-card__crest{flex-shrink:0}
-.favorite-team-card__info{min-width:0}
+.favorite-team-card__info{min-width:0;flex:1}
 .favorite-team-card__name{
   display:block;font-weight:800;color:var(--text);font-size:1rem;
   text-decoration:none;overflow-wrap:anywhere;
 }
 .favorite-team-card__meta{font-size:.68rem;color:var(--muted);margin-top:2px}
-.favorite-team-card__aside{
-  flex:1 1 180px;min-width:0;max-width:100%;
-}
-.favorite-team-card__aside--match{
-  cursor:pointer;text-align:right;margin-left:auto;
-}
-.favorite-team-card__aside-label{
+.favorite-team-card__body{min-width:0}
+.favorite-team-card__label{
   font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;
+  margin-bottom:8px;
 }
-.favorite-team-card__matchup{
-  font-weight:700;color:var(--text);font-size:.9rem;line-height:1.35;
-  overflow-wrap:anywhere;
+.favorite-team-card__match-list{border-color:rgba(238,30,70,.18);background:rgba(0,0,0,.12)}
+body.light-mode .favorite-team-card__match-list{background:rgba(255,255,255,.55)}
+.favorite-team-card__match-list .match-row{border-bottom:none;background:transparent}
+.favorite-team-card__body--empty{
+  font-size:.82rem;color:var(--muted);line-height:1.45;text-align:center;
+  padding:14px 12px;border-radius:10px;
+  background:rgba(0,0,0,.12);border:1px dashed rgba(238,30,70,.2);
 }
-.favorite-team-card__kickoff{font-size:.72rem;color:var(--accent);margin-top:2px}
-.favorite-team-card__aside--empty{
-  font-size:.82rem;color:var(--muted);line-height:1.45;overflow-wrap:anywhere;
-}
+body.light-mode .favorite-team-card__body--empty{background:rgba(255,255,255,.45)}
 .schedule-fixture{transition:background .15s}
 .schedule-fixture--clickable{cursor:pointer}
 .schedule-fixture--clickable:hover{background:rgba(255,255,255,.1)}
@@ -496,11 +493,6 @@ body.light-mode .schedule-fixture--clickable:hover{background:rgba(0,0,0,.04)}
   .home-favorite-bar .favorite-team-picker{align-self:stretch;width:100%;max-width:100%}
   .home-favorite-bar .favorite-team-picker__trigger{width:100%;justify-content:center}
   .favorite-team-picker__label{max-width:100%}
-  .favorite-team-card__aside,
-  .favorite-team-card__aside--match{
-    flex:1 1 100%;margin-left:0;text-align:left;
-    padding-top:12px;border-top:1px solid rgba(238,30,70,.15);
-  }
 }
 .league-hero__row{
   display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;
