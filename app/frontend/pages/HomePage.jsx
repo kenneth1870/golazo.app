@@ -585,13 +585,19 @@ export default function HomePage() {
     >
       {ptr.showIndicator && <PullIndicator distance={ptr.pullDist} refreshing={ptr.refreshing} />}
     <>
-      <Hero nextMatch={nextMatch} liveCount={liveCount} clubsPrimary={clubsPrimary} compact={clubsPrimary} />
+      <Hero nextMatch={nextMatch} liveCount={liveCount} clubsPrimary={clubsPrimary} />
 
       <div className="container">
         <OfflineBanner stale={todayStale || newsStale || matchesStale} onRetry={refreshAll} />
       </div>
 
-      <div className="container home-today-section" style={{ paddingTop: clubsPrimary ? 12 : 24, paddingBottom: 0 }}>
+      {clubsPrimary && (
+        <div className="container" style={{ paddingTop: 16, paddingBottom: 0 }}>
+          <ClubCompetitionChips />
+        </div>
+      )}
+
+      <div className="container home-today-section" style={{ paddingTop: clubsPrimary ? 16 : 24, paddingBottom: 0 }}>
         <TodayMatchesSection
           todayMatches={todayMatches}
           upcomingPreview={upcomingPreview}
@@ -631,12 +637,6 @@ export default function HomePage() {
           </div>
         )}
       </div>
-
-      {clubsPrimary && (
-        <div className="container home-league-chips" style={{ paddingTop: 8, paddingBottom: 0 }}>
-          <ClubCompetitionChips compact />
-        </div>
-      )}
 
       {/* ── Latest News ── */}
       <div className="latest-news">

@@ -258,8 +258,8 @@ export default function Hero({ nextMatch, liveCount = 0, compact = false, clubsP
               </button>
             </div>
 
-            {/* Feature proof chips — desktop only to keep mobile hero scannable */}
-            <div className="hero-features d-none d-md-flex" style={{ flexWrap: "wrap", gap: 6 }}>
+            {/* Feature proof chips */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {FEATURES.map(f => (
                 <span key={f.labelKey} style={{
                   display: "inline-flex", alignItems: "center", gap: 4,
