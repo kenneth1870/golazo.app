@@ -436,7 +436,7 @@
     "forYouEmptyHint": "Follow teams from team pages or the Mundial section to see their news here.",
     "forYouShowing": "Showing news for {{teams}}",
     "notFound": "Article not found",
-    "backToNews": "← Back to News",
+    "backToNews": "Back to News",
     "originalOn": "Original article on {{source}}",
     "readOn": "Read on {{source}} ↗",
     "allLoaded": "All {{count}} articles loaded",

@@ -8,9 +8,10 @@ import { fetchJson } from "../utils/fetchJson"
 import OfflineBanner from "../components/OfflineBanner"
 
 const SOURCE_COLORS = {
-  "BBC Sport": "#b80000",
-  "ESPN FC":   "#cc0000",
-  "Goal.com":  "var(--accent)",
+  "BBC Sport":     "#b80000",
+  "ESPN FC":       "#cc0000",
+  "ESPN Deportes": "#cc0000",
+  "Goal.com":      "var(--accent)",
 }
 
 function ArticleSkeleton() {
@@ -114,7 +115,7 @@ export default function NewsShowPage() {
           <div className="empty-state">
             <div className="empty-state__icon">📰</div>
             <h3>{t("news.notFound")}</h3>
-            <p><Link to="/news" style={{ color: "var(--accent)" }}>← {t("news.backToNews")}</Link></p>
+            <p><Link to="/news" className="news-article__back">← {t("news.backToNews")}</Link></p>
           </div>
         </div>
       </div>
@@ -126,117 +127,79 @@ export default function NewsShowPage() {
   const paragraphs = content?.paragraphs || []
 
   return (
-    <article style={{ paddingBottom: 60 }}>
+    <article className="news-article">
       <OfflineBanner stale={stale} onRetry={load} />
 
-      {/* Back bar */}
       <div className="match-back-bar">
-        <div className="container" style={{ maxWidth: 740, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button onClick={() => navigate(-1)} className="btn-back" style={{ padding: "10px 0" }}>← {t("nav.back")}</button>
+        <div className="container news-article__toolbar">
+          <button type="button" onClick={() => navigate(-1)} className="btn-back">← {t("nav.back")}</button>
           <button
+            type="button"
             onClick={share}
-            style={{
-              background: "none", border: "1px solid var(--border)", borderRadius: 20,
-              padding: "5px 14px", color: copied ? "#10b981" : "var(--muted)",
-              fontSize: ".72rem", fontWeight: 600, cursor: "pointer",
-            }}
+            className={`news-article__share${copied ? " news-article__share--copied" : ""}`}
           >
             {copied ? t("match.copied") : t("match.share")}
           </button>
         </div>
       </div>
 
-      {/* Full-width hero photo */}
       {heroImage && (
-        <div style={{ position: "relative", width: "100%", maxHeight: 520, overflow: "hidden", background: "#0d1117" }}>
+        <div className="news-article__hero">
           <img
             src={heroImage}
-            alt={article.title}
-            style={{
-              width: "100%", maxHeight: 520,
-              objectFit: "cover", objectPosition: "center top",
-              display: "block",
-            }}
+            alt=""
+            className="news-article__hero-img"
             onError={e => { e.target.style.display = "none" }}
           />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(to bottom, transparent 50%, rgba(0,0,0,.75))",
-          }} />
+          <div className="news-article__hero-scrim" aria-hidden="true" />
         </div>
       )}
 
-      <div style={{ maxWidth: 740, margin: "0 auto", padding: "32px 20px 0" }}>
+      <div className="container news-article__body">
 
-        {/* Breadcrumb */}
-        <div style={{ marginBottom: 20, fontSize: "0.78rem", color: "var(--muted)" }}>
-          <Link to="/news" style={{ color: "var(--accent)", textDecoration: "none" }}>{t("nav.news")}</Link>
-          <span style={{ margin: "0 6px", opacity: .5 }}>›</span>
+        <nav className="news-article__breadcrumb" aria-label={t("nav.news")}>
+          <Link to="/news">{t("nav.news")}</Link>
+          <span aria-hidden="true">›</span>
           <span>{article.source}</span>
-        </div>
+        </nav>
 
-        {/* Source + date */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-          <span style={{
-            background: color, color: "#fff",
-            fontSize: ".62rem", fontWeight: 700, letterSpacing: ".1em",
-            padding: "3px 10px", borderRadius: 20, textTransform: "uppercase",
-          }}>
+        <div className="news-article__meta">
+          <span className="news-article__source" style={{ background: color }}>
             {article.source}
           </span>
           {article.date_label && (
-            <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>{article.date_label}</span>
+            <time className="news-article__date">{article.date_label}</time>
           )}
         </div>
 
-        {/* Title */}
-        <h1 style={{
-          fontSize: "clamp(1.45rem, 4vw, 2.1rem)", fontWeight: 900,
-          lineHeight: 1.28, color: "var(--text)", marginBottom: 28,
-        }}>
-          {article.title}
-        </h1>
+        <h1 className="news-article__title">{article.title}</h1>
 
-        {/* Article body */}
         {paragraphs.length > 0 ? (
-          <div style={{ fontSize: "clamp(1rem, 2.5vw, 1.1rem)", lineHeight: 1.85, color: "var(--text)" }}>
+          <div className="news-article__content">
             {paragraphs.map((p, i) => (
-              <p key={i} style={{ marginBottom: 22 }}>{p}</p>
+              <p key={i}>{p}</p>
             ))}
           </div>
         ) : article.summary ? (
-          <p style={{
-            fontSize: "clamp(1rem, 2.5vw, 1.1rem)", lineHeight: 1.85, color: "var(--text)",
-            borderLeft: "3px solid var(--accent)", paddingLeft: 16, marginBottom: 28,
-          }}>
-            {article.summary}
-          </p>
+          <p className="news-article__summary">{article.summary}</p>
         ) : null}
 
-        {/* Read original article CTA — shown when full content wasn't scraped */}
         {paragraphs.length < 3 && article.link && (
           <a
             href={article.link}
             target="_blank"
             rel="noopener noreferrer"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              marginTop: 8, marginBottom: 28,
-              background: "var(--accent)", color: "#fff",
-              padding: "10px 20px", borderRadius: 8,
-              fontWeight: 700, fontSize: "0.9rem", textDecoration: "none",
-            }}
+            className="news-article__cta"
           >
             {t("news.readOn", { source: article.source })}
           </a>
         )}
 
-        {/* Back */}
-        <div style={{ marginTop: 40, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
-          <Link to="/news" style={{ color: "var(--accent)", fontSize: "0.85rem", textDecoration: "none" }}>
+        <footer className="news-article__footer">
+          <Link to="/news" className="news-article__back">
             ← {t("news.backToNews")}
           </Link>
-        </div>
+        </footer>
 
       </div>
     </article>
