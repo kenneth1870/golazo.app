@@ -24,6 +24,7 @@ import PullIndicator from "../components/PullIndicator"
 import { usePullRefresh } from "../hooks/usePullRefresh"
 import { useStandingsChannel } from "../hooks/useStandingsChannel"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
+import { attachNewsPrefetch } from "../utils/newsPrefetch"
 
 function useTodayFeed(wcOnly = false) {
   const [todayMatches, setTodayMatches] = useState([])
@@ -476,8 +477,13 @@ function NewsCard({ post, index }) {
     : post?.date_label
 
   return (
-    <div className="col-md-4">
-      <Link to={post?.id ? `/news/${post.id}` : "#"} style={{ display: "block", textDecoration: "none", color: "inherit", pointerEvents: post ? "auto" : "none" }}>
+    <div className="home-news-card">
+      <Link
+        to={post?.id ? `/news/${post.id}` : "#"}
+        className="home-news-card__link"
+        style={{ pointerEvents: post ? "auto" : "none" }}
+        ref={el => post?.id && attachNewsPrefetch(el, post.id, i18n.language.split("-")[0])}
+      >
         <div className="post-entry">
           {post ? (
             <NewsThumbnail post={post} index={index} />
@@ -579,19 +585,13 @@ export default function HomePage() {
     >
       {ptr.showIndicator && <PullIndicator distance={ptr.pullDist} refreshing={ptr.refreshing} />}
     <>
-      <Hero nextMatch={nextMatch} liveCount={liveCount} clubsPrimary={clubsPrimary} />
+      <Hero nextMatch={nextMatch} liveCount={liveCount} clubsPrimary={clubsPrimary} compact={clubsPrimary} />
 
       <div className="container">
         <OfflineBanner stale={todayStale || newsStale || matchesStale} onRetry={refreshAll} />
       </div>
 
-      {clubsPrimary && (
-        <div className="container" style={{ paddingTop: 24, paddingBottom: 0 }}>
-          <ClubCompetitionChips />
-        </div>
-      )}
-
-      <div className="container" style={{ paddingTop: clubsPrimary ? 16 : 24, paddingBottom: 0 }}>
+      <div className="container home-today-section" style={{ paddingTop: clubsPrimary ? 12 : 24, paddingBottom: 0 }}>
         <TodayMatchesSection
           todayMatches={todayMatches}
           upcomingPreview={upcomingPreview}
@@ -623,20 +623,20 @@ export default function HomePage() {
         {fav ? (
           <FavoriteTeamCard fav={fav} upcomingMatches={favUpcoming} navigate={navigate} t={t} clubsPrimary={clubsPrimary} />
         ) : (
-          <EmptyState
-            icon="★"
-            title={t("home.followTeam")}
-            description={t(clubsPrimary ? "news.forYouEmptyHintClubs" : "news.forYouEmptyHint")}
-            action={
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginTop: 8 }}>
-                {clubsPrimary && (
-                  <Link to="/leagues" className="btn btn-outline-light btn-sm">{t("nav.leagues")}</Link>
-                )}
-              </div>
-            }
-          />
+          <div className="home-follow-cta">
+            <p>{t(clubsPrimary ? "news.forYouEmptyHintClubs" : "news.forYouEmptyHint")}</p>
+            {clubsPrimary && (
+              <Link to="/leagues" className="btn btn-primary btn-sm">{t("nav.leagues")}</Link>
+            )}
+          </div>
         )}
       </div>
+
+      {clubsPrimary && (
+        <div className="container home-league-chips" style={{ paddingTop: 8, paddingBottom: 0 }}>
+          <ClubCompetitionChips compact />
+        </div>
+      )}
 
       {/* ── Latest News ── */}
       <div className="latest-news">
@@ -659,16 +659,16 @@ export default function HomePage() {
               </div>
             </div>
           )}
-          <div className="row no-gutters" style={{ rowGap: 16 }}>
+          <div className="home-news-scroll">
             {newsLoading ? (
               [0, 1, 2].map(i => (
-                <div key={i} className="col-md-4">
-                  <div className="loading-shimmer" style={{ aspectRatio: "16/9", borderRadius: "8px 8px 0 0" }} />
-                  <div className="loading-shimmer" style={{ height: 60, borderRadius: 8, marginTop: 8 }} />
+                <div key={i} className="home-news-card home-news-card--loading">
+                  <div className="loading-shimmer" style={{ aspectRatio: "16/9", borderRadius: "10px 10px 0 0" }} />
+                  <div className="loading-shimmer" style={{ height: 60, borderRadius: 8, margin: 12 }} />
                 </div>
               ))
             ) : newsError ? (
-              <div className="col-12">
+              <div className="home-news-scroll__empty">
                 <EmptyState
                   icon="🗞️"
                   title={t("error.newsUnavailable", "Couldn't load news.")}
@@ -680,7 +680,7 @@ export default function HomePage() {
                 />
               </div>
             ) : latestNews.length === 0 ? (
-              <div className="col-12">
+              <div className="home-news-scroll__empty">
                 <EmptyState
                   icon="🗞️"
                   title={t("news.noArticles")}
@@ -702,80 +702,33 @@ export default function HomePage() {
 
       {/* ── Quick-links: clubs hub ── */}
       {clubsPrimary && (
-        <div className="site-section" style={{ paddingTop: 32, paddingBottom: 40 }}>
+        <div className="site-section home-quick-section">
           <div className="container">
-            <div className="row">
-              <div className="col-md-6" style={{ marginBottom: 20 }}>
-                <div style={{
-                  background: "linear-gradient(135deg, rgba(238,30,70,.1) 0%, rgba(238,30,70,.03) 100%)",
-                  border: "1px solid rgba(238,30,70,.2)", borderRadius: 14, padding: "20px 24px",
-                }}>
-                  <div style={{ fontSize: ".62rem", fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 8 }}>
-                    {t("home.clubCompetitions")}
-                  </div>
-                  <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", marginBottom: 12 }}>
-                    {t("home.liveScoresWorldwide")}
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {[
-                      { label: `📅 ${t("time.today")}`, path: "/scores/today" },
-                      { label: `📊 ${t("nav.results")}`, path: "/scores/results" },
-                      { label: `🏆 ${t("nav.allLeagues")}`, path: "/leagues" },
-                      { label: `⚔️ ${t("teamComparison.compare")}`, path: "/compare/teams" },
-                      { label: `🎯 ${t("nav.predictor")}`, path: "/predictor" },
-                      { label: `📊 ${t("nav.leaderboard")}`, path: "/leaderboard" },
-                      { label: `📰 ${t("nav.news")}`, path: "/news" },
-                    ].map(({ label, path }) => (
-                      <Link key={path} to={path} style={{
-                        display: "inline-block",
-                        background: "var(--surface2)", border: "1px solid var(--border)",
-                        borderRadius: 8, padding: "6px 12px",
-                        fontSize: ".7rem", fontWeight: 700, color: "var(--text)", textDecoration: "none",
-                      }}>
-                        {label}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6" style={{ marginBottom: 20 }}>
-                <div style={{
-                  background: "var(--surface)", border: "1px solid var(--border)",
-                  borderRadius: 14, padding: "20px 24px",
-                }}>
-                  <div style={{ fontSize: ".62rem", fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 8 }}>
-                    {t("leagues.archived", "Archived")}
-                  </div>
-                  <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "var(--text)", marginBottom: 12 }}>
-                    <Link to="/world-cup-2026" style={{ color: "inherit", textDecoration: "none" }}>
-                      {t("nav.mundial")}
-                    </Link>
-                  </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {[
-                      { label: `🏆 ${t("nav.mundialShort")}`, path: "/world-cup-2026" },
-                      { label: `📅 ${t("nav.schedule")}`, path: "/mundial/schedule" },
-                      { label: `📊 ${t("nav.groups")}`, path: "/mundial/groups" },
-                      { label: `🏆 ${t("nav.knockout")}`, path: "/mundial/knockout" },
-                      { label: `🎯 ${t("nav.predictor", "Predictor")}`, path: "/predictor" },
-                      { label: `📊 ${t("nav.leaderboard", "Leaderboard")}`, path: "/leaderboard" },
-                      { label: `⭐ ${t("mundial.tabGoals")}`, path: "/mundial/scorers" },
-                      { label: `🏟️ ${t("nav.venues")}`, path: "/mundial/venues" },
-                      { label: `👥 ${t("nav.teams")}`, path: "/mundial/teams" },
-                    ].map(({ label, path }) => (
-                      <Link key={path} to={path} style={{
-                        display: "inline-block",
-                        background: "var(--surface2)", border: "1px solid var(--border)",
-                        borderRadius: 8, padding: "6px 12px",
-                        fontSize: ".7rem", fontWeight: 700, color: "var(--text)", textDecoration: "none",
-                      }}>
-                        {label}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </div>
+            <div className="home-quick-links">
+              {[
+                { label: `📅 ${t("time.today")}`, path: "/scores/today" },
+                { label: `📊 ${t("nav.results")}`, path: "/scores/results" },
+                { label: `🏆 ${t("nav.allLeagues")}`, path: "/leagues" },
+                { label: `📰 ${t("nav.news")}`, path: "/news" },
+                { label: `⚔️ ${t("teamComparison.compare")}`, path: "/compare/teams" },
+                { label: `🎯 ${t("nav.predictor")}`, path: "/predictor" },
+              ].map(({ label, path }) => (
+                <Link key={path} to={path} className="home-quick-links__chip">{label}</Link>
+              ))}
             </div>
+            <details className="home-wc-archive">
+              <summary>{t("nav.mundial")} · {t("leagues.archived", "Archived")}</summary>
+              <div className="home-quick-links home-quick-links--archive">
+                {[
+                  { label: `🏆 ${t("nav.mundialShort")}`, path: "/world-cup-2026" },
+                  { label: `📅 ${t("nav.schedule")}`, path: "/mundial/schedule" },
+                  { label: `📊 ${t("nav.groups")}`, path: "/mundial/groups" },
+                  { label: `🏆 ${t("nav.knockout")}`, path: "/mundial/knockout" },
+                ].map(({ label, path }) => (
+                  <Link key={path} to={path} className="home-quick-links__chip">{label}</Link>
+                ))}
+              </div>
+            </details>
           </div>
         </div>
       )}
@@ -831,7 +784,7 @@ export default function HomePage() {
       </div>}
 
       {/* ── Next match widget + upcoming ── */}
-      {(nextMatch || upcomingFuture.length > 0) && <div className="site-section bg-dark">
+      {(nextMatch || upcomingFuture.length > 0) && !clubsPrimary && <div className="site-section bg-dark">
         <div className="container">
           <div className="row">
 

@@ -453,6 +453,44 @@ button:focus:not(:focus-visible){outline:none}
 .home-favorite-bar{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
 }
+.home-follow-cta{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:18px 20px;text-align:center;margin-bottom:16px;
+}
+.home-follow-cta p{margin:0 0 12px;color:var(--muted);font-size:.88rem;line-height:1.5}
+.home-league-chips{padding-top:4px}
+.home-news-scroll{
+  display:flex;gap:14px;overflow-x:auto;padding:4px 2px 12px;
+  scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+}
+.home-news-scroll__empty{min-width:100%}
+.home-news-card{
+  flex:0 0 min(82vw,300px);scroll-snap-align:start;
+}
+.home-news-card__link{display:block;text-decoration:none;color:inherit}
+.home-news-card .post-entry{border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--surface)}
+.home-news-card .post-entry img{border-radius:10px 10px 0 0}
+.home-news-card--loading{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface)}
+.home-quick-section{padding-top:20px;padding-bottom:36px}
+.home-quick-links{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.home-quick-links__chip{
+  display:inline-flex;align-items:center;background:var(--surface2);border:1px solid var(--border);
+  border-radius:999px;padding:8px 14px;font-size:.72rem;font-weight:700;color:var(--text);text-decoration:none;
+}
+.home-quick-links__chip:hover{border-color:rgba(238,30,70,.35);color:var(--text)}
+.home-wc-archive{
+  border:1px solid var(--border);border-radius:12px;padding:12px 14px;background:var(--surface);
+}
+.home-wc-archive summary{
+  cursor:pointer;font-size:.78rem;font-weight:700;color:var(--muted);list-style:none;
+}
+.home-wc-archive summary::-webkit-details-marker{display:none}
+.home-wc-archive[open] summary{margin-bottom:10px;color:var(--text)}
+.home-quick-links--archive{margin-bottom:0}
+@media(min-width:992px){
+  .home-news-scroll{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible}
+  .home-news-card{flex:none}
+}
 .favorite-team-card{
   background:linear-gradient(135deg, rgba(238,30,70,.12) 0%, rgba(238,30,70,.04) 100%);
   border:1px solid rgba(238,30,70,.25);border-radius:12px;
