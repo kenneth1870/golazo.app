@@ -10,6 +10,8 @@ import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
 import { formatKickoff } from "../hooks/useLocalTime"
 import { translateTeam } from "../i18n/teamNames"
+import { translateLeague, translateCountry } from "../i18n/leagueNames"
+import FlagImg from "../components/FlagImg"
 import { clubTeamPath, clubTeamSlug } from "../utils/clubTeamPath"
 import { matchTeamName } from "../utils/matchTeamName"
 import { navIdFor, navigateToMatch } from "../utils/matchDetailCache"
@@ -234,6 +236,63 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
   )
 }
 
+const STATUS_ORDER = { live: 0, scheduled: 1, finished: 2 }
+
+function groupMatchesByCompetition(matches) {
+  const map = new Map()
+  for (const m of matches) {
+    const key = m.competition?.code ?? m.competition?.name ?? "other"
+    if (!map.has(key)) map.set(key, [])
+    map.get(key).push(m)
+  }
+  return [...map.values()].map(items =>
+    [ ...items ].sort((a, b) => {
+      const sa = STATUS_ORDER[a.status] ?? 3
+      const sb = STATUS_ORDER[b.status] ?? 3
+      return sa - sb || new Date(a.kickoff_at || 0) - new Date(b.kickoff_at || 0)
+    })
+  )
+}
+
+function CompetitionGroupHeader({ match, navigate, i18n }) {
+  const comp = match?.competition
+  if (!comp) return null
+  const code = comp.code
+  const canNav = code && !String(code).match(/^\d+$/)
+  const leagueName = translateLeague(comp.name, i18n.language) ?? comp.name
+
+  return (
+    <div
+      role={canNav ? "button" : undefined}
+      tabIndex={canNav ? 0 : undefined}
+      onClick={canNav ? () => navigate(`/leagues/${code}`) : undefined}
+      onKeyDown={canNav ? (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          navigate(`/leagues/${code}`)
+        }
+      } : undefined}
+      style={{
+        display: "flex", alignItems: "center", gap: 8,
+        padding: "10px 14px", background: "var(--surface2)",
+        borderBottom: "1px solid var(--border)",
+        cursor: canNav ? "pointer" : "default",
+      }}
+    >
+      <FlagImg src={comp.logo} name={comp.name} size={18} className="logo-sm" />
+      <span style={{ fontWeight: 800, fontSize: ".72rem", color: "var(--text)", flex: 1 }}>
+        {leagueName}
+      </span>
+      {comp.country && (
+        <span style={{ fontSize: ".62rem", color: "var(--muted)" }}>
+          {translateCountry(comp.country, i18n.language)}
+        </span>
+      )}
+      {canNav && <span style={{ color: "var(--muted)", fontSize: ".7rem" }}>→</span>}
+    </div>
+  )
+}
+
 // ─── Today's matches strip ────────────────────────────────────────────────────
 function TodayFeedSkeleton() {
   return (
@@ -252,6 +311,10 @@ function TodayFeedSkeleton() {
 
 function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = false, error = false, onRetry, navigate, t, clubsPrimary = false }) {
   const { i18n } = useTranslation()
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const todayLabel = new Date().toLocaleDateString(i18n.language || undefined, {
+    weekday: "long", month: "long", day: "numeric", timeZone: tz,
+  })
 
   if (loading) return <TodayFeedSkeleton />
 
@@ -269,15 +332,65 @@ function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = fal
   const live      = all.filter(m => m.status === "live")
   const rest      = all.filter(m => m.status !== "live")
   const liveCount = live.length
+  const restGroups = groupMatchesByCompetition(rest)
   const previewDayLabel = upcomingPreview[0]?.kickoff_at
     ? new Date(upcomingPreview[0].kickoff_at).toLocaleDateString(i18n.language || undefined, {
         weekday: "long", month: "short", day: "numeric",
       })
     : null
 
+  const sectionHeader = (count) => (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, gap: 8 }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontWeight: 900, fontSize: "1rem", color: "var(--text)" }}>
+          {t("scores.tabToday", "Today")}
+        </div>
+        <div style={{ fontSize: ".72rem", color: "var(--muted)", marginTop: 2 }}>
+          {todayLabel}
+          {count > 0 && (
+            <span> · {t("time.matchCount", { count, defaultValue: "{{count}} matches" })}</span>
+          )}
+        </div>
+      </div>
+      <Link
+        to="/scores/today"
+        style={{ fontSize: ".72rem", fontWeight: 700, color: "var(--accent)", textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}
+      >
+        {t("home.viewAll")}
+      </Link>
+    </div>
+  )
+
+  const renderMatchGroups = (groups, { limit } = {}) => {
+    let shown = 0
+    const cap = limit ?? Infinity
+    return groups.map((group, gi) => {
+      if (shown >= cap) return null
+      const slice = group.slice(0, cap - shown)
+      shown += slice.length
+      return (
+        <div
+          key={`${group[0]?.competition?.code ?? gi}-${gi}`}
+          style={{
+            background: "var(--surface)", borderRadius: 12, overflow: "hidden",
+            border: "1px solid var(--border)", marginBottom: gi < groups.length - 1 ? 10 : 0,
+          }}
+        >
+          <CompetitionGroupHeader match={group[0]} navigate={navigate} i18n={i18n} />
+          {slice.map((m, i) => (
+            <div key={m.id} style={{ borderBottom: i < slice.length - 1 ? "1px solid var(--border)" : "none" }}>
+              <MatchRow match={m} showDate={false} onClick={() => navigateToMatch(navigate, m)} />
+            </div>
+          ))}
+        </div>
+      )
+    })
+  }
+
   if (all.length === 0 && upcomingPreview.length === 0) {
     return (
       <>
+        {sectionHeader(0)}
         {errorBanner}
         {!error && (
           <EmptyState
@@ -298,6 +411,7 @@ function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = fal
   if (all.length === 0 && upcomingPreview.length > 0) {
     return (
       <div style={{ marginBottom: 8 }}>
+        {sectionHeader(0)}
         <EmptyState
           icon="📅"
           title={t("scores.noMatchesToday", "No matches today")}
@@ -331,6 +445,7 @@ function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = fal
 
   return (
     <div style={{ marginBottom: 8 }}>
+      {sectionHeader(all.length)}
       {errorBanner}
       {/* ── LIVE NOW banner — only shown when matches are in progress ── */}
       {liveCount > 0 && (
@@ -345,12 +460,6 @@ function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = fal
                 · {liveCount} {liveCount === 1 ? t("scores.match") : t("scores.matches")}
               </span>
             </div>
-            <button
-              onClick={() => navigate("/scores/today")}
-              style={{ background: "none", border: "none", color: "var(--accent)", fontSize: ".72rem", fontWeight: 700, cursor: "pointer", padding: 0 }}
-            >
-              {t("home.viewAll")}
-            </button>
           </div>
           <div style={{ background: "rgba(238,30,70,.06)", borderRadius: 12, overflow: "hidden", border: "1px solid rgba(238,30,70,.2)" }}>
             {live.map((m, i) => (
@@ -366,45 +475,21 @@ function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = fal
         </div>
       )}
 
-      {/* ── Today (non-live) ── */}
+      {/* ── Today (non-live), grouped by competition ── */}
       {rest.length > 0 && (
         <div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontWeight: 800, fontSize: ".78rem", color: "var(--text)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-                {t("time.today", "Today")}
-              </span>
-              <span style={{ fontSize: ".7rem", color: "var(--muted)" }}>
-                · {clubsPrimary ? t("home.liveScoresWorldwide") : t("scores.wcSubtitle", "FIFA World Cup 2026")}
-              </span>
-            </div>
-            {liveCount === 0 && (
-              <button
-                onClick={() => navigate("/scores/today")}
-                style={{ background: "none", border: "none", color: "var(--accent)", fontSize: ".72rem", fontWeight: 700, cursor: "pointer", padding: 0 }}
-              >
-                {t("home.viewAll")}
-              </button>
-            )}
-          </div>
-          <div style={{ background: "var(--surface)", borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)" }}>
-            {rest.slice(0, 6).map((m, i) => (
-              <div key={m.id} style={{ borderBottom: i < Math.min(rest.length, 6) - 1 ? "1px solid var(--border)" : "none" }}>
-                <MatchRow
-                  match={m}
-                  showDate={false}
-                  onClick={() => navigateToMatch(navigate, m)}
-                />
-              </div>
-            ))}
-          </div>
-          {rest.length > 6 && (
-            <button
-              onClick={() => navigate("/scores/today")}
-              style={{ width: "100%", marginTop: 8, background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)", borderRadius: 8, padding: "9px", fontSize: ".72rem", fontWeight: 700, cursor: "pointer" }}
+          {renderMatchGroups(restGroups, { limit: 8 })}
+          {rest.length > 8 && (
+            <Link
+              to="/scores/today"
+              style={{
+                display: "block", width: "100%", marginTop: 10, textAlign: "center",
+                background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--muted)",
+                borderRadius: 8, padding: "9px", fontSize: ".72rem", fontWeight: 700, textDecoration: "none",
+              }}
             >
-              {t("home.moreMatches", { count: rest.length - 6 })}
-            </button>
+              {t("home.moreMatches", { count: rest.length - 8 })}
+            </Link>
           )}
         </div>
       )}
@@ -591,13 +676,7 @@ export default function HomePage() {
         <OfflineBanner stale={todayStale || newsStale || matchesStale} onRetry={refreshAll} />
       </div>
 
-      {clubsPrimary && (
-        <div className="container" style={{ paddingTop: 16, paddingBottom: 0 }}>
-          <ClubCompetitionChips />
-        </div>
-      )}
-
-      <div className="container home-today-section" style={{ paddingTop: clubsPrimary ? 16 : 24, paddingBottom: 0 }}>
+      <div className="container home-today-section" style={{ paddingTop: clubsPrimary ? 12 : 24, paddingBottom: 0 }}>
         <TodayMatchesSection
           todayMatches={todayMatches}
           upcomingPreview={upcomingPreview}
@@ -617,6 +696,12 @@ export default function HomePage() {
           />
         )}
       </div>
+
+      {clubsPrimary && (
+        <div className="container" style={{ paddingTop: 16, paddingBottom: 0 }}>
+          <ClubCompetitionChips />
+        </div>
+      )}
 
       {/* ── Favorite team section ── */}
       <div className="container" style={{ paddingTop: 16, paddingBottom: 4 }}>
