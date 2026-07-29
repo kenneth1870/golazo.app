@@ -13,6 +13,7 @@ const MatchPreviewPanel = lazy(() => import("./match/MatchPreviewPanel"))
 const PlayerRatingsPanel = lazy(() => import("./match/PlayerRatingsPanel"))
 import FirstScorerOdds from "./match/FirstScorerOdds"
 import RelatedNewsStrip from "../components/RelatedNewsStrip"
+import MatchReactions from "../components/MatchReactions"
 import { buildMatchNewsQuery } from "../utils/newsQuery"
 import { useReminders } from "../hooks/useReminders"
 import { usePushNotifications } from "../hooks/usePushNotifications"
