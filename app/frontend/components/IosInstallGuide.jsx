@@ -4,6 +4,7 @@ import { storageGet, storageSet } from "../utils/safeStorage"
 import { isIosSafari, isStandalone } from "../utils/platform"
 import { dismissOverlayProps } from "../utils/dismissOverlay"
 import { claimPrompt, releasePrompt } from "../utils/promptCoordinator"
+import { hasInstallNudge } from "../utils/installNudge"
 import { useFocusTrap } from "../hooks/useFocusTrap"
 
 const SHOWN_KEY = "golazo_ios_guide_shown"
@@ -63,11 +64,12 @@ export default function IosInstallGuide({ paused = false }) {
     const deferredAt = parseInt(storageGet(DEFERRED_KEY) || "0", 10)
     if (deferredAt && Date.now() - deferredAt < DEFER_TTL_MS) return
     const onboardedAt = parseInt(storageGet("golazo_onboarded_at") || "0", 10)
-    if (onboardedAt && Date.now() - onboardedAt < 60 * 60 * 1000) return
+    const nudged = hasInstallNudge()
+    if (onboardedAt && !nudged && Date.now() - onboardedAt < 60 * 60 * 1000) return
 
     const timer = setTimeout(() => {
       if (claimPrompt("ios-install")) setVisible(true)
-    }, 4000)
+    }, nudged ? 1500 : 4000)
     return () => clearTimeout(timer)
   }, [paused])
 

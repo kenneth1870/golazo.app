@@ -17,7 +17,7 @@ import { fetchJson } from "../utils/fetchJson"
 import OfflineBanner from "../components/OfflineBanner"
 import RelatedNewsStrip from "../components/RelatedNewsStrip"
 
-const VALID_TABS = ["today", "fixtures", "results", "standings"]
+const VALID_TABS = ["today", "fixtures", "results", "standings", "news"]
 
 function flattenStandings(data) {
   if (Array.isArray(data)) return data
@@ -238,7 +238,7 @@ export default function LeagueDetailPage() {
   const hasResults  = (ms) => ms.some(m => m.status === "finished")
 
   const loadMatches = useCallback(() => {
-    if (!code || tab === "standings") return Promise.resolve()
+    if (!code || tab === "standings" || tab === "news") return Promise.resolve()
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     const url = `/api/v1/competitions/${code}/fixtures?tab=${tabParam || "today"}&tz=${encodeURIComponent(tz)}`
     setMatchesStale(false)
@@ -291,7 +291,7 @@ export default function LeagueDetailPage() {
   }, [tab, loading, loadStandings])
 
   useEffect(() => {
-    if (loading || tab === "standings") return
+    if (loading || tab === "standings" || tab === "news") return
     setTabLoading(true)
     loadMatches().finally(() => setTabLoading(false))
   }, [tab, loadMatches, loading])
@@ -334,12 +334,13 @@ export default function LeagueDetailPage() {
     { key: "fixtures",   label: t("nav.fixtures") },
     { key: "results",    label: t("nav.results") },
     { key: "standings",  label: t("nav.standings", "Standings") },
+    { key: "news",       label: t("nav.news", "News") },
   ]
 
   const displayedMatches =
     tab === "today"
       ? [...liveMatches, ...matches.filter(m => m.status !== "live")]
-      : tab === "standings"
+      : tab === "standings" || tab === "news"
       ? []
       : matches
 
@@ -469,6 +470,14 @@ export default function LeagueDetailPage() {
                 </button>
               </div>
             )
+          ) : tab === "news" ? (
+            <RelatedNewsStrip
+              title={t("news.leagueNews", { league: translateLeague(competition?.name, i18n.language) ?? competition?.name })}
+              lang={i18n.language.split("-")[0]}
+              leagues={code}
+              limit={20}
+              seeMoreTo={`/news?tab=all&league=${code}`}
+            />
           ) : tabLoading ? (
             <div className="loading-shimmer" style={{ height: 240, borderRadius: 12 }} />
           ) : displayedMatches.length === 0 ? (
@@ -516,7 +525,7 @@ export default function LeagueDetailPage() {
         </div>
       </div>
 
-      {competition && (
+      {competition && tab !== "news" && (
         <div className="site-section" style={{ paddingTop: 0 }}>
           <div className="container">
             <RelatedNewsStrip
@@ -524,7 +533,7 @@ export default function LeagueDetailPage() {
               lang={i18n.language.split("-")[0]}
               leagues={code}
               limit={8}
-              seeMoreTo={`/news?tab=all`}
+              seeMoreTo={`/news?tab=all&league=${code}`}
             />
           </div>
         </div>

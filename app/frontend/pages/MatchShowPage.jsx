@@ -25,6 +25,7 @@ import { clubTeamPath } from "../utils/clubTeamPath"
 import { leagueCodeFromApiId } from "../utils/leagueCodes"
 import { sourceColor } from "../utils/sourceColors"
 import { storageGet, storageSet } from "../utils/safeStorage"
+import { buildMatchShareText, shareMatchText } from "../utils/matchShare"
 import { fetchJson } from "../utils/fetchJson"
 import OfflineBanner from "../components/OfflineBanner"
 import { formatKickoff } from "../hooks/useLocalTime"
@@ -64,35 +65,32 @@ function ReminderButton({ match }) {
 }
 
 // ─── Share button ─────────────────────────────────────
-function ShareButton({ homeName, awayName }) {
+function ShareButton({ homeName, awayName, homeScore, awayScore, statusShort, isLive, events, homeTeamRaw, round }) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
 
-  function share() {
+  async function share() {
+    const text = buildMatchShareText({
+      homeName,
+      awayName,
+      homeScore,
+      awayScore,
+      statusShort,
+      isLive,
+      events,
+      homeTeamRaw,
+      round,
+      t,
+    })
     const title = homeName && awayName ? `${homeName} vs ${awayName} — Golazo` : "Golazo"
-    const url   = window.location.href
-    if (navigator.share) {
-      navigator.share({ title, url }).catch(() => {})
-    } else {
-      const fallback = () => {
-        try {
-          const ta = document.createElement("textarea")
-          ta.value = url; ta.style.position = "fixed"; ta.style.opacity = "0"
-          document.body.appendChild(ta); ta.select()
-          document.execCommand("copy")
-          document.body.removeChild(ta)
-        } catch {}
+    await shareMatchText({
+      title,
+      text,
+      onCopied: () => {
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
-      }
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(url).then(() => {
-          setCopied(true); setTimeout(() => setCopied(false), 2000)
-        }).catch(fallback)
-      } else {
-        fallback()
-      }
-    }
+      },
+    })
   }
 
   return (
@@ -1505,6 +1503,8 @@ export default function MatchShowPage() {
   // Detect if live
   const statusShort = data?.fixture?.fixture?.status?.short
   const isLive      = ["1H", "2H", "HT", "ET", "BT", "P", "INT"].includes(statusShort)
+  const homeScore   = data?.fixture?.goals?.home
+  const awayScore   = data?.fixture?.goals?.away
   const apiMinute   = data?.fixture?.fixture?.status?.elapsed
   const apiExtra    = data?.fixture?.fixture?.status?.extra
   const liveMinute  = useLiveMinute(apiMinute, isLive)
@@ -1549,17 +1549,17 @@ export default function MatchShowPage() {
   const { clubs_primary: clubsPrimary, push_enabled: pushEnabled } = useAppFocus()
   const leagueLabel = translateLeague(data?.fixture?.league?.name, i18n.language) ?? data?.fixture?.league?.name ?? t("nav.leagues")
   const metaDesc = homeName && awayName
-    ? (clubsPrimary
-        ? t("meta.matchDescClubs", { home: homeName, away: awayName, competition: leagueLabel })
-        : t("meta.matchDescWC", { home: homeName, away: awayName }))
+    ? (homeScore != null && awayScore != null && (isLive || ["FT", "AET", "PEN"].includes(statusShort))
+        ? `${homeName} ${homeScore}–${awayScore} ${awayName} — ${leagueLabel}`
+        : clubsPrimary
+          ? t("meta.matchDescClubs", { home: homeName, away: awayName, competition: leagueLabel })
+          : t("meta.matchDescWC", { home: homeName, away: awayName }))
     : undefined
   usePageMeta(
     homeName && awayName ? `${homeName} vs ${awayName}` : t("match.summary"),
     metaDesc,
     { type: "article", image: homeLogo || undefined }
   )
-  const homeScore = data?.fixture?.goals?.home
-  const awayScore = data?.fixture?.goals?.away
   useStructuredData(homeName && awayName ? {
     "@context": "https://schema.org",
     "@type": "SportsEvent",
@@ -1856,7 +1856,17 @@ export default function MatchShowPage() {
               </span>
             )}
             {!isLive && <ReminderButton match={data?.fixture ? { ...data.fixture.fixture, home_team: data.fixture.teams?.home, away_team: data.fixture.teams?.away, kickoff_at: data.fixture.fixture?.date, external_id: id } : null} />}
-            <ShareButton homeName={homeName} awayName={awayName} />
+            <ShareButton
+              homeName={homeName}
+              awayName={awayName}
+              homeScore={homeScore}
+              awayScore={awayScore}
+              statusShort={statusShort}
+              isLive={isLive}
+              events={data?.events}
+              homeTeamRaw={homeTeamRaw}
+              round={data?.fixture?.league?.round}
+            />
           </div>
         </div>
       </div>
@@ -1968,6 +1978,7 @@ export default function MatchShowPage() {
                 fixtureId={id}
                 homeName={homeName}
                 awayName={awayName}
+                h2h={data?.h2h}
                 t={t}
               />
             </Suspense>

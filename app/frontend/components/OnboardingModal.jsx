@@ -24,6 +24,7 @@ import { useAppFocus } from "../hooks/useAppFocus"
 import { isIosSafari, isStandalone } from "../utils/platform"
 import { translateTeam } from "../i18n/teamNames"
 import { loadClubTeams } from "../utils/loadClubTeams"
+import { triggerInstallNudge } from "../utils/installNudge"
 
 const ONBOARDED_KEY = "golazo_onboarded"
 const ONBOARDED_AT_KEY = "golazo_onboarded_at"
@@ -193,6 +194,7 @@ export default function OnboardingModal({ onDismiss, returnFocusRef }) {
       teamNames: selectedTeams.map(t => t.name),
       competitionCodes: selectedLeagues.map(l => l.code),
     })
+    if (selectedTeams.length > 0 || selectedLeagues.length > 0) triggerInstallNudge()
     storageSet(ONBOARDED_AT_KEY, Date.now().toString())
     onDismiss()
   }, [selectedTeams, selectedLeagues, addFavorite, t, onDismiss])

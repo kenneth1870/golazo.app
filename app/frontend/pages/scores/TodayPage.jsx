@@ -17,6 +17,7 @@ import { useAppFocus } from "../../hooks/useAppFocus"
 import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
 import PullIndicator from "../../components/PullIndicator"
 import { usePullRefresh } from "../../hooks/usePullRefresh"
+import { triggerInstallNudge } from "../../utils/installNudge"
 
 // ─── Helpers ──────────────────────────────────────────
 function toISO(date) {
@@ -487,7 +488,18 @@ export default function TodayPage() {
     ? allGroups.filter(g => g.some(matchInvolvesAnyFav))
     : allGroups
 
-  const liveCount = todayMatches.filter(m => m.status === "live").length
+  const liveMatches = useMemo(
+    () => todayMatches.filter(m => m.status === "live"),
+    [todayMatches]
+  )
+
+  const liveCount = liveMatches.length
+  const groupsWithoutLive = useMemo(() => {
+    if (liveMatches.length === 0) return groups
+    return groups
+      .map(g => g.filter(m => m.status !== "live"))
+      .filter(g => g.length > 0)
+  }, [groups, liveMatches.length])
   const label     = useDateLabel(selected, t, i18n.language)
   const isToday   = toISO(selected) === toISO(new Date())
   const previewDayLabel = upcomingPreview[0]?.kickoff_at
@@ -507,6 +519,10 @@ export default function TodayPage() {
   const yourMatches = favoriteTeamNames.length > 0
     ? todayMatches.filter(matchInvolvesAnyFav)
     : []
+
+  useEffect(() => {
+    if (liveCount > 0 && toISO(selected) === toISO(new Date())) triggerInstallNudge()
+  }, [liveCount, selected])
 
   const minDate = clubsPrimary ? addDays(new Date(), -30) : WC_START
 
@@ -588,6 +604,31 @@ export default function TodayPage() {
           onMatchClick={onMatchClick}
           onDismiss={() => setAlertDismissed(true)}
         />
+
+        {/* Sticky live strip — keeps live scores visible while scrolling */}
+        {!loading && liveCount > 0 && (
+          <div className="live-strip">
+            <div className="live-strip__header">
+              <span className="live-dot" />
+              <span>{t("time.liveCount", { count: liveCount })}</span>
+            </div>
+            <div className="live-strip__body">
+              {liveMatches.map(m => {
+                const navigable = !!navIdFor(m)
+                return (
+                  <MatchRow
+                    key={`live-${m.id}`}
+                    match={m}
+                    flashing={flashIds?.has(m.external_id ?? m.id)}
+                    showChevron={navigable}
+                    showMeta={navigable}
+                    onClick={navigable ? () => onMatchClick(m) : undefined}
+                  />
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Your Matches — pinned section for followed teams */}
         {!loading && yourMatches.length > 0 && (
@@ -707,7 +748,7 @@ export default function TodayPage() {
                 </button>
               </div>
             )}
-            {groups.map((g, i) => (
+            {groupsWithoutLive.map((g, i) => (
               <CompetitionBlock
                 key={g[0]?.competition?.id ?? i}
                 matches={g}

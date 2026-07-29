@@ -4,6 +4,71 @@ import SafeImg from "../../components/SafeImg"
 import { fetchJson } from "../../utils/fetchJson"
 import FirstScorerOdds from "./FirstScorerOdds"
 
+function FormCharPill({ result }) {
+  const styles = {
+    W: { bg: "rgba(16,185,129,.18)", color: "#10b981" },
+    D: { bg: "rgba(245,158,11,.18)", color: "#f59e0b" },
+    L: { bg: "rgba(239,68,68,.18)", color: "#ef4444" },
+  }
+  const s = styles[result] || styles.D
+  return (
+    <span style={{
+      width: 22, height: 22, borderRadius: 6, display: "inline-flex", alignItems: "center", justifyContent: "center",
+      fontSize: "0.62rem", fontWeight: 800, background: s.bg, color: s.color,
+    }}>
+      {result || "?"}
+    </span>
+  )
+}
+
+function RecentFormSection({ homeName, awayName, homeForm, awayForm, t }) {
+  if (!homeForm && !awayForm) return null
+  return (
+    <section className="match-section" style={{ marginBottom: 20 }}>
+      <h3 className="match-section__title">{t("match.predForm")}</h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
+        {homeForm && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: "0.72rem", color: "var(--muted)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{homeName}</span>
+            <div style={{ display: "flex", gap: 4 }}>
+              {homeForm.split("").slice(-5).map((c, i) => <FormCharPill key={`h-${i}`} result={c} />)}
+            </div>
+          </div>
+        )}
+        {awayForm && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: "0.72rem", color: "var(--muted)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{awayName}</span>
+            <div style={{ display: "flex", gap: 4 }}>
+              {awayForm.split("").slice(-5).map((c, i) => <FormCharPill key={`a-${i}`} result={c} />)}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function H2HPreviewSection({ h2h, homeName, awayName, t }) {
+  if (!h2h?.matches?.length) return null
+  const [hw, d, aw] = h2h.summary || [0, 0, 0]
+  const total = hw + d + aw || 1
+  return (
+    <section className="match-section" style={{ marginBottom: 20 }}>
+      <h3 className="match-section__title">{t("match.h2hSummary")}</h3>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, marginBottom: 10, fontSize: "0.82rem" }}>
+        <span style={{ color: "var(--accent)", fontWeight: 700 }}>{homeName} {hw}</span>
+        <span style={{ color: "var(--muted)" }}>{t("match.draw")} {d}</span>
+        <span style={{ color: "var(--away-blue)", fontWeight: 700 }}>{awayName} {aw}</span>
+      </div>
+      <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden", background: "var(--border)" }}>
+        <div style={{ width: `${(hw / total) * 100}%`, background: "var(--accent)" }} />
+        <div style={{ width: `${(d / total) * 100}%`, background: "var(--amber)" }} />
+        <div style={{ flex: 1, background: "var(--away-blue)" }} />
+      </div>
+    </section>
+  )
+}
+
 export function ComparisonBar({ label, home, away }) {
   const h = parseFloat(home) || 0
   return (
@@ -79,7 +144,7 @@ export function InjuriesSection({ fixtureId, homeName, awayName }) {
   )
 }
 
-export default function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) {
+export default function MatchPreviewPanel({ fixtureId, homeName, awayName, h2h, t }) {
   const [pred, setPred]       = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -100,6 +165,7 @@ export default function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) 
 
   if (!pred) return (
     <div style={{ paddingBottom: 8 }}>
+      <H2HPreviewSection h2h={h2h} homeName={homeName} awayName={awayName} t={t} />
       <InjuriesSection fixtureId={fixtureId} homeName={homeName} awayName={awayName} />
       <div className="empty-state" style={{ paddingTop: 20 }}>
         <div className="empty-state__icon">🔮</div>
@@ -120,6 +186,8 @@ export default function MatchPreviewPanel({ fixtureId, homeName, awayName, t }) 
 
   return (
     <div style={{ paddingBottom: 8 }}>
+      <RecentFormSection homeName={homeName} awayName={awayName} homeForm={pred.home_form} awayForm={pred.away_form} t={t} />
+      <H2HPreviewSection h2h={h2h} homeName={homeName} awayName={awayName} t={t} />
       <InjuriesSection fixtureId={fixtureId} homeName={homeName} awayName={awayName} />
       {/* Win probability */}
       <div className="match-section" style={{ marginBottom: 20 }}>

@@ -589,6 +589,20 @@ body.light-mode .schedule-fixture--clickable:hover{background:rgba(0,0,0,.04)}
 /* ─── Tab Bar ────────────────────────────────────────── */
 .tab-bar{background:var(--surface);border-bottom:1px solid var(--border)}
 .sticky-tabs{position:sticky;top:var(--nav-height);z-index:99}
+
+.live-strip{
+  position:sticky;top:var(--nav-height);z-index:98;
+  margin-bottom:20px;border:1px solid rgba(238,30,70,.35);
+  border-radius:12px;background:var(--surface);
+  box-shadow:0 8px 24px rgba(0,0,0,.25);overflow:hidden;
+}
+.live-strip__header{
+  display:flex;align-items:center;gap:8px;padding:10px 14px;
+  background:rgba(238,30,70,.12);font-size:.72rem;font-weight:800;
+  color:var(--accent);text-transform:uppercase;letter-spacing:.06em;
+}
+.live-strip__body .match-row:last-child{border-bottom:none}
+body.light-mode .live-strip{background:var(--surface);border-color:rgba(238,30,70,.25)}
 .tab-bar__inner{
   display:flex;gap:6px;padding:10px 16px;
   overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;

@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react"
 import { storageGet, storageSet, storageRemove } from "../utils/safeStorage"
+import { triggerInstallNudge } from "../utils/installNudge"
 
 const KEY = "golazo_favorites"
 
@@ -56,6 +57,7 @@ export function useFavorites() {
       if (prev.some(f => f.type === item.type && String(f.id) === String(item.id))) return prev
       const next = [...prev, item]
       persist(next)
+      if (item.type === "team") triggerInstallNudge()
       return next
     })
   }, [])

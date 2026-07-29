@@ -17,20 +17,26 @@ function HealthBadge({ recalculatedAt }) {
 }
 
 export default function AdminStandingsPage() {
-  const { authFetch } = useAuthContext()
+  const { authJson, authFetch } = useAuthContext()
   const [data,        setData]        = useState({})
   const [loading,     setLoading]     = useState(true)
+  const [fetchError,  setFetchError]  = useState(null)
   const [recalcing,   setRecalcing]   = useState(false)
   const [recalcMsg,   setRecalcMsg]   = useState(null)
   const [search,      setSearch]      = useState("")
 
   const load = useCallback(() => {
     setLoading(true)
-    authFetch("/api/v1/admin/standings")
-      .then(r => r.json())
+    setFetchError(null)
+    authJson("/api/v1/admin/standings")
       .then(setData)
+      .catch(err => {
+        if (err.status === 401) return
+        setFetchError(err.message || "Failed to load standings")
+        setData({})
+      })
       .finally(() => setLoading(false))
-  }, [authFetch])
+  }, [authJson])
 
   useEffect(() => { load() }, [load])
 
@@ -122,6 +128,8 @@ export default function AdminStandingsPage() {
       {/* Groups grid */}
       {loading ? (
         <div style={{ color: "rgba(255,255,255,.4)" }}>Loading…</div>
+      ) : fetchError ? (
+        <div style={{ color: "#f87171", fontSize: "0.9rem", marginBottom: 16 }}>⚠ {fetchError}</div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(460px, 1fr))", gap: 20 }}>
           {Object.entries(filtered).sort(([a],[b]) => a.localeCompare(b)).map(([group, rows]) => (

@@ -20,20 +20,32 @@ const PROVIDER_ICON = {
 }
 
 export default function AdminPushPage() {
-  const { authFetch } = useAuthContext()
+  const { authJson, authFetch } = useAuthContext()
   const [stats,    setStats]    = useState(null)
   const [devices,  setDevices]  = useState([])
+  const [fetchError, setFetchError] = useState(null)
   const [form,     setForm]     = useState({ title: "", body: "", url: "/", team_name: "" })
   const [sending,  setSending]  = useState(false)
   const [result,   setResult]   = useState(null)
 
   const loadDevices = () =>
-    authFetch("/api/v1/admin/push/devices").then(r => r.json()).then(d => setDevices(Array.isArray(d) ? d : [])).catch(() => {})
+    authJson("/api/v1/admin/push/devices")
+      .then(d => setDevices(Array.isArray(d) ? d : []))
+      .catch(err => {
+        if (err.status === 401) return
+        setFetchError(err.message || "Failed to load devices")
+        setDevices([])
+      })
 
   useEffect(() => {
-    authFetch("/api/v1/admin/push").then(r => r.json()).then(setStats).catch(() => {})
+    authJson("/api/v1/admin/push")
+      .then(setStats)
+      .catch(err => {
+        if (err.status === 401) return
+        setFetchError(err.message || "Failed to load push stats")
+      })
     loadDevices()
-  }, [])
+  }, [authJson])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -68,6 +80,10 @@ export default function AdminPushPage() {
       <p style={{ color: "rgba(255,255,255,.35)", marginBottom: 28, fontSize: "0.85rem" }}>
         Send notifications to all subscribers or a specific team's followers
       </p>
+
+      {fetchError && (
+        <div style={{ color: "#f87171", fontSize: "0.85rem", marginBottom: 16 }}>⚠ {fetchError}</div>
+      )}
 
       {/* Stats */}
       {stats && (

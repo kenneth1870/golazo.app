@@ -19,9 +19,10 @@ function RoleBadge({ role }) {
 }
 
 export default function AdminUsersPage() {
-  const { authFetch, user: me } = useAuthContext()
+  const { authJson, authFetch, user: me } = useAuthContext()
   const [users,   setUsers]   = useState([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(null)
   const [toast,   setToast]   = useState(null)
   const [search,  setSearch]  = useState("")
   const [roleF,   setRoleF]   = useState("")
@@ -37,10 +38,18 @@ export default function AdminUsersPage() {
 
   const load = () => {
     setLoading(true)
-    authFetch("/api/v1/admin/users").then(r => r.json()).then(setUsers).catch(() => {}).finally(() => setLoading(false))
+    setFetchError(null)
+    authJson("/api/v1/admin/users")
+      .then(setUsers)
+      .catch(err => {
+        if (err.status === 401) return
+        setFetchError(err.message || "Failed to load users")
+        setUsers([])
+      })
+      .finally(() => setLoading(false))
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [authJson])
 
   const filtered = users.filter(u =>
     (!roleF   || u.role === roleF) &&
@@ -193,6 +202,8 @@ export default function AdminUsersPage() {
       {/* Table */}
       {loading ? (
         <div style={{ color: "rgba(255,255,255,.4)" }}>Loading…</div>
+      ) : fetchError ? (
+        <div style={{ color: "#f87171", fontSize: "0.9rem" }}>⚠ {fetchError}</div>
       ) : (
         <div style={{ background: "#161b22", border: "1px solid rgba(255,255,255,.07)", borderRadius: 12, overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>

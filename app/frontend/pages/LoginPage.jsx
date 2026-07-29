@@ -6,7 +6,7 @@ import { fetchJson } from "../utils/fetchJson"
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 export default function LoginPage() {
-  const { login, loading, error } = useAuthContext()
+  const { login, loginWithSession, loading, error } = useAuthContext()
   const navigate  = useNavigate()
   const location  = useLocation()
   const from      = location.state?.from?.pathname || "/admin"
@@ -61,9 +61,8 @@ export default function LoginPage() {
         setGError(data?.error || "Google sign-in failed")
         return
       }
-      localStorage.setItem("golazo_token", data.token)
-      localStorage.setItem("golazo_user",  JSON.stringify(data.user))
-      window.location.href = from
+      loginWithSession(data.token, data.user)
+      navigate(from, { replace: true })
     } catch {
       setGError("Network error — try again")
     } finally {

@@ -44,19 +44,23 @@ function Stat({ icon, label, value, color = "#ee1e46" }) {
 }
 
 export default function AdminDashboardPage() {
-  const { authFetch } = useAuthContext()
+  const { authJson, authFetch } = useAuthContext()
   const [data, setData]         = useState(null)
   const [loading, setLoading]   = useState(true)
+  const [fetchError, setFetchError] = useState(null)
   const [healing, setHealing]   = useState(false)
   const [healMsg, setHealMsg]   = useState(null)
 
   useEffect(() => {
-    authFetch("/api/v1/admin")
-      .then(r => r.json())
+    authJson("/api/v1/admin")
       .then(setData)
-      .catch(() => {})
+      .catch(err => {
+        if (err.status === 401) return
+        setFetchError(err.message || "Failed to load dashboard")
+        setData(null)
+      })
       .finally(() => setLoading(false))
-  }, [])
+  }, [authJson])
 
   async function triggerHeal() {
     setHealing(true)
@@ -73,6 +77,14 @@ export default function AdminDashboardPage() {
   }
 
   if (loading) return <div style={{ color: "rgba(255,255,255,.4)" }}>Loading…</div>
+
+  if (fetchError) {
+    return (
+      <div style={{ color: "#f87171", fontSize: "0.9rem" }}>
+        ⚠ {fetchError}
+      </div>
+    )
+  }
 
   return (
     <div>

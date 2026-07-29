@@ -5,9 +5,10 @@ const GROUPS = ["A","B","C","D","E","F","G","H","I","J","K","L"]
 const CONFS  = ["UEFA","CONMEBOL","CONCACAF","CAF","AFC","OFC"]
 
 export default function AdminTeamsPage() {
-  const { authFetch } = useAuthContext()
+  const { authJson, authFetch } = useAuthContext()
   const [teams,   setTeams]   = useState([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(null)
   const [search,  setSearch]  = useState("")
   const [groupF,  setGroupF]  = useState("")
   const [editing, setEditing] = useState(null)
@@ -18,8 +19,15 @@ export default function AdminTeamsPage() {
   const showToast = (msg, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 3000) }
 
   useEffect(() => {
-    authFetch("/api/v1/admin/teams").then(r => r.json()).then(setTeams).finally(() => setLoading(false))
-  }, [])
+    authJson("/api/v1/admin/teams")
+      .then(setTeams)
+      .catch(err => {
+        if (err.status === 401) return
+        setFetchError(err.message || "Failed to load teams")
+        setTeams([])
+      })
+      .finally(() => setLoading(false))
+  }, [authJson])
 
   const openEdit = (t) => { setEditing(t); setForm({ name: t.name, code: t.code, group: t.group || "", confederation: t.confederation || "", flag_url: t.flag_url || "" }) }
 
@@ -80,6 +88,8 @@ export default function AdminTeamsPage() {
 
       {loading ? (
         <div style={{ color: "rgba(255,255,255,.4)" }}>Loading…</div>
+      ) : fetchError ? (
+        <div style={{ color: "#f87171", fontSize: "0.9rem" }}>⚠ {fetchError}</div>
       ) : (
         Object.entries(byGroup).sort(([a],[b]) => a.localeCompare(b)).map(([group, groupTeams]) => (
           <div key={group} style={{ marginBottom: 24 }}>

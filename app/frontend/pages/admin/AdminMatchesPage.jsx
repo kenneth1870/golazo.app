@@ -85,9 +85,10 @@ const btnPrimary = { background: "#ee1e46", color: "#fff", border: "none", borde
 const btnSecondary = { background: "rgba(255,255,255,.07)", color: "rgba(255,255,255,.6)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 8, padding: "9px 20px", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", flex: 1 }
 
 export default function AdminMatchesPage() {
-  const { authFetch } = useAuthContext()
+  const { authJson, authFetch } = useAuthContext()
   const [matches,  setMatches]  = useState([])
   const [loading,  setLoading]  = useState(true)
+  const [fetchError, setFetchError] = useState(null)
   const [filter,   setFilter]   = useState("all")
   const [editing,  setEditing]  = useState(null)
   const [toast,    setToast]    = useState(null)
@@ -97,10 +98,14 @@ export default function AdminMatchesPage() {
 
   const load = () => {
     setLoading(true)
-    authFetch("/api/v1/admin/matches")
-      .then(r => r.json())
+    setFetchError(null)
+    authJson("/api/v1/admin/matches")
       .then(setMatches)
-      .catch(() => {})
+      .catch(err => {
+        if (err.status === 401) return
+        setFetchError(err.message || "Failed to load matches")
+        setMatches([])
+      })
       .finally(() => setLoading(false))
   }
 
@@ -238,6 +243,8 @@ export default function AdminMatchesPage() {
 
       {loading ? (
         <div style={{ color: "rgba(255,255,255,.4)" }}>Loading…</div>
+      ) : fetchError ? (
+        <div style={{ color: "#f87171", fontSize: "0.9rem" }}>⚠ {fetchError}</div>
       ) : (
         <div style={{ background: "#161b22", border: "1px solid rgba(255,255,255,.07)", borderRadius: 12, overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>

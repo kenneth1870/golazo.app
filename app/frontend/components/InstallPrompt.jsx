@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { claimPrompt, releasePrompt } from "../utils/promptCoordinator"
+import { hasInstallNudge } from "../utils/installNudge"
 import { storageGet, storageSet } from "../utils/safeStorage"
 import { isIosSafari, isStandalone } from "../utils/platform"
 
@@ -69,14 +70,15 @@ export default function InstallPrompt({ paused = false }) {
     if (isStandalone()) return
     if (wasDismissed()) return
     const onboardedAt = parseInt(storageGet("golazo_onboarded_at") || "0", 10)
-    if (onboardedAt && Date.now() - onboardedAt < 60 * 60 * 1000) return
+    const nudged = hasInstallNudge()
+    if (onboardedAt && !nudged && Date.now() - onboardedAt < 60 * 60 * 1000) return
 
     const handler = e => {
       e.preventDefault()
       setDeferredPrompt(e)
       setTimeout(() => {
         if (claimPrompt("android-install")) setShowAndroid(true)
-      }, 12000)
+      }, nudged ? 2500 : 12000)
     }
     window.addEventListener("beforeinstallprompt", handler)
     return () => window.removeEventListener("beforeinstallprompt", handler)

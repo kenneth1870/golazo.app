@@ -2,17 +2,21 @@ import { useState, useEffect } from "react"
 import { useAuthContext } from "../../contexts/AuthContext"
 
 export default function AdminNewsPage() {
-  const { authFetch } = useAuthContext()
+  const { authJson } = useAuthContext()
   const [articles, setArticles] = useState([])
   const [loading,  setLoading]  = useState(true)
+  const [fetchError, setFetchError] = useState(null)
 
   useEffect(() => {
-    authFetch("/api/v1/admin/news")
-      .then(r => r.json())
+    authJson("/api/v1/admin/news")
       .then(d => setArticles(Array.isArray(d) ? d : []))
-      .catch(() => {})
+      .catch(err => {
+        if (err.status === 401) return
+        setFetchError(err.message || "Failed to load news")
+        setArticles([])
+      })
       .finally(() => setLoading(false))
-  }, [])
+  }, [authJson])
 
   return (
     <div>
@@ -23,6 +27,8 @@ export default function AdminNewsPage() {
 
       {loading ? (
         <div style={{ color: "rgba(255,255,255,.4)" }}>Loading…</div>
+      ) : fetchError ? (
+        <div style={{ color: "#f87171", fontSize: "0.9rem" }}>⚠ {fetchError}</div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {articles.map((a, i) => (

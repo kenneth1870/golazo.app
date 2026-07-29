@@ -31,6 +31,10 @@ export function useAuth() {
     setUser(null)
   }
 
+  const loginWithSession = useCallback((tok, usr) => {
+    persist(tok, usr)
+  }, [])
+
   const login = useCallback(async (email, password) => {
     setLoading(true)
     setError(null)
@@ -75,6 +79,9 @@ export function useAuth() {
         ...(options.headers || {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
+    }).then(res => {
+      if (res.status === 401) clear()
+      return res
     })
   }, [token])
 
@@ -122,5 +129,5 @@ export function useAuth() {
 
   const isAdmin = user?.role === "admin"
 
-  return { user, token, loading, error, login, logout, authFetch, authJson, validateSession, isAdmin, isLoggedIn: !!token }
+  return { user, token, loading, error, login, loginWithSession, logout, authFetch, authJson, validateSession, isAdmin, isLoggedIn: !!token }
 }
