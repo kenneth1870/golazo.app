@@ -16,7 +16,7 @@ export function LiveProvider({ children }) {
     function schedule() {
       clearTimeout(timer)
       // 60s → 120s → 240s → 300s cap; resets to 60s on success
-      const delay = Math.min(60_000 * (2 ** failCount), 300_000)
+      const delay = Math.min(120_000 * (2 ** failCount), 300_000)
       timer = setTimeout(tick, delay)
     }
 

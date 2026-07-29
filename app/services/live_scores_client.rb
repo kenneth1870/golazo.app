@@ -175,74 +175,45 @@ class LiveScoresClient
     []
   end
 
-  # Full match detail: fixture + events + lineups + stats + h2h in parallel.
-  #
-  # TTL strategy:
-  #   Live / pre-match  → 5 min  (SyncPreMatchDataJob runs every 5 min, so this
-  #                                matches its interval and pre-warms the cache;
-  #                                live scores come via ActionCable, not here)
-  #   Finished (FT/AET/PEN) → 24 h  (data never changes after full-time)
-  #   h2h → 24 h in its own key  (historical, never changes mid-tournament)
-  # race_condition_ttl prevents multiple concurrent cache misses each spawning 5
-  # upstream threads (thundering herd) — stale value is served for up to 10 s
-  # while one writer refreshes.
-  def match_detail(fixture_id)
-    cache_key = "live_scores_detail_v5_#{fixture_id}"
+  DETAIL_SECTIONS = %w[fixture events stats lineups h2h].freeze
 
-    result = Rails.cache.fetch(cache_key, expires_in: 5.minutes, race_condition_ttl: 10.seconds) do
-      results = {}
-      threads = {
-        fixture: Thread.new { get("fixtures",            id:      fixture_id) },
-        events:  Thread.new { get("fixtures/events",     fixture: fixture_id) },
-        lineups: Thread.new { get("fixtures/lineups",    fixture: fixture_id) },
-        stats:   Thread.new { get("fixtures/statistics", fixture: fixture_id) }
-      }
-      threads.each do |k, t|
-        results[k] = t.join(10)&.value || {}
+  # Match detail with optional section filter. Each section is cached independently
+  # so the frontend can load fixture+events first and fetch stats/lineups/h2h on tab open.
+  # Pass include: nil for a full fetch (jobs, admin heal).
+  def match_detail(fixture_id, include: nil)
+    sections = normalize_detail_sections(include)
+    result   = {}
+
+    if sections.include?("fixture")
+      result[:fixture] = fetch_detail_fixture(fixture_id)
+      return nil unless result[:fixture]
+    end
+
+    parallel = sections & %w[events stats lineups]
+    if parallel.any?
+      threads = parallel.index_with { |section| Thread.new { fetch_detail_section(fixture_id, section) } }
+      threads.each do |section, thread|
+        result[section.to_sym] = thread.join(10)&.value
       rescue => e
-        Rails.logger.warn("[LiveScoresClient] thread #{k}: #{e.message}")
-        results[k] = {}
+        Rails.logger.warn("[LiveScoresClient] detail #{section}: #{e.message}")
+        result[section.to_sym] = []
       ensure
-        t.kill if t.alive?
-      end
-
-      fx = results[:fixture].dig("response", 0)
-      next nil unless fx
-
-      home_id = fx.dig("teams", "home", "id")
-      away_id = fx.dig("teams", "away", "id")
-
-      h2h_raw = if home_id && away_id
-        Rails.cache.fetch("live_scores_h2h_v1_#{home_id}_#{away_id}", expires_in: 24.hours, race_condition_ttl: 30.seconds) do
-          get("fixtures/headtohead", h2h: "#{home_id}-#{away_id}", last: 10).dig("response") || []
-        end
-      else
-        []
-      end
-
-      {
-        fixture:  build_fixture(fx),
-        events:   normalize_events(results[:events].dig("response")  || []),
-        stats:    normalize_stats(results[:stats].dig("response")    || []),
-        lineups:  normalize_lineups(results[:lineups].dig("response") || []),
-        h2h:      normalize_h2h(h2h_raw)
-      }
-    end
-
-    # Adjust TTL based on match status:
-    # - Finished: 24 h — never needs to be fetched again
-    # - Live (1H/2H/HT/ET/BT/P): 60 s — VAR/offside corrections need to propagate within ~1 min
-    # - Everything else: keep the default 5-minute TTL written by cache.fetch above
-    if result
-      status = result.dig(:fixture, "fixture", "status", "short")
-      if %w[FT AET PEN].include?(status)
-        Rails.cache.write(cache_key, result, expires_in: 24.hours)
-      elsif %w[1H 2H HT ET BT P].include?(status)
-        Rails.cache.write(cache_key, result, expires_in: 60.seconds)
+        thread.kill if thread.alive?
       end
     end
 
-    result
+    if sections.include?("h2h")
+      fx = result[:fixture] || fetch_detail_fixture(fixture_id)
+      if fx
+        home_id = fx.dig("teams", "home", "id")
+        away_id = fx.dig("teams", "away", "id")
+        result[:h2h] = fetch_detail_h2h(home_id, away_id) if home_id && away_id
+      end
+      result[:h2h] ||= normalize_h2h([])
+    end
+
+    apply_detail_fixture_ttl!(fixture_id, result[:fixture]) if result[:fixture]
+    result.presence
   rescue => e
     Rails.logger.error("[LiveScoresClient] match_detail(#{fixture_id}): #{e.message}")
     nil
@@ -599,6 +570,56 @@ class LiveScoresClient
   # ── Private ───────────────────────────────────────────────────────────────
 
   private
+
+  def normalize_detail_sections(include)
+    return DETAIL_SECTIONS if include.nil?
+
+    list = Array(include).map(&:to_s) & DETAIL_SECTIONS
+    list.presence || DETAIL_SECTIONS
+  end
+
+  def fetch_detail_fixture(fixture_id)
+    Rails.cache.fetch("live_scores_detail_fixture_v6_#{fixture_id}", expires_in: 5.minutes, race_condition_ttl: 10.seconds) do
+      fx = get("fixtures", id: fixture_id).dig("response", 0)
+      fx ? build_fixture(fx) : nil
+    end
+  end
+
+  def fetch_detail_section(fixture_id, section)
+    endpoint = case section
+    when "events"  then [ "fixtures/events",     { fixture: fixture_id } ]
+    when "stats"   then [ "fixtures/statistics", { fixture: fixture_id } ]
+    when "lineups" then [ "fixtures/lineups",    { fixture: fixture_id } ]
+    else return []
+    end
+
+    Rails.cache.fetch("live_scores_detail_#{section}_v6_#{fixture_id}", expires_in: 5.minutes, race_condition_ttl: 10.seconds) do
+      raw = get(endpoint[0], **endpoint[1]).dig("response") || []
+      case section
+      when "events"  then normalize_events(raw)
+      when "stats"   then normalize_stats(raw)
+      when "lineups" then normalize_lineups(raw)
+      else []
+      end
+    end
+  end
+
+  def fetch_detail_h2h(home_id, away_id)
+    Rails.cache.fetch("live_scores_h2h_v1_#{home_id}_#{away_id}", expires_in: 24.hours, race_condition_ttl: 30.seconds) do
+      raw = get("fixtures/headtohead", h2h: "#{home_id}-#{away_id}", last: 10).dig("response") || []
+      normalize_h2h(raw)
+    end
+  end
+
+  def apply_detail_fixture_ttl!(fixture_id, fixture)
+    status = fixture.dig("fixture", "status", "short")
+    key    = "live_scores_detail_fixture_v6_#{fixture_id}"
+    if %w[FT AET PEN].include?(status)
+      Rails.cache.write(key, fixture, expires_in: 24.hours)
+    elsif %w[1H 2H HT ET BT P].include?(status)
+      Rails.cache.write(key, fixture, expires_in: 60.seconds)
+    end
+  end
 
   def featured_league?(match)
     lid       = match[:league_id].to_i

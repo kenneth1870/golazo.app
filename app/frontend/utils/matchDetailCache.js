@@ -11,6 +11,9 @@ const inflight = new Map() // navId -> Promise
 const TTL_MS   = 30_000    // match_detail is server-cached ~30s; mirror that here
 const MAX      = 20
 
+/** Default API include — fixture + events only (stats/lineups/h2h lazy on tab). */
+export const MATCH_DETAIL_INITIAL_INCLUDE = "fixture,events"
+
 export function navIdFor(match) {
   if (!match) return null
   if (match.external_id != null && match.external_id !== "") return String(match.external_id)
@@ -42,14 +45,31 @@ export function setCachedMatchDetail(navId, data) {
   if (cache.size > MAX) cache.delete(cache.keys().next().value) // evict oldest
 }
 
+export function mergeCachedMatchDetail(navId, partial) {
+  if (!navId || !partial) return null
+  const existing = getCachedMatchDetail(navId) || {}
+  const merged = { ...existing, ...partial }
+  setCachedMatchDetail(navId, merged)
+  return merged
+}
+
+function detailUrl(navId, include = MATCH_DETAIL_INITIAL_INCLUDE) {
+  const q = include ? `?include=${encodeURIComponent(include)}` : ""
+  return `/api/v1/match_detail/${navId}${q}`
+}
+
 // Fire-and-forget warm-up. Dedupes concurrent prefetches for the same id and
 // skips the network entirely when a fresh entry already exists.
 export function prefetchMatchDetail(navId) {
   if (!navId || getCachedMatchDetail(navId) || inflight.has(navId)) return
-  const p = fetch(`/api/v1/match_detail/${navId}`)
+  const p = fetch(detailUrl(navId))
     .then(r => (r.ok ? r.json() : null))
-    .then(data => { if (data?.fixture) setCachedMatchDetail(navId, data); return data })
+    .then(data => { if (data?.fixture) mergeCachedMatchDetail(navId, data); return data })
     .catch(() => null)
     .finally(() => inflight.delete(navId))
   inflight.set(navId, p)
+}
+
+export function fetchMatchDetailInclude(navId, include) {
+  return detailUrl(navId, include)
 }

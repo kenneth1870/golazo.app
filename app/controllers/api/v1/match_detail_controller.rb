@@ -4,6 +4,8 @@ module Api
       def show
         raw_id = params[:id].to_s
         client = LiveScoresClient.new
+        sections = detail_include_sections
+        full_detail = sections.nil?
 
         # db-{id} — direct DB lookup (WC matches navigated from the HOY widget)
         if raw_id.start_with?("db-")
@@ -21,13 +23,13 @@ module Api
             if resolved&.dig(:fixture, "teams").present?
               sync_db_from_resolved(match, resolved)
               resolved[:fixture]["fixture"]["db_id"] = match.id
-              return render json: resolved
+              return render json: slice_detail_data(resolved, sections)
             end
           end
 
           data = local_match_as_fixture(match)
           data[:fixture]["fixture"]["db_id"] = match.id
-          return render json: data
+          return render json: slice_detail_data(data, sections)
         end
 
         external_id = raw_id.sub(/\Aext-/, "").to_i
@@ -35,7 +37,7 @@ module Api
         local_match = Match.includes(:home_team, :away_team, :goals, { match_stats: :team }, :competition)
                            .find_by(external_id: external_id)
 
-        data = client.match_detail(external_id)
+        data = client.match_detail(external_id, include: full_detail ? nil : sections)
 
         # If the API returned a match but the team names don't match the local DB record,
         # the external_id is still in the old namespace (football-data.org). Fall back to
@@ -83,13 +85,13 @@ module Api
                   sync_db_from_resolved(local_match, resolved)
                   resolved[:fixture]["fixture"]["db_id"] = local_match.id
                   broadcast_if_changed(external_id, resolved, local_match: local_match)
-                  return render json: resolved
+                  return render json: slice_detail_data(resolved, sections)
                 end
               end
               # ApiSportsClient also failed — serve local DB data as last resort
               data = local_match_as_fixture(local_match)
               data[:fixture]["fixture"]["db_id"] = local_match.id
-              return render json: data
+              return render json: slice_detail_data(data, sections)
             end
           end
         end
@@ -99,14 +101,16 @@ module Api
           if local_match
             data = local_match_as_fixture(local_match)
             data[:fixture]["fixture"]["db_id"] = local_match.id
-            return render json: data
+            return render json: slice_detail_data(data, sections)
           end
           data = client.match_from_list(external_id)
-          return render json: { fixture: nil, error: "not_found", stats: [], events: [], lineups: [] } unless data
+          return render json: { fixture: nil, error: "not_found" } unless data
         end
 
-        # Try fallback whenever stats are missing — even if events/lineups exist.
-        data = api_sports_fallback(data) if data[:fixture].present? && data[:stats].to_a.empty?
+        # Try fallback whenever stats are missing — only when stats were requested.
+        if data[:fixture].present? && (full_detail || sections.include?("stats"))
+          data = api_sports_fallback(data) if data[:stats].to_a.empty?
+        end
 
         # Inject db_id so frontend can call AI summary endpoint
         if local_match && data[:fixture].is_a?(Hash)
@@ -115,13 +119,29 @@ module Api
         end
 
         broadcast_if_changed(external_id, data, local_match: local_match)
-        render json: data
+        render json: slice_detail_data(data, sections)
       rescue StandardError => e
         Rails.logger.error("[MatchDetailController] #{e.message}")
         render json: { fixture: nil, error: "api_error", stats: [], events: [], lineups: [] }
       end
 
       private
+
+      # Default: fixture + events for fast first paint. ?include=all for full payload.
+      def detail_include_sections
+        raw = params[:include].to_s.strip.downcase
+        return nil if raw == "all"
+        return %w[fixture events] if raw.blank?
+
+        parts = raw.split(",").map(&:strip) & LiveScoresClient::DETAIL_SECTIONS
+        parts.presence || %w[fixture events]
+      end
+
+      def slice_detail_data(data, sections)
+        return data unless data.is_a?(Hash) && sections
+
+        data.slice(*sections.map(&:to_sym))
+      end
 
       def api_sports_fallback(data)
         home    = data.dig(:fixture, "teams", "home", "name")

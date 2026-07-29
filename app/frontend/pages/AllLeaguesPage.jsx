@@ -8,6 +8,7 @@ import OfflineBanner from "../components/OfflineBanner"
 import PullIndicator from "../components/PullIndicator"
 import EmptyState from "../components/EmptyState"
 import { usePullRefresh } from "../hooks/usePullRefresh"
+import { useVisiblePolling } from "../hooks/useVisiblePolling"
 import { translateLeague, translateCountry } from "../i18n/leagueNames"
 
 const TYPE_ORDER = { world_cup: 0, latam: 1, cup: 2, league: 3 }
@@ -109,16 +110,9 @@ export default function AllLeaguesPage() {
 
   const ptr = usePullRefresh(() => load(), { disabled: loading })
 
-  useEffect(() => {
-    load()
-    const onVisible = () => { if (!document.hidden) loadLive() }
-    document.addEventListener("visibilitychange", onVisible)
-    const iv = setInterval(loadLive, 30_000)
-    return () => {
-      clearInterval(iv)
-      document.removeEventListener("visibilitychange", onVisible)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useVisiblePolling(loadLive, 30_000, [])
 
   // Count live matches per competition, matched by external league_id
   const liveByExternalId = liveMatches.reduce((acc, m) => {

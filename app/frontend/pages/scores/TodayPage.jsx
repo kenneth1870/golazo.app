@@ -17,6 +17,7 @@ import { useAppFocus } from "../../hooks/useAppFocus"
 import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
 import PullIndicator from "../../components/PullIndicator"
 import { usePullRefresh } from "../../hooks/usePullRefresh"
+import { useVisiblePolling } from "../../hooks/useVisiblePolling"
 import { triggerInstallNudge } from "../../utils/installNudge"
 
 // ─── Helpers ──────────────────────────────────────────
@@ -413,22 +414,12 @@ export default function TodayPage() {
   // 30s when a match is live (matches the server's live-sync cadence so we
   // never lag more than one extra cycle), 5min when nothing is on.
   const hasLive = matches.some(m => m.status === "live")
-  useEffect(() => {
-    const iso   = toISO(selected)
-    const today = toISO(new Date())
-    if (iso !== today) return
-    // Pause the safety-net poll while the tab is hidden; refresh on return.
-    const interval  = hasLive ? 15000 : 300000
-    const tick      = () => { if (!document.hidden) load(selected) }
-    const onVisible = () => { if (!document.hidden) load(selected) }
-    const iv = setInterval(tick, interval)
-    document.addEventListener("visibilitychange", onVisible)
-    return () => {
-      clearInterval(iv)
-      document.removeEventListener("visibilitychange", onVisible)
-      clearTimeout(flashTimerRef.current)
-    }
-  }, [selected, load, hasLive])
+  const isTodaySelected = toISO(selected) === toISO(new Date())
+  useVisiblePolling(
+    () => load(selected),
+    isTodaySelected ? (hasLive ? 60_000 : 300_000) : null,
+    [selected, load, hasLive]
+  )
 
   // Patch a single row in-place from a live_scores push — no re-fetch.
   const applyLiveScore = useCallback((d) => {

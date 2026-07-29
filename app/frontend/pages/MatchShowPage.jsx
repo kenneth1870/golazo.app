@@ -13,13 +13,13 @@ const MatchPreviewPanel = lazy(() => import("./match/MatchPreviewPanel"))
 const PlayerRatingsPanel = lazy(() => import("./match/PlayerRatingsPanel"))
 import FirstScorerOdds from "./match/FirstScorerOdds"
 import RelatedNewsStrip from "../components/RelatedNewsStrip"
-import MatchReactions from "../components/MatchReactions"
+const MatchReactions = lazy(() => import("../components/MatchReactions"))
 import { buildMatchNewsQuery } from "../utils/newsQuery"
 import { useReminders } from "../hooks/useReminders"
 import { usePushNotifications } from "../hooks/usePushNotifications"
 import { useVisiblePolling } from "../hooks/useVisiblePolling"
 import { useAppFocus } from "../hooks/useAppFocus"
-import { getCachedMatchDetail, setCachedMatchDetail, navIdFor } from "../utils/matchDetailCache"
+import { getCachedMatchDetail, setCachedMatchDetail, mergeCachedMatchDetail, fetchMatchDetailInclude, MATCH_DETAIL_INITIAL_INCLUDE } from "../utils/matchDetailCache"
 import { getMatchColor } from "../utils/teamColors"
 import { clubTeamPath } from "../utils/clubTeamPath"
 import { leagueCodeFromApiId } from "../utils/leagueCodes"
@@ -1624,19 +1624,20 @@ export default function MatchShowPage() {
     }
     const fetchStarted = Date.now()
     setStale(false)
-    return fetchJson(`/api/v1/match_detail/${id}`, 10000)
+    return fetchJson(fetchMatchDetailInclude(id, MATCH_DETAIL_INITIAL_INCLUDE), 10000)
       .then(({ data: d, stale: isStale, offline, ok }) => {
         setStale(isStale)
         if (!ok || offline) {
           setData(prev => (prev?.fixture ? prev : { error: "api_error" }))
           return
         }
-        if (d?.fixture) setCachedMatchDetail(id, d)
+        if (d?.fixture) mergeCachedMatchDetail(id, d)
         setData(prev => {
           if (fetchStarted < dataFetchedAt.current) return prev  // WS beat us — keep fresher data
           dataFetchedAt.current = fetchStarted
-          if (prev && isLive) checkGoals(d.fixture?.goals, d.events)
-          return d
+          const merged = { ...prev, ...d }
+          if (prev && isLive) checkGoals(merged.fixture?.goals, merged.events)
+          return merged
         })
       })
       .catch(() => {
@@ -1656,7 +1657,27 @@ export default function MatchShowPage() {
   // hidden — match_detail is the heaviest endpoint (external API call + DB
   // writes + ActionCable broadcasts on every hit), so a backgrounded tab must
   // not keep hammering it.
-  useVisiblePolling(load, isLive ? 20000 : 60000, [id])
+  useVisiblePolling(load, isLive ? 30000 : 60000, [id])
+
+  // Lazy-load heavy sections when their tab is opened.
+  useEffect(() => {
+    if (!id || loading || !data?.fixture) return
+    const sections = []
+    if (tab === "stats" && data.stats === undefined) sections.push("stats")
+    if (tab === "lineups" && data.lineups === undefined) sections.push("lineups")
+    if (tab === "h2h" && data.h2h === undefined) sections.push("h2h")
+    if (sections.length === 0) return
+
+    fetchJson(fetchMatchDetailInclude(id, sections.join(",")), 10000)
+      .then(({ data: d, ok, offline }) => {
+        if (!ok || offline || !d) return
+        setData(prev => {
+          const merged = mergeCachedMatchDetail(id, { ...prev, ...d })
+          return merged || { ...prev, ...d }
+        })
+      })
+      .catch(() => {})
+  }, [tab, id, loading, data?.fixture, data?.stats, data?.lineups, data?.h2h])
 
   // ActionCable subscription — push updates when live.
   // Stamps dataFetchedAt so concurrent polls know this data is the freshest.
@@ -1665,7 +1686,13 @@ export default function MatchShowPage() {
       dataFetchedAt.current = Date.now()
       setData(prev => {
         if (prev) checkGoals(msg.fixture?.goals, msg.events)
-        return { fixture: msg.fixture, events: msg.events, stats: msg.stats, lineups: msg.lineups }
+        return {
+          fixture: msg.fixture,
+          events: msg.events ?? prev?.events,
+          stats: msg.stats ?? prev?.stats,
+          lineups: msg.lineups ?? prev?.lineups,
+          h2h: prev?.h2h,
+        }
       })
     } else if (msg.type === "score_update" || (msg.type === "match_update" && !msg.fixture)) {
       // Lightweight score-only update (broadcast from WorldCupSync) — patch existing data
@@ -1989,7 +2016,9 @@ export default function MatchShowPage() {
           <>
             {/* Reactions — always shown; compact for live matches */}
             <div className="match-section" style={{ marginBottom: 12 }}>
-              <MatchReactions matchId={id} compact={["1H","HT","2H","ET","BT","P"].includes(statusShort)} />
+              <Suspense fallback={null}>
+                <MatchReactions matchId={id} compact={["1H","HT","2H","ET","BT","P"].includes(statusShort)} />
+              </Suspense>
             </div>
 
             {hasFixture && !clubsPrimary && (

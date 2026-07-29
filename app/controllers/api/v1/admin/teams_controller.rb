@@ -5,6 +5,13 @@ module Api
         before_action :require_admin!
 
         def index
+          played_counts = Match.where(status: "finished")
+                               .group(:home_team_id)
+                               .count
+          away_counts = Match.where(status: "finished")
+                             .group(:away_team_id)
+                             .count
+
           teams = Team.order(:group, :name).map do |t|
             {
               id:            t.id,
@@ -14,8 +21,7 @@ module Api
               group:         t.group,
               confederation: t.confederation,
               external_id:   t.external_id,
-              matches_played: Match.where("home_team_id = ? OR away_team_id = ?", t.id, t.id)
-                                   .where(status: "finished").count
+              matches_played: (played_counts[t.id] || 0) + (away_counts[t.id] || 0)
             }
           end
           render json: teams

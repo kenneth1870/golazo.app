@@ -23,9 +23,9 @@ import { useAppFocus } from "./hooks/useAppFocus"
 import { isIosSafari, isStandalone } from "./utils/platform"
 import { storageGet } from "./utils/safeStorage"
 
-// Critical path — loaded eagerly (scores shell + today tab)
+// Critical path — scores shell only; today tab lazy-loaded
 import ScoresPage from "./pages/ScoresPage"
-import TodayPage  from "./pages/scores/TodayPage"
+const TodayPage  = lazy(() => import("./pages/scores/TodayPage"))
 
 // Home + secondary routes — lazy-loaded to keep initial bundle smaller
 const HomePage        = lazy(() => import("./pages/HomePage"))

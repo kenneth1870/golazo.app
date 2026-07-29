@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useMatches, patchLiveScore } from "../hooks/useMatches"
@@ -600,7 +600,7 @@ function NewsCard({ post, index }) {
 export default function HomePage() {
   const { t, i18n } = useTranslation()
   const navigate    = useNavigate()
-  const liveCount  = useLiveCount()
+  const liveCountGlobal = useLiveCount()
   const [fav]      = useFavoriteTeam()
   const { favoriteCompetitions, favoriteTeamNames } = useFavorites()
   const { clubs_primary: clubsPrimary } = useAppFocus()
@@ -625,6 +625,11 @@ export default function HomePage() {
   const { matches: upcomingMatches, refetch: refetchUpcoming, stale: matchesStale } = useMatches("upcoming", { competition: clubsPrimary ? undefined : "WC" })
   useLiveScoresChannel(patchLiveScore)
   const { todayMatches, upcomingPreview, loading: todayLoading, todayError, todayStale, retryToday } = useTodayFeed(!clubsPrimary)
+  const todayLiveCount = useMemo(
+    () => todayMatches.filter(m => m.status === "live").length,
+    [todayMatches]
+  )
+  const liveCount = todayLiveCount > 0 ? todayLiveCount : liveCountGlobal
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
   const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: tz })
   const clubFixtures = clubsPrimary
