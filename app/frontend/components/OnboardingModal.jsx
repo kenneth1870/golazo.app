@@ -63,6 +63,8 @@ const LEAGUE_DEFS = [
   { code: "MLS", key: "clubs.mls", flag: "🇺🇸" },
   { code: "LMX", key: "clubs.lmx", flag: "🇲🇽" },
   { code: "CRC", key: "clubs.crc", flag: "🇨🇷" },
+  { code: "CAC", key: "clubs.cac", flag: "🌎" },
+  { code: "CCC", key: "clubs.ccc", flag: "🏆" },
   { code: "WC",  key: "nav.mundial", flag: "🌍" },
 ]
 

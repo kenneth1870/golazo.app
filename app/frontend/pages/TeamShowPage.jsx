@@ -11,7 +11,7 @@ import OfflineBanner from "../components/OfflineBanner"
 import { useFavorites } from "../hooks/useFavorites"
 import { getTeamColor } from "../utils/teamColors"
 
-const LEAGUE_API_IDS = { WC: 1, PL: 39, LAL: 140, BL1: 78, SA: 135, L1: 61, MLS: 253, CRC: 162, LMX: 262, UCL: 2 }
+const LEAGUE_API_IDS = { WC: 1, PL: 39, LAL: 140, BL1: 78, SA: 135, L1: 61, MLS: 253, CRC: 162, LMX: 262, CAC: 1028, CCC: 16, UCL: 2 }
 
 function playerQueryForTeam(team, clubsPrimary) {
   if (clubsPrimary) {

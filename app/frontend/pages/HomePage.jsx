@@ -98,7 +98,7 @@ function useTodayFeed(wcOnly = false) {
   return { todayMatches, upcomingPreview, loading, todayError: error, todayStale: stale, retryToday: () => load(true) }
 }
 
-const FEATURED_NEWS_LEAGUES = [ "CRC", "LMX", "PL", "LAL" ]
+const FEATURED_NEWS_LEAGUES = [ "CRC", "CAC", "CCC", "LMX", "PL", "LAL" ]
 
 function useLatestNews(leagueCodes = []) {
   const { i18n } = useTranslation()

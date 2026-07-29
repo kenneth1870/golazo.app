@@ -222,6 +222,8 @@ class NewsService
   LEAGUE_NEWS_KEYWORDS = {
     "CRC" => [ "costa rica", "liga tica", "saprissa", "herediano", "alajuelense", "escorpiones", "zeledón", "cartaginés", "sporting fc", "puntarenas", "guadalupe" ],
     "LMX" => [ "liga mx", "méxico", "mexico", "américa", "chivas", "tigres", "rayados", "cruz azul", "pumas", "toluca" ],
+    "CAC" => [ "copa centroamericana", "central american cup", "concacaf central", "alajuelense", "saprissa", "herediano", "olimpia", "motagua", "xelajú", "diriangén" ],
+    "CCC" => [ "concachampions", "concacaf champions", "champions cup", "champions league concacaf", "tigres", "cruz azul", "inter miami", "lafc", "monterrey" ],
     "PL"  => [ "premier league", "manchester", "liverpool", "arsenal", "chelsea", "tottenham", "newcastle" ],
     "LAL" => [ "la liga", "real madrid", "barcelona", "atlético", "atletico", "sevilla", "villarreal" ],
     "BL1" => [ "bundesliga", "bayern", "dortmund", "leverkusen", "leipzig" ],
@@ -254,6 +256,8 @@ class NewsService
       "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/news?limit=25",
       "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/news?limit=25",
       "https://site.api.espn.com/apis/site/v2/sports/soccer/crc.1/news?limit=25",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/concacaf.central.american.cup/news?limit=25",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/concacaf.champions/news?limit=25",
       "https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/news?limit=25"
     ],
     "es" => [
@@ -261,7 +265,9 @@ class NewsService
       "https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/news?limit=25&lang=es",
       "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/news?limit=25&lang=es",
       "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/news?limit=25&lang=es",
-      "https://site.api.espn.com/apis/site/v2/sports/soccer/crc.1/news?limit=25&lang=es"
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/crc.1/news?limit=25&lang=es",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/concacaf.central.american.cup/news?limit=25&lang=es",
+      "https://site.api.espn.com/apis/site/v2/sports/soccer/concacaf.champions/news?limit=25&lang=es"
     ]
   }.freeze
 
@@ -274,7 +280,9 @@ class NewsService
     "LMX" => "https://site.api.espn.com/apis/site/v2/sports/soccer/mex.1/news?limit=30",
     "MLS" => "https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/news?limit=30",
     "UCL" => "https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/news?limit=30",
-    "CRC" => "https://site.api.espn.com/apis/site/v2/sports/soccer/crc.1/news?limit=30"
+    "CRC" => "https://site.api.espn.com/apis/site/v2/sports/soccer/crc.1/news?limit=30",
+    "CAC" => "https://site.api.espn.com/apis/site/v2/sports/soccer/concacaf.central.american.cup/news?limit=30",
+    "CCC" => "https://site.api.espn.com/apis/site/v2/sports/soccer/concacaf.champions/news?limit=30"
   }.freeze
 
   private

@@ -8,12 +8,14 @@ class FeaturedCompetitions
     "L1"  => { name: "Ligue 1",               country: "France",     competition_type: "league", external_id: 61,  logo: "https://crests.football-data.org/FL1.png" },
     "UCL" => { name: "UEFA Champions League", country: "Europe",     competition_type: "cup",    external_id: 2,   logo: "https://crests.football-data.org/CL.png" },
     "MLS" => { name: "Major League Soccer",   country: "USA/Canada", competition_type: "league", external_id: 253, logo: "https://flagcdn.com/w80/us.png" },
-    "CRC" => { name: "Liga Tica",             country: "Costa Rica", competition_type: "league", external_id: 162, logo: "https://media.api-sports.io/football/leagues/162.png" },
-    "LMX" => { name: "Liga MX",               country: "Mexico",     competition_type: "league", external_id: 262, logo: "https://media.api-sports.io/football/leagues/262.png" },
+    "CRC" => { name: "Liga Tica",             country: "Costa Rica", competition_type: "league", external_id: 162,  logo: "https://media.api-sports.io/football/leagues/162.png" },
+    "LMX" => { name: "Liga MX",               country: "Mexico",     competition_type: "league", external_id: 262,  logo: "https://media.api-sports.io/football/leagues/262.png" },
+    "CAC" => { name: "Copa Centroamericana",  country: "CONCACAF",   competition_type: "cup",    external_id: 1028, logo: "https://media.api-sports.io/football/leagues/1028.png" },
+    "CCC" => { name: "Concachampions",        country: "CONCACAF",   competition_type: "cup",    external_id: 16,   logo: "https://media.api-sports.io/football/leagues/16.png" },
     "WC"  => { name: "FIFA World Cup 2026",   country: "International", competition_type: "world_cup", external_id: 1, logo: "https://crests.football-data.org/WC.png" }
   }.freeze
 
-  LATAM_CODES = %w[CRC LMX].freeze
+  LATAM_CODES = %w[CRC LMX CAC CCC].freeze
 
   class << self
     def sync_missing!

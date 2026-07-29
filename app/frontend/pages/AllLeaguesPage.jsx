@@ -11,7 +11,7 @@ import { usePullRefresh } from "../hooks/usePullRefresh"
 import { translateLeague, translateCountry } from "../i18n/leagueNames"
 
 const TYPE_ORDER = { world_cup: 0, latam: 1, cup: 2, league: 3 }
-const LATAM_CODES = ["CRC", "LMX"]
+const LATAM_CODES = ["CRC", "LMX", "CAC", "CCC"]
 
 function LeagueCard({ competition, liveCount, onClick, lang, t }) {
   const leagueName = translateLeague(competition.name, lang) ?? competition.name

@@ -9,6 +9,8 @@ export const CLUB_CHIPS = [
   { emoji: "🇫🇷", key: "clubs.l1", path: "/leagues/L1" },
   { emoji: "⭐", key: "clubs.ucl", path: "/leagues/UCL" },
   { emoji: "🇨🇷", key: "clubs.crc", path: "/leagues/CRC" },
+  { emoji: "🌎", key: "clubs.cac", path: "/leagues/CAC" },
+  { emoji: "🏆", key: "clubs.ccc", path: "/leagues/CCC" },
   { emoji: "🇲🇽", key: "clubs.lmx", path: "/leagues/LMX" },
 ]
 

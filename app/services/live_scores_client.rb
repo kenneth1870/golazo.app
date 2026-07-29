@@ -51,7 +51,9 @@ class LiveScoresClient
     61,   # Ligue 1
     253,  # MLS
     162,  # Liga Tica (Costa Rica Primera División)
-    262   # Liga MX
+    262,  # Liga MX
+    1028, # CONCACAF Central American Cup (Copa Centroamericana)
+    16    # CONCACAF Champions League (Concachampions)
   ]).freeze
 
   # Always excluded — low-value fixtures that waste API quota in caches/UI.

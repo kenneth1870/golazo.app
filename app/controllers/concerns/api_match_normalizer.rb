@@ -10,8 +10,10 @@ module ApiMatchNormalizer
     140 => "LAL",
     61  => "L1",
     253 => "MLS",
-    162 => "CRC",
-    262 => "LMX"
+    162  => "CRC",
+    262  => "LMX",
+    1028 => "CAC",
+    16   => "CCC"
   }.freeze
 
   LEAGUE_CANONICAL_NAMES = {
@@ -23,8 +25,10 @@ module ApiMatchNormalizer
     135 => "Serie A",
     61  => "Ligue 1",
     253 => "Major League Soccer",
-    162 => "Liga Tica",
-    262 => "Liga MX"
+    162  => "Liga Tica",
+    262  => "Liga MX",
+    1028 => "Copa Centroamericana",
+    16   => "Concachampions"
   }.freeze
 
   private
@@ -33,7 +37,7 @@ module ApiMatchNormalizer
     LEAGUE_ID_TO_CODE[league_id.to_i] || league_id.to_s
   end
 
-  LATAM_LEAGUES = %w[CRC LMX].freeze
+  LATAM_LEAGUES = %w[CRC LMX CAC CCC].freeze
 
   def latam_league?(code)
     LATAM_LEAGUES.include?(code.to_s.upcase)

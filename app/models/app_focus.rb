@@ -36,10 +36,12 @@ module AppFocus
     "MLS" => 253,
     "CRC" => 162,
     "LMX" => 262,
+    "CAC" => 1028,
+    "CCC" => 16,
     "WC"  => 1
   }.freeze
 
-  FEATURED_CLUB_CODES = %w[PL LAL BL1 SA L1 UCL MLS CRC LMX].freeze
+  FEATURED_CLUB_CODES = %w[PL LAL BL1 SA L1 UCL MLS CRC CAC CCC LMX].freeze
 
   # Top domestic leagues — used for empty-day previews (no UCL qualifiers).
   DOMESTIC_CLUB_CODES = %w[PL LAL BL1 SA L1 MLS CRC LMX].freeze
