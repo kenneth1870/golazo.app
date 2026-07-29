@@ -15,7 +15,7 @@ import PushPrompt from "./components/PushPrompt"
 import IosInstallGuide from "./components/IosInstallGuide"
 import ConsentBanner from "./components/ConsentBanner"
 import RequireAdmin from "./components/RequireAdmin"
-import LoginPage from "./pages/LoginPage"
+const LoginPage = lazy(() => import("./pages/LoginPage"))
 import { useFavorites } from "./hooks/useFavorites"
 import { scopeFromFavorites, hasPushScope } from "./utils/pushScope"
 import { usePushNotifications } from "./hooks/usePushNotifications"

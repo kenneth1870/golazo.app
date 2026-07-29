@@ -19,7 +19,7 @@ export function useLocale() {
         setLocale(data)
         if (data.timezone) setTimezone(data.timezone)
         if (data.language && ["en", "es"].includes(data.language)) {
-          i18n.changeLanguage(data.language)
+          import("../i18n").then(({ ensureLanguage }) => ensureLanguage(data.language))
           storageSet("golazo_lang", data.language)
           applyLangToDocument(data.language)
         }
@@ -32,10 +32,11 @@ export function useLocale() {
     applyLangToDocument(i18n.language)
   }, [i18n.language])
 
-  const changeLanguage = (lang) => {
+  const changeLanguage = async (lang) => {
     storageSet("golazo_lang", lang)
     storageSet("golazo_lang_manual", "1")
-    i18n.changeLanguage(lang)
+    const { ensureLanguage } = await import("../i18n")
+    await ensureLanguage(lang)
   }
 
   return { locale, timezone, currentLang: i18n.language, changeLanguage }

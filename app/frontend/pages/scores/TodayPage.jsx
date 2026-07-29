@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague, translateCountry } from "../../i18n/leagueNames"
+import { sortCompetitionGroups } from "../../utils/leagueOrder"
 import { translateTeam } from "../../i18n/teamNames"
 import MatchRow from "../../components/MatchRow"
 import FlagImg from "../../components/FlagImg"
@@ -462,11 +463,7 @@ export default function TodayPage() {
     return acc
   }, {}), [todayMatches])
 
-  const allGroups = useMemo(() => Object.values(byComp).sort((a, b) => {
-    const aLive = a.some(m => m.status === "live") ? 0 : 1
-    const bLive = b.some(m => m.status === "live") ? 0 : 1
-    return aLive - bLive || (a[0]?.competition?.name ?? "").localeCompare(b[0]?.competition?.name ?? "")
-  }), [byComp])
+  const allGroups = useMemo(() => sortCompetitionGroups(Object.values(byComp)), [byComp])
 
   function matchInvolvesAnyFav(m) {
     return favoriteTeamNames.some(name =>

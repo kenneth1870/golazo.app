@@ -10,6 +10,7 @@ import EmptyState from "../components/EmptyState"
 import { usePullRefresh } from "../hooks/usePullRefresh"
 import { useVisiblePolling } from "../hooks/useVisiblePolling"
 import { translateLeague, translateCountry } from "../i18n/leagueNames"
+import { sortCompetitions } from "../utils/leagueOrder"
 
 const TYPE_ORDER = { world_cup: 0, latam: 1, cup: 2, league: 3 }
 const LATAM_CODES = ["CRC", "LMX", "CAC", "CCC"]
@@ -130,7 +131,7 @@ export default function AllLeaguesPage() {
 
   // Pin Liga Tica + Liga MX at the top in clubs mode
   const latamLeagues = clubsPrimary
-    ? competitions.filter(c => LATAM_CODES.includes(c.code))
+    ? sortCompetitions(competitions.filter(c => LATAM_CODES.includes(c.code)))
     : []
   const otherComps = clubsPrimary
     ? competitions.filter(c => !LATAM_CODES.includes(c.code))

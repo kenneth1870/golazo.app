@@ -15,6 +15,7 @@ import FlagImg from "../components/FlagImg"
 import { clubTeamPath, clubTeamSlug } from "../utils/clubTeamPath"
 import { matchTeamName } from "../utils/matchTeamName"
 import { navIdFor, navigateToMatch } from "../utils/matchDetailCache"
+import { sortCompetitionGroups } from "../utils/leagueOrder"
 import Hero from "../components/Hero"
 import MatchRow from "../components/MatchRow"
 import FavoriteTeamPicker from "../components/FavoriteTeamPicker"
@@ -245,13 +246,13 @@ function groupMatchesByCompetition(matches) {
     if (!map.has(key)) map.set(key, [])
     map.get(key).push(m)
   }
-  return [...map.values()].map(items =>
+  return sortCompetitionGroups([...map.values()].map(items =>
     [ ...items ].sort((a, b) => {
       const sa = STATUS_ORDER[a.status] ?? 3
       const sb = STATUS_ORDER[b.status] ?? 3
       return sa - sb || new Date(a.kickoff_at || 0) - new Date(b.kickoff_at || 0)
     })
-  )
+  ))
 }
 
 function CompetitionGroupHeader({ match, navigate, i18n }) {

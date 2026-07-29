@@ -105,13 +105,20 @@ RAILS_MASTER_KEY=...                  # decrypts credentials.yml.enc
 RAPIDAPI_KEY=...                      # API-Football (RapidAPI or direct)
 
 # Auth & security
-JWT_SECRET=...
+JWT_SECRET=...                        # set a stable value on Render — rotating it logs everyone out
 ADMIN_API_TOKEN=...                   # admin / sync scripts
+ADMIN_SEED_PASSWORD=...               # initial admin password (run bin/rails admin:create_admin)
 ALLOWED_ORIGINS=http://localhost:3000
 
 # App behaviour
 APP_FOCUS=clubs                       # clubs | wc | both
 PUSH_NOTIFICATIONS=paused             # enabled to activate Web Push
+ASSET_HOST=                           # optional CDN host for static assets (production)
+
+# Ops notes (Render free tier)
+# - Set JWT_SECRET and ADMIN_SEED_PASSWORD as persistent env vars (not generated per deploy).
+# - The app pings /up every 4 min while a tab is open (useKeepAlive) to reduce cold starts.
+# - For 24/7 uptime, use an external pinger on https://www.golazoapp.live/up or upgrade the dyno.
 
 # Web Push (optional)
 VAPID_PUBLIC_KEY=...

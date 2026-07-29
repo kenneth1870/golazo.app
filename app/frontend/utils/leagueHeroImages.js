@@ -22,6 +22,30 @@ const LEAGUE_HERO_IMAGES = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Costa_Rica_vs._Espa%C3%B1a_%28amistoso%29_-7.jpg/1920px-Costa_Rica_vs._Espa%C3%B1a_%28amistoso%29_-7.jpg",
     "https://upload.wikimedia.org/wikipedia/commons/9/90/Archivo-Inauguraci%C3%B3n_Estadio_Nacional_de_Costa_Rica_-13.jpg",
   ],
+  CAC: [
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Estadio_Nacional_de_Costa_Rica%2C_2011.jpg/1920px-Estadio_Nacional_de_Costa_Rica%2C_2011.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Estadio_nacional_costarica.jpg/1920px-Estadio_nacional_costarica.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Azteca_Stadium_-_panoramio.jpg/1920px-Azteca_Stadium_-_panoramio.jpg",
+    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1560272564-c83b4dd4bb27?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1459865264687-595d652de67e?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1575368838369-8966c6366a96?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1526232762012-60ec059c6789?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1431324155629-2a467a053bd4?auto=format&fit=crop&w=1600&q=80",
+  ],
+  CCC: [
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Azteca_Stadium_-_panoramio.jpg/1920px-Azteca_Stadium_-_panoramio.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Estadio_Azteca_-_panoramio.jpg/1920px-Estadio_Azteca_-_panoramio.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/b/b4/Arsenal_Man_U_Metlife_Stadium_July_2023_%28cropped%29.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/2014_Allianz_Arena.JPG/1920px-2014_Allianz_Arena.JPG",
+    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1560272564-c83b4dd4bb27?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1459865264687-595d652de67e?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1575368838369-8966c6366a96?auto=format&fit=crop&w=1600&q=80",
+    "https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=1600&q=80",
+  ],
   LMX: [
     "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Azteca_Stadium_-_panoramio.jpg/1920px-Azteca_Stadium_-_panoramio.jpg",
     "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Estadio_Azteca_-_panoramio.jpg/1920px-Estadio_Azteca_-_panoramio.jpg",
@@ -136,10 +160,26 @@ export function pickLeagueHeroImage(code, extraSeed = "") {
   return pool[idx]
 }
 
+/** Resize Wikimedia / Unsplash hero URLs for mobile bandwidth. */
+export function heroImageUrl(url, width = 1280) {
+  if (!url) return url
+  if (url.includes("upload.wikimedia.org") && url.includes("/thumb/")) {
+    return url.replace(/\/(\d+)px-/, `/${width}px-`)
+  }
+  if (url.includes("images.unsplash.com")) {
+    if (url.includes("w=")) return url.replace(/w=\d+/, `w=${width}`)
+    return `${url}${url.includes("?") ? "&" : "?"}w=${width}`
+  }
+  return url
+}
+
+/** CSS image-set for responsive hero backgrounds. */
 export function leagueHeroStyle(code, extraSeed = "") {
-  const url = pickLeagueHeroImage(code, extraSeed)
+  const raw = pickLeagueHeroImage(code, extraSeed)
+  const mobile = heroImageUrl(raw, 768)
+  const desktop = heroImageUrl(raw, 1280)
   return {
-    backgroundImage: `url("${url}")`,
+    backgroundImage: `image-set(url("${mobile}") 1x, url("${desktop}") 2x)`,
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",

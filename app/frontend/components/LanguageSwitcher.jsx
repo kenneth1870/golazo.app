@@ -14,11 +14,11 @@ export default function LanguageSwitcher() {
   const current = SUPPORTED_LANGUAGES.find(l => l.code === currentLang)
     || SUPPORTED_LANGUAGES[0]
 
-  function handleSelect(code) {
-    // Save as explicit manual override — prevents IP from overriding it next visit
+  async function handleSelect(code) {
     storageSet("golazo_lang", code)
     storageSet("golazo_lang_manual", "1")
-    i18n.changeLanguage(code)
+    const { ensureLanguage } = await import("../i18n")
+    await ensureLanguage(code)
     document.documentElement.lang = code
     document.documentElement.dir = code === "ar" ? "rtl" : "ltr"
     setOpen(false)

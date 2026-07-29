@@ -1,67 +1,16 @@
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { translateTeam } from "../../i18n/teamNames"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { fetchJson } from "../../utils/fetchJson"
 import OfflineBanner from "../../components/OfflineBanner"
 import { navigateToMatch, navIdFor } from "../../utils/matchDetailCache"
+import MatchRow from "../../components/MatchRow"
 
 const COUNTRY_FLAG = { "USA": "🇺🇸", "Canada": "🇨🇦", "Mexico": "🇲🇽" }
 
 function slugify(name) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
-}
-
-function fmtKickoff(utc) {
-  if (!utc) return ""
-  return new Date(utc).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
-}
-
-function MatchRow({ match }) {
-  const { t, i18n } = useTranslation()
-  const navigate  = useNavigate()
-  const isLive     = match.status === "live"
-  const isFinished = match.status === "finished"
-  const hasScore   = match.home_score != null && match.away_score != null
-
-  return (
-    <div
-      className={`match-row${navIdFor(match) ? " match-row--clickable" : ""}`}
-      onClick={() => navigateToMatch(navigate, match)}
-      style={{ cursor: navIdFor(match) ? "pointer" : "default" }}
-    >
-      <div className="match-row__status">
-        {isLive
-          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'` : t("status.live")}</span>
-          : isFinished
-          ? <span className="match-status-ft">{t("status.ft")}</span>
-          : <span className="match-status-time">{fmtKickoff(match.kickoff_at)}</span>
-        }
-      </div>
-      <div className="match-row__teams">
-        <div className="match-row__team match-row__team--home">
-          {match.home_team?.flag_url && <img src={match.home_team.flag_url} alt="" className="flag-xs" onError={e => (e.target.style.display = "none")} />}
-          <span className="team-name">{translateTeam(match.home_team?.name, i18n.language)}</span>
-        </div>
-        <div className="match-row__score">
-          {hasScore
-            ? <span className={`score-pill${isLive ? " score-pill--live" : ""}`}>{match.home_score} – {match.away_score}</span>
-            : <span className="score-pill score-pill--vs">vs</span>
-          }
-        </div>
-        <div className="match-row__team match-row__team--away">
-          <span className="team-name">{translateTeam(match.away_team?.name, i18n.language)}</span>
-          {match.away_team?.flag_url && <img src={match.away_team.flag_url} alt="" className="flag-xs" onError={e => (e.target.style.display = "none")} />}
-        </div>
-      </div>
-      <div className="match-row__meta">
-        <span style={{ fontSize: "0.62rem", color: "var(--muted)" }}>
-          {match.round || (match.group_stage ? `Group ${match.group_stage}` : "")}
-        </span>
-      </div>
-    </div>
-  )
 }
 
 export default function VenueShowPage() {
@@ -231,7 +180,14 @@ export default function VenueShowPage() {
                 </h2>
               </div>
               <div className="match-section">
-                {liveMatches.map(m => <MatchRow key={m.id} match={m} />)}
+                {liveMatches.map(m => (
+                  <MatchRow
+                    key={m.id}
+                    match={m}
+                    metaLabel={m.round || (m.group_stage ? `Group ${m.group_stage}` : undefined)}
+                    onClick={navIdFor(m) ? () => navigateToMatch(navigate, m) : undefined}
+                  />
+                ))}
               </div>
             </div>
           )}
@@ -244,7 +200,14 @@ export default function VenueShowPage() {
               <div className="match-section">
                 {venue.matches
                   .filter(m => m.status !== "live")
-                  .map(m => <MatchRow key={m.id} match={m} />)}
+                  .map(m => (
+                    <MatchRow
+                      key={m.id}
+                      match={m}
+                      metaLabel={m.round || (m.group_stage ? `Group ${m.group_stage}` : undefined)}
+                      onClick={navIdFor(m) ? () => navigateToMatch(navigate, m) : undefined}
+                    />
+                  ))}
               </div>
             </div>
           ) : (

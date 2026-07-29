@@ -85,6 +85,12 @@ self.addEventListener("fetch", event => {
     return
   }
 
+  // Live scores — never serve stale cached responses (scores change every minute).
+  if (isLiveApiPath(url.pathname)) {
+    event.respondWith(fetch(request))
+    return
+  }
+
   // API routes: network-first, fall back to cache
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(networkFirstApi(request))
@@ -265,6 +271,12 @@ async function networkFirstApi(request) {
 
 function isStaticAsset(pathname) {
   return /\.(js|css|woff2?|ttf|otf|png|jpg|jpeg|svg|ico|webp|gif)$/.test(pathname)
+}
+
+function isLiveApiPath(pathname) {
+  return pathname.startsWith("/api/v1/today")
+    || pathname.startsWith("/api/v1/live_scores")
+    || pathname.startsWith("/api/v1/match_detail")
 }
 
 // ── Push Notifications ────────────────────────────────

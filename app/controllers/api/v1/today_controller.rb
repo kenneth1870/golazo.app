@@ -199,27 +199,13 @@ module Api
         []
       end
 
-      # Liga MX / Liga Tica jornadas are often stacked on Sunday in the API; adjusted_kickoff
-      # shifts them to Thursday. Pull a week-wide window per league, then filter locally.
+      # LATAM leagues need a ±7-day window for stacked jornada placeholders.
+      # European leagues are covered by the date endpoint (3 calls).
+      LATAM_WINDOW_CODES = %w[CRC LMX CAC CCC].freeze
+
       def fetch_club_league_raw_matches(client, date, tz)
         seen = {}
         combined = []
-
-        AppFocus::FEATURED_CLUB_CODES.each do |code|
-          league_id = AppFocus.league_id_for(code)
-          next unless league_id
-
-          season = client.current_season_for_league(league_id, code)
-          client.matches_for_league(
-            league_id, from: date - 7, to: date + 7, code: code, timezone: tz, season: season
-          ).each do |m|
-            key = m[:external_id].to_s
-            next if key.blank? || seen[key]
-
-            seen[key] = true
-            combined << m
-          end
-        end
 
         [ date - 1, date, date + 1 ].each do |d|
           client.matches_for_date(d, timezone: tz).each do |m|
@@ -231,7 +217,32 @@ module Api
           end
         end
 
+        LATAM_WINDOW_CODES.each do |code|
+          fetch_league_window_matches(client, code, date, tz).each do |m|
+            key = m[:external_id].to_s
+            next if key.blank? || seen[key]
+
+            seen[key] = true
+            combined << m
+          end
+        end
+
         combined
+      end
+
+      def fetch_league_window_matches(client, code, date, tz)
+        Rails.cache.fetch("today_league_v2_#{code}_#{date.iso8601}_#{tz}", expires_in: 5.minutes, race_condition_ttl: 15.seconds) do
+          league_id = AppFocus.league_id_for(code)
+          next [] unless league_id
+
+          season = client.current_season_for_league(league_id, code)
+          client.matches_for_league(
+            league_id, from: date - 7, to: date + 7, code: code, timezone: tz, season: season
+          )
+        end
+      rescue => e
+        Rails.logger.error("[TodayController] league window #{code} failed: #{e.message}")
+        []
       end
 
       # Returns WC matches from the DB for the given local date as a safety net
