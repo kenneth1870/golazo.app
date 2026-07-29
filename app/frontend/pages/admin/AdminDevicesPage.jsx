@@ -46,9 +46,10 @@ const ctrl = {
 }
 
 export default function AdminDevicesPage() {
-  const { authFetch } = useAuthContext()
+  const { authJson, authFetch } = useAuthContext()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(null)
   const [expandedIp, setExpandedIp] = useState(null)
   const [toast, setToast] = useState(null)
 
@@ -77,12 +78,16 @@ export default function AdminDevicesPage() {
 
   const load = useCallback(() => {
     setLoading(true)
-    authFetch(`/api/v1/admin/devices?${queryString()}`)
-      .then(r => r.json())
+    setFetchError(null)
+    authJson(`/api/v1/admin/devices?${queryString()}`)
       .then(setData)
-      .catch(() => setData({ summary: {}, devices: [], pagination: {} }))
+      .catch(err => {
+        if (err.status === 401) return
+        setFetchError(err.message || "Failed to load devices")
+        setData({ summary: {}, devices: [], pagination: {} })
+      })
       .finally(() => setLoading(false))
-  }, [authFetch, queryString])
+  }, [authJson, queryString])
 
   // Reset to page 1 whenever a filter changes
   const firstRender = useRef(true)
@@ -175,6 +180,15 @@ export default function AdminDevicesPage() {
         Every device that has opened the app — engagement, sessions, location and last activity.
       </p>
 
+      {fetchError && (
+        <div style={{
+          background: "rgba(238,30,70,.12)", border: "1px solid rgba(238,30,70,.35)",
+          borderRadius: 10, padding: "12px 16px", marginBottom: 20, color: "#fca5a5", fontSize: "0.85rem",
+        }}>
+          Could not load devices: {fetchError}. Try signing out and back in, or hard-refresh to update the service worker.
+        </div>
+      )}
+
       {/* Summary cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14, marginBottom: 24 }}>
         {stats.map(s => (
@@ -221,7 +235,9 @@ export default function AdminDevicesPage() {
         <div className="loading-shimmer" style={{ height: 300, borderRadius: 12 }} />
       ) : devices.length === 0 ? (
         <p style={{ color: "rgba(255,255,255,.3)", fontSize: "0.85rem" }}>
-          {hasFilters ? "No devices match these filters." : "No device activity recorded yet."}
+          {fetchError
+            ? "Device data unavailable."
+            : hasFilters ? "No devices match these filters." : "No device activity recorded yet."}
         </p>
       ) : (
         <>

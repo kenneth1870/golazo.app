@@ -78,6 +78,13 @@ self.addEventListener("fetch", event => {
   // Only handle same-origin beyond this point
   if (url.origin !== self.location.origin) return
 
+  // Admin + auth endpoints: always hit network with the original request (Bearer token).
+  // Never cache — Cache API keys by URL only, so cached admin JSON could leak across sessions.
+  if (url.pathname.startsWith("/api/v1/admin") || url.pathname.startsWith("/api/v1/sessions")) {
+    event.respondWith(fetch(request))
+    return
+  }
+
   // API routes: network-first, fall back to cache
   if (url.pathname.startsWith("/api/")) {
     event.respondWith(networkFirstApi(request))

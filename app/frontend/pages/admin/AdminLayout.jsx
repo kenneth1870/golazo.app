@@ -1,4 +1,5 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom"
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom"
+import { useEffect, useState } from "react"
 import { useAuthContext } from "../../contexts/AuthContext"
 
 const NAV = [
@@ -39,8 +40,20 @@ const S = {
 }
 
 export default function AdminLayout() {
-  const { user, logout } = useAuthContext()
+  const { user, logout, validateSession } = useAuthContext()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [sessionReady, setSessionReady] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    validateSession().then(ok => {
+      if (cancelled) return
+      if (!ok) navigate("/login", { replace: true, state: { from: location } })
+      else setSessionReady(true)
+    })
+    return () => { cancelled = true }
+  }, [validateSession, navigate, location])
 
   const handleLogout = async () => {
     await logout()
@@ -49,6 +62,12 @@ export default function AdminLayout() {
 
   return (
     <div style={S.wrap}>
+      {!sessionReady ? (
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,.5)" }}>
+          Loading admin session…
+        </div>
+      ) : (
+      <>
       {/* Sidebar */}
       <aside style={S.sidebar}>
         <div style={S.brand}>
@@ -101,6 +120,8 @@ export default function AdminLayout() {
       <main style={S.main}>
         <Outlet />
       </main>
+      </>
+      )}
     </div>
   )
 }

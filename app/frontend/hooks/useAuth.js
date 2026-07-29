@@ -69,6 +69,7 @@ export function useAuth() {
   const authFetch = useCallback((url, options = {}) => {
     return fetch(url, {
       ...options,
+      credentials: "same-origin",
       headers: {
         "Content-Type": "application/json",
         ...(options.headers || {}),
@@ -77,7 +78,49 @@ export function useAuth() {
     })
   }, [token])
 
+  /** JSON helper for admin routes — clears session and throws on 401. */
+  const authJson = useCallback(async (url, options = {}) => {
+    const res = await authFetch(url, options)
+    if (res.status === 401) {
+      clear()
+      const err = new Error("session_expired")
+      err.status = 401
+      throw err
+    }
+    if (!res.ok) {
+      let message = `HTTP ${res.status}`
+      try {
+        const body = await res.json()
+        message = body.error || message
+      } catch {}
+      const err = new Error(message)
+      err.status = res.status
+      throw err
+    }
+    return res.json()
+  }, [authFetch])
+
+  const validateSession = useCallback(async () => {
+    if (!token) return false
+    try {
+      const res = await authFetch("/api/v1/sessions/me")
+      if (!res.ok) {
+        clear()
+        return false
+      }
+      const data = await res.json()
+      if (data?.user) {
+        localStorage.setItem(USER_KEY, JSON.stringify(data.user))
+        setUser(data.user)
+      }
+      return !!data?.user
+    } catch {
+      clear()
+      return false
+    }
+  }, [authFetch, token])
+
   const isAdmin = user?.role === "admin"
 
-  return { user, token, loading, error, login, logout, authFetch, isAdmin, isLoggedIn: !!token }
+  return { user, token, loading, error, login, logout, authFetch, authJson, validateSession, isAdmin, isLoggedIn: !!token }
 }
