@@ -10,7 +10,7 @@ import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
 import { formatKickoff } from "../hooks/useLocalTime"
 import { translateTeam } from "../i18n/teamNames"
-import { translateLeague, translateCountry } from "../i18n/leagueNames"
+import { translateLeague, competitionRegion } from "../i18n/leagueNames"
 import FlagImg from "../components/FlagImg"
 import { clubTeamPath, clubTeamSlug } from "../utils/clubTeamPath"
 import { matchKey, matchTeamName } from "../utils/matchTeamName"
@@ -252,7 +252,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
   )
 }
 
-const STATUS_ORDER = { live: 0, scheduled: 1, finished: 2 }
+const STATUS_ORDER = { live: 0, finished: 1, scheduled: 2 }
 
 function groupMatchesByCompetition(matches) {
   const map = new Map()
@@ -276,6 +276,7 @@ function CompetitionGroupHeader({ match, navigate, i18n }) {
   const code = comp.code
   const canNav = code && !String(code).match(/^\d+$/)
   const leagueName = translateLeague(comp.name, i18n.language) ?? comp.name
+  const regionLabel = competitionRegion(comp, i18n.language)
 
   return (
     <div
@@ -299,9 +300,9 @@ function CompetitionGroupHeader({ match, navigate, i18n }) {
       <span style={{ fontWeight: 800, fontSize: ".72rem", color: "var(--text)", flex: 1 }}>
         {leagueName}
       </span>
-      {comp.country && (
+      {regionLabel && (
         <span style={{ fontSize: ".62rem", color: "var(--muted)" }}>
-          {translateCountry(comp.country, i18n.language)}
+          {regionLabel}
         </span>
       )}
       {canNav && <span style={{ color: "var(--muted)", fontSize: ".7rem" }}>→</span>}

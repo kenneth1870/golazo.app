@@ -37,7 +37,7 @@ function MatchRow({
   const { t, i18n } = useTranslation()
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
-  const hasScore   = match.home_score !== null && match.away_score !== null
+  const hasScore   = match.home_score != null && match.away_score != null
   const liveMinute = useLiveMinute(match.minute, isLive)
 
   const homeName = translateTeam(match.home_team?.name, i18n.language) || match.home_slot || t("time.tbd")

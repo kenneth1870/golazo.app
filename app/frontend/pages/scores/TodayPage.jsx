@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { translateLeague, translateCountry } from "../../i18n/leagueNames"
+import { translateLeague, competitionRegion } from "../../i18n/leagueNames"
 import { sortCompetitionGroups } from "../../utils/leagueOrder"
 import { translateTeam } from "../../i18n/teamNames"
 import MatchRow from "../../components/MatchRow"
@@ -137,11 +137,12 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
   const canNav  = comp?.code && !String(comp.code).match(/^\d+$/)
 
   const sorted = [...matches].sort((a, b) => {
-    const order = { live: 0, scheduled: 1, finished: 2 }
+    const order = { live: 0, finished: 1, scheduled: 2 }
     return (order[a.status] ?? 3) - (order[b.status] ?? 3) || new Date(a.kickoff_at) - new Date(b.kickoff_at)
   })
 
   const leagueName = translateLeague(comp?.name, i18n.language) ?? "Other"
+  const regionLabel = competitionRegion(comp, i18n.language)
 
   function handleHeaderKeyDown(e) {
     if (!canNav) return
@@ -164,7 +165,9 @@ function CompetitionBlock({ matches, navigate, onMatchClick, flashIds }) {
       >
         <FlagImg src={comp?.logo} name={comp?.name} size={20} className="logo-sm" />
         <h3 className="competition-block__title">{leagueName}</h3>
-        <span className="widget-meta-country competition-block__country" style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{translateCountry(comp?.country, i18n.language)}</span>
+        {regionLabel && (
+          <span className="widget-meta-country competition-block__country" style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{regionLabel}</span>
+        )}
         {hasLive && <span className="live-badge">{t("status.live")}</span>}
         {canNav && <span className="competition-block__nav">→</span>}
       </div>

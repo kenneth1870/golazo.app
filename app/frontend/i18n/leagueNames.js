@@ -73,6 +73,20 @@ const COUNTRY_ES = {
   "Oceania":       "Oceanía",
 }
 
+const LEAGUE_REGION_BY_CODE = {
+  CAC: { es: "Centroamérica", en: "Central America" },
+  CCC: { es: "CONCACAF", en: "CONCACAF" },
+  CRC: { es: "Costa Rica", en: "Costa Rica" },
+  LMX: { es: "México", en: "Mexico" },
+  MLS: { es: "Estados Unidos", en: "United States" },
+  UCL: { es: "Europa", en: "Europe" },
+  PL:  { es: "Inglaterra", en: "England" },
+  LAL: { es: "España", en: "Spain" },
+  BL1: { es: "Alemania", en: "Germany" },
+  SA:  { es: "Italia", en: "Italy" },
+  L1:  { es: "Francia", en: "France" },
+}
+
 export function translateLeague(name, lang) {
   if (!name) return name
   const base = (lang || "en").split("-")[0].toLowerCase()
@@ -84,4 +98,17 @@ export function translateCountry(country, lang) {
   if (!country) return null
   const base = (lang || "en").split("-")[0].toLowerCase()
   return base === "es" ? (COUNTRY_ES[country] ?? country) : country
+}
+
+/** Region label for a competition block — avoids "World" → "Mundial" on club cups. */
+export function competitionRegion(comp, lang) {
+  if (!comp) return null
+  const code = comp.code?.toString().toUpperCase()
+  const mapped = LEAGUE_REGION_BY_CODE[code]
+  if (mapped) {
+    const base = (lang || "en").split("-")[0].toLowerCase()
+    return base === "es" ? mapped.es : mapped.en
+  }
+  if (comp.country === "World") return null
+  return translateCountry(comp.country, lang)
 }
