@@ -13,7 +13,7 @@ import { translateTeam } from "../i18n/teamNames"
 import { translateLeague, translateCountry } from "../i18n/leagueNames"
 import FlagImg from "../components/FlagImg"
 import { clubTeamPath, clubTeamSlug } from "../utils/clubTeamPath"
-import { matchTeamName } from "../utils/matchTeamName"
+import { matchKey, matchTeamName } from "../utils/matchTeamName"
 import { navIdFor, navigateToMatch } from "../utils/matchDetailCache"
 import { sortCompetitionGroups } from "../utils/leagueOrder"
 import Hero from "../components/Hero"
@@ -310,7 +310,7 @@ function TodayFeedSkeleton() {
   )
 }
 
-function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = false, error = false, onRetry, navigate, t, clubsPrimary = false }) {
+function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = false, error = false, onRetry, navigate, t, clubsPrimary = false, favoriteTeamNames = [] }) {
   const { i18n } = useTranslation()
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
   const todayLabel = new Date().toLocaleDateString(i18n.language || undefined, {
@@ -332,8 +332,27 @@ function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = fal
     .sort((a, b) => new Date(a.kickoff_at || a.kickoff) - new Date(b.kickoff_at || b.kickoff))
   const live      = all.filter(m => m.status === "live")
   const rest      = all.filter(m => m.status !== "live")
+
+  const yourMatchKeys = clubsPrimary && favoriteTeamNames.length > 0
+    ? new Set(
+        rest
+          .filter(m =>
+            favoriteTeamNames.some(name =>
+              matchTeamName(m.home_team?.name, name, i18n.language) ||
+              matchTeamName(m.away_team?.name, name, i18n.language)
+            )
+          )
+          .map(matchKey)
+          .filter(Boolean)
+      )
+    : null
+
+  const restForGroups = yourMatchKeys?.size
+    ? rest.filter(m => !yourMatchKeys.has(matchKey(m)))
+    : rest
+
   const liveCount = live.length
-  const restGroups = groupMatchesByCompetition(rest)
+  const restGroups = groupMatchesByCompetition(restForGroups)
   const previewDayLabel = upcomingPreview[0]?.kickoff_at
     ? new Date(upcomingPreview[0].kickoff_at).toLocaleDateString(i18n.language || undefined, {
         weekday: "long", month: "short", day: "numeric",
@@ -477,10 +496,10 @@ function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = fal
       )}
 
       {/* ── Today (non-live), grouped by competition ── */}
-      {rest.length > 0 && (
+      {restForGroups.length > 0 && (
         <div>
           {renderMatchGroups(restGroups, { limit: 8 })}
-          {rest.length > 8 && (
+          {restForGroups.length > 8 && (
             <Link
               to="/scores/today"
               style={{
@@ -489,7 +508,7 @@ function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = fal
                 borderRadius: 8, padding: "9px", fontSize: ".72rem", fontWeight: 700, textDecoration: "none",
               }}
             >
-              {t("home.moreMatches", { count: rest.length - 8 })}
+              {t("home.moreMatches", { count: restForGroups.length - 8 })}
             </Link>
           )}
         </div>
@@ -692,6 +711,7 @@ export default function HomePage() {
           navigate={navigate}
           t={t}
           clubsPrimary={clubsPrimary}
+          favoriteTeamNames={favoriteTeamNames}
         />
         {clubsPrimary && favoriteTeamNames.length > 0 && (
           <YourMatchesSection

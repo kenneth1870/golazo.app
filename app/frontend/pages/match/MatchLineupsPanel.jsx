@@ -86,6 +86,11 @@ function PosLegend() {
 
 export default function MatchLineupsPanel({ lineups, fixtureId, t, statusShort }) {
   const isPreKickoff = ["NS", "TBD"].includes(statusShort)
+
+  if (lineups === undefined) {
+    return <div className="loading-shimmer" style={{ height: 200, borderRadius: 12 }} />
+  }
+
   const noData = !lineups?.length
 
   if (noData || !lineups.some(l => l?.start_xi?.length > 0)) return (

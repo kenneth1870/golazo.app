@@ -2,12 +2,12 @@ import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react"
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateLeague } from "../i18n/leagueNames"
-import { translateTeam } from "../i18n/teamNames"
+import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
 import SafeImg from "../components/SafeImg"
 import { useExternalMatchChannel } from "../hooks/useExternalMatchChannel"
 import { usePageMeta } from "../hooks/usePageMeta"
 import { useStructuredData } from "../hooks/useStructuredData"
-import { useLiveMinute, useGoalNotifications } from "./match/useMatchLive"
+import { useLiveMinute } from "./match/useMatchLive"
 const ScorePredictionPanel = lazy(() => import("./match/ScorePredictionPanel"))
 const MatchPreviewPanel = lazy(() => import("./match/MatchPreviewPanel"))
 const PlayerRatingsPanel = lazy(() => import("./match/PlayerRatingsPanel"))
@@ -127,9 +127,11 @@ function ShareButton({ homeName, awayName, homeScore, awayScore, statusShort, is
 function FlagOrInitials({ name, src, size = 80 }) {
   const [err, setErr] = useState(false)
   const init = name?.slice(0, 3).toUpperCase() || "?"
-  if (src && !err) {
+  const logo = resolveTeamLogo(name, src)
+  const badUrl = !logo || /teams\/0\.png/i.test(logo)
+  if (logo && !badUrl && !err) {
     return (
-      <img src={src} alt={name}
+      <img src={logo} alt={name}
         className="scoreboard__crest" style={{ width: size, height: size }}
         onError={() => setErr(true)}
       />
@@ -705,7 +707,7 @@ function previewToFixture(m) {
       },
       goals: { home: m.home_score, away: m.away_score },
     },
-    events: [], stats: [], lineups: [],
+    // Omit events/stats/lineups/h2h — empty arrays block lazy tab fetches (=== undefined check).
   }
 }
 
@@ -732,6 +734,7 @@ export default function MatchShowPage() {
   const swipeStartX   = useRef(null)
   const swipeStartY   = useRef(null)
   const dataFetchedAt = useRef(0)    // timestamp of the most recent data update (poll or WS)
+  const sectionsFetchedRef = useRef(new Set())
 
   // Detect if live
   const statusShort = data?.fixture?.fixture?.status?.short
@@ -879,8 +882,7 @@ export default function MatchShowPage() {
   }, [id])
 
   useEffect(() => {
-    // When navigating to an already-prefetched match, swap in cached data and
-    // skip the skeleton; otherwise show the skeleton until the fetch resolves.
+    sectionsFetchedRef.current = new Set()
     const cached = getCachedMatchDetail(id)
     if (cached) { setData(cached); setLoading(false) } else { setLoading(true) }
     load().finally(() => setLoading(false))
@@ -896,10 +898,13 @@ export default function MatchShowPage() {
   useEffect(() => {
     if (!id || loading || !data?.fixture) return
     const sections = []
-    if (tab === "stats" && data.stats === undefined) sections.push("stats")
-    if (tab === "lineups" && data.lineups === undefined) sections.push("lineups")
-    if (tab === "h2h" && data.h2h === undefined) sections.push("h2h")
+    const needs = (key) => data[key] === undefined && !sectionsFetchedRef.current.has(key)
+    if (tab === "stats" && needs("stats")) sections.push("stats")
+    if (tab === "lineups" && needs("lineups")) sections.push("lineups")
+    if (tab === "h2h" && needs("h2h")) sections.push("h2h")
     if (sections.length === 0) return
+
+    sections.forEach(s => sectionsFetchedRef.current.add(s))
 
     fetchJson(fetchMatchDetailInclude(id, sections.join(",")), 10000)
       .then(({ data: d, ok, offline }) => {
@@ -909,7 +914,9 @@ export default function MatchShowPage() {
           return merged || { ...prev, ...d }
         })
       })
-      .catch(() => {})
+      .catch(() => {
+        sections.forEach(s => sectionsFetchedRef.current.delete(s))
+      })
   }, [tab, id, loading, data?.fixture, data?.stats, data?.lineups, data?.h2h])
 
   // ActionCable subscription — push updates when live.

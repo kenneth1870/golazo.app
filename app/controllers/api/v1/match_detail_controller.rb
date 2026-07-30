@@ -107,9 +107,15 @@ module Api
           return render json: { fixture: nil, error: "not_found" } unless data
         end
 
-        # Try fallback whenever stats are missing — only when stats were requested.
-        if data[:fixture].present? && (full_detail || sections.include?("stats"))
-          data = api_sports_fallback(data) if data[:stats].to_a.empty?
+        # Try fallback when requested sections are missing from the primary API.
+        if data[:fixture].present?
+          wants_stats   = full_detail || sections.include?("stats")
+          wants_lineups = full_detail || sections.include?("lineups")
+          wants_events  = full_detail || sections.include?("events")
+          needs_fallback = (wants_stats && data[:stats].to_a.empty?) ||
+                           (wants_lineups && data[:lineups].to_a.empty?) ||
+                           (wants_events && data[:events].to_a.empty?)
+          data = api_sports_fallback(data) if needs_fallback
         end
 
         # Inject db_id so frontend can call AI summary endpoint

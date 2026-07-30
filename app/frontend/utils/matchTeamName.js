@@ -1,5 +1,11 @@
 import { translateTeam } from "../i18n/teamNames"
 
+/** Stable id for deduping the same fixture across sections. */
+export function matchKey(m) {
+  if (!m) return ""
+  return String(m.id ?? m.external_id ?? "")
+}
+
 /** True if a fixture team name matches a followed team (exact or translated). */
 export function matchTeamName(teamName, favName, lang) {
   if (!teamName || !favName) return false

@@ -10,7 +10,7 @@ import { useLocale } from "../../hooks/useLocale"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useFavorites } from "../../hooks/useFavorites"
 import { fetchJson } from "../../utils/fetchJson"
-import { matchTeamName } from "../../utils/matchTeamName"
+import { matchKey, matchTeamName } from "../../utils/matchTeamName"
 import OfflineBanner from "../../components/OfflineBanner"
 import { navIdFor } from "../../utils/matchDetailCache"
 import { useStandingsChannel } from "../../hooks/useStandingsChannel"
@@ -482,12 +482,31 @@ export default function TodayPage() {
   )
 
   const liveCount = liveMatches.length
+
+  const yourMatches = useMemo(
+    () => (favoriteTeamNames.length > 0 ? todayMatches.filter(matchInvolvesAnyFav) : []),
+    [todayMatches, favoriteTeamNames, i18n.language]
+  )
+
+  const yourMatchKeys = useMemo(
+    () => new Set(yourMatches.map(matchKey).filter(Boolean)),
+    [yourMatches]
+  )
+
   const groupsWithoutLive = useMemo(() => {
-    if (liveMatches.length === 0) return groups
-    return groups
-      .map(g => g.filter(m => m.status !== "live"))
-      .filter(g => g.length > 0)
-  }, [groups, liveMatches.length])
+    let result = groups
+    if (liveMatches.length > 0) {
+      result = result
+        .map(g => g.filter(m => m.status !== "live"))
+        .filter(g => g.length > 0)
+    }
+    if (yourMatchKeys.size > 0) {
+      result = result
+        .map(g => g.filter(m => !yourMatchKeys.has(matchKey(m))))
+        .filter(g => g.length > 0)
+    }
+    return result
+  }, [groups, liveMatches.length, yourMatchKeys])
   const label     = useDateLabel(selected, t, i18n.language)
   const isToday   = toISO(selected) === toISO(new Date())
   const previewDayLabel = upcomingPreview[0]?.kickoff_at
@@ -502,11 +521,6 @@ export default function TodayPage() {
       matchTeamName(m.away_team?.name, favTeam.name, i18n.language)
     )
   ) : null
-
-  // "Your Matches" = any match involving a followed team today
-  const yourMatches = favoriteTeamNames.length > 0
-    ? todayMatches.filter(matchInvolvesAnyFav)
-    : []
 
   useEffect(() => {
     if (liveCount > 0 && toISO(selected) === toISO(new Date())) triggerInstallNudge()
