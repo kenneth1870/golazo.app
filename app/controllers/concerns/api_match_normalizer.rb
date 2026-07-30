@@ -169,23 +169,37 @@ module ApiMatchNormalizer
   end
 
   FIXTURE_REFRESH_CAP = 8
+  RESULTS_REFRESH_CAP = 4
+  REFRESH_TIME_BUDGET_SEC = 4.0
 
   # Reconcile stale date-list rows against the live feed + per-fixture lookup.
-  def refresh_club_fixtures(matches)
+  def refresh_club_fixtures(matches, include_live: true, refresh_cap: FIXTURE_REFRESH_CAP)
     return matches unless AppFocus.clubs_primary?
 
-    overlay_club_live_scores(matches)
+    overlay_club_live_scores(matches, include_live: include_live, refresh_cap: refresh_cap)
+  rescue => e
+    Rails.logger.error("[ApiMatchNormalizer] refresh_club_fixtures: #{e.message}")
+    matches
   end
 
-  def overlay_club_live_scores(matches)
+  def overlay_club_live_scores(matches, include_live: true, refresh_cap: FIXTURE_REFRESH_CAP)
     client      = LiveScoresClient.new
-    live_by_ext = client.live_matches.index_by { |m| m[:external_id].to_s }
-    refreshes   = 0
+    live_by_ext = if include_live
+      client.live_matches.index_by { |m| m[:external_id].to_s }
+    else
+      {}
+    end
+    refreshes = 0
+    deadline  = Process.clock_gettime(Process::CLOCK_MONOTONIC) + REFRESH_TIME_BUDGET_SEC
 
     matches.map do |m|
       live  = live_by_ext[m[:external_id]&.to_s]
       fresh = live
-      if !fresh && needs_fixture_refresh?(m) && refreshes < FIXTURE_REFRESH_CAP
+      if !fresh && needs_fixture_refresh?(m) && refreshes < refresh_cap
+        if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+          next m
+        end
+
         fresh = client.fixture_status(m[:external_id])
         refreshes += 1 if fresh
       end
@@ -193,6 +207,9 @@ module ApiMatchNormalizer
 
       merge_fresh_fixture(m, fresh)
     end
+  rescue => e
+    Rails.logger.error("[ApiMatchNormalizer] overlay_club_live_scores: #{e.message}")
+    matches
   end
 
   def needs_fixture_refresh?(m)

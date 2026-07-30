@@ -9,7 +9,11 @@ module Api
         client = LiveScoresClient.new
         matches = client.matches_for_date(date, timezone: tz)
         normalized = filter_matches_for_focus(matches).map { |m| normalize_api_match(m) }
-        render json: refresh_club_fixtures(normalized)
+        render json: refresh_club_fixtures(
+          normalized,
+          include_live: false,
+          refresh_cap: ApiMatchNormalizer::RESULTS_REFRESH_CAP
+        )
       rescue => e
         Rails.logger.error("[ResultsController] #{e.message}")
         render json: []

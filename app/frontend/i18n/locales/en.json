@@ -388,6 +388,7 @@
     "back": "Back",
     "goBack": "Go back",
     "failedToLoad": "Failed to load group standings.",
+    "failedToLoadResults": "Could not load results.",
     "failedToLoadNews": "Failed to load news.",
     "newsUnavailable": "Couldn't load news.",
     "tryAgain": "Couldn't load matches. Check your connection.",

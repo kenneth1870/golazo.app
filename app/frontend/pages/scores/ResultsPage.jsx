@@ -181,7 +181,7 @@ export default function ResultsPage() {
         ) : error ? (
           <EmptyState
             icon="📡"
-            title={t("error.failedToLoad")}
+            title={t("error.failedToLoadResults")}
             action={<button type="button" className="btn btn-primary btn-sm" onClick={() => load(date)}>{t("error.retry")}</button>}
           />
         ) : groups.length === 0 ? (
