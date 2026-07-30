@@ -7,8 +7,10 @@ import { useLiveMinute } from "../pages/match/useMatchLive"
 
 function FlagOrPlaceholder({ src, name }) {
   const [err, setErr] = useState(false)
-  if (src && !err) {
-    return <img src={src} alt={name} className="flag-xs" onError={() => setErr(true)} />
+  const logo = resolveTeamLogo(name, src)
+  const badUrl = !logo || /teams\/0\.png/i.test(logo)
+  if (logo && !badUrl && !err) {
+    return <img src={logo} alt={name} className="flag-xs" onError={() => setErr(true)} />
   }
   return (
     <span style={{

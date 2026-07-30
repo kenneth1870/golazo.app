@@ -1,4 +1,4 @@
-const CACHE_NAME = "golazo-v4"
+const CACHE_NAME = "golazo-v5"
 const TODAY_API  = "/api/v1/today"
 const OFFLINE_URLS = ["/", TODAY_API]
 

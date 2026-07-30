@@ -410,8 +410,8 @@ export default function TodayPage() {
   const isTodaySelected = toISO(selected) === toISO(new Date())
   useVisiblePolling(
     () => load(selected),
-    isTodaySelected ? (hasLive ? 30_000 : 300_000) : null,
-    [selected, load, hasLive]
+    hasLive ? 30_000 : (isTodaySelected ? 300_000 : null),
+    [selected, load, hasLive, isTodaySelected]
   )
 
   // Patch a single row in-place from a live_scores push — no re-fetch.

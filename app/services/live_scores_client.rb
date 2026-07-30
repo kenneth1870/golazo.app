@@ -115,6 +115,17 @@ class LiveScoresClient
     []
   end
 
+  # Fresh fixture status for list reconciliation (short TTL).
+  def fixture_status(fixture_id)
+    Rails.cache.fetch("live_scores_status_v1_#{fixture_id}", expires_in: 30.seconds, race_condition_ttl: 5.seconds) do
+      fx = get("fixtures", id: fixture_id).dig("response", 0)
+      normalize_fixture(fx) if fx
+    end
+  rescue => e
+    Rails.logger.error("[LiveScoresClient] fixture_status(#{fixture_id}): #{e.message}")
+    nil
+  end
+
   # All important matches for a given date.
   # Returns every senior men's international/continental competition — World Cup,
   # Copa América, AFCON, Asian/regional friendlies, WC qualifiers, etc. —

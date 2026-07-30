@@ -168,23 +168,24 @@ module Api
       end
 
       # Club fixtures come from the date endpoint (5 min cache). Overlay the live
-      # feed so minute/score stay current on every /today request.
+      # feed and reconcile stale "live" rows the date cache hasn't caught up on.
       def overlay_club_live_scores(matches)
-        live_by_ext = LiveScoresClient.new.live_matches.index_by { |m| m[:external_id].to_s }
-        return matches if live_by_ext.empty?
+        client      = LiveScoresClient.new
+        live_by_ext = client.live_matches.index_by { |m| m[:external_id].to_s }
 
         matches.map do |m|
           live = live_by_ext[m[:external_id]&.to_s]
-          next m unless live
+          fresh = live || (m[:status].to_s == "live" && m[:external_id].present? ? client.fixture_status(m[:external_id]) : nil)
+          next m unless fresh
 
           m.merge(
-            status:         live[:status],
-            minute:         live[:minute],
-            minute_extra:   live[:minute_extra],
-            home_score:     live.dig(:home, :score),
-            away_score:     live.dig(:away, :score),
-            home_pen_score: live.dig(:home, :pen_score),
-            away_pen_score: live.dig(:away, :pen_score)
+            status:         fresh[:status],
+            minute:         fresh[:status] == "finished" ? nil : fresh[:minute],
+            minute_extra:   fresh[:status] == "finished" ? nil : fresh[:minute_extra],
+            home_score:     fresh.dig(:home, :score),
+            away_score:     fresh.dig(:away, :score),
+            home_pen_score: fresh.dig(:home, :pen_score),
+            away_pen_score: fresh.dig(:away, :pen_score)
           )
         end
       end
