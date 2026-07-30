@@ -582,6 +582,16 @@ class LiveScoresClient
 
   private
 
+  def fixture_goal_scores(f)
+    home = f.dig("goals", "home")
+    away = f.dig("goals", "away")
+    if home.nil? && away.nil?
+      home = f.dig("score", "fulltime", "home")
+      away = f.dig("score", "fulltime", "away")
+    end
+    [ home, away ]
+  end
+
   def normalize_detail_sections(include)
     return DETAIL_SECTIONS if include.nil?
 
@@ -668,6 +678,8 @@ class LiveScoresClient
     status = STATUS_MAP[short]
     return nil unless status
 
+    home_score, away_score = fixture_goal_scores(f)
+
     {
       external_id:    f.dig("fixture", "id"),
       league_id:      f.dig("league", "id"),
@@ -684,14 +696,14 @@ class LiveScoresClient
       home: {
         name:      TeamDisplayNames.display_name(f.dig("teams", "home", "name")),
         logo:      TeamDisplayNames.flag_url(f.dig("teams", "home", "name"), f.dig("teams", "home", "logo")),
-        score:     f.dig("goals", "home"),
+        score:     home_score,
         pen_score: f.dig("score", "penalty", "home"),
         red_cards: nil
       },
       away: {
         name:      TeamDisplayNames.display_name(f.dig("teams", "away", "name")),
         logo:      TeamDisplayNames.flag_url(f.dig("teams", "away", "name"), f.dig("teams", "away", "logo")),
-        score:     f.dig("goals", "away"),
+        score:     away_score,
         pen_score: f.dig("score", "penalty", "away"),
         red_cards: nil
       },

@@ -160,6 +160,7 @@ const DISPLAY_NAMES = {
 const LOGO_OVERRIDES = {
   "Municipal Liberia":    "https://media.api-sports.io/football/teams/17784.png",
   "AD Municipal Liberia": "https://media.api-sports.io/football/teams/17784.png",
+  "UMECIT":               "https://media.api-sports.io/football/teams/20788.png",
 }
 
 /**

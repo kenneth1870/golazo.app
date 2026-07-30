@@ -39,6 +39,9 @@ function MatchRow({
   const isFinished = match.status === "finished"
   const hasScore   = match.home_score != null && match.away_score != null
   const liveMinute = useLiveMinute(match.minute, isLive)
+  const homeWon    = hasScore && match.home_score > match.away_score
+  const awayWon    = hasScore && match.away_score > match.home_score
+  const isDraw     = hasScore && match.home_score === match.away_score
 
   const homeName = translateTeam(match.home_team?.name, i18n.language) || match.home_slot || t("time.tbd")
   const awayName = translateTeam(match.away_team?.name, i18n.language) || match.away_slot || t("time.tbd")
@@ -62,7 +65,11 @@ function MatchRow({
       className={`match-row${isLive ? " match-row--live" : ""}${onClick ? " match-row--clickable" : ""}${flashing ? " match-row--score-flash" : ""}${showChevron ? " match-row--nav" : ""}`}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
-      aria-label={onClick ? t("a11y.matchRow", { home: homeName, away: awayName }) : undefined}
+      aria-label={onClick ? t("a11y.matchRow", {
+        home: homeName,
+        away: awayName,
+        ...(hasScore ? { score: `${match.home_score}–${match.away_score}` } : {}),
+      }) : undefined}
       onClick={onClick}
       onKeyDown={handleKeyDown}
       onMouseEnter={warm}
@@ -90,6 +97,9 @@ function MatchRow({
         <div className="match-row__team match-row__team--home">
           <FlagOrPlaceholder src={resolveTeamLogo(match.home_team?.name, match.home_team?.flag_url)} name={match.home_team?.name} />
           <span className="team-name">{homeName}</span>
+          {hasScore && (
+            <span className={`team-score${homeWon || isDraw ? " team-score--lead" : ""}`}>{match.home_score}</span>
+          )}
           {match.home_red_cards > 0 && (
             <span className="red-card-badge">🟥{match.home_red_cards > 1 ? `×${match.home_red_cards}` : ""}</span>
           )}
@@ -97,7 +107,7 @@ function MatchRow({
 
         <div className="match-row__score">
           {hasScore
-            ? <span className={`score-pill${isLive ? " score-pill--live" : ""}`}>{match.home_score} – {match.away_score}</span>
+            ? <span className={`score-pill${isLive ? " score-pill--live" : " score-pill--final"}`} aria-hidden="true">–</span>
             : <span className="score-pill score-pill--vs">{t("status.vs")}</span>
           }
           {match.home_pen_score != null && match.away_pen_score != null && (
@@ -108,6 +118,9 @@ function MatchRow({
         <div className="match-row__team match-row__team--away">
           {match.away_red_cards > 0 && (
             <span className="red-card-badge">🟥{match.away_red_cards > 1 ? `×${match.away_red_cards}` : ""}</span>
+          )}
+          {hasScore && (
+            <span className={`team-score${awayWon || isDraw ? " team-score--lead" : ""}`}>{match.away_score}</span>
           )}
           <span className="team-name">{awayName}</span>
           <FlagOrPlaceholder src={resolveTeamLogo(match.away_team?.name, match.away_team?.flag_url)} name={match.away_team?.name} />

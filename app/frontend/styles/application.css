@@ -700,6 +700,12 @@ body.light-mode .live-strip{background:var(--surface);border-color:rgba(238,30,7
 .match-row__team--home{justify-content:flex-end}
 .match-row__team--away{justify-content:flex-start}
 .team-name{font-size:.88rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.team-score{
+  font-size:1rem;font-weight:900;font-variant-numeric:tabular-nums;
+  color:var(--muted);flex-shrink:0;min-width:1ch;text-align:center;
+}
+.team-score--lead{color:var(--text)}
+.match-row--live .team-score--lead{color:#fff}
 .flag-xs{width:32px;height:32px;object-fit:contain;border-radius:3px;flex-shrink:0;image-rendering:-webkit-optimize-contrast}
 .logo-sm{width:28px;height:28px;object-fit:contain;flex-shrink:0;image-rendering:-webkit-optimize-contrast}
 .logo-md{width:40px;height:40px;object-fit:contain;flex-shrink:0;image-rendering:-webkit-optimize-contrast}
@@ -714,6 +720,7 @@ body.light-mode .live-strip{background:var(--surface);border-color:rgba(238,30,7
   border:1px solid rgba(255,255,255,.07);
 }
 .score-pill--live{background:rgba(238,30,70,.18);color:#fff;border:1px solid rgba(238,30,70,.4);box-shadow:0 0 12px rgba(238,30,70,.2)}
+.score-pill--final{min-width:auto;padding:5px 8px;font-size:.85rem;color:var(--muted);background:transparent;border:none;box-shadow:none}
 .score-pill--vs{color:var(--muted);font-size:.75rem;font-weight:600;letter-spacing:.05em}
 .score-pill__pen{display:block;font-size:.6rem;font-weight:600;color:var(--muted);text-align:center;letter-spacing:.02em;margin-top:2px;white-space:nowrap}
 .match-row__meta{font-size:.7rem;color:var(--muted);text-align:right;flex-shrink:0;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
