@@ -30,6 +30,7 @@ module Api
           normalize_api_match(m)
         end
 
+        team_matches = refresh_club_fixtures(team_matches)
         upcoming = team_matches.select { |m| m[:status] == "scheduled" }.sort_by { |m| m[:kickoff_at].to_s }
         recent   = team_matches.select { |m| m[:status] == "finished" }.sort_by { |m| m[:kickoff_at].to_s }.reverse
 

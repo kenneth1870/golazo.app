@@ -30,6 +30,7 @@ module Api
           matches = normalize_league_matches(client, league_id, from, to, code, tz, season.to_i - 1)
         end
 
+        matches = refresh_club_fixtures(matches)
         render json: filter_for_tab(matches, tab, today: today, tz: tz)
       rescue ArgumentError
         render json: []

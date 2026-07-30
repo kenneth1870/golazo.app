@@ -167,4 +167,92 @@ module ApiMatchNormalizer
   def competition_code_param
     (params[:competition_code] || params[:code]).to_s.upcase
   end
+
+  FIXTURE_REFRESH_CAP = 8
+
+  # Reconcile stale date-list rows against the live feed + per-fixture lookup.
+  def refresh_club_fixtures(matches)
+    return matches unless AppFocus.clubs_primary?
+
+    overlay_club_live_scores(matches)
+  end
+
+  def overlay_club_live_scores(matches)
+    client      = LiveScoresClient.new
+    live_by_ext = client.live_matches.index_by { |m| m[:external_id].to_s }
+    refreshes   = 0
+
+    matches.map do |m|
+      live  = live_by_ext[m[:external_id]&.to_s]
+      fresh = live
+      if !fresh && needs_fixture_refresh?(m) && refreshes < FIXTURE_REFRESH_CAP
+        fresh = client.fixture_status(m[:external_id])
+        refreshes += 1 if fresh
+      end
+      next m unless fresh
+
+      merge_fresh_fixture(m, fresh)
+    end
+  end
+
+  def needs_fixture_refresh?(m)
+    return false if m[:external_id].blank?
+
+    status = m[:status].to_s
+    return true if status == "live"
+    return true if status == "finished" && (fixture_home_score(m).nil? || fixture_away_score(m).nil?)
+
+    if status == "scheduled"
+      begin
+        kickoff = Time.parse(m[:kickoff_at].to_s)
+        return kickoff < Time.current
+      rescue ArgumentError, TypeError
+        return false
+      end
+    end
+
+    false
+  end
+
+  def fixture_home_score(m)
+    return m[:home_score] unless m[:home_score].nil?
+
+    m.dig(:home, :score)
+  end
+
+  def fixture_away_score(m)
+    return m[:away_score] unless m[:away_score].nil?
+
+    m.dig(:away, :score)
+  end
+
+  def merge_fresh_fixture(m, fresh)
+    finished   = fresh[:status].to_s == "finished"
+    home_score = fresh.dig(:home, :score)
+    away_score = fresh.dig(:away, :score)
+    home_pen   = fresh.dig(:home, :pen_score)
+    away_pen   = fresh.dig(:away, :pen_score)
+
+    out = m.merge(
+      status:         fresh[:status],
+      minute:         finished ? nil : fresh[:minute],
+      minute_extra:   finished ? nil : fresh[:minute_extra],
+      home_score:     home_score,
+      away_score:     away_score,
+      home_pen_score: home_pen,
+      away_pen_score: away_pen
+    )
+
+    if m[:home].is_a?(Hash)
+      out[:home] = m[:home].merge(score: home_score, pen_score: home_pen)
+      out[:away] = m[:away].merge(score: away_score, pen_score: away_pen)
+    end
+
+    if m[:home_team].is_a?(Hash)
+      out[:home_team] = m[:home_team]
+      out[:away_team] = m[:away_team]
+    end
+
+    out
+  end
 end

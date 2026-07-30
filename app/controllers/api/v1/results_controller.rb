@@ -6,8 +6,10 @@ module Api
       def index
         date = parse_date(params[:date]) || Date.yesterday
         tz   = sanitize_tz(params[:tz])
-        matches = LiveScoresClient.new.matches_for_date(date, timezone: tz)
-        render json: filter_matches_for_focus(matches)
+        client = LiveScoresClient.new
+        matches = client.matches_for_date(date, timezone: tz)
+        normalized = filter_matches_for_focus(matches).map { |m| normalize_api_match(m) }
+        render json: refresh_club_fixtures(normalized)
       rescue => e
         Rails.logger.error("[ResultsController] #{e.message}")
         render json: []

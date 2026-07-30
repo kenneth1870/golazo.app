@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { translateLeague, translateCountry } from "../../i18n/leagueNames"
+import { translateLeague, competitionRegion } from "../../i18n/leagueNames"
 import MatchRow from "../../components/MatchRow"
 import EmptyState from "../../components/EmptyState"
 import OfflineBanner from "../../components/OfflineBanner"
@@ -13,6 +13,7 @@ import { usePageMeta } from "../../hooks/usePageMeta"
 import { useAppFocus } from "../../hooks/useAppFocus"
 
 function normalizeMatch(m) {
+  if (m.home_team) return m
   return {
     id:          `real-${m.external_id}`,
     external_id: m.external_id,
@@ -44,7 +45,9 @@ function CompetitionBlock({ matches, onMatchClick }) {
             onError={e => (e.target.style.display = "none")} />
         )}
         <h3 style={{ margin: 0 }}>{translateLeague(comp?.name, i18n.language) ?? "Other"}</h3>
-        <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "var(--muted)" }}>{translateCountry(comp?.country, i18n.language)}</span>
+        {competitionRegion(comp, i18n.language) && (
+          <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "var(--muted)" }}>{competitionRegion(comp, i18n.language)}</span>
+        )}
       </div>
       <div className="widget-body p-0">
         {sorted.map(m => (

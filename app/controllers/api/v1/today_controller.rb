@@ -10,7 +10,7 @@ module Api
         # which would cause June 13 matches (Qatar, Brazil) to be excluded.
         date = parse_date(params[:date]) || TZInfo::Timezone.get(tz).now.to_date
         all  = merge_matches(date, tz).sort_by { |m| m[:kickoff_at].to_s }
-        all  = overlay_club_live_scores(all) if AppFocus.wc_paused?
+        all  = refresh_club_fixtures(all) if AppFocus.wc_paused?
         unless AppFocus.wc_paused?
           wc_db     = fetch_wc_from_db_for_date(date, tz)
 
@@ -165,48 +165,6 @@ module Api
         end
 
         api_matches + db_only
-      end
-
-      # Club fixtures come from the date endpoint (5 min cache). Overlay the live
-      # feed and reconcile stale rows the date cache hasn't caught up on.
-      def overlay_club_live_scores(matches)
-        client      = LiveScoresClient.new
-        live_by_ext = client.live_matches.index_by { |m| m[:external_id].to_s }
-
-        matches.map do |m|
-          live = live_by_ext[m[:external_id]&.to_s]
-          fresh = live || (needs_fixture_refresh?(m) ? client.fixture_status(m[:external_id]) : nil)
-          next m unless fresh
-
-          m.merge(
-            status:         fresh[:status],
-            minute:         fresh[:status] == "finished" ? nil : fresh[:minute],
-            minute_extra:   fresh[:status] == "finished" ? nil : fresh[:minute_extra],
-            home_score:     fresh.dig(:home, :score),
-            away_score:     fresh.dig(:away, :score),
-            home_pen_score: fresh.dig(:home, :pen_score),
-            away_pen_score: fresh.dig(:away, :pen_score)
-          )
-        end
-      end
-
-      def needs_fixture_refresh?(m)
-        return false if m[:external_id].blank?
-
-        status = m[:status].to_s
-        return true if status == "live"
-        return true if status == "finished" && (m[:home_score].nil? || m[:away_score].nil?)
-
-        if status == "scheduled"
-          begin
-            kickoff = Time.parse(m[:kickoff_at].to_s)
-            return kickoff < Time.current
-          rescue ArgumentError, TypeError
-            return false
-          end
-        end
-
-        false
       end
 
       def fetch_api_matches(date, tz = "UTC")

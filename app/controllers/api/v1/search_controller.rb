@@ -1,6 +1,8 @@
 module Api
   module V1
     class SearchController < BaseController
+      include ApiMatchNormalizer
+
       def index
         q = params[:q].to_s.strip
         return render json: [] if q.length < 2
@@ -74,7 +76,8 @@ module Api
                       .select { |m| AppFocus.important_match?(m) }
                       .uniq { |m| m[:external_id] }
 
-        raw.select { |m| match_names(m).any? { |n| n.include?(needle) } }
+        refreshed = refresh_club_fixtures(raw)
+        refreshed.select { |m| match_names(m).any? { |n| n.include?(needle) } }
            .sort_by { |m| [ m[:status] == "live" ? 0 : 1, m[:kickoff_at].to_s ] }
            .first(6)
            .map { |m| serialize_live_match(m) }
