@@ -168,14 +168,14 @@ module Api
       end
 
       # Club fixtures come from the date endpoint (5 min cache). Overlay the live
-      # feed and reconcile stale "live" rows the date cache hasn't caught up on.
+      # feed and reconcile stale rows the date cache hasn't caught up on.
       def overlay_club_live_scores(matches)
         client      = LiveScoresClient.new
         live_by_ext = client.live_matches.index_by { |m| m[:external_id].to_s }
 
         matches.map do |m|
           live = live_by_ext[m[:external_id]&.to_s]
-          fresh = live || (m[:status].to_s == "live" && m[:external_id].present? ? client.fixture_status(m[:external_id]) : nil)
+          fresh = live || (needs_fixture_refresh?(m) ? client.fixture_status(m[:external_id]) : nil)
           next m unless fresh
 
           m.merge(
@@ -188,6 +188,25 @@ module Api
             away_pen_score: fresh.dig(:away, :pen_score)
           )
         end
+      end
+
+      def needs_fixture_refresh?(m)
+        return false if m[:external_id].blank?
+
+        status = m[:status].to_s
+        return true if status == "live"
+        return true if status == "finished" && (m[:home_score].nil? || m[:away_score].nil?)
+
+        if status == "scheduled"
+          begin
+            kickoff = Time.parse(m[:kickoff_at].to_s)
+            return kickoff < Time.current
+          rescue ArgumentError, TypeError
+            return false
+          end
+        end
+
+        false
       end
 
       def fetch_api_matches(date, tz = "UTC")
