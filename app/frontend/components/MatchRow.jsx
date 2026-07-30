@@ -3,6 +3,7 @@ import { formatKickoff, formatMatchDate } from "../hooks/useLocalTime"
 import { useTranslation } from "react-i18next"
 import { translateTeam, resolveTeamLogo } from "../i18n/teamNames"
 import { prefetchMatchDetail, navIdFor } from "../utils/matchDetailCache"
+import { useLiveMinute } from "../pages/match/useMatchLive"
 
 function FlagOrPlaceholder({ src, name }) {
   const [err, setErr] = useState(false)
@@ -35,6 +36,7 @@ function MatchRow({
   const isLive     = match.status === "live"
   const isFinished = match.status === "finished"
   const hasScore   = match.home_score !== null && match.away_score !== null
+  const liveMinute = useLiveMinute(match.minute, isLive)
 
   const homeName = translateTeam(match.home_team?.name, i18n.language) || match.home_slot || t("time.tbd")
   const awayName = translateTeam(match.away_team?.name, i18n.language) || match.away_slot || t("time.tbd")
@@ -67,7 +69,7 @@ function MatchRow({
     >
       <div className="match-row__status">
         {isLive
-          ? <span className="match-status-live"><span className="live-dot" />{match.minute ? `${match.minute}'${match.minute_extra ? `+${match.minute_extra}` : ""}` : t("status.live")}</span>
+          ? <span className="match-status-live"><span className="live-dot" />{liveMinute ? `${liveMinute}'${match.minute_extra ? `+${match.minute_extra}` : ""}` : t("status.live")}</span>
           : isFinished
           ? <>
               <span className="match-status-ft">{t("status.ft")}</span>

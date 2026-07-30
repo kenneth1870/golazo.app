@@ -9,6 +9,7 @@ import FlagImg from "../../components/FlagImg"
 import { useLocale } from "../../hooks/useLocale"
 import { usePageMeta } from "../../hooks/usePageMeta"
 import { useFavorites } from "../../hooks/useFavorites"
+import { mergeLiveMatchSnapshot } from "../../hooks/useMatches"
 import { fetchJson } from "../../utils/fetchJson"
 import { matchKey, matchTeamName } from "../../utils/matchTeamName"
 import OfflineBanner from "../../components/OfflineBanner"
@@ -379,16 +380,7 @@ export default function TodayPage() {
         // poll snapshot, keep the fresher score — polls can lag behind WS pushes.
         setMatches(cur => {
           const curById = new Map(cur.map(m => [m.external_id ?? m.id, m]))
-          return filtered.map(m => {
-            const key = m.external_id ?? m.id
-            const ws  = curById.get(key)
-            if (!ws || m.status !== "live") return m
-            const pollTotal = (m.home_score ?? 0) + (m.away_score ?? 0)
-            const wsTotal   = (ws.home_score ?? 0) + (ws.away_score ?? 0)
-            return wsTotal > pollTotal
-              ? { ...m, home_score: ws.home_score, away_score: ws.away_score, minute: ws.minute }
-              : m
-          })
+          return filtered.map(m => mergeLiveMatchSnapshot(m, curById.get(m.external_id ?? m.id)))
         })
       })
       .catch(() => { setError(true) })
@@ -418,7 +410,7 @@ export default function TodayPage() {
   const isTodaySelected = toISO(selected) === toISO(new Date())
   useVisiblePolling(
     () => load(selected),
-    isTodaySelected ? (hasLive ? 60_000 : 300_000) : null,
+    isTodaySelected ? (hasLive ? 30_000 : 300_000) : null,
     [selected, load, hasLive]
   )
 

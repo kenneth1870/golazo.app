@@ -116,6 +116,27 @@ function applyScorePatch(m, d) {
   }
 }
 
+/** Keep the fresher live minute/score when a poll snapshot races WS state. */
+export function mergeLiveMatchSnapshot(poll, local) {
+  if (!local || poll.status !== "live") return poll
+  const pollTotal  = (poll.home_score ?? 0) + (poll.away_score ?? 0)
+  const localTotal = (local.home_score ?? 0) + (local.away_score ?? 0)
+  const pollMinute  = poll.minute ?? 0
+  const localMinute = local.minute ?? 0
+  const useLocalScores = localTotal > pollTotal
+  const bestMinute = Math.max(pollMinute, localMinute)
+  return {
+    ...poll,
+    home_score:   useLocalScores ? local.home_score : poll.home_score,
+    away_score:   useLocalScores ? local.away_score : poll.away_score,
+    minute:       bestMinute > 0 ? bestMinute : (poll.minute ?? local.minute),
+    minute_extra: localMinute >= pollMinute
+      ? (local.minute_extra ?? poll.minute_extra)
+      : (poll.minute_extra ?? local.minute_extra),
+    status: local.status || poll.status,
+  }
+}
+
 export function patchLiveScore(d) {
   for (const [key, entry] of cache) {
     const isLiveKey     = key.startsWith("live|")

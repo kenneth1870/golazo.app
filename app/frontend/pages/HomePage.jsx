@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { useMatches, patchLiveScore } from "../hooks/useMatches"
+import { useMatches, patchLiveScore, mergeLiveMatchSnapshot } from "../hooks/useMatches"
 import { useFavoriteTeam } from "../hooks/useFavoriteTeam"
 import { useFavorites } from "../hooks/useFavorites"
 import { useLiveCount } from "../contexts/LiveContext"
@@ -27,6 +27,7 @@ import PullIndicator from "../components/PullIndicator"
 import { usePullRefresh } from "../hooks/usePullRefresh"
 import { useStandingsChannel } from "../hooks/useStandingsChannel"
 import { useLiveScoresChannel } from "../hooks/useLiveScoresChannel"
+import { useVisiblePolling } from "../hooks/useVisiblePolling"
 import { attachNewsPrefetch } from "../utils/newsPrefetch"
 
 function useTodayFeed(wcOnly = false) {
@@ -52,15 +53,21 @@ function useTodayFeed(wcOnly = false) {
         }
         const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: tz })
         const filtered = wcOnly ? all.filter(m => m.competition?.code === "WC") : all
-        setUpcomingPreview(filtered.filter(m => m.upcoming_preview))
-        setTodayMatches(
-          filtered.filter(m => {
+        setUpcomingPreview(prev => {
+          const preview = filtered.filter(m => m.upcoming_preview)
+          const prevById = new Map(prev.map(m => [m.external_id ?? m.id, m]))
+          return preview.map(m => mergeLiveMatchSnapshot(m, prevById.get(m.external_id ?? m.id)))
+        })
+        setTodayMatches(prev => {
+          const next = filtered.filter(m => {
             if (m.upcoming_preview) return false
             const ko = m.kickoff_at || m.kickoff
             if (!ko) return false
             return new Date(ko).toLocaleDateString("en-CA", { timeZone: tz }) === todayStr
           })
-        )
+          const prevById = new Map(prev.map(m => [m.external_id ?? m.id, m]))
+          return next.map(m => mergeLiveMatchSnapshot(m, prevById.get(m.external_id ?? m.id)))
+        })
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
@@ -68,15 +75,14 @@ function useTodayFeed(wcOnly = false) {
 
   loadRef.current = load
 
+  const hasLive = todayMatches.some(m => m.status === "live")
+  useVisiblePolling(() => loadRef.current?.(), hasLive ? 30_000 : 300_000, [hasLive])
+
   useEffect(() => {
     load()
     const onVisible = () => { if (!document.hidden) loadRef.current?.() }
     document.addEventListener("visibilitychange", onVisible)
-    const iv = setInterval(() => loadRef.current?.(), 300_000)
-    return () => {
-      clearInterval(iv)
-      document.removeEventListener("visibilitychange", onVisible)
-    }
+    return () => document.removeEventListener("visibilitychange", onVisible)
   }, [load])
 
   const applyLiveScore = useCallback((d) => {
@@ -86,9 +92,18 @@ function useTodayFeed(wcOnly = false) {
         const hit = (d.external_id != null && m.external_id === d.external_id) ||
                     (d.match_id != null && m.id === d.match_id)
         if (!hit) return m
-        if (m.home_score === d.home_score && m.away_score === d.away_score && m.status === d.status) return m
+        if (m.home_score === d.home_score && m.away_score === d.away_score &&
+            m.status === d.status && m.minute === d.minute &&
+            m.minute_extra === d.minute_extra) return m
         touched = true
-        return { ...m, home_score: d.home_score, away_score: d.away_score, status: d.status, minute: d.minute }
+        return {
+          ...m,
+          home_score: d.home_score,
+          away_score: d.away_score,
+          status: d.status,
+          minute: d.minute,
+          minute_extra: d.minute_extra,
+        }
       })
       return touched ? next : prev
     }

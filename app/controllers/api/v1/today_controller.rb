@@ -10,6 +10,7 @@ module Api
         # which would cause June 13 matches (Qatar, Brazil) to be excluded.
         date = parse_date(params[:date]) || TZInfo::Timezone.get(tz).now.to_date
         all  = merge_matches(date, tz).sort_by { |m| m[:kickoff_at].to_s }
+        all  = overlay_club_live_scores(all) if AppFocus.wc_paused?
         unless AppFocus.wc_paused?
           wc_db     = fetch_wc_from_db_for_date(date, tz)
 
@@ -131,8 +132,6 @@ module Api
         TEAM_ALIASES[n] || n
       end
 
-      # Merge live-API matches with DB matches for the date.
-      # API match wins on duplicate (same home+away team pair) since it has live scores.
       def merge_matches(date, tz = "UTC")
         api_matches = fetch_api_matches(date, tz)
         return api_matches if AppFocus.wc_paused?
@@ -166,6 +165,28 @@ module Api
         end
 
         api_matches + db_only
+      end
+
+      # Club fixtures come from the date endpoint (5 min cache). Overlay the live
+      # feed so minute/score stay current on every /today request.
+      def overlay_club_live_scores(matches)
+        live_by_ext = LiveScoresClient.new.live_matches.index_by { |m| m[:external_id].to_s }
+        return matches if live_by_ext.empty?
+
+        matches.map do |m|
+          live = live_by_ext[m[:external_id]&.to_s]
+          next m unless live
+
+          m.merge(
+            status:         live[:status],
+            minute:         live[:minute],
+            minute_extra:   live[:minute_extra],
+            home_score:     live.dig(:home, :score),
+            away_score:     live.dig(:away, :score),
+            home_pen_score: live.dig(:home, :pen_score),
+            away_pen_score: live.dig(:away, :pen_score)
+          )
+        end
       end
 
       def fetch_api_matches(date, tz = "UTC")

@@ -1,7 +1,7 @@
 class ClubLiveSync
-  # Polls the live API feed for featured club leagues and fires scoped push
-  # notifications on score changes and full-time. WC matches are handled by
-  # WorldCupSync against the DB; this service covers API-only club fixtures.
+  # Polls the live API feed for featured club leagues, broadcasts list-view
+  # updates over ActionCable, and fires scoped push notifications on goals/FT.
+  # WC matches are handled by WorldCupSync against the DB.
 
   def sync_live
     return unless AppFocus.clubs_primary?
@@ -32,10 +32,12 @@ class ClubLiveSync
     cache_key = "club_live_score_#{ext_id}"
     prev = Rails.cache.read(cache_key)
     current = {
-      h: home_score.to_i,
-      a: away_score.to_i,
-      status: status,
-      short: raw[:status_short].to_s
+      h:            home_score.to_i,
+      a:            away_score.to_i,
+      status:       status,
+      short:        raw[:status_short].to_s,
+      minute:       raw[:minute].to_i,
+      minute_extra: raw[:minute_extra].to_i
     }
 
     if prev
@@ -48,7 +50,29 @@ class ClubLiveSync
       end
     end
 
+    changed = !prev ||
+              current[:h] != prev[:h] || current[:a] != prev[:a] ||
+              current[:status] != prev[:status] ||
+              current[:minute] != prev[:minute] ||
+              current[:minute_extra] != prev[:minute_extra]
+
+    broadcast_live_update(raw, current) if changed && %w[live finished].include?(status)
+
     Rails.cache.write(cache_key, current, expires_in: 6.hours)
+  end
+
+  def broadcast_live_update(raw, current)
+    ActionCable.server.broadcast("live_scores", {
+      type:            "live_score_update",
+      external_id:     raw[:external_id],
+      home_score:      current[:h],
+      away_score:      current[:a],
+      status:          current[:status],
+      minute:          raw[:minute],
+      minute_extra:    raw[:minute_extra],
+      home_pen_score:  raw.dig(:home, :pen_score),
+      away_pen_score:  raw.dig(:away, :pen_score)
+    })
   end
 
   def notify_goal(raw, home, away, current, competition_code)
