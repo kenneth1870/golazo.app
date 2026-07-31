@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_23_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -112,6 +112,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_23_180000) do
     t.index ["away_team_id", "kickoff_at"], name: "index_matches_on_away_team_kickoff"
     t.index ["away_team_id"], name: "index_matches_on_away_team_id"
     t.index ["bracket_pos"], name: "index_matches_on_bracket_pos"
+    t.index ["competition_id", "group_stage"], name: "index_matches_on_competition_group_stage"
     t.index ["competition_id", "kickoff_at"], name: "index_matches_on_competition_kickoff"
     t.index ["competition_id", "status"], name: "index_matches_on_competition_id_and_status"
     t.index ["competition_id"], name: "index_matches_on_competition_id"
