@@ -781,12 +781,7 @@ class WorldCupSync
           Rails.cache.delete("wc_fixture_events_v2_#{match.external_id}")
           Rails.cache.delete("live_scores_detail_v5_#{match.external_id}")
         end
-        kickoff_date = match.kickoff_at&.utc&.to_date
-        if kickoff_date
-          [ kickoff_date, kickoff_date + 1, kickoff_date - 1 ].each do |d|
-            Rails.cache.delete("today_api_#{d.iso8601}")
-          end
-        end
+        LiveScoresCache.bust_kickoff!(match.kickoff_at) if match.kickoff_at.present?
         ActionCable.server.broadcast("live_scores", {
           type:            "live_score_update",
           match_id:        match.id,
@@ -1132,12 +1127,7 @@ class WorldCupSync
       # Bust the today-api cache so the next refetch (triggered by the
       # standings-channel broadcast above) sees the finished status, not a
       # stale 90s snapshot that still calls the match "live".
-      kickoff_date = match.kickoff_at&.utc&.to_date
-      if kickoff_date
-        [ kickoff_date, kickoff_date + 1, kickoff_date - 1 ].each do |d|
-          Rails.cache.delete("today_api_#{d.iso8601}")
-        end
-      end
+      LiveScoresCache.bust_kickoff!(match.kickoff_at) if match.kickoff_at.present?
 
       # Immediately push "finished" to the live-scores channel so the LIVE
       # panel on the home page removes the match without waiting for the 60s poll.
@@ -1309,12 +1299,7 @@ class WorldCupSync
 
     # Bust the today-api cache so that any safety-net poll immediately after a
     # goal or status change sees fresh data rather than the 90s stale snapshot.
-    kickoff_date = match.kickoff_at&.utc&.to_date
-    if kickoff_date
-      [ kickoff_date, kickoff_date + 1, kickoff_date - 1 ].each do |d|
-        Rails.cache.delete("today_api_#{d.iso8601}")
-      end
-    end
+    LiveScoresCache.bust_kickoff!(match.kickoff_at) if match.kickoff_at.present?
 
     # Shared stream for list views (Today, Home) — carries enough identity to
     # update the right row without a full re-fetch.

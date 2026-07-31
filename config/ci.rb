@@ -10,6 +10,8 @@ CI.run do
 
   step "Tests: Rails", "bin/rails test"
 
+  step "Lint: Frontend", "npm ci && npm run lint:js"
+
   # Optional: set a green GitHub commit status to unblock PR merge.
   # Requires the `gh` CLI and `gh extension install basecamp/gh-signoff`.
   # if success?

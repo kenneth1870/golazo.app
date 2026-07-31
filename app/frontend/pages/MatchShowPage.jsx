@@ -805,6 +805,9 @@ export default function MatchShowPage() {
     "sport": "Soccer",
     "homeTeam": { "@type": "SportsTeam", "name": homeName },
     "awayTeam": { "@type": "SportsTeam", "name": awayName },
+    ...(data?.fixture?.league?.id === 1 ? {
+      "organizer": { "@type": "Organization", "name": "FIFA", "url": "https://www.fifa.com" },
+    } : {}),
     ...(homeScore != null && awayScore != null ? {
       "homeScore": homeScore,
       "awayScore": awayScore,

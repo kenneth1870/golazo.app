@@ -224,7 +224,7 @@ class PageMeta
 
     home = match.home_team&.name || "TBD"
     away = match.away_team&.name || "TBD"
-    comp = match.competition&.name || "FIFA World Cup 2026"
+    comp = match.competition&.name || (AppFocus.wc_paused? ? "Football" : "FIFA World Cup 2026")
 
     if match.status == "finished"
       score = "#{match.home_score}–#{match.away_score}"
@@ -250,9 +250,11 @@ class PageMeta
       "sport"     => "Football",
       "location"  => match.venue.present? ? { "@type" => "Place", "name" => match.venue } : nil,
       "homeTeam"  => { "@type" => "SportsTeam", "name" => home },
-      "awayTeam"  => { "@type" => "SportsTeam", "name" => away },
-      "organizer" => { "@type" => "Organization", "name" => "FIFA", "url" => "https://www.fifa.com" }
+      "awayTeam"  => { "@type" => "SportsTeam", "name" => away }
     }.compact
+    if match.competition&.code == "WC"
+      json_ld["organizer"] = { "@type" => "Organization", "name" => "FIFA", "url" => "https://www.fifa.com" }
+    end
     json_ld["location"] = nil if json_ld["location"].nil?
     json_ld.compact!
 

@@ -12,6 +12,7 @@ class SitemapController < ApplicationController
         /
         /world-cup-2026
         /scores/today
+        /scores/live
         /scores/results
         /news
         /leagues

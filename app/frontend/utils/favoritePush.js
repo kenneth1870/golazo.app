@@ -15,11 +15,3 @@ export async function syncFavoriteToPush(item, { addTeams, addLeagues, removeTea
     else await removeLeagues([code])
   }
 }
-
-/** @deprecated use syncFavoriteToPush */
-export async function syncTeamFollowToPush(teamName, opts) {
-  return syncFavoriteToPush(
-    { type: "team", name: teamName },
-    { ...opts, following: opts.following }
-  )
-}
