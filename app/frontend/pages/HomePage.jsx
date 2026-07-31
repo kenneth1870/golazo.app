@@ -700,7 +700,10 @@ export default function HomePage() {
     "url": "https://golazo.app/world-cup-2026"
   })
 
-  const { matches: upcomingMatches, refetch: refetchUpcoming, stale: matchesStale } = useMatches("upcoming", { competition: clubsPrimary ? undefined : "WC" })
+  const { matches: upcomingMatches, refetch: refetchUpcoming, stale: matchesStale } = useMatches("upcoming", {
+    competition: "WC",
+    enabled: !clubsPrimary,
+  })
   useLiveScoresChannel(patchLiveScore)
   const { todayMatches, upcomingPreview, loading: todayLoading, todayError, todayStale, retryToday } = useTodayFeed(!clubsPrimary)
   const todayLiveCount = useMemo(

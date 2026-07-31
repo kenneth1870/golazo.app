@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useNavigate, useSearchParams, Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { translateTeam } from "../i18n/teamNames"
@@ -68,23 +68,49 @@ function WcTeamPicker({ value, onChange, label }) {
 function ClubTeamPicker({ value, onChange, label }) {
   const { t, i18n } = useTranslation()
   const [teams, setTeams] = useState([])
-  useEffect(() => {
-    loadClubTeams().then(({ teams }) => setTeams(teams))
+  const [teamsLoading, setTeamsLoading] = useState(true)
+  const [teamsError, setTeamsError] = useState(false)
+
+  const loadTeams = useCallback(() => {
+    setTeamsLoading(true)
+    setTeamsError(false)
+    loadClubTeams()
+      .then(({ teams: loaded, error }) => {
+        setTeams(loaded)
+        setTeamsError(error)
+      })
+      .finally(() => setTeamsLoading(false))
   }, [])
+
+  useEffect(() => { loadTeams() }, [loadTeams])
 
   return (
     <div style={{ flex: 1 }}>
       <label style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".08em", display: "block", marginBottom: 4 }}>{label}</label>
+      {teamsError && (
+        <div style={{ marginBottom: 8, fontSize: "0.72rem", color: "var(--muted)", textAlign: "center" }}>
+          {t("error.failedToLoadTeams")}
+          <button
+            type="button"
+            onClick={loadTeams}
+            style={{ marginLeft: 8, background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "0.72rem", textDecoration: "underline" }}
+          >
+            {t("error.retry")}
+          </button>
+        </div>
+      )}
       <select
         value={value || ""}
         onChange={e => onChange(e.target.value)}
+        disabled={teamsLoading || teamsError || teams.length === 0}
         style={{
           width: "100%", background: "var(--surface2)", border: "1px solid var(--border)",
           borderRadius: 8, padding: "8px 12px", color: value ? "var(--text)" : "var(--muted)",
-          fontSize: "0.85rem", fontWeight: 700, cursor: "pointer",
+          fontSize: "0.85rem", fontWeight: 700, cursor: teamsLoading || teamsError ? "default" : "pointer",
+          opacity: teamsLoading || teamsError ? 0.6 : 1,
         }}
       >
-        <option value="">{t("teamComparison.selectTeam")}</option>
+        <option value="">{teamsLoading ? t("loading") : t("teamComparison.selectTeam")}</option>
         {teams.map(tm => {
           const key = `${tm.league_code}/${clubTeamSlug(tm.name)}`
           return (

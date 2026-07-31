@@ -175,8 +175,10 @@ export function patchLiveScore(d) {
 }
 
 export function useMatches(filter = "all", opts = {}) {
-  const key = cacheKey(filter, opts)
+  const { enabled = true, ...fetchOpts } = opts
+  const key = cacheKey(filter, fetchOpts)
   const [state, setState] = useState(() => {
+    if (!enabled) return { data: [], loading: false, error: null, stale: false }
     const cached = cache.get(key)
     return { data: cached?.data || [], loading: !cached, error: null, stale: cached?.stale || false }
   })
@@ -185,12 +187,19 @@ export function useMatches(filter = "all", opts = {}) {
   setStateRef.current = setState
 
   useEffect(() => {
+    if (!enabled) {
+      setState({ data: [], loading: false, error: null, stale: false })
+      return
+    }
     const fn = (s) => setStateRef.current(s)
-    subscribe(key, filter, opts, fn)
+    subscribe(key, filter, fetchOpts, fn)
     return () => unsubscribe(key, fn)
-  }, [key]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [key, enabled]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const refetch = useCallback(() => fetchKey(key, filter, opts), [key]) // eslint-disable-line react-hooks/exhaustive-deps
+  const refetch = useCallback(() => {
+    if (!enabled) return Promise.resolve([])
+    return fetchKey(key, filter, fetchOpts)
+  }, [key, enabled]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return { matches: state.data, loading: state.loading, error: state.error, stale: state.stale, refetch }
 }
