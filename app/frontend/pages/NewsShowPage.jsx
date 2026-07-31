@@ -36,6 +36,7 @@ export default function NewsShowPage() {
   const [metaLoading, setMetaLoading] = useState(true)
   const [contentLoading, setContentLoading] = useState(true)
   const [notFound, setNotFound]       = useState(false)
+  const [contentError, setContentError] = useState(false)
   const [copied, setCopied]           = useState(false)
   const [stale, setStale]             = useState(false)
 
@@ -45,6 +46,7 @@ export default function NewsShowPage() {
     setArticle(null)
     setContent(null)
     setNotFound(false)
+    setContentError(false)
     setStale(false)
 
     const prefetched = consumePrefetchedArticle(id, lang)
@@ -79,9 +81,13 @@ export default function NewsShowPage() {
     fetchJson(`/api/v1/news/${id}/content?lang=${lang}`)
       .then(bodyRes => {
         setStale(prev => prev || bodyRes.stale)
-        if (bodyRes.ok) setContent(bodyRes.data)
+        if (!bodyRes.ok || bodyRes.offline) {
+          setContentError(true)
+          return
+        }
+        setContent(bodyRes.data)
       })
-      .catch(() => {})
+      .catch(() => setContentError(true))
       .finally(() => setContentLoading(false))
   }, [id, lang])
 
@@ -218,10 +224,23 @@ export default function NewsShowPage() {
 
         <h1 className="news-article__title">{article.title}</h1>
 
+        {contentError && !contentLoading && (
+          <div style={{ textAlign: "center", padding: "24px 0", color: "var(--muted)", fontSize: "0.88rem" }}>
+            {t("error.failedToLoadNews")}
+            <button
+              type="button"
+              onClick={load}
+              style={{ marginLeft: 8, background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "0.88rem", textDecoration: "underline" }}
+            >
+              {t("error.retry")}
+            </button>
+          </div>
+        )}
+
         <NewsArticleBody
           paragraphs={paragraphs}
           images={content?.images}
-          loading={contentLoading && !content}
+          loading={contentLoading && !content && !contentError}
         />
 
         <RelatedNewsStrip

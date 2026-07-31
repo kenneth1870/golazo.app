@@ -31,7 +31,12 @@ module Api
         end
       rescue => e
         Rails.logger.error("[TopScorersController#index] #{e.message}")
-        render json: WorldCupScorers.scorers("WC") rescue render json: []
+        fallback = competition == "WC" ? (WorldCupScorers.scorers(competition) rescue []) : []
+        if fallback.any?
+          render json: fallback
+        else
+          render json: [], status: :service_unavailable
+        end
       end
 
       def assists
@@ -50,7 +55,12 @@ module Api
         end
       rescue => e
         Rails.logger.error("[TopScorersController#assists] #{e.message}")
-        render json: WorldCupScorers.assists("WC") rescue render json: []
+        fallback = competition == "WC" ? (WorldCupScorers.assists(competition) rescue []) : []
+        if fallback.any?
+          render json: fallback
+        else
+          render json: [], status: :service_unavailable
+        end
       end
 
       def cards
@@ -72,7 +82,12 @@ module Api
         end
       rescue => e
         Rails.logger.error("[TopScorersController#cards] #{e.message}")
-        render json: []
+        fallback = competition == "WC" ? (WorldCupScorers.cards(competition, type: card_type) rescue []) : []
+        if fallback.any?
+          render json: fallback
+        else
+          render json: [], status: :service_unavailable
+        end
       end
 
       private

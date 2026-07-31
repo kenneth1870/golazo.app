@@ -400,15 +400,6 @@ module Api
         Rails.logger.error("[MatchDetail#ai_summary] #{e.message}")
         render json: { error: "server_error" }, status: :internal_server_error
       end
-
-      def preview
-        home_id = params[:home_team_id].to_i
-        away_id = params[:away_team_id].to_i
-        render json: { h2h: [], home_form: [], away_form: [] }
-      rescue StandardError => e
-        Rails.logger.error("[MatchDetailController#preview] #{e.message}")
-        render json: { h2h: [], home_form: [], away_form: [] }
-      end
     end
   end
 end

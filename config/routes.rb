@@ -47,7 +47,6 @@ Rails.application.routes.draw do
       get "today",        to: "today#index"
       get "match_detail/:id",            to: "match_detail#show"
       get "match_detail/:id/ai_summary", to: "match_detail#ai_summary"
-      get  "match_preview",             to: "match_detail#preview"
       get  "predictions/:match_id",     to: "predictions#show"
       post "predictions/:match_id/vote", to: "predictions#vote"
       get   "score_predictions/leaderboard",  to: "score_predictions#leaderboard"

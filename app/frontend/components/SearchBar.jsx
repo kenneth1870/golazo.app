@@ -37,7 +37,9 @@ export default function SearchBar({ onClose, returnFocusRef }) {
   const [query, setQuery]     = useState("")
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
+  const [searchError, setSearchError] = useState(false)
   const [focused, setFocused] = useState(0)
+  const [retryTick, setRetryTick] = useState(0)
   const navigate  = useNavigate()
   const inputRef     = useRef(null)
   const dialogRef    = useRef(null)
@@ -83,8 +85,9 @@ export default function SearchBar({ onClose, returnFocusRef }) {
   useEffect(() => {
     clearTimeout(timerRef.current)
     abortRef.current?.abort()
-    if (query.length < 2) { setResults([]); setLoading(false); return }
+    if (query.length < 2) { setResults([]); setLoading(false); setSearchError(false); return }
     setLoading(true)
+    setSearchError(false)
     timerRef.current = setTimeout(() => {
       abortRef.current = new AbortController()
       fetchJson(`/api/v1/search?q=${encodeURIComponent(query)}`, {
@@ -92,14 +95,25 @@ export default function SearchBar({ onClose, returnFocusRef }) {
         signal: abortRef.current.signal,
       })
         .then(({ data, ok, offline }) => {
-          setResults(ok && !offline && Array.isArray(data) ? data : [])
+          if (!ok || offline) {
+            setResults([])
+            setSearchError(true)
+          } else {
+            setResults(Array.isArray(data) ? data : [])
+            setSearchError(false)
+          }
           setFocused(0)
         })
-        .catch(err => { if (err.name !== "AbortError") setResults([]) })
+        .catch(err => {
+          if (err.name !== "AbortError") {
+            setResults([])
+            setSearchError(true)
+          }
+        })
         .finally(() => setLoading(false))
     }, 280)
     return () => { clearTimeout(timerRef.current); abortRef.current?.abort() }
-  }, [query])
+  }, [query, retryTick])
 
   const go = useCallback((result) => {
     if (!result?.id) return
@@ -276,6 +290,17 @@ export default function SearchBar({ onClose, returnFocusRef }) {
                 )}
               </div>
             ))}
+          </div>
+        ) : searchError && query.length >= 2 && !loading ? (
+          <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--muted)", fontSize: "0.88rem" }}>
+            {t("error.tryAgain")}
+            <button
+              type="button"
+              onClick={() => setRetryTick(t => t + 1)}
+              style={{ marginLeft: 8, background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "0.88rem", textDecoration: "underline" }}
+            >
+              {t("error.retry")}
+            </button>
           </div>
         ) : query.length >= 2 && !loading ? (
           <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--muted)", fontSize: "0.88rem" }}>

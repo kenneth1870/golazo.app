@@ -52,7 +52,7 @@ function newsNavActive({ isActive }, pathname) {
 export default function BottomNav() {
   const { t }     = useTranslation()
   const liveCount = useLiveCount()
-  const { clubs_primary: clubsPrimary } = useAppFocus()
+  const { wc_paused: wcPaused = true } = useAppFocus()
   const { pathname } = useLocation()
 
   return (
@@ -84,9 +84,9 @@ export default function BottomNav() {
         <span className="bottom-nav__label">{t("nav.results", "Results")}</span>
       </NavLink>
 
-      <NavLink to={clubsPrimary ? "/leagues" : "/mundial"} className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}>
-        {clubsPrimary ? <LeaguesIcon /> : <MundialIcon />}
-        <span className="bottom-nav__label">{clubsPrimary ? t("nav.leagues", "Leagues") : t("nav.mundialShort", "Mundial")}</span>
+      <NavLink to={wcPaused ? "/leagues" : "/mundial"} className={({ isActive }) => `bottom-nav__item${isActive ? " bottom-nav__item--active" : ""}`}>
+        {wcPaused ? <LeaguesIcon /> : <MundialIcon />}
+        <span className="bottom-nav__label">{wcPaused ? t("nav.leagues", "Leagues") : t("nav.mundialShort", "Mundial")}</span>
       </NavLink>
 
     </nav>

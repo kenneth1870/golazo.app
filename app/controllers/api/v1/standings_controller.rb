@@ -36,6 +36,9 @@ module Api
         end
 
         render json: result
+      rescue => e
+        Rails.logger.error("[StandingsController] #{e.message}")
+        render json: {}, status: :service_unavailable
       end
 
       private
@@ -131,7 +134,7 @@ module Api
         flat.group_by { |s| s[:group_name] }
       rescue => e
         Rails.logger.error("[StandingsController] API standings failed: #{e.message}")
-        {}
+        raise
       end
     end
   end

@@ -27,7 +27,7 @@ module Api
         render json: teams.sort_by { |t| t[:name].to_s.downcase }
       rescue StandardError => e
         Rails.logger.error("[ClubTeamsController#index] #{e.message}")
-        render json: []
+        render json: [], status: :service_unavailable
       end
 
       def show

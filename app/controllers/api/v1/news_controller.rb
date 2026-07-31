@@ -27,7 +27,7 @@ module Api
         render json: articles
       rescue => e
         Rails.logger.error("[NewsController] #{e.message}")
-        render json: []
+        render json: [], status: :service_unavailable
       end
 
       def show
@@ -52,7 +52,7 @@ module Api
         render json: articles
       rescue => e
         Rails.logger.error("[NewsController] related: #{e.message}")
-        render json: []
+        render json: [], status: :service_unavailable
       end
 
       def content
@@ -85,7 +85,8 @@ module Api
         }
       rescue => e
         Rails.logger.error("[NewsController] content: #{e.message}")
-        render json: { paragraphs: [], hero_image: nil, images: [], is_video: false, reading_time_min: 1 }
+        render json: { paragraphs: [], hero_image: nil, images: [], is_video: false, reading_time_min: 1 },
+               status: :service_unavailable
       end
 
       private

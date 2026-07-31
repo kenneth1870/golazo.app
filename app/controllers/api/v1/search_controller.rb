@@ -25,7 +25,7 @@ module Api
         render json: dedupe_results(results).first(12)
       rescue => e
         Rails.logger.error("[SearchController] #{e.message}")
-        render json: []
+        render json: [], status: :service_unavailable
       end
 
       private

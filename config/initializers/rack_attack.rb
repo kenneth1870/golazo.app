@@ -16,7 +16,6 @@ class Rack::Attack
   # Endpoints that fan out to the upstream paid API — throttled hardest.
   EXPENSIVE_PATHS = %w[
     /api/v1/match_detail
-    /api/v1/match_preview
     /api/v1/today
     /api/v1/live_scores
     /api/v1/news

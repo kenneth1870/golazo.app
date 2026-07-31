@@ -25,6 +25,7 @@ export default function ClubTeamPage() {
   const { addTeams, removeTeams, addLeagues, removeLeagues, subscribed } = usePushNotifications()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
   const [stale, setStale] = useState(false)
   const [tab, setTab] = useState("upcoming")
   const heroKey = `${code}|${slug}`
@@ -46,15 +47,25 @@ export default function ClubTeamPage() {
   const load = useCallback(() => {
     if (!code || !slug) return
     setLoading(true)
+    setFetchError(false)
     setStale(false)
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     fetchJson(`/api/v1/club_teams/${code}/${slug}?tz=${encodeURIComponent(tz)}`)
-      .then(({ data: d, stale: isStale, offline, ok }) => {
+      .then(({ data: d, stale: isStale, offline, ok, status }) => {
         setStale(isStale)
-        if (!ok || offline) { setData(null); return }
+        if (!ok || offline) {
+          setData(null)
+          setFetchError(true)
+          return
+        }
+        if (d?.error === "not_found" || status === 404) {
+          setData(null)
+          setFetchError(false)
+          return
+        }
         setData(d)
       })
-      .catch(() => setData(null))
+      .catch(() => { setData(null); setFetchError(true) })
       .finally(() => setLoading(false))
   }, [code, slug])
 
@@ -93,6 +104,19 @@ export default function ClubTeamPage() {
         <div className="site-section container">
           <div className="loading-shimmer" style={{ height: 320, borderRadius: 12 }} />
         </div>
+      </div>
+    )
+  }
+
+  if (fetchError) {
+    return (
+      <div className="site-section container">
+        <OfflineBanner stale={stale} onRetry={load} />
+        <EmptyState
+          icon="📡"
+          title={t("error.dataUnavailable", "Data unavailable")}
+          action={<button type="button" className="btn btn-primary btn-sm" onClick={load}>{t("error.retry")}</button>}
+        />
       </div>
     )
   }
