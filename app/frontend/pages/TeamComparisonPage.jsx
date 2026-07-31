@@ -68,7 +68,9 @@ function WcTeamPicker({ value, onChange, label }) {
 function ClubTeamPicker({ value, onChange, label }) {
   const { t, i18n } = useTranslation()
   const [teams, setTeams] = useState([])
-  useEffect(() => { loadClubTeams(setTeams) }, [])
+  useEffect(() => {
+    loadClubTeams().then(({ teams }) => setTeams(teams))
+  }, [])
 
   return (
     <div style={{ flex: 1 }}>

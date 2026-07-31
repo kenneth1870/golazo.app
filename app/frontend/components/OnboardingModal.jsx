@@ -149,7 +149,9 @@ export default function OnboardingModal({ onDismiss, returnFocusRef }) {
   }, [])
 
   useEffect(() => {
-    if (clubsPrimary) loadClubTeams(setClubTeams)
+    if (clubsPrimary) {
+      loadClubTeams().then(({ teams }) => setClubTeams(teams))
+    }
   }, [clubsPrimary])
 
   const onIosSafari  = isIosSafari()

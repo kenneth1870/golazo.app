@@ -33,6 +33,8 @@ export default function FavoriteTeamPicker() {
   const [fav, setFav]     = useFavoriteTeam()
   const { addTeams, removeTeams, addLeagues, removeLeagues, subscribed } = usePushNotifications()
   const [teams, setTeams] = useState([])
+  const [teamsLoading, setTeamsLoading] = useState(false)
+  const [teamsError, setTeamsError] = useState(false)
   const [open, setOpen]   = useState(false)
   const [query, setQuery] = useState("")
   const [menuStyle, setMenuStyle] = useState(null)
@@ -41,15 +43,25 @@ export default function FavoriteTeamPicker() {
 
   useEffect(() => {
     if (clubsPrimary) {
-      loadClubTeams(setTeams)
+      setTeamsLoading(true)
+      setTeamsError(false)
+      loadClubTeams()
+        .then(({ teams: loaded, error }) => {
+          setTeams(loaded)
+          setTeamsError(error)
+        })
+        .finally(() => setTeamsLoading(false))
       return
     }
 
+    setTeamsLoading(true)
     fetchJson("/api/v1/teams?wc=1", { soft: true })
       .then(({ data, ok, offline }) => {
         setTeams(ok && !offline && Array.isArray(data) ? data : [])
+        setTeamsError(!ok || offline)
       })
-      .catch(() => {})
+      .catch(() => { setTeams([]); setTeamsError(true) })
+      .finally(() => setTeamsLoading(false))
   }, [clubsPrimary])
 
   useEffect(() => {
@@ -169,7 +181,17 @@ export default function FavoriteTeamPicker() {
             ✕ {t("team.removeFavorite", "Quitar favorito")}
           </button>
         )}
-        {filtered.map(tm => (
+        {teamsLoading && (
+          <div style={{ color: "var(--muted)", fontSize: "0.78rem", textAlign: "center", padding: "12px 0" }}>
+            {t("loading")}
+          </div>
+        )}
+        {!teamsLoading && teamsError && (
+          <div style={{ color: "var(--muted)", fontSize: "0.78rem", textAlign: "center", padding: "12px 0" }}>
+            {t("error.tryAgain")}
+          </div>
+        )}
+        {!teamsLoading && !teamsError && filtered.map(tm => (
           <button
             key={tm.id}
             role="option"
@@ -186,7 +208,7 @@ export default function FavoriteTeamPicker() {
             {tm.group && <span style={{ marginLeft: "auto", fontSize: "0.65rem", color: "var(--muted)", flexShrink: 0 }}>{t("nav.group", { letter: tm.group })}</span>}
           </button>
         ))}
-        {filtered.length === 0 && (
+        {!teamsLoading && !teamsError && filtered.length === 0 && (
           <div style={{ color: "var(--muted)", fontSize: "0.78rem", textAlign: "center", padding: "12px 0" }}>
             {t("team.noTeamsFound", "Sin equipos encontrados")}
           </div>

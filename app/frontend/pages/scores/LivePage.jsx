@@ -13,11 +13,13 @@ import OfflineBanner from "../../components/OfflineBanner"
 import { fetchJson } from "../../utils/fetchJson"
 import { navigateToMatch } from "../../utils/matchDetailCache"
 
+import { useLiveScoresChannel } from "../../hooks/useLiveScoresChannel"
+
 function toMatchRowMatch(m) {
   return {
     external_id: m.external_id,
     id: m.external_id,
-    status: "live",
+    status: m.status || "live",
     minute: m.minute,
     minute_extra: m.minute_extra,
     home_score: m.home?.score ?? null,
@@ -93,6 +95,30 @@ export default function LivePage() {
   const ptr = usePullRefresh(() => load(true), { disabled: loading && !matches.length })
 
   useEffect(() => { load() }, [load])
+
+  const applyLiveScore = useCallback((d) => {
+    setMatches(prev => {
+      let touched = false
+      const next = prev.map(m => {
+        if (m.external_id !== d.external_id) return m
+        if (m.home?.score === d.home_score && m.away?.score === d.away_score &&
+            m.status === d.status && m.minute === d.minute &&
+            m.minute_extra === d.minute_extra) return m
+        touched = true
+        return {
+          ...m,
+          status: d.status || m.status,
+          minute: d.minute,
+          minute_extra: d.minute_extra,
+          home: { ...m.home, score: d.home_score },
+          away: { ...m.away, score: d.away_score },
+        }
+      })
+      if (touched) setLastUpdated(new Date())
+      return touched ? next : prev
+    })
+  }, [])
+  useLiveScoresChannel(applyLiveScore)
 
   useVisiblePolling(() => load(true), 30000)
 

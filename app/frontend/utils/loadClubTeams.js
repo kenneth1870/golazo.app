@@ -3,11 +3,12 @@ import { fetchJson } from "./fetchJson"
 
 const CLUB_LEAGUE_CODES = NAV_LEAGUES.map(l => l.path.split("/").pop())
 
-export function loadClubTeams(setTeams) {
-  Promise.all(
+/** Load club teams from league standings for pickers. Returns { teams, error }. */
+export function loadClubTeams() {
+  return Promise.all(
     CLUB_LEAGUE_CODES.map(code =>
       fetchJson(`/api/v1/standings?competition=${code}`, { soft: true })
-        .then(({ data, ok, offline }) => ({ code, data: ok && !offline ? data : {} }))
+        .then(({ data, ok, offline }) => ({ code, ok: ok && !offline, data: ok && !offline ? data : {} }))
     )
   )
     .then(pairs => {
@@ -21,7 +22,12 @@ export function loadClubTeams(setTeams) {
           teams.push({ id: t.name, name: t.name, flag_url: t.flag_url, group: null, code: t.code, league_code: code })
         })
       })
-      setTeams(teams.sort((a, b) => a.name.localeCompare(b.name)))
+      const sorted = teams.sort((a, b) => a.name.localeCompare(b.name))
+      const failedLeagues = pairs.filter(p => !p.ok).length
+      return {
+        teams: sorted,
+        error: sorted.length === 0 && failedLeagues > 0,
+      }
     })
-    .catch(() => {})
+    .catch(() => ({ teams: [], error: true }))
 }

@@ -117,6 +117,35 @@ function useTodayFeed(wcOnly = false) {
 
 const FEATURED_NEWS_LEAGUES = [ "CRC", "CAC", "CCC", "LMX", "PL", "LAL" ]
 
+function pickHeroMatch(fixtures, preview, favName, i18n) {
+  const pool = [ ...fixtures, ...preview ]
+  const live = pool.filter(m => m.status === "live")
+  if (live.length) {
+    if (favName) {
+      const favLive = live.find(m =>
+        matchTeamName(m.home_team?.name, favName, i18n.language) ||
+        matchTeamName(m.away_team?.name, favName, i18n.language)
+      )
+      if (favLive) return favLive
+    }
+    return [ ...live ].sort((a, b) => (b.minute ?? 0) - (a.minute ?? 0))[0]
+  }
+
+  const upcoming = pool
+    .filter(m => m.status === "scheduled" && m.kickoff_at)
+    .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))
+
+  if (favName) {
+    const favNext = upcoming.find(m =>
+      matchTeamName(m.home_team?.name, favName, i18n.language) ||
+      matchTeamName(m.away_team?.name, favName, i18n.language)
+    )
+    if (favNext) return favNext
+  }
+
+  return upcoming[0] ?? pool.find(m => m.kickoff_at && new Date(m.kickoff_at) > new Date())
+}
+
 function useLatestNews(leagueCodes = []) {
   const { i18n } = useTranslation()
   const [news, setNews]     = useState([])
@@ -685,8 +714,7 @@ export default function HomePage() {
   // Prefer the next match with a known future kickoff; only fall back to TBD
   // if nothing has a time yet (avoids showing a placeholder knockout slot in hero).
   const nextMatch = clubsPrimary
-    ? clubFixtures.find(m => m.kickoff_at && new Date(m.kickoff_at) > new Date())
-      ?? upcomingPreview.find(m => m.kickoff_at && new Date(m.kickoff_at) > new Date())
+    ? pickHeroMatch(clubFixtures, upcomingPreview, fav?.name, i18n)
     : upcomingMatches.find(m => m.kickoff_at && new Date(m.kickoff_at) > new Date())
       ?? upcomingMatches.find(m => !m.kickoff_at)
 

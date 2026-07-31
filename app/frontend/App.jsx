@@ -26,6 +26,7 @@ import { storageGet } from "./utils/safeStorage"
 // Critical path — scores shell only; today tab lazy-loaded
 import ScoresPage from "./pages/ScoresPage"
 const TodayPage  = lazy(() => import("./pages/scores/TodayPage"))
+const LivePage   = lazy(() => import("./pages/scores/LivePage"))
 
 // Home + secondary routes — lazy-loaded to keep initial bundle smaller
 const HomePage        = lazy(() => import("./pages/HomePage"))
@@ -192,7 +193,7 @@ export default function App() {
               <Route path="/scores" element={<ScoresPage />}>
                 <Route index element={<Navigate to="/scores/today" replace />} />
                 <Route path="today"    element={<TodayPage />} />
-                <Route path="live"     element={<Navigate to="/scores/today" replace />} />
+                <Route path="live"     element={<LivePage />} />
                 <Route path="results"  element={<ResultsPage />} />
                 <Route path="groups"   element={<ClubsModeRedirect><GroupStagePage /></ClubsModeRedirect>} />
                 <Route path="knockout" element={<ClubsModeRedirect><KnockoutPage /></ClubsModeRedirect>} />
