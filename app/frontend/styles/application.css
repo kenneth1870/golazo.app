@@ -707,7 +707,6 @@ body.light-mode .live-strip{background:var(--surface);border-color:rgba(238,30,7
 .logo-md{width:40px;height:40px;object-fit:contain;flex-shrink:0;image-rendering:-webkit-optimize-contrast}
 .logo-lg{width:72px;height:72px;object-fit:contain;flex-shrink:0;image-rendering:-webkit-optimize-contrast}
 .img-fluid{max-width:100%;height:auto;display:block}
-.match-row__score{text-align:center}
 .score-pill{
   display:inline-block;font-weight:900;font-size:1rem;
   background:var(--surface2);padding:5px 12px;border-radius:8px;
