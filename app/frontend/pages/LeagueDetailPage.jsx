@@ -201,6 +201,7 @@ export default function LeagueDetailPage() {
   const [standingsError, setStandingsError]     = useState(false)
   const [stale, setStale]                       = useState(false)
   const [matchesStale, setMatchesStale]         = useState(false)
+  const [matchesError, setMatchesError]         = useState(false)
 
   const favKey = competition?.code ?? code
   const heroRef = useRef({ code: null, style: null })
@@ -243,17 +244,22 @@ export default function LeagueDetailPage() {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
     const url = `/api/v1/competitions/${code}/fixtures?tab=${tabParam || "today"}&tz=${encodeURIComponent(tz)}`
     setMatchesStale(false)
+    setMatchesError(false)
     return fetchJson(url)
       .then(({ data, stale: isStale, offline, ok }) => {
         setMatchesStale(isStale)
-        if (!ok || offline) { setMatches([]); return }
+        if (!ok || offline) {
+          setMatchesError(true)
+          setMatches([])
+          return
+        }
         setMatches(prev => {
           const prevById = new Map(prev.map(m => [m.external_id ?? m.id, m]))
           const incoming = Array.isArray(data) ? data : []
           return incoming.map(m => mergeLiveMatchSnapshot(m, prevById.get(m.external_id ?? m.id)))
         })
       })
-      .catch(() => setMatches([]))
+      .catch(() => { setMatchesError(true); setMatches([]) })
   }, [code, tab, tabParam])
 
   useEffect(() => {
@@ -495,6 +501,15 @@ export default function LeagueDetailPage() {
             />
           ) : tabLoading ? (
             <div className="loading-shimmer" style={{ height: 240, borderRadius: 12 }} />
+          ) : matchesError ? (
+            <div className="empty-state">
+              <div className="empty-state__icon">⚠️</div>
+              <h3>{t("error.dataUnavailable")}</h3>
+              <p>{t("error.tryAgain")}</p>
+              <button type="button" className="btn btn-sm btn-outline-light mt-3" onClick={loadMatches}>
+                {t("error.retry")}
+              </button>
+            </div>
           ) : displayedMatches.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state__icon">📅</div>

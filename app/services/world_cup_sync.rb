@@ -72,9 +72,7 @@ class WorldCupSync
     # like 02:00 UTC are stored under tomorrow's date key in the API cache) so
     # the verification re-sync reads fresh, authoritative status.
     [ Time.current.utc.to_date, Time.current.utc.to_date + 1 ].each do |d|
-      Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
-      Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
-      Rails.cache.delete("today_api_#{d.iso8601}")
+      LiveScoresCache.bust_date!(d, timezones: [ "UTC" ])
     end
 
     SyncTodayMatchesJob.perform_later
@@ -140,8 +138,7 @@ class WorldCupSync
       # Bust the past-date cache before re-fetching. Past dates are cached for
       # 24 h, so if the cache was primed while the match was still "2H" the
       # re-sync would write "live" back to the DB and leave standings broken.
-      Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
-      Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
+      LiveScoresCache.bust_date!(d, timezones: [ "UTC" ])
       past_matches = @api.matches_for_date(d)
       past_matches
         .reject { |m| already_synced_ids.include?(m[:external_id]) }
@@ -188,7 +185,7 @@ class WorldCupSync
   # and broadcasts corrections to connected clients. Safe to run at any time.
   def force_sync_dates(dates)
     dates.each do |d|
-      %W[live_scores_date_v15_#{d.iso8601}_utc live_scores_date_v15_#{d.iso8601}_ today_api_#{d.iso8601}].each { |k| Rails.cache.delete(k) }
+      LiveScoresCache.bust_date!(d)
       api_matches = @api.matches_for_date(d)
       log("force_sync_dates #{d}: #{api_matches.size} matches")
       api_matches.each { |m| sync_match_from_normalized(m, force: true) }
@@ -210,12 +207,7 @@ class WorldCupSync
 
     fixed = 0
     dates.each do |d|
-      # Bust every known cache variant for this date so we never read stale data.
-      %W[
-        live_scores_date_v15_#{d.iso8601}_utc
-        live_scores_date_v15_#{d.iso8601}_
-        today_api_#{d.iso8601}
-      ].each { |k| Rails.cache.delete(k) }
+      LiveScoresCache.bust_date!(d)
 
       api_matches = @api.matches_for_date(d)
       log("  #{d}: #{api_matches.size} API matches")
@@ -853,11 +845,7 @@ class WorldCupSync
       Rails.cache.delete("wc_matches_active_v1")
       # Bust the today feed cache so the live match appears immediately on the
       # Hoy page without waiting for the 90s outer cache or 10min inner cache.
-      [ Date.today, Date.today + 1 ].each do |d|
-        Rails.cache.delete("today_api_#{d.iso8601}")
-        Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
-        Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
-      end
+      [ Date.today, Date.today + 1 ].each { |d| LiveScoresCache.bust_date!(d) }
       broadcast_score(match, minute, minute_extra: minute_extra, event_type: "kickoff", notify: true)
       return true
     end

@@ -2,6 +2,11 @@ class SyncTodayMatchesJob < ApplicationJob
   queue_as :default
 
   def perform
+    if AppFocus.clubs_primary?
+      sync_club_date_caches
+      return
+    end
+
     return if AppFocus.wc_paused?
 
     wc = Competition.find_by(code: "WC")
@@ -17,8 +22,7 @@ class SyncTodayMatchesJob < ApplicationJob
                        .pluck(Arel.sql("DATE(kickoff_at AT TIME ZONE 'UTC')"))
                        .uniq
     ([ Date.today, Date.today - 1 ] + stale_dates.map { |d| d.is_a?(Date) ? d : Date.parse(d.to_s) }).uniq.each do |d|
-      Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_utc")
-      Rails.cache.delete("live_scores_date_v15_#{d.iso8601}_")
+      LiveScoresCache.bust_date!(d)
     end
     sync = WorldCupSync.new
     sync.sync_today
@@ -31,5 +35,10 @@ class SyncTodayMatchesJob < ApplicationJob
       Rails.cache.write(cache_key, true, expires_in: 23.hours)
       sync.force_sync_dates([ Date.today, Date.today + 1 ])
     end
+  end
+
+  def sync_club_date_caches
+    [ Date.today, Date.today - 1 ].each { |d| LiveScoresCache.bust_date!(d) }
+    Rails.logger.info("[SyncTodayMatchesJob] Busted club date caches")
   end
 end

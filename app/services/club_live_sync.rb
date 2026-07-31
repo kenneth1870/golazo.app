@@ -47,6 +47,7 @@ class ClubLiveSync
 
       if status == "finished" && prev[:status] != "finished"
         notify_fulltime(raw, home, away, current, competition_code)
+        LiveScoresCache.bust_kickoff!(raw[:kickoff_at])
       end
     end
 

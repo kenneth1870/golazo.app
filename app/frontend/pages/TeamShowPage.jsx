@@ -38,6 +38,7 @@ export default function TeamShowPage() {
   const [squadLoading, setSquadLoading] = useState(false)
   const [activeTab, setActiveTab]   = useState("overview")
   const [stale, setStale]           = useState(false)
+  const [fetchError, setFetchError] = useState(false)
 
   const { clubs_primary: clubsPrimary } = useAppFocus()
   const displayName = team ? (translateTeam(team.name, i18n.language) ?? team.name) : null
@@ -53,10 +54,16 @@ export default function TeamShowPage() {
   useEffect(() => {
     setLoading(true)
     setStale(false)
+    setFetchError(false)
+    setTeam(null)
     fetchJson(`/api/v1/teams/${id}`)
       .then(({ data, stale: isStale, offline, ok }) => {
         setStale(isStale)
-        if (!ok || offline || !data) return
+        if (!ok || offline) {
+          setFetchError(true)
+          return
+        }
+        if (!data) return
         if (clubsPrimary && data.redirect) {
           navigate(data.redirect, { replace: true })
           return
@@ -72,20 +79,25 @@ export default function TeamShowPage() {
             .catch(() => {})
         }
       })
-      .catch(() => {})
+      .catch(() => setFetchError(true))
       .finally(() => setLoading(false))
   }, [id, clubsPrimary, navigate])
 
   const reloadTeam = useCallback(() => {
     setLoading(true)
     setStale(false)
+    setFetchError(false)
     fetchJson(`/api/v1/teams/${id}`)
       .then(({ data, stale: isStale, offline, ok }) => {
         setStale(isStale)
-        if (!ok || offline || !data) return
+        if (!ok || offline) {
+          setFetchError(true)
+          return
+        }
+        if (!data) return
         setTeam(data)
       })
-      .catch(() => {})
+      .catch(() => setFetchError(true))
       .finally(() => setLoading(false))
   }, [id])
 
@@ -156,6 +168,24 @@ export default function TeamShowPage() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (!loading && fetchError) {
+    return (
+      <div className="site-section">
+        <div className="container">
+          <OfflineBanner stale={stale} onRetry={reloadTeam} />
+          <div className="empty-state">
+            <div className="empty-state__icon">⚠️</div>
+            <h3>{t("error.dataUnavailable")}</h3>
+            <p>{t("error.tryAgain")}</p>
+            <button type="button" className="btn btn-sm btn-outline-light mt-3" onClick={reloadTeam}>
+              {t("error.retry")}
+            </button>
+          </div>
         </div>
       </div>
     )

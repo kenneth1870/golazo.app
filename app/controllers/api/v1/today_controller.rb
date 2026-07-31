@@ -68,6 +68,9 @@ module Api
         end
 
         render json: all
+      rescue StandardError => e
+        Rails.logger.error("[TodayController] #{e.message}")
+        render json: []
       end
 
       private

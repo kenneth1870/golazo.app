@@ -254,6 +254,7 @@ module ApiMatchNormalizer
       status:         fresh[:status],
       minute:         finished ? nil : fresh[:minute],
       minute_extra:   finished ? nil : fresh[:minute_extra],
+      kickoff_at:     fresh[:kickoff_at].presence || m[:kickoff_at],
       home_score:     home_score,
       away_score:     away_score,
       home_pen_score: home_pen,
