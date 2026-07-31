@@ -119,9 +119,10 @@ export default function OnboardingModal({ onDismiss, returnFocusRef }) {
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     )
     first?.focus()
+    const returnFocusEl = returnFocusRef?.current
     return () => {
       inerted.forEach(el => { el.inert = false })
-      returnFocusRef?.current?.focus()
+      returnFocusEl?.focus()
     }
   }, [returnFocusRef])
 

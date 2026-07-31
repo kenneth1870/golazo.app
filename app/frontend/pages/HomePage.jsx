@@ -193,7 +193,10 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
   const [teamUpcoming, setTeamUpcoming] = useState([])
   const [teamLoading, setTeamLoading] = useState(false)
 
-  const matchesTeam = (name) => matchTeamName(name, fav.name, i18n.language)
+  const matchesTeam = useCallback(
+    (name) => matchTeamName(name, fav.name, i18n.language),
+    [fav.name, i18n.language]
+  )
 
   const leagueCode = fav.league_code || leagueCodeFromMatches(upcomingMatches, fav.name, i18n.language)
 
@@ -225,7 +228,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
       .finally(() => { if (!cancelled) setTeamLoading(false) })
 
     return () => { cancelled = true }
-  }, [clubsPrimary, leagueCode, fav?.name, upcomingMatches, i18n.language])
+  }, [clubsPrimary, leagueCode, fav?.name, upcomingMatches, i18n.language, matchesTeam])
 
   const mergedMatches = (() => {
     const seen = new Set()

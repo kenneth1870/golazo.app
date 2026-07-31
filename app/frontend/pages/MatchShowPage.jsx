@@ -655,6 +655,17 @@ function LivePushBanner({ homeName, awayName, teamNamesRaw, leagueCode, onDismis
   )
 }
 
+// ─── Tab section error ─────────────────────────────────
+function TabSectionError({ onRetry, t }) {
+  return (
+    <div className="empty-state" style={{ paddingTop: 40 }}>
+      <div className="empty-state__icon">⚠️</div>
+      <h3>{t("error.dataUnavailable", "Data unavailable")}</h3>
+      <button type="button" className="btn btn-primary btn-sm" onClick={onRetry}>{t("error.retry")}</button>
+    </div>
+  )
+}
+
 // ─── Skeleton loader ───────────────────────────────────
 function MatchSkeleton() {
   return (
@@ -735,6 +746,8 @@ export default function MatchShowPage() {
   const swipeStartY   = useRef(null)
   const dataFetchedAt = useRef(0)    // timestamp of the most recent data update (poll or WS)
   const sectionsFetchedRef = useRef(new Set())
+  const [sectionErrors, setSectionErrors] = useState({})
+  const [sectionLoading, setSectionLoading] = useState({})
 
   // Detect if live
   const statusShort = data?.fixture?.fixture?.status?.short
@@ -834,7 +847,7 @@ export default function MatchShowPage() {
 
   // Goal notification logic
   const prevGoalsRef = useRef({ h: null, a: null })
-  function checkGoals(goals, events) {
+  const checkGoals = useCallback((goals, events) => {
     const h = goals?.home
     const a = goals?.away
     const prev = prevGoalsRef.current
@@ -850,7 +863,7 @@ export default function MatchShowPage() {
       // via the service worker — no duplicate notification needed here.
     }
     prevGoalsRef.current = { h, a }
-  }
+  }, [])
 
   // Poll for data — guards against a stale response overwriting fresher WS data.
   // We capture fetchStarted *before* the network round-trip; if a WS message
@@ -882,20 +895,54 @@ export default function MatchShowPage() {
       .catch(() => {
         setData(prev => (prev?.fixture ? prev : { error: "api_error" }))
       })
-  }, [id])
+  }, [id, isLive, checkGoals])
 
   useEffect(() => {
     sectionsFetchedRef.current = new Set()
+    setSectionErrors({})
+    setSectionLoading({})
     const cached = getCachedMatchDetail(id)
     if (cached) { setData(cached); setLoading(false) } else { setLoading(true) }
     load().finally(() => setLoading(false))
+  }, [id, load])
+
+  const loadSections = useCallback((sections) => {
+    if (!id || sections.length === 0) return Promise.resolve()
+    sections.forEach(s => {
+      sectionsFetchedRef.current.add(s)
+      setSectionErrors(prev => ({ ...prev, [s]: false }))
+      setSectionLoading(prev => ({ ...prev, [s]: true }))
+    })
+    return fetchJson(fetchMatchDetailInclude(id, sections.join(",")), 10000)
+      .then(({ data: d, ok, offline }) => {
+        if (!ok || offline || !d) {
+          sections.forEach(s => {
+            sectionsFetchedRef.current.delete(s)
+            setSectionErrors(prev => ({ ...prev, [s]: true }))
+          })
+          return
+        }
+        setData(prev => {
+          const merged = mergeCachedMatchDetail(id, { ...prev, ...d })
+          return merged || { ...prev, ...d }
+        })
+      })
+      .catch(() => {
+        sections.forEach(s => {
+          sectionsFetchedRef.current.delete(s)
+          setSectionErrors(prev => ({ ...prev, [s]: true }))
+        })
+      })
+      .finally(() => {
+        sections.forEach(s => setSectionLoading(prev => ({ ...prev, [s]: false })))
+      })
   }, [id])
 
   // Adaptive polling: 20s when live, 60s otherwise. Paused while the tab is
   // hidden — match_detail is the heaviest endpoint (external API call + DB
   // writes + ActionCable broadcasts on every hit), so a backgrounded tab must
   // not keep hammering it.
-  useVisiblePolling(load, isLive ? 30000 : 60000, [id])
+  useVisiblePolling(load, isLive ? 30000 : 60000, [id, load, isLive])
 
   // Lazy-load heavy sections when their tab is opened.
   useEffect(() => {
@@ -906,21 +953,9 @@ export default function MatchShowPage() {
     if (tab === "lineups" && needs("lineups")) sections.push("lineups")
     if (tab === "h2h" && needs("h2h")) sections.push("h2h")
     if (sections.length === 0) return
-
-    sections.forEach(s => sectionsFetchedRef.current.add(s))
-
-    fetchJson(fetchMatchDetailInclude(id, sections.join(",")), 10000)
-      .then(({ data: d, ok, offline }) => {
-        if (!ok || offline || !d) return
-        setData(prev => {
-          const merged = mergeCachedMatchDetail(id, { ...prev, ...d })
-          return merged || { ...prev, ...d }
-        })
-      })
-      .catch(() => {
-        sections.forEach(s => sectionsFetchedRef.current.delete(s))
-      })
-  }, [tab, id, loading, data?.fixture, data?.stats, data?.lineups, data?.h2h])
+    loadSections(sections)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- react to section keys only, not whole data object
+  }, [tab, id, loading, data?.fixture, data?.stats, data?.lineups, data?.h2h, loadSections])
 
   // ActionCable subscription — push updates when live.
   // Stamps dataFetchedAt so concurrent polls know this data is the freshest.
@@ -961,7 +996,7 @@ export default function MatchShowPage() {
         return updated
       })
     }
-  }, [])
+  }, [checkGoals])
 
   useExternalMatchChannel(isLive ? id : null, handleCableMessage)
 
@@ -1327,21 +1362,39 @@ export default function MatchShowPage() {
         )}
 
         {tab === "stats" && (
-          <Suspense fallback={<div className="loading-shimmer" style={{ height: 200, borderRadius: 12 }} />}>
-            <MatchStatsPanel stats={data?.stats} home={data?.fixture?.teams?.home} away={data?.fixture?.teams?.away} t={t} statusShort={statusShort} />
-          </Suspense>
+          sectionErrors.stats ? (
+            <TabSectionError onRetry={() => loadSections(["stats"])} t={t} />
+          ) : (sectionLoading.stats || data?.stats === undefined) ? (
+            <div className="loading-shimmer" style={{ height: 200, borderRadius: 12 }} />
+          ) : (
+            <Suspense fallback={<div className="loading-shimmer" style={{ height: 200, borderRadius: 12 }} />}>
+              <MatchStatsPanel stats={data?.stats} home={data?.fixture?.teams?.home} away={data?.fixture?.teams?.away} t={t} statusShort={statusShort} />
+            </Suspense>
+          )
         )}
 
         {tab === "lineups" && (
-          <Suspense fallback={<div className="loading-shimmer" style={{ height: 200, borderRadius: 12 }} />}>
-            <MatchLineupsPanel lineups={data?.lineups} fixtureId={id} t={t} statusShort={statusShort} />
-          </Suspense>
+          sectionErrors.lineups ? (
+            <TabSectionError onRetry={() => loadSections(["lineups"])} t={t} />
+          ) : (sectionLoading.lineups || data?.lineups === undefined) ? (
+            <div className="loading-shimmer" style={{ height: 200, borderRadius: 12 }} />
+          ) : (
+            <Suspense fallback={<div className="loading-shimmer" style={{ height: 200, borderRadius: 12 }} />}>
+              <MatchLineupsPanel lineups={data?.lineups} fixtureId={id} t={t} statusShort={statusShort} />
+            </Suspense>
+          )
         )}
 
         {tab === "h2h" && (
-          <Suspense fallback={<div className="loading-shimmer" style={{ height: 200, borderRadius: 12 }} />}>
-            <MatchH2HPanel h2h={data?.h2h} homeTeamName={homeName} awayTeamName={awayName} t={t} lang={i18n.language} />
-          </Suspense>
+          sectionErrors.h2h ? (
+            <TabSectionError onRetry={() => loadSections(["h2h"])} t={t} />
+          ) : (sectionLoading.h2h || data?.h2h === undefined) ? (
+            <div className="loading-shimmer" style={{ height: 200, borderRadius: 12 }} />
+          ) : (
+            <Suspense fallback={<div className="loading-shimmer" style={{ height: 200, borderRadius: 12 }} />}>
+              <MatchH2HPanel h2h={data?.h2h} homeTeamName={homeName} awayTeamName={awayName} t={t} lang={i18n.language} />
+            </Suspense>
+          )
         )}
 
         {tab === "ratings" && (

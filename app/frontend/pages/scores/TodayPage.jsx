@@ -460,11 +460,11 @@ export default function TodayPage() {
 
   const allGroups = useMemo(() => sortCompetitionGroups(Object.values(byComp)), [byComp])
 
-  function matchInvolvesAnyFav(m) {
-    return favoriteTeamNames.some(name =>
+  const matchInvolvesAnyFav = useCallback((m) => (
+    favoriteTeamNames.some(name =>
       matchTeamName(m.home_team?.name, name, i18n.language) || matchTeamName(m.away_team?.name, name, i18n.language)
     )
-  }
+  ), [favoriteTeamNames, i18n.language])
 
   // "My Teams" filter — only show competition blocks that include a followed team
   const groups = filterMyTeams && favoriteTeamNames.length > 0
@@ -483,7 +483,7 @@ export default function TodayPage() {
       const fav = favoriteTeamNames.length > 0 ? todayMatches.filter(matchInvolvesAnyFav) : []
       return liveCount > 0 ? fav.filter(m => m.status !== "live") : fav
     },
-    [todayMatches, favoriteTeamNames, i18n.language, liveCount]
+    [todayMatches, favoriteTeamNames, liveCount, matchInvolvesAnyFav]
   )
 
   const yourMatchKeys = useMemo(

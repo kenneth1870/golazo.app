@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useAuthContext } from "../../contexts/AuthContext"
 
 function timeAgo(iso) {
@@ -28,14 +28,14 @@ export default function AdminPushPage() {
   const [sending,  setSending]  = useState(false)
   const [result,   setResult]   = useState(null)
 
-  const loadDevices = () =>
+  const loadDevices = useCallback(() =>
     authJson("/api/v1/admin/push/devices")
       .then(d => setDevices(Array.isArray(d) ? d : []))
       .catch(err => {
         if (err.status === 401) return
         setFetchError(err.message || "Failed to load devices")
         setDevices([])
-      })
+      }), [authJson])
 
   useEffect(() => {
     authJson("/api/v1/admin/push")
@@ -45,7 +45,7 @@ export default function AdminPushPage() {
         setFetchError(err.message || "Failed to load push stats")
       })
     loadDevices()
-  }, [authJson])
+  }, [authJson, loadDevices])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 

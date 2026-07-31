@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { fetchJson } from "../utils/fetchJson"
@@ -43,34 +43,68 @@ export default function RelatedNewsStrip({
   const { t } = useTranslation()
   const [articles, setArticles] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  const load = useCallback(async () => {
+    if (relatedId) {
+      const { data, ok, offline } = await fetchJson(`/api/v1/news/${relatedId}/related?lang=${lang}&limit=${limit}`)
+      if (!ok || offline || !Array.isArray(data)) {
+        setError(true)
+        setArticles([])
+        return
+      }
+      setError(false)
+      setArticles(data)
+      return
+    }
+
+    const params = new URLSearchParams({ lang, limit: String(limit) })
+    if (query) params.set("q", query)
+    if (leagues) params.set("leagues", leagues)
+    if (!query && !leagues) return
+
+    const { data, ok, offline } = await fetchJson(`/api/v1/news?${params}`)
+    if (!ok || offline || !Array.isArray(data)) {
+      setError(true)
+      setArticles([])
+      return
+    }
+    setError(false)
+    setArticles(data)
+  }, [lang, query, relatedId, leagues, limit])
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
+    setError(false)
     setArticles([])
 
-    const load = async () => {
-      if (relatedId) {
-        const { data, ok } = await fetchJson(`/api/v1/news/${relatedId}/related?lang=${lang}&limit=${limit}`)
-        if (!cancelled && ok && Array.isArray(data)) setArticles(data)
-        return
-      }
-
-      const params = new URLSearchParams({ lang, limit: String(limit) })
-      if (query) params.set("q", query)
-      if (leagues) params.set("leagues", leagues)
-      if (!query && !leagues) return
-
-      const { data, ok } = await fetchJson(`/api/v1/news?${params}`)
-      if (!cancelled && ok && Array.isArray(data)) setArticles(data)
-    }
-
     load()
-      .catch(() => {})
+      .catch(() => { if (!cancelled) setError(true) })
       .finally(() => { if (!cancelled) setLoading(false) })
 
     return () => { cancelled = true }
-  }, [lang, query, relatedId, leagues, limit])
+  }, [load])
+
+  if (!loading && error) {
+    return (
+      <section className="related-news">
+        <div className="related-news__header">
+          <h3 className="related-news__title">{title}</h3>
+        </div>
+        <div style={{ textAlign: "center", padding: "20px 0", color: "var(--muted)", fontSize: "0.85rem" }}>
+          {t("error.failedToLoadNews")}
+          <button
+            type="button"
+            onClick={() => { setLoading(true); load().finally(() => setLoading(false)) }}
+            style={{ marginLeft: 8, background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "0.85rem", textDecoration: "underline" }}
+          >
+            {t("error.retry")}
+          </button>
+        </div>
+      </section>
+    )
+  }
 
   if (!loading && articles.length === 0) {
     return empty

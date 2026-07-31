@@ -302,6 +302,8 @@ export default function LeagueDetailPage() {
       const flat = flattenStandings(standData)
       setStandings(flat)
     }).finally(() => setLoading(false))
+    // Intentionally omit searchParams — only re-fetch when competition code changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code, setSearchParams])
 
   useEffect(() => {

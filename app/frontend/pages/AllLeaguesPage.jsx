@@ -84,12 +84,12 @@ export default function AllLeaguesPage() {
   const [stale, setStale]               = useState(false)
   const navigate = useNavigate()
 
-  const loadLive = () => {
+  const loadLive = useCallback(() => {
     if (document.hidden) return
     fetchJson("/api/v1/live_scores")
       .then(({ data, ok }) => { if (ok && Array.isArray(data)) setLiveMatches(data) })
       .catch(() => {})
-  }
+  }, [])
 
   const load = useCallback(() => {
     setLoading(true)
@@ -107,11 +107,11 @@ export default function AllLeaguesPage() {
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loadLive])
 
   const ptr = usePullRefresh(() => load(), { disabled: loading })
 
-  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load() }, [load])
 
   useVisiblePolling(loadLive, 30_000, [])
 

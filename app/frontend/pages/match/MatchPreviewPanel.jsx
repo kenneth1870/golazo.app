@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import SafeImg from "../../components/SafeImg"
 import { fetchJson } from "../../utils/fetchJson"
@@ -89,15 +89,38 @@ export function ComparisonBar({ label, home, away }) {
 export function InjuriesSection({ fixtureId, homeName, awayName }) {
   const { t } = useTranslation()
   const [injuries, setInjuries] = useState(null)
+  const [error, setError] = useState(false)
 
-  useEffect(() => {
+  const load = useCallback(() => {
     const apiId = String(fixtureId).replace(/^ext-/, "")
-    let cancelled = false
-    fetchJson(`/api/v1/fixture_injuries/${apiId}`)
-      .then(({ data: d, ok }) => { if (!cancelled) setInjuries(ok && Array.isArray(d) && d.length ? d : []) })
-      .catch(() => { if (!cancelled) setInjuries([]) })
-    return () => { cancelled = true }
+    setError(false)
+    return fetchJson(`/api/v1/fixture_injuries/${apiId}`)
+      .then(({ data: d, ok, offline }) => {
+        if (!ok || offline) {
+          setInjuries(null)
+          setError(true)
+          return
+        }
+        setInjuries(Array.isArray(d) && d.length ? d : [])
+      })
+      .catch(() => { setInjuries(null); setError(true) })
   }, [fixtureId])
+
+  useEffect(() => { load() }, [load])
+
+  if (error) {
+    return (
+      <section className="match-section" style={{ marginBottom: 20 }}>
+        <h3 className="match-section__title">🚑 {t("match.injuries")}</h3>
+        <div style={{ padding: "12px 0", textAlign: "center" }}>
+          <p style={{ color: "var(--muted)", fontSize: "0.85rem", marginBottom: 10 }}>
+            {t("error.dataUnavailable", "Data unavailable")}
+          </p>
+          <button type="button" className="btn btn-primary btn-sm" onClick={load}>{t("error.retry")}</button>
+        </div>
+      </section>
+    )
+  }
 
   if (!injuries?.length) return null
 

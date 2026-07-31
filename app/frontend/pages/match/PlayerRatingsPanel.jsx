@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import SafeImg from "../../components/SafeImg"
 import { translateTeam } from "../../i18n/teamNames"
@@ -17,14 +17,26 @@ export default function PlayerRatingsPanel({ fixtureId }) {
   const { t, i18n } = useTranslation()
   const [teams, setTeams]     = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState(false)
 
-  useEffect(() => {
+  const load = useCallback(() => {
     const apiId = String(fixtureId).replace(/^ext-/, "")
-    fetchJson(`/api/v1/fixture_ratings/${apiId}`)
-      .then(({ data: d, ok }) => setTeams(ok && Array.isArray(d) && d.length ? d : null))
-      .catch(() => {})
+    setLoading(true)
+    setError(false)
+    return fetchJson(`/api/v1/fixture_ratings/${apiId}`)
+      .then(({ data: d, ok, offline }) => {
+        if (!ok || offline) {
+          setTeams(null)
+          setError(true)
+          return
+        }
+        setTeams(Array.isArray(d) && d.length ? d : null)
+      })
+      .catch(() => { setTeams(null); setError(true) })
       .finally(() => setLoading(false))
   }, [fixtureId])
+
+  useEffect(() => { load() }, [load])
 
   // Find MOTM: highest-rated player across both teams
   const motmKey = teams ? (() => {
@@ -44,6 +56,14 @@ export default function PlayerRatingsPanel({ fixtureId }) {
         <div key={i} className="loading-shimmer" style={{ height: 56, borderRadius: 8, marginBottom: 6 }} />
       ))}
     </div>
+  )
+
+  if (error) return (
+    <EmptyState
+      icon="📡"
+      title={t("error.dataUnavailable", "Data unavailable")}
+      action={<button type="button" className="btn btn-primary btn-sm" onClick={load}>{t("error.retry")}</button>}
+    />
   )
 
   if (!teams) return (

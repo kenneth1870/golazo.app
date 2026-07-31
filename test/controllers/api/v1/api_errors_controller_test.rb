@@ -61,6 +61,24 @@ class Api::V1::ApiErrorsControllerTest < ActionDispatch::IntegrationTest
     Rails.cache = original_cache
   end
 
+  test "fixture ratings returns 503 when live scores API fails" do
+    with_failing_live_client do
+      get "/api/v1/fixture_ratings/12345"
+    end
+
+    assert_response :service_unavailable
+    assert_equal [], json_response
+  end
+
+  test "fixture injuries returns 503 when live scores API fails" do
+    with_failing_live_client do
+      get "/api/v1/fixture_injuries/12345"
+    end
+
+    assert_response :service_unavailable
+    assert_equal [], json_response
+  end
+
   private
 
   def with_failing_live_client
@@ -74,6 +92,8 @@ class Api::V1::ApiErrorsControllerTest < ActionDispatch::IntegrationTest
       define_method(:matches_for_league) { |*_args| raise "API down" }
       define_method(:league_standings) { |*_args| raise "API down" }
       define_method(:search_players) { |*_args| raise "API down" }
+      define_method(:player_ratings) { |*_args| raise "API down" }
+      define_method(:fixture_injuries) { |*_args| raise "API down" }
     end
 
     original = LiveScoresClient.method(:new)

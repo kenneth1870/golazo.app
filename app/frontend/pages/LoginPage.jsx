@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAuthContext } from "../contexts/AuthContext"
 import { fetchJson } from "../utils/fetchJson"
@@ -16,38 +16,7 @@ export default function LoginPage() {
   const [gLoading, setGLoading] = useState(false)
   const googleBtnRef = useRef(null)
 
-  useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return
-    const scriptId = "gsi-script"
-    if (document.getElementById(scriptId)) {
-      initGoogle()
-      return
-    }
-    const script = document.createElement("script")
-    script.id  = scriptId
-    script.src = "https://accounts.google.com/gsi/client"
-    script.async = true
-    script.defer = true
-    script.onload = initGoogle
-    document.head.appendChild(script)
-  }, [])
-
-  const initGoogle = () => {
-    if (!window.google || !googleBtnRef.current) return
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleGoogleCredential,
-    })
-    window.google.accounts.id.renderButton(googleBtnRef.current, {
-      theme: "outline",
-      size: "large",
-      width: 336,
-      text: "signin_with",
-      shape: "rectangular",
-    })
-  }
-
-  const handleGoogleCredential = async ({ credential }) => {
+  const handleGoogleCredential = useCallback(async ({ credential }) => {
     setGLoading(true)
     setGError(null)
     try {
@@ -68,7 +37,38 @@ export default function LoginPage() {
     } finally {
       setGLoading(false)
     }
-  }
+  }, [from, loginWithSession, navigate])
+
+  const initGoogle = useCallback(() => {
+    if (!window.google || !googleBtnRef.current) return
+    window.google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleCredential,
+    })
+    window.google.accounts.id.renderButton(googleBtnRef.current, {
+      theme: "outline",
+      size: "large",
+      width: 336,
+      text: "signin_with",
+      shape: "rectangular",
+    })
+  }, [handleGoogleCredential])
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return
+    const scriptId = "gsi-script"
+    if (document.getElementById(scriptId)) {
+      initGoogle()
+      return
+    }
+    const script = document.createElement("script")
+    script.id  = scriptId
+    script.src = "https://accounts.google.com/gsi/client"
+    script.async = true
+    script.defer = true
+    script.onload = initGoogle
+    document.head.appendChild(script)
+  }, [initGoogle])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

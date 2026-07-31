@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Link } from "react-router-dom"
 import { storageGet, storageSet } from "../../utils/safeStorage"
 import { fetchJson } from "../../utils/fetchJson"
@@ -59,7 +59,7 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
   const [error, setError]       = useState(null)
   const [loaded, setLoaded]     = useState(false)
 
-  const deviceId = getDeviceId()
+  const deviceId = useMemo(() => getDeviceId(), [])
   const isFinished = matchStatus === "FT" || matchStatus === "AET" || matchStatus === "PEN"
   const isLive     = !["NS", "FT", "AET", "PEN", "CANC", "PST", "ABD"].includes(matchStatus)
   const canPredict = matchStatus === "NS"   // only before kickoff
@@ -77,7 +77,7 @@ export default function ScorePredictionPanel({ matchId, homeName, awayName, matc
         setLoaded(true)
       })
       .catch(() => setLoaded(true))
-  }, [matchId])
+  }, [matchId, deviceId])
 
   async function submit() {
     const h = parseInt(homeVal)

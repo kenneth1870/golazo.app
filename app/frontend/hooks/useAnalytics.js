@@ -30,7 +30,7 @@ export function useAnalytics() {
   pathRef.current = location.pathname
 
   // Ping on every route change (also fires once on mount).
-  useEffect(() => { sendAnalyticsPing(pathRef.current) }, [location.pathname]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { sendAnalyticsPing(pathRef.current) }, [location.pathname])
 
   // Heartbeat while visible, flush on hide/unload, and fire right after the
   // user grants consent (so we don't wait up to 60s for the first ping).
@@ -48,5 +48,5 @@ export function useAnalytics() {
       window.removeEventListener("pagehide", beat)
       window.removeEventListener("golazo:consent", onConsent)
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useAuthContext } from "../../contexts/AuthContext"
 
 const STATUS_COLORS = {
@@ -96,7 +96,7 @@ export default function AdminMatchesPage() {
   const [resolving, setResolving] = useState(false)
   const [fixingKickoffs, setFixingKickoffs] = useState(false)
 
-  const load = () => {
+  const load = useCallback(() => {
     setLoading(true)
     setFetchError(null)
     authJson("/api/v1/admin/matches")
@@ -107,7 +107,7 @@ export default function AdminMatchesPage() {
         setMatches([])
       })
       .finally(() => setLoading(false))
-  }
+  }, [authJson])
 
   const healMatches = async () => {
     setHealing(true)
@@ -155,7 +155,7 @@ export default function AdminMatchesPage() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [load])
 
   const saveMatch = async (id, form) => {
     const res = await authFetch(`/api/v1/admin/matches/${id}`, {

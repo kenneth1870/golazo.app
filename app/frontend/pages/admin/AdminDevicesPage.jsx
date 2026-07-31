@@ -94,7 +94,7 @@ export default function AdminDevicesPage() {
   useEffect(() => {
     if (firstRender.current) { firstRender.current = false; return }
     setPage(1)
-  }, [q, os, country, pushOnly, blockedOnly]) // eslint-disable-line
+  }, [q, os, country, pushOnly, blockedOnly])
 
   // Debounced fetch on any filter/page change
   useEffect(() => {

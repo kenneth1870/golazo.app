@@ -7,7 +7,7 @@ module Api
         render json: data
       rescue => e
         Rails.logger.error("[FixtureRatingsController] #{e.message}")
-        render json: []
+        render json: [], status: :service_unavailable
       end
 
       private

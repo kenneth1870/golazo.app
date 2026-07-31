@@ -52,9 +52,10 @@ export default function SearchBar({ onClose, returnFocusRef }) {
     inputRef.current?.focus()
     const inerted = INERT_SELECTORS.flatMap(s => [...document.querySelectorAll(s)])
     inerted.forEach(el => { el.inert = true })
+    const returnFocusEl = returnFocusRef?.current
     return () => {
       inerted.forEach(el => { el.inert = false })
-      returnFocusRef?.current?.focus()
+      returnFocusEl?.focus()
     }
   }, [returnFocusRef])
 

@@ -59,7 +59,7 @@ export default function GroupStagePage() {
   useEffect(() => {
     loadStandings()
     loadBestThirds()
-  }, [hasLiveOrRecent])
+  }, [hasLiveOrRecent, loadStandings])
 
   // Refresh standings on an interval (30s with live/recent matches, 60s
   // otherwise), paused while the tab is hidden.

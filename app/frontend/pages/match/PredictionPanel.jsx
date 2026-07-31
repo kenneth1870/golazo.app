@@ -18,7 +18,7 @@ export default function PredictionPanel({ matchId, homeTeamName, awayTeamName, t
     fetchJson(`/api/v1/predictions/${matchId}`, { soft: true })
       .then(({ data, ok, offline }) => { if (ok && !offline && data) setPred(data) })
       .catch(() => {})
-  }, [matchId])
+  }, [matchId, TOKEN_KEY])
 
   function castVote(choice) {
     if (myVote || voting) return

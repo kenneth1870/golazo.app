@@ -132,7 +132,7 @@ export default function TeamShowPage() {
     tick()
     countdownRef.current = setInterval(tick, 1000)
     return () => clearInterval(countdownRef.current)
-  }, [team]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [team])
 
   if (loading) {
     return (

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useAuthContext } from "../../contexts/AuthContext"
 
 const inputStyle = { width: "100%", boxSizing: "border-box", background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: "9px 12px", color: "#fff", fontSize: "0.88rem", outline: "none" }
@@ -36,7 +36,7 @@ export default function AdminUsersPage() {
 
   const showToast = (msg, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 3000) }
 
-  const load = () => {
+  const load = useCallback(() => {
     setLoading(true)
     setFetchError(null)
     authJson("/api/v1/admin/users")
@@ -47,9 +47,9 @@ export default function AdminUsersPage() {
         setUsers([])
       })
       .finally(() => setLoading(false))
-  }
+  }, [authJson])
 
-  useEffect(() => { load() }, [authJson])
+  useEffect(() => { load() }, [load])
 
   const filtered = users.filter(u =>
     (!roleF   || u.role === roleF) &&
