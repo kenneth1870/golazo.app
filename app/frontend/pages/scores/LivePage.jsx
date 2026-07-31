@@ -123,7 +123,7 @@ export default function LivePage() {
         <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
           <EmptyState
             icon="⚠️"
-            title={t("error.failedToLoad")}
+            title={t("error.failedToLoadLive")}
             action={
               <button className="btn btn-primary btn-sm" onClick={() => load()}>
                 {t("error.retry")}

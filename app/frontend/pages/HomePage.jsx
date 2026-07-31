@@ -93,8 +93,7 @@ function useTodayFeed(wcOnly = false) {
                     (d.match_id != null && m.id === d.match_id)
         if (!hit) return m
         if (m.home_score === d.home_score && m.away_score === d.away_score &&
-            m.status === d.status && m.minute === d.minute &&
-            m.minute_extra === d.minute_extra) return m
+            m.status === d.status && m.minute === d.minute) return m
         touched = true
         return {
           ...m,
@@ -149,7 +148,7 @@ function useLatestNews(leagueCodes = []) {
   return { news, newsError: error, newsStale: stale, newsLoading: loading, retryNews: load }
 }
 
-function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = false }) {
+function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = false, suppressLive = false }) {
   const { i18n } = useTranslation()
   const [teamUpcoming, setTeamUpcoming] = useState([])
   const [teamLoading, setTeamLoading] = useState(false)
@@ -201,7 +200,9 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
   const favMatches = mergedMatches.filter(m =>
     matchesTeam(m.home_team?.name) || matchesTeam(m.away_team?.name)
   )
-  const next = favMatches.find(m => m.status === "live") || favMatches[0]
+  const next = suppressLive
+    ? favMatches.find(m => m.status !== "live")
+    : (favMatches.find(m => m.status === "live") || favMatches[0])
   const teamHref = leagueCode
     ? clubTeamPath(leagueCode, fav.name)
     : (/^\d+$/.test(String(fav.id)) ? `/teams/${fav.id}` : null)
@@ -534,7 +535,7 @@ function TodayMatchesSection({ todayMatches, upcomingPreview = [], loading = fal
 }
 
 // ─── Your matches (followed teams) ────────────────────────────────────────────
-function YourMatchesSection({ todayMatches, favoriteTeamNames, navigate, t }) {
+function YourMatchesSection({ todayMatches, favoriteTeamNames, navigate, t, excludeLive = false }) {
   const { i18n } = useTranslation()
   const yourMatches = favoriteTeamNames.length > 0
     ? todayMatches.filter(m =>
@@ -543,8 +544,9 @@ function YourMatchesSection({ todayMatches, favoriteTeamNames, navigate, t }) {
         )
       )
     : []
+  const visible = excludeLive ? yourMatches.filter(m => m.status !== "live") : yourMatches
 
-  if (yourMatches.length === 0) return null
+  if (visible.length === 0) return null
 
   return (
     <div style={{ marginBottom: 16 }}>
@@ -555,8 +557,8 @@ function YourMatchesSection({ todayMatches, favoriteTeamNames, navigate, t }) {
         <span>★</span> {t("scores.yourMatches")}
       </div>
       <div style={{ background: "var(--surface)", borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)" }}>
-        {yourMatches.map((m, i) => (
-          <div key={m.id} style={{ borderBottom: i < yourMatches.length - 1 ? "1px solid var(--border)" : "none" }}>
+        {visible.map((m, i) => (
+          <div key={m.id} style={{ borderBottom: i < visible.length - 1 ? "1px solid var(--border)" : "none" }}>
             <MatchRow match={m} showDate={false} onClick={() => navigateToMatch(navigate, m)} />
           </div>
         ))}
@@ -735,6 +737,7 @@ export default function HomePage() {
             favoriteTeamNames={favoriteTeamNames}
             navigate={navigate}
             t={t}
+            excludeLive={todayLiveCount > 0}
           />
         )}
       </div>
@@ -754,7 +757,7 @@ export default function HomePage() {
           <FavoriteTeamPicker />
         </div>
         {fav ? (
-          <FavoriteTeamCard fav={fav} upcomingMatches={favUpcoming} navigate={navigate} t={t} clubsPrimary={clubsPrimary} />
+          <FavoriteTeamCard fav={fav} upcomingMatches={favUpcoming} navigate={navigate} t={t} clubsPrimary={clubsPrimary} suppressLive={todayLiveCount > 0} />
         ) : (
           <div className="home-follow-cta">
             <p>{t(clubsPrimary ? "news.forYouEmptyHintClubs" : "news.forYouEmptyHint")}</p>

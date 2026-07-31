@@ -14,6 +14,7 @@ import { clubTeamPath } from "../utils/clubTeamPath"
 import { matchTeamName } from "../utils/matchTeamName"
 import { leagueHeroStyle } from "../utils/leagueHeroImages"
 import { fetchJson } from "../utils/fetchJson"
+import { mergeLiveMatchSnapshot } from "../hooks/useMatches"
 import OfflineBanner from "../components/OfflineBanner"
 import RelatedNewsStrip from "../components/RelatedNewsStrip"
 
@@ -246,7 +247,11 @@ export default function LeagueDetailPage() {
       .then(({ data, stale: isStale, offline, ok }) => {
         setMatchesStale(isStale)
         if (!ok || offline) { setMatches([]); return }
-        setMatches(Array.isArray(data) ? data : [])
+        setMatches(prev => {
+          const prevById = new Map(prev.map(m => [m.external_id ?? m.id, m]))
+          const incoming = Array.isArray(data) ? data : []
+          return incoming.map(m => mergeLiveMatchSnapshot(m, prevById.get(m.external_id ?? m.id)))
+        })
       })
       .catch(() => setMatches([]))
   }, [code, tab, tabParam])
@@ -300,11 +305,21 @@ export default function LeagueDetailPage() {
     setMatches(prev => {
       let touched = false
       const next = prev.map(m => {
-        const hit = d.external_id != null && m.external_id === d.external_id
+        const hit = (d.external_id != null && m.external_id === d.external_id) ||
+                    (d.match_id != null && m.id === d.match_id)
         if (!hit) return m
-        if (m.home_score === d.home_score && m.away_score === d.away_score && m.status === d.status) return m
+        if (m.home_score === d.home_score && m.away_score === d.away_score &&
+            m.status === d.status && m.minute === d.minute &&
+            m.minute_extra === d.minute_extra) return m
         touched = true
-        return { ...m, home_score: d.home_score, away_score: d.away_score, status: d.status, minute: d.minute }
+        return {
+          ...m,
+          home_score: d.home_score,
+          away_score: d.away_score,
+          status: d.status,
+          minute: d.minute,
+          minute_extra: d.minute_extra,
+        }
       })
       return touched ? next : prev
     })

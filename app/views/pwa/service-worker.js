@@ -1,4 +1,4 @@
-const CACHE_NAME = "golazo-v6"
+const CACHE_NAME = "golazo-v7"
 const TODAY_API  = "/api/v1/today"
 const OFFLINE_URLS = ["/", TODAY_API]
 
@@ -54,6 +54,7 @@ self.addEventListener("fetch", (event) => {
 
 // ── Push notifications ───────────────────────────────────
 self.addEventListener("push", (event) => {
+  if (!event.data) return
   const d = event.data.json()
   // One notification slot per match — new events replace the old one for that
   // match (same tag) and re-alert the user (renotify: true). This prevents a
@@ -104,7 +105,7 @@ self.addEventListener("notificationclick", (event) => {
       for (const client of clientList) {
         if ("focus" in client) {
           client.focus()
-          if (client.navigate) client.navigate(path)
+          client.postMessage({ type: "navigate", url: path })
           return
         }
       }

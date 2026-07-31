@@ -479,8 +479,11 @@ export default function TodayPage() {
   const liveCount = liveMatches.length
 
   const yourMatches = useMemo(
-    () => (favoriteTeamNames.length > 0 ? todayMatches.filter(matchInvolvesAnyFav) : []),
-    [todayMatches, favoriteTeamNames, i18n.language]
+    () => {
+      const fav = favoriteTeamNames.length > 0 ? todayMatches.filter(matchInvolvesAnyFav) : []
+      return liveCount > 0 ? fav.filter(m => m.status !== "live") : fav
+    },
+    [todayMatches, favoriteTeamNames, i18n.language, liveCount]
   )
 
   const yourMatchKeys = useMemo(

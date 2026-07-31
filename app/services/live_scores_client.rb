@@ -877,9 +877,23 @@ class LiveScoresClient
 
   def get(path, params = {})
     resp = @conn.get(path, params)
-    JSON.parse(resp.body)
+    unless resp.success?
+      Rails.logger.error("[LiveScoresClient] GET #{path} HTTP #{resp.status}")
+      raise Faraday::Error, "HTTP #{resp.status}"
+    end
+    body = JSON.parse(resp.body)
+    if body["errors"].present?
+      Rails.logger.error("[LiveScoresClient] GET #{path} API errors: #{body['errors']}")
+      raise Faraday::Error, body["errors"].to_s
+    end
+    body
+  rescue JSON::ParserError => e
+    Rails.logger.error("[LiveScoresClient] GET #{path} invalid JSON: #{e.message}")
+    raise
+  rescue Faraday::Error
+    raise
   rescue => e
     Rails.logger.error("[LiveScoresClient] GET #{path} #{params}: #{e.message}")
-    {}
+    raise Faraday::Error, e.message
   end
 end

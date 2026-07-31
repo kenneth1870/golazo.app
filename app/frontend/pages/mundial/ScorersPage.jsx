@@ -220,7 +220,7 @@ export default function ScorersPage() {
 
         {!loading && error && (
           <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
+            <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoadScorers")}</p>
             <button className="btn btn-primary btn-sm" onClick={() => fetchTab(activeTab)}>{t("error.retry")}</button>
           </div>
         )}

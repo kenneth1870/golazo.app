@@ -34,6 +34,9 @@ module Api
         render json: filter_for_tab(matches, tab, today: today, tz: tz)
       rescue ArgumentError
         render json: []
+      rescue StandardError => e
+        Rails.logger.error("[CompetitionFixturesController] #{e.message}")
+        render json: []
       end
 
       private

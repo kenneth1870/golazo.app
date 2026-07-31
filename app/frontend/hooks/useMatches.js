@@ -162,7 +162,8 @@ export function patchLiveScore(d) {
     const next = entry.data.map(m => {
       if (!isHit(m)) return m
       if (m.home_score === d.home_score && m.away_score === d.away_score &&
-          m.status === d.status && m.minute === d.minute) return m
+          m.status === d.status && m.minute === d.minute &&
+          m.minute_extra === d.minute_extra) return m
       patched = true
       return applyScorePatch(m, d)
     })

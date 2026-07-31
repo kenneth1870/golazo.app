@@ -75,7 +75,7 @@ function MatchRow({
     >
       <div className="match-row__status">
         {isLive
-          ? <span className="match-status-live"><span className="live-dot" />{liveMinute ? `${liveMinute}'${match.minute_extra ? `+${match.minute_extra}` : ""}` : t("status.live")}</span>
+          ? <span className="match-status-live"><span className="live-dot" />{liveMinute != null ? `${liveMinute}'${match.minute_extra ? `+${match.minute_extra}` : ""}` : (match.minute != null ? `${match.minute}'${match.minute_extra ? `+${match.minute_extra}` : ""}` : t("status.live"))}</span>
           : isFinished
           ? <>
               <span className="match-status-ft">{t("status.ft")}</span>

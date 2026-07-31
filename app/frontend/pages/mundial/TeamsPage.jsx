@@ -42,7 +42,7 @@ export default function TeamsPage() {
   if (error) return (
     <div className="site-section">
       <div className="container" style={{ textAlign: "center", paddingTop: 60 }}>
-        <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoad")}</p>
+        <p style={{ color: "var(--muted)", marginBottom: 16 }}>{t("error.failedToLoadTeams")}</p>
         <button className="btn btn-primary btn-sm" onClick={load}>{t("error.retry")}</button>
       </div>
     </div>

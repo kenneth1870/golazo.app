@@ -71,14 +71,15 @@ module Api
 
       def search_live_matches(needle)
         client = LiveScoresClient.new
-        dates  = (Date.today - 1)..(Date.today + 14)
-        raw    = dates.flat_map { |d| client.matches_for_date(d) }
+        tz     = sanitize_tz(params[:tz])
+        dates  = (Date.today - 1)..(Date.today + 3)
+        raw    = dates.flat_map { |d| client.matches_for_date(d, timezone: tz) }
                       .select { |m| AppFocus.important_match?(m) }
                       .uniq { |m| m[:external_id] }
 
-        refreshed = refresh_club_fixtures(raw)
-        refreshed.select { |m| match_names(m).any? { |n| n.include?(needle) } }
-           .sort_by { |m| [ m[:status] == "live" ? 0 : 1, m[:kickoff_at].to_s ] }
+        matched = raw.select { |m| match_names(m).any? { |n| n.include?(needle) } }
+        refreshed = refresh_club_fixtures(matched, refresh_cap: 2)
+        refreshed.sort_by { |m| [ m[:status] == "live" ? 0 : 1, m[:kickoff_at].to_s ] }
            .first(6)
            .map { |m| serialize_live_match(m) }
       end

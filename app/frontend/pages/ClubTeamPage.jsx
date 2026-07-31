@@ -64,9 +64,20 @@ export default function ClubTeamPage() {
     setData(prev => {
       if (!prev) return prev
       const patch = ms => ms.map(m => {
-        if (m.external_id !== d.external_id) return m
-        if (m.home_score === d.home_score && m.away_score === d.away_score && m.status === d.status) return m
-        return { ...m, home_score: d.home_score, away_score: d.away_score, status: d.status, minute: d.minute }
+        const hit = (d.external_id != null && m.external_id === d.external_id) ||
+                    (d.match_id != null && m.id === d.match_id)
+        if (!hit) return m
+        if (m.home_score === d.home_score && m.away_score === d.away_score &&
+            m.status === d.status && m.minute === d.minute &&
+            m.minute_extra === d.minute_extra) return m
+        return {
+          ...m,
+          home_score: d.home_score,
+          away_score: d.away_score,
+          status: d.status,
+          minute: d.minute,
+          minute_extra: d.minute_extra,
+        }
       })
       return { ...prev, upcoming: patch(prev.upcoming || []), recent: patch(prev.recent || []) }
     })
