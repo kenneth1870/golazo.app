@@ -3,6 +3,33 @@ module Api
     class ClubTeamsController < BaseController
       include ApiMatchNormalizer
 
+      def index
+        teams = []
+        seen  = Set.new
+
+        AppFocus::FEATURED_CLUB_CODES.each do |code|
+          flatten_standings(cached_standings(code)).each do |row|
+            name = row.dig(:team, :name)
+            next if name.blank? || seen.include?(name)
+
+            seen.add(name)
+            teams << {
+              id:          name,
+              name:        name,
+              flag_url:    row.dig(:team, :flag_url),
+              code:        row.dig(:team, :code),
+              league_code: code,
+              group:       nil
+            }
+          end
+        end
+
+        render json: teams.sort_by { |t| t[:name].to_s.downcase }
+      rescue StandardError => e
+        Rails.logger.error("[ClubTeamsController#index] #{e.message}")
+        render json: []
+      end
+
       def show
         code = params[:code].to_s.upcase
         slug = params[:slug].to_s

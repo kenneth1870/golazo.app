@@ -22,6 +22,7 @@ export default function ScoresPage() {
 
   const TABS = [
     { path: "/scores/today",    label: t("scores.tabToday",   t("time.today")),        live: liveCount > 0 },
+    ...(liveCount > 0 ? [{ path: "/scores/live", label: t("scores.tabLive", t("nav.live")), live: true }] : []),
     { path: "/scores/results",  label: t("scores.tabResults",  t("nav.results"))  },
     ...(!clubsPrimary ? [
       { path: "/mundial/groups",   label: t("scores.tabGroups",   t("nav.groupStage")) },

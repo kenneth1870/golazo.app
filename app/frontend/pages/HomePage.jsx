@@ -177,6 +177,17 @@ function useLatestNews(leagueCodes = []) {
   return { news, newsError: error, newsStale: stale, newsLoading: loading, retryNews: load }
 }
 
+function leagueCodeFromMatches(matches, favName, lang) {
+  for (const m of matches) {
+    const involved = matchTeamName(m.home_team?.name, favName, lang) ||
+      matchTeamName(m.away_team?.name, favName, lang)
+    if (!involved) continue
+    const code = m.competition?.code
+    if (code && !String(code).match(/^\d+$/)) return code
+  }
+  return null
+}
+
 function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = false, suppressLive = false }) {
   const { i18n } = useTranslation()
   const [teamUpcoming, setTeamUpcoming] = useState([])
@@ -184,7 +195,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
 
   const matchesTeam = (name) => matchTeamName(name, fav.name, i18n.language)
 
-  const leagueCode = fav.league_code || (clubsPrimary ? "CRC" : null)
+  const leagueCode = fav.league_code || leagueCodeFromMatches(upcomingMatches, fav.name, i18n.language)
 
   useEffect(() => {
     if (!clubsPrimary || !leagueCode || !fav?.name) {

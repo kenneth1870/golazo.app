@@ -38,6 +38,7 @@ Rails.application.routes.draw do
         get "fixtures", to: "competition_fixtures#index"
       end
       get "search",       to: "search#index"
+      get "club_teams",   to: "club_teams#index"
       get "club_teams/:code/:slug", to: "club_teams#show"
       get "config",       to: "config#show"
       get "locale",       to: "locale#index"

@@ -17,8 +17,10 @@ const GROUPS = Array.from({ length: 12 }, (_, i) => String.fromCharCode(65 + i))
 // ─── Theme toggle — see ThemeToggle.jsx ─────────────────
 export function NotifToggle({ variant = "drawer" }) {
   const { t } = useTranslation()
-  const { supported, subscribed, loading, subscribe, unsubscribe, needsIosInstall } = usePushNotifications()
+  const { supported, subscribed, loading, subscribe, unsubscribe, needsIosInstall, pushEnabled } = usePushNotifications()
   const [iosHint, setIosHint] = useState(false)
+
+  if (!pushEnabled) return null
 
   // Hide completely on browsers that can never support push (iOS Chrome, Firefox on iOS)
   if (!supported && !needsIosInstall) return null

@@ -124,6 +124,7 @@ export default function App() {
   useAnalytics() // fire-and-forget usage heartbeat for the admin device panel
   useKeepAlive() // ping /up every 4 min to prevent Render free-plan cold starts
   useAutoSubscribePush()
+  const { push_enabled: pushEnabled = false } = useAppFocus()
   const { show: showOnboarding, dismiss: dismissOnboarding } = useOnboarding()
   const { favoriteTeams } = useFavorites()
   const favTeamName = favoriteTeams[0]?.name ?? null
@@ -181,7 +182,7 @@ export default function App() {
       <ScrollToTop />
       <Navbar />
       {showOnboarding && <OnboardingModal onDismiss={dismissOnboarding} />}
-      <PushPrompt favoriteTeamName={favTeamName} paused={showOnboarding} />
+      {pushEnabled && <PushPrompt favoriteTeamName={favTeamName} paused={showOnboarding} />}
       <IosInstallGuide paused={showOnboarding} />
 
       <main id="main-content" key={location.pathname} className="main-content page-transition">

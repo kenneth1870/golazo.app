@@ -5,6 +5,7 @@ import { useFavorites } from "../hooks/useFavorites"
 import { scopeFromFavorites } from "../utils/pushScope"
 import { claimPrompt, releasePrompt } from "../utils/promptCoordinator"
 import { storageGet } from "../utils/safeStorage"
+import { useAppFocus } from "../hooks/useAppFocus"
 
 const DISMISSED_KEY = "golazo_push_dismissed_at"
 const DISMISS_TTL_MS = 24 * 60 * 60 * 1000 // re-prompt after 1 day
@@ -14,6 +15,7 @@ const ONBOARDING_GRACE_MS = 60 * 60 * 1000
 // Asks to enable goal alerts, optionally scoped to a favorite team.
 export default function PushPrompt({ favoriteTeamName = null, paused = false }) {
   const { t } = useTranslation()
+  const { pushEnabled } = useAppFocus()
   const { favorites } = useFavorites()
   const { supported, permission, subscribed, loading, subscribe, needsIosInstall } = usePushNotifications()
   const [visible, setVisible] = useState(false)
@@ -41,6 +43,7 @@ export default function PushPrompt({ favoriteTeamName = null, paused = false }) 
     return () => clearTimeout(timer)
   }, [supported, needsIosInstall, permission, subscribed, paused])
 
+  if (!pushEnabled) return null
   if (paused || !visible || subscribed || done) return null
   if (permission === "denied") return null
 
