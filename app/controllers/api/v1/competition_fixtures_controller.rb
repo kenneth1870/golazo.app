@@ -33,10 +33,10 @@ module Api
         matches = refresh_club_fixtures(matches)
         render json: filter_for_tab(matches, tab, today: today, tz: tz)
       rescue ArgumentError
-        render json: []
+        render json: [], status: :bad_request
       rescue StandardError => e
         Rails.logger.error("[CompetitionFixturesController] #{e.message}")
-        render json: []
+        render json: [], status: :service_unavailable
       end
 
       private

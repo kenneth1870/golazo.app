@@ -97,7 +97,7 @@ export default function OnboardingModal({ onDismiss, returnFocusRef }) {
   const { t, i18n } = useTranslation()
   const { addFavorite, favorites } = useFavorites()
   const { subscribe } = usePushNotifications()
-  const { push_enabled: pushEnabled = false, clubs_primary: clubsPrimary = true } = useAppFocus()
+  const { push_enabled: pushEnabled = false, clubs_primary: clubsPrimary = true, wc_paused: wcPaused = true } = useAppFocus()
 
   const [step, setStep]               = useState(0)
   const [selectedTeams, setTeams]     = useState([])
@@ -228,7 +228,7 @@ export default function OnboardingModal({ onDismiss, returnFocusRef }) {
     }
   }
 
-  const visibleLeagues = LEAGUE_DEFS.filter(l => !clubsPrimary || l.code !== "WC")
+  const visibleLeagues = LEAGUE_DEFS.filter(l => !wcPaused || l.code !== "WC")
 
   const steps = [
     {

@@ -16,6 +16,14 @@ class AppFocusTest < ActiveSupport::TestCase
     end
   end
 
+  test "both mode keeps clubs and wc active" do
+    with_focus("both") do
+      assert AppFocus.clubs_primary?
+      assert AppFocus.wc_primary?
+      assert_not AppFocus.wc_paused?
+    end
+  end
+
   test "league_id_for maps featured codes" do
     assert_equal 162, AppFocus.league_id_for("CRC")
     assert_equal 262, AppFocus.league_id_for("LMX")

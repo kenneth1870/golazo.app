@@ -2,10 +2,7 @@ class SyncTodayMatchesJob < ApplicationJob
   queue_as :default
 
   def perform
-    if AppFocus.clubs_primary?
-      sync_club_date_caches
-      return
-    end
+    sync_club_date_caches if AppFocus.clubs_primary?
 
     return if AppFocus.wc_paused?
 

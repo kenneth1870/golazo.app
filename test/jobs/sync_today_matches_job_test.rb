@@ -20,6 +20,31 @@ class SyncTodayMatchesJobTest < ActiveSupport::TestCase
     end
   end
 
+  test "both mode busts club caches without skipping wc sync path" do
+    with_focus("both") do
+      memory_cache = ActiveSupport::Cache::MemoryStore.new
+      original_cache = Rails.cache
+      Rails.cache = memory_cache
+      original_sync = WorldCupSync.method(:new)
+      WorldCupSync.define_singleton_method(:new) do
+        Class.new do
+          define_method(:sync_today) { }
+          define_method(:force_sync_dates) { |_dates| }
+        end.new
+      end
+      begin
+        Rails.cache.write("today_api_v2_#{Date.today.iso8601}_America/Costa_Rica", [ 1 ])
+
+        SyncTodayMatchesJob.perform_now
+
+        assert_nil Rails.cache.read("today_api_v2_#{Date.today.iso8601}_America/Costa_Rica")
+      ensure
+        WorldCupSync.define_singleton_method(:new, original_sync)
+        Rails.cache = original_cache
+      end
+    end
+  end
+
   private
 
   def with_focus(value)

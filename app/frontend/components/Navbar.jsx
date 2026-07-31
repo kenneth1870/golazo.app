@@ -201,7 +201,7 @@ export default function Navbar() {
   const location  = useLocation()
   const { t }     = useTranslation()
   const liveCount = useLiveCount()
-  const { clubs_primary: clubsPrimary } = useAppFocus()
+  const { clubs_primary: clubsPrimary, wc_paused: wcPaused = true } = useAppFocus()
   const brandSubtitle = clubsPrimary ? t("hero.clubBadge") : t("nav.mundialShort")
   const [searchOpen, setSearchOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -326,7 +326,7 @@ export default function Navbar() {
             </>
           )}
 
-          {!clubsPrimary && (
+          {!wcPaused && (
             <>
           <div className="mobile-drawer-divider">{t("nav.mundial")}</div>
 
@@ -350,7 +350,7 @@ export default function Navbar() {
             </>
           )}
 
-          {!clubsPrimary && (
+          {!wcPaused && (
             <>
           <div className="mobile-drawer-divider">{t("nav.groups")}</div>
           <MobileGroupGrid />
@@ -415,7 +415,7 @@ export default function Navbar() {
               </div>
 
               {/* Mundial 2026 (mega-menu) — archived in clubs mode */}
-              {!clubsPrimary && (
+              {!wcPaused && (
               <div className="nav-item has-mega">
                 <NavLink to="/mundial" className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}>
                   {t("nav.mundial")}

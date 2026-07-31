@@ -7,7 +7,7 @@ import { useAppFocus } from "../hooks/useAppFocus"
 export default function ScoresPage() {
   const { t } = useTranslation()
   const liveCount = useLiveCount()
-  const { clubs_primary: clubsPrimary } = useAppFocus()
+  const { clubs_primary: clubsPrimary, wc_paused: wcPaused = true } = useAppFocus()
 
   usePageMeta(
     liveCount > 0
@@ -24,7 +24,7 @@ export default function ScoresPage() {
     { path: "/scores/today",    label: t("scores.tabToday",   t("time.today")),        live: liveCount > 0 },
     ...(liveCount > 0 ? [{ path: "/scores/live", label: t("scores.tabLive", t("nav.live")), live: true }] : []),
     { path: "/scores/results",  label: t("scores.tabResults",  t("nav.results"))  },
-    ...(!clubsPrimary ? [
+    ...(!wcPaused ? [
       { path: "/mundial/groups",   label: t("scores.tabGroups",   t("nav.groupStage")) },
       { path: "/mundial/knockout", label: t("scores.tabBracket",  t("nav.knockout"))  },
     ] : []),

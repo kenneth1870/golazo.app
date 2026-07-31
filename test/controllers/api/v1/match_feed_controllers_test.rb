@@ -37,6 +37,15 @@ class Api::V1::MatchFeedControllersTest < ActionDispatch::IntegrationTest
     assert_equal [], json_response
   end
 
+  test "competition fixtures returns 503 when live scores API fails" do
+    with_failing_live_client do
+      get "/api/v1/competitions/CRC/fixtures", params: { tab: "today", tz: "America/Costa_Rica" }
+    end
+
+    assert_response :service_unavailable
+    assert_equal [], json_response
+  end
+
   private
 
   def with_failing_live_client
@@ -47,7 +56,7 @@ class Api::V1::MatchFeedControllersTest < ActionDispatch::IntegrationTest
       define_method(:matches_for_date) { |*_args| raise "API down" }
       define_method(:live_matches) { raise "API down" }
       define_method(:current_season_for_league) { |*_args| 2025 }
-      define_method(:matches_for_league) { |*_args| [] }
+      define_method(:matches_for_league) { |*_args| raise "API down" }
     end
 
     original = LiveScoresClient.method(:new)

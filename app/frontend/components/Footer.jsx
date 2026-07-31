@@ -7,7 +7,7 @@ import { NAV_LEAGUES } from "./ClubCompetitionChips"
 
 export default function Footer() {
   const { t } = useTranslation()
-  const { clubs_primary: clubsPrimary } = useAppFocus()
+  const { clubs_primary: clubsPrimary, wc_paused: wcPaused = true } = useAppFocus()
   const brandSubtitle = clubsPrimary ? t("hero.clubBadge") : t("nav.mundialShort")
 
   return (
@@ -37,7 +37,7 @@ export default function Footer() {
             <ul className="footer-links">
               <li><Link to="/scores/today">{t("time.today")}</Link></li>
               <li><Link to="/scores/results">{t("nav.results")}</Link></li>
-              {!clubsPrimary && (
+              {!wcPaused && (
                 <>
                   <li><Link to="/mundial/groups">{t("nav.groupStage")}</Link></li>
                   <li><Link to="/mundial/knockout">{t("nav.knockout")}</Link></li>
@@ -62,7 +62,7 @@ export default function Footer() {
           </div>
 
           {/* ── Mundial ── */}
-          {!clubsPrimary && (
+          {!wcPaused && (
           <div className="footer-col">
             <h4 className="footer-col__title">{t("nav.mundial")}</h4>
             <ul className="footer-links">

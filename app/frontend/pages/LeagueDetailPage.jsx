@@ -273,26 +273,34 @@ export default function LeagueDetailPage() {
         if (!ok || offline || data?.error === "not_found") return { notFound: true }
         return { comp: data }
       }),
-      fetchJson(`/api/v1/competitions/${code}/fixtures?tab=today&tz=${encodeURIComponent(tz)}`).then(({ data, ok }) => ok && Array.isArray(data) ? data : []),
+      fetchJson(`/api/v1/competitions/${code}/fixtures?tab=today&tz=${encodeURIComponent(tz)}`).then(({ data, ok, offline }) => {
+        if (!ok || offline || !Array.isArray(data)) return { matchesError: true, matches: [] }
+        return { matches: data }
+      }),
       fetchJson(`/api/v1/standings?competition=${code}`).then(({ data, ok }) => ok ? data : {}).catch(() => ({})),
-    ]).then(([compResult, matchData, standData]) => {
+    ]).then(([compResult, matchResult, standData]) => {
       if (compResult.notFound) {
         setNotFound(true)
         return
       }
       setCompetition(compResult.comp)
-      const ms = Array.isArray(matchData) ? matchData : []
-      setMatches(ms)
-      const flat = flattenStandings(standData)
-      setStandings(flat)
-      if (!VALID_TABS.includes(tabAtMount)) {
-        const hasLiveOrToday = ms.some(m => m.status === "live") || ms.length > 0
-        if (!hasLiveOrToday && hasResults(ms)) {
-          setSearchParams({ tab: "results" }, { replace: true })
-        } else if (!hasLiveOrToday && hasUpcoming(ms)) {
-          setSearchParams({ tab: "fixtures" }, { replace: true })
+      if (matchResult.matchesError) {
+        setMatchesError(true)
+        setMatches([])
+      } else {
+        const ms = Array.isArray(matchResult.matches) ? matchResult.matches : []
+        setMatches(ms)
+        if (!VALID_TABS.includes(tabAtMount)) {
+          const hasLiveOrToday = ms.some(m => m.status === "live") || ms.length > 0
+          if (!hasLiveOrToday && hasResults(ms)) {
+            setSearchParams({ tab: "results" }, { replace: true })
+          } else if (!hasLiveOrToday && hasUpcoming(ms)) {
+            setSearchParams({ tab: "fixtures" }, { replace: true })
+          }
         }
       }
+      const flat = flattenStandings(standData)
+      setStandings(flat)
     }).finally(() => setLoading(false))
   }, [code, setSearchParams])
 

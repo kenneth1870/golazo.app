@@ -10,7 +10,7 @@ module Api
         # which would cause June 13 matches (Qatar, Brazil) to be excluded.
         date = parse_date(params[:date]) || TZInfo::Timezone.get(tz).now.to_date
         all  = merge_matches(date, tz).sort_by { |m| m[:kickoff_at].to_s }
-        all  = refresh_club_fixtures(all) if AppFocus.wc_paused?
+        all  = refresh_club_fixtures(all) if AppFocus.clubs_primary?
         unless AppFocus.wc_paused?
           wc_db     = fetch_wc_from_db_for_date(date, tz)
 
@@ -58,7 +58,7 @@ module Api
           else
             fetch_upcoming_wc(6).map { |m| normalize_db(m).merge(upcoming_preview: true) }
           end
-        elsif AppFocus.wc_paused? && date == TZInfo::Timezone.get(tz).now.to_date
+        elsif AppFocus.clubs_primary? && date == TZInfo::Timezone.get(tz).now.to_date
           # Homepage still needs future fixtures for favorite-team cards even when
           # today's schedule isn't empty (e.g. Liga Tica match on Saturday while
           # other leagues play today).

@@ -188,7 +188,7 @@ function leagueCodeFromMatches(matches, favName, lang) {
   return null
 }
 
-function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = false, suppressLive = false }) {
+function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = false, wcPaused = true, suppressLive = false }) {
   const { i18n } = useTranslation()
   const [teamUpcoming, setTeamUpcoming] = useState([])
   const [teamLoading, setTeamLoading] = useState(false)
@@ -260,7 +260,7 @@ function FavoriteTeamCard({ fav, upcomingMatches, navigate, t, clubsPrimary = fa
           ) : (
             <div className="favorite-team-card__name">{teamLabel}</div>
           )}
-          {fav.group && !fav.league_code && !clubsPrimary && (
+          {fav.group && !fav.league_code && !wcPaused && (
             <div className="favorite-team-card__meta">{t("nav.group", { letter: fav.group })}</div>
           )}
         </div>
@@ -681,13 +681,13 @@ export default function HomePage() {
   const liveCountGlobal = useLiveCount()
   const [fav]      = useFavoriteTeam()
   const { favoriteCompetitions, favoriteTeamNames } = useFavorites()
-  const { clubs_primary: clubsPrimary } = useAppFocus()
+  const { clubs_primary: clubsPrimary, wc_paused: wcPaused = true } = useAppFocus()
 
   usePageMeta(
     clubsPrimary ? t("home.metaTitleClubs") : t("home.metaTitleWC"),
     clubsPrimary ? t("home.metaDescClubs") : t("home.metaDescWC")
   )
-  useStructuredData(clubsPrimary ? null : {
+  useStructuredData(wcPaused ? null : {
     "@context": "https://schema.org",
     "@type": "SportsEvent",
     "name": "FIFA World Cup 2026",
@@ -796,7 +796,7 @@ export default function HomePage() {
           <FavoriteTeamPicker />
         </div>
         {fav ? (
-          <FavoriteTeamCard fav={fav} upcomingMatches={favUpcoming} navigate={navigate} t={t} clubsPrimary={clubsPrimary} suppressLive={todayLiveCount > 0} />
+          <FavoriteTeamCard fav={fav} upcomingMatches={favUpcoming} navigate={navigate} t={t} clubsPrimary={clubsPrimary} wcPaused={wcPaused} suppressLive={todayLiveCount > 0} />
         ) : (
           <div className="home-follow-cta">
             <p>{t(clubsPrimary ? "news.forYouEmptyHintClubs" : "news.forYouEmptyHint")}</p>
@@ -903,7 +903,7 @@ export default function HomePage() {
       )}
 
       {/* ── Quick-links section: World Cup + Competitions (WC mode only) ── */}
-      {!clubsPrimary && <div className="site-section" style={{ paddingTop: 32, paddingBottom: 40 }}>
+      {!wcPaused && <div className="site-section" style={{ paddingTop: 32, paddingBottom: 40 }}>
         <div className="container">
           <div className="row" style={{ gap: "0 0" }}>
             <>
@@ -953,7 +953,7 @@ export default function HomePage() {
       </div>}
 
       {/* ── Next match widget + upcoming ── */}
-      {(nextMatch || upcomingFuture.length > 0) && !clubsPrimary && <div className="site-section bg-dark">
+      {(nextMatch || upcomingFuture.length > 0) && !wcPaused && <div className="site-section bg-dark">
         <div className="container">
           <div className="row">
 
