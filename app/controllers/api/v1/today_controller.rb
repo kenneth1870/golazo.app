@@ -70,7 +70,7 @@ module Api
         render json: all
       rescue StandardError => e
         Rails.logger.error("[TodayController] #{e.message}")
-        render json: []
+        render json: [], status: :service_unavailable
       end
 
       private
@@ -196,9 +196,6 @@ module Api
             normalized
           end
         end
-      rescue => e
-        Rails.logger.error("[TodayController] API matches failed: #{e.message}")
-        []
       end
 
       # LATAM leagues need a ±7-day window for stacked jornada placeholders.

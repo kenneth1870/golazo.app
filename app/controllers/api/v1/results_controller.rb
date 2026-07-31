@@ -16,7 +16,7 @@ module Api
         )
       rescue => e
         Rails.logger.error("[ResultsController] #{e.message}")
-        render json: []
+        render json: [], status: :service_unavailable
       end
 
       private

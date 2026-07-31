@@ -10,7 +10,7 @@ module Api
         render json: matches
       rescue StandardError => e
         Rails.logger.error("[LiveScoresController] #{e.message}")
-        render json: []
+        render json: [], status: :service_unavailable
       end
 
       # Lightweight endpoint — just the live count for the nav badge.
@@ -22,7 +22,7 @@ module Api
         render json: { count: count }
       rescue StandardError => e
         Rails.logger.error("[LiveScoresController#count] #{e.message}")
-        render json: { count: 0 }
+        render json: { count: 0 }, status: :service_unavailable
       end
     end
   end
